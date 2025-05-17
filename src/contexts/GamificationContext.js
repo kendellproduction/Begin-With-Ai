@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const GamificationContext = createContext();
 
@@ -7,31 +7,14 @@ export function useGamification() {
 }
 
 export function GamificationProvider({ children }) {
-  const [xp, setXp] = useState(0);
-  const [level, setLevel] = useState(1);
-  const [badges, setBadges] = useState([]);
-
-  const addXp = (amount) => {
-    setXp(prevXp => {
-      const newXp = prevXp + amount;
-      // Level up every 1000 XP
-      if (newXp >= level * 1000) {
-        setLevel(prevLevel => prevLevel + 1);
-      }
-      return newXp;
-    });
-  };
-
-  const addBadge = (badge) => {
-    setBadges(prevBadges => [...prevBadges, badge]);
-  };
+  const [userStats, setUserStats] = useState({
+    xp: 340,
+    level: 2,
+  });
 
   const value = {
-    xp,
-    level,
-    badges,
-    addXp,
-    addBadge
+    userStats,
+    setUserStats,
   };
 
   return (
