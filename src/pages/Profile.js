@@ -1,12 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
 const Profile = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, updateUserProfile } = useAuth();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const fileInputRef = useRef(null);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    displayName: currentUser?.displayName || '',
+    bio: currentUser?.bio || '',
+    location: currentUser?.location || '',
+    website: currentUser?.website || '',
+    twitter: currentUser?.twitter || '',
+    linkedin: currentUser?.linkedin || '',
+  });
+
+  // Profile photo state
+  const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.email}`);
+  const [photoPreview, setPhotoPreview] = useState(null);
 
   // Mock data for gamification
   const userStats = {
@@ -29,6 +47,48 @@ const Profile = () => {
     { id: '1-2', title: 'Machine Learning Basics', completed: true },
     { id: '2-1', title: 'Neural Networks', completed: false },
   ];
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Preview the image
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPhotoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setIsLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // Update profile data
+      await updateUserProfile({
+        ...formData,
+        photoURL: photoPreview || photoURL
+      });
+
+      setSuccess('Profile updated successfully!');
+      setPhotoURL(photoPreview || photoURL);
+      setPhotoPreview(null);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0F172A]">
@@ -58,48 +118,176 @@ const Profile = () => {
 
         <div className="bg-gray-800 rounded-xl p-6">
           <h1 className="text-3xl font-bold text-white mb-8">Profile Settings</h1>
+          
+          {/* Error and Success Messages */}
+          {error && (
+            <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-400">
+              {error}
+            </div>
+          )}
+          {success && (
+            <div className="mb-4 p-4 bg-green-500/20 border border-green-500 rounded-lg text-green-400">
+              {success}
+            </div>
+          )}
+
           <div className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Display Name
-              </label>
-              <input
-                type="text"
-                className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white"
-                defaultValue={currentUser?.displayName || ''}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white"
-                defaultValue={currentUser?.email || ''}
-                disabled
-              />
-            </div>
+            {/* Profile Photo Section */}
             <div>
               <label className="block text-sm font-medium text-gray-400 mb-2">
                 Profile Picture
               </label>
-              <div className="flex items-center space-x-4">
-                <img
-                  src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.email}`}
-                  alt="Profile"
-                  className="h-16 w-16 rounded-full"
+              <div className="flex items-center space-x-6">
+                <div className="relative group">
+                  <img
+                    src={photoPreview || photoURL}
+                    alt="Profile"
+                    className="h-24 w-24 rounded-full object-cover border-2 border-gray-700 group-hover:border-indigo-500 transition-colors duration-300"
+                  />
+                  <div 
+                    className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    <span className="text-white text-sm">Change</span>
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handlePhotoChange}
+                  accept="image/*"
+                  className="hidden"
                 />
-                <button className="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 text-white">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 text-white transition-colors duration-300"
+                >
                   Change Photo
                 </button>
               </div>
+            </div>
+
+            {/* Profile Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Display Name
+                </label>
+                <input
+                  type="text"
+                  name="displayName"
+                  value={formData.displayName}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={currentUser?.email || ''}
+                  disabled
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-gray-400 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Bio
+                </label>
+                <textarea
+                  name="bio"
+                  value={formData.bio}
+                  onChange={handleInputChange}
+                  rows="3"
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="Tell us about yourself..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="Your location"
+                />
+              </div>
+            </div>
+
+            {/* Social Links */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  name="website"
+                  value={formData.website}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="https://yourwebsite.com"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  Twitter
+                </label>
+                <input
+                  type="text"
+                  name="twitter"
+                  value={formData.twitter}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="@username"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-400 mb-2">
+                  LinkedIn
+                </label>
+                <input
+                  type="text"
+                  name="linkedin"
+                  value={formData.linkedin}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="linkedin.com/in/username"
+                />
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleSaveProfile}
+                disabled={isLoading}
+                className="bg-indigo-600 px-6 py-2 rounded-lg hover:bg-indigo-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Saving...
+                  </div>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
             </div>
           </div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-8">
           <div className="bg-gray-800 rounded-xl p-6">
             <h3 className="text-lg font-medium text-gray-400 mb-2">Total XP</h3>
             <p className="text-3xl font-bold text-white">{userStats.totalXP}</p>

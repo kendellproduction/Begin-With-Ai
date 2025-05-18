@@ -1,103 +1,72 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 
 const HomePage = () => {
-  // Latest AI news for the homepage card
-  const latestNews = {
-    title: "OpenAI Releases GPT-4 Turbo",
-    summary: "The latest model offers improved performance and reduced costs for developers.",
-    date: "2024-03-15"
-  };
-
-  // Feature cards data
-  const featureCards = [
-    {
-      title: "Dashboard",
-      subtitle: "Track your progress",
-      route: "/dashboard",
-      image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-    },
-    {
-      title: "Lessons",
-      subtitle: "Start learning AI",
-      route: "/lessons",
-      image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-    },
-    {
-      title: "AI News",
-      subtitle: "Latest developments",
-      route: "/ai-news",
-      image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
-    }
+  // AI facts and quotes
+  const aiFacts = [
+    "AI will add $15.7 trillion to the global economy by 2030.",
+    "The first neural network was created in 1958.",
+    "Prompt writing is the new coding.",
+    "You don't need to be technical to use AI — you just need curiosity."
   ];
 
-  // Haptic feedback function
-  const triggerHapticFeedback = () => {
-    if ('vibrate' in navigator) {
-      // Trigger a short vibration (50ms)
-      navigator.vibrate(50);
-    }
-  };
+  const [currentFact, setCurrentFact] = useState('');
+
+  useEffect(() => {
+    // Set initial fact
+    setCurrentFact(aiFacts[Math.floor(Math.random() * aiFacts.length)]);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className="min-h-screen bg-gradient-to-b from-[#0F172A] to-[#1E293B]">
       <LoggedInNavbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <section className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-4">Welcome to BeginningWithAI</h1>
-          <p className="text-xl text-gray-300">Your journey to mastering AI starts here</p>
-        </section>
-
-        {/* Feature Cards Row */}
-        <section className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featureCards.map((card) => (
+        {/* Video Section */}
+        <section className="relative w-full h-[60vh] mb-12 rounded-3xl overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 mix-blend-overlay z-10"></div>
+          <video
+            className="w-full h-full object-cover"
+            autoPlay
+            muted
+            loop
+            playsInline
+          >
+            <source src="/videos/ai-background.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+          
+          {/* Video Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 flex flex-col items-center justify-center text-center p-4 backdrop-blur-[2px]">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+              AI is changing everything. Let's help you master it.
+            </h1>
+            <div className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
               <Link
-                key={card.title}
-                to={card.route}
-                onClick={triggerHapticFeedback}
-                className="relative h-56 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1 cursor-pointer group active:scale-95"
+                to="/lessons"
+                className="relative block bg-gray-800/80 backdrop-blur-sm text-white text-xl font-bold px-8 py-4 rounded-3xl border border-gray-700/50 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-gray-700/80 hover:border-indigo-500/50"
               >
-                <img
-                  src={card.image}
-                  alt={card.title}
-                  className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-all duration-300 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 group-hover:from-black/50 group-hover:to-black/30 transition-all duration-300 flex flex-col justify-center items-center text-white">
-                  <h2 className="text-2xl font-bold mb-2 transform group-hover:scale-110 transition-transform duration-300">{card.title}</h2>
-                  <p className="text-sm font-medium transform group-hover:scale-105 transition-transform duration-300">{card.subtitle}</p>
-                </div>
-                <div className="absolute inset-0 border-2 border-transparent group-hover:border-white/20 rounded-xl transition-all duration-300" />
+                <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:to-purple-300 transition-all duration-300">
+                  Start Your First Lesson
+                </span>
               </Link>
-            ))}
+            </div>
           </div>
         </section>
 
-        {/* Latest AI News Card */}
-        <section className="mb-12">
-          <div className="bg-gray-800 rounded-xl p-6 hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-            <div className="flex justify-between items-start mb-4">
-              <h2 className="text-2xl font-bold text-white">Latest AI News</h2>
-              <Link 
-                to="/ai-news" 
-                className="text-indigo-400 hover:text-indigo-300 text-sm font-medium"
-              >
-                View All News →
-              </Link>
-            </div>
-            <div className="border-t border-gray-700 pt-4">
-              <h3 className="text-xl font-semibold text-white mb-3">{latestNews.title}</h3>
-              <p className="text-gray-400 mb-4">{latestNews.summary}</p>
-              <div className="flex justify-between items-center">
-                <p className="text-sm text-gray-500">{new Date(latestNews.date).toLocaleDateString()}</p>
-                <Link 
-                  to="/ai-news" 
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Read More
-                </Link>
+        {/* AI Fact/Quote Section */}
+        <section className="max-w-3xl mx-auto mb-12">
+          <div className="relative group">
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+            <div className="relative bg-gray-800/80 backdrop-blur-sm rounded-3xl p-8 border border-gray-700/50 shadow-lg">
+              <div className="text-center">
+                <h2 className="text-2xl font-semibold text-gray-300 mb-4 bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                  AI Fact of the Day
+                </h2>
+                <p className="text-2xl md:text-3xl font-bold text-white leading-relaxed drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)]">
+                  "{currentFact}"
+                </p>
               </div>
             </div>
           </div>
