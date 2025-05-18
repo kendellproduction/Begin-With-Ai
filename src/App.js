@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import LessonDetail from './pages/LessonDetail';
 import Lessons from './pages/Lessons';
+import HomePage from './pages/HomePage';
+import AiNews from './pages/AiNews';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navigation from './components/Navigation';
 import LandingPage from './pages/LandingPage';
@@ -26,11 +28,14 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
+              <Route index element={<Navigate to="/home" replace />} />
+              <Route path="home" element={<HomePage />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="settings" element={<Profile />} />
               <Route path="lessons" element={<Lessons />} />
               <Route path="lessons/:lessonId" element={<LessonDetail />} />
+              <Route path="ai-news" element={<AiNews />} />
             </Route>
           </Routes>
         </GamificationProvider>

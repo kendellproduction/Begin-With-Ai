@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
+import LoggedInNavbar from '../components/LoggedInNavbar';
+import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'framer-motion';
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
 
   // Mock data for gamification
@@ -29,24 +31,69 @@ const Profile = () => {
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen bg-gray-900"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Profile Header */}
-        <div className="bg-gray-800 rounded-xl p-8 mb-8">
-          <div className="flex items-center space-x-6">
-            <img
-              src={user?.photoURL || `https://ui-avatars.com/api/?name=${user?.email}`}
-              alt={user?.email}
-              className="w-24 h-24 rounded-full"
-            />
+    <div className="min-h-screen bg-[#0F172A]">
+      <LoggedInNavbar />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <Link
+            to="/home"
+            className="inline-flex items-center text-gray-300 hover:text-white"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
+
+        <div className="bg-gray-800 rounded-xl p-6">
+          <h1 className="text-3xl font-bold text-white mb-8">Profile Settings</h1>
+          <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold text-white">{user?.email}</h1>
-              <p className="text-gray-400">Level {userStats.level} Learner</p>
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Display Name
+              </label>
+              <input
+                type="text"
+                className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white"
+                defaultValue={currentUser?.displayName || ''}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white"
+                defaultValue={currentUser?.email || ''}
+                disabled
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-2">
+                Profile Picture
+              </label>
+              <div className="flex items-center space-x-4">
+                <img
+                  src={currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.email}`}
+                  alt="Profile"
+                  className="h-16 w-16 rounded-full"
+                />
+                <button className="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 text-white">
+                  Change Photo
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -128,7 +175,7 @@ const Profile = () => {
             Cancel Subscription
           </button>
         </div>
-      </div>
+      </main>
 
       {/* Cancel Subscription Modal */}
       {isCancelModalOpen && (
@@ -163,7 +210,7 @@ const Profile = () => {
           </motion.div>
         </div>
       )}
-    </motion.div>
+    </div>
   );
 };
 
