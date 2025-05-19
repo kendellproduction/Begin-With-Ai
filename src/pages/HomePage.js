@@ -21,10 +21,9 @@ const HomePage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0F172A] to-[#1E293B]">
       <LoggedInNavbar />
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-full mx-auto">
         {/* Video Section */}
-        <section className="relative w-full h-[60vh] mb-12 rounded-3xl overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 mix-blend-overlay z-10"></div>
+        <section className="relative w-full h-[70vh] mb-12 overflow-hidden shadow-[0_10px_30px_rgba(99,102,241,0.3)]">
           <video
             className="w-full h-full object-cover"
             autoPlay
@@ -32,7 +31,7 @@ const HomePage = () => {
             loop
             playsInline
           >
-            <source src="/videos/ai-background.mp4" type="video/mp4" />
+            <source src="/HomePageHeroVideo.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
           
