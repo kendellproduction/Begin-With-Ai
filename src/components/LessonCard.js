@@ -3,38 +3,47 @@ import { Link } from 'react-router-dom';
 
 const LessonCard = ({ lesson }) => {
   return (
-    <div className="relative h-full bg-gradient-to-br from-gray-800 via-gray-800 to-gray-900 rounded-3xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/30 group transform hover:-translate-y-1 shadow-2xl shadow-black/50">
-      {/* Card Image */}
-      <div className="relative h-64 overflow-hidden">
+    <div className="relative h-[500px] bg-[#1a1a1a] rounded-3xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/30 group transform hover:-translate-y-1 shadow-2xl shadow-black/50">
+      {/* Card Image with Overlay */}
+      <div className="absolute inset-0">
         <img
           src={lesson.image}
           alt={lesson.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/50 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] via-[#1a1a1a]/80 to-transparent" />
       </div>
 
       {/* Card Content */}
-      <div className="p-6 flex flex-col h-[calc(100%-16rem)] relative bg-gradient-to-b from-gray-800/95 to-gray-900/95">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-white drop-shadow-lg">{lesson.title}</h3>
-          <span className={`px-3 py-1 rounded-2xl text-sm font-medium shadow-lg ${
-            lesson.difficulty === 'Beginner' 
-              ? 'bg-green-500/20 text-green-400 shadow-green-500/20'
-              : lesson.difficulty === 'Intermediate'
-              ? 'bg-yellow-500/20 text-yellow-400 shadow-yellow-500/20'
-              : 'bg-red-500/20 text-red-400 shadow-red-500/20'
-          }`}>
-            {lesson.difficulty}
-          </span>
+      <div className="relative h-full p-8 flex flex-col justify-between">
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-2xl font-bold text-white drop-shadow-lg">{lesson.title}</h3>
+            <span className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-lg ${
+              lesson.difficulty === 'Beginner' 
+                ? 'bg-green-500/20 text-green-400 shadow-green-500/20'
+                : lesson.difficulty === 'Intermediate'
+                ? 'bg-yellow-500/20 text-yellow-400 shadow-yellow-500/20'
+                : 'bg-red-500/20 text-red-400 shadow-red-500/20'
+            }`}>
+              {lesson.difficulty}
+            </span>
+          </div>
+          <p className="text-gray-300 mb-8 line-clamp-3 drop-shadow-md text-lg">{lesson.description}</p>
         </div>
-        <p className="text-gray-400 mb-6 line-clamp-3 flex-grow drop-shadow-md">{lesson.description}</p>
-        <Link
-          to={`/lessons/${lesson.id}`}
-          className="inline-flex items-center justify-center w-full px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-medium rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/40 transform hover:-translate-y-0.5 shadow-lg shadow-indigo-900/50"
-        >
-          Start Lesson
-        </Link>
+
+        {/* Start Lesson Button with HomePage-style effects */}
+        <div className="relative group">
+          <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+          <Link
+            to={`/lessons/${lesson.id}`}
+            className="relative block bg-gray-800/80 backdrop-blur-sm text-white text-lg font-bold px-8 py-4 rounded-3xl border border-gray-700/50 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-gray-700/80 hover:border-indigo-500/50"
+          >
+            <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:to-purple-300 transition-all duration-300">
+              Start Lesson
+            </span>
+          </Link>
+        </div>
       </div>
 
       {/* Ambient Light Effect */}

@@ -12,32 +12,35 @@ import AiNews from './pages/AiNews';
 import ProtectedRoute from './components/ProtectedRoute';
 import Navigation from './components/Navigation';
 import LandingPage from './pages/LandingPage';
+import Layout from './components/Layout';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <GamificationProvider>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route
-              element={
-                <ProtectedRoute>
-                  <Navigation />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Navigate to="/home" replace />} />
-              <Route path="home" element={<HomePage />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="settings" element={<Profile />} />
-              <Route path="lessons" element={<Lessons />} />
-              <Route path="lessons/:lessonId" element={<LessonDetail />} />
-              <Route path="ai-news" element={<AiNews />} />
-            </Route>
-          </Routes>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<Login />} />
+              <Route
+                element={
+                  <ProtectedRoute>
+                    <Navigation />
+                  </ProtectedRoute>
+                }
+              >
+                <Route index element={<Navigate to="/home" replace />} />
+                <Route path="home" element={<HomePage />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="settings" element={<Profile />} />
+                <Route path="lessons" element={<Lessons />} />
+                <Route path="lessons/:lessonId" element={<LessonDetail />} />
+                <Route path="ai-news" element={<AiNews />} />
+              </Route>
+            </Routes>
+          </Layout>
         </GamificationProvider>
       </AuthProvider>
     </Router>

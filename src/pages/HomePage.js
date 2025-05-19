@@ -11,11 +11,27 @@ const HomePage = () => {
     "You don't need to be technical to use AI — you just need curiosity."
   ];
 
+  // Motivational quotes for hero section
+  const heroQuotes = [
+    "The future belongs to those who learn more skills and combine them in creative ways.",
+    "In a world of constant change, the only constant is your ability to adapt and learn.",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "The best way to predict the future is to create it.",
+    "Your career is a journey, not a destination. Keep learning, keep growing.",
+    "The only way to do great work is to love what you do.",
+    "Stay ahead of the curve, or the curve will leave you behind.",
+    "The more you learn, the more you earn.",
+    "Success is where preparation and opportunity meet.",
+    "The future of work belongs to those who can work with AI, not against it."
+  ];
+
   const [currentFact, setCurrentFact] = useState('');
+  const [currentHeroQuote, setCurrentHeroQuote] = useState('');
 
   useEffect(() => {
-    // Set initial fact
+    // Set initial fact and hero quote
     setCurrentFact(aiFacts[Math.floor(Math.random() * aiFacts.length)]);
+    setCurrentHeroQuote(heroQuotes[Math.floor(Math.random() * heroQuotes.length)]);
   }, []);
 
   return (
@@ -38,7 +54,7 @@ const HomePage = () => {
           {/* Video Overlay */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-black/40 flex flex-col items-center justify-center text-center p-4 backdrop-blur-[2px]">
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
-              AI is changing everything. Let's help you master it.
+              {currentHeroQuote}
             </h1>
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>

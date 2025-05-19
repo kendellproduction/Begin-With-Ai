@@ -8,37 +8,37 @@ const lessons = [
   {
     id: 1,
     title: "Introduction to AI",
-    description: "Learn the fundamentals of artificial intelligence and machine learning",
+    description: "Master the fundamentals of artificial intelligence and machine learning. Learn about neural networks, deep learning, and how AI is transforming industries.",
     difficulty: "Beginner",
     image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
   },
   {
     id: 2,
     title: "AI Ethics",
-    description: "Understanding the ethical implications and responsible use of AI",
+    description: "Explore the ethical implications of AI development and deployment. Understand bias, privacy concerns, and responsible AI practices.",
     difficulty: "Beginner",
     image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
   },
   {
     id: 3,
     title: "GPT-4 Mastery",
-    description: "Advanced techniques for working with OpenAI's GPT-4 model",
+    description: "Learn advanced techniques for working with OpenAI's GPT-4 model. Master prompt engineering, fine-tuning, and real-world applications.",
     difficulty: "Intermediate",
     image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
   },
   {
     id: 4,
     title: "Gemini Pro",
-    description: "Harness the power of Google's latest AI model",
+    description: "Harness the power of Google's latest AI model. Learn to integrate Gemini Pro into your applications and leverage its advanced capabilities.",
     difficulty: "Intermediate",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
   },
   {
     id: 5,
     title: "AI Tools Overview",
-    description: "Comprehensive guide to the most popular AI tools and platforms",
+    description: "Discover and master the most popular AI tools and platforms. Learn to choose the right tools for your needs and integrate them effectively.",
     difficulty: "Beginner",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
+    image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
   }
 ];
 
@@ -132,20 +132,20 @@ const Lessons = () => {
   const visibleCards = getVisibleCards();
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <LoggedInNavbar />
-      <main className="container mx-auto px-4 py-8">
-        {/* Search and Filter Section */}
-        <div className="mb-6">
+      <main className="container mx-auto px-4 py-4 flex-1 flex flex-col">
+        {/* Search and Filter Section - Updated Layout */}
+        <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
           <input
             type="text"
             placeholder="Search lessons..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-gray-800 text-white px-6 py-3 rounded-3xl w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="bg-gray-800 text-white px-6 py-3 rounded-3xl w-full md:w-96 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
 
-          <div className="flex gap-2 overflow-x-auto mt-4 pb-2">
+          <div className="flex gap-2 overflow-x-auto w-full md:w-auto">
             {filterOptions.map((filter) => (
               <button
                 key={filter}
@@ -162,7 +162,7 @@ const Lessons = () => {
         </div>
 
         {/* Desktop View - Horizontal Scroll */}
-        <div className="relative h-[calc(100vh-16rem)]">
+        <div className="relative flex-1">
           {/* Navigation Buttons */}
           <button
             onClick={scrollToPrev}
@@ -184,7 +184,7 @@ const Lessons = () => {
           {/* Cards Container */}
           <div
             ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto snap-x snap-mandatory h-full px-16 py-4"
+            className="flex gap-6 overflow-x-auto snap-x snap-mandatory h-full px-16 py-2"
             style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
             {visibleCards.map((lesson, index) => (
@@ -199,10 +199,10 @@ const Lessons = () => {
         </div>
 
         {/* Mobile View - Vertical Scroll */}
-        <div className="md:hidden">
-          <div className="flex flex-col gap-8 overflow-y-auto scroll-smooth snap-y snap-mandatory items-center">
+        <div className="md:hidden mt-4">
+          <div className="flex flex-col gap-6 overflow-y-auto scroll-smooth snap-y snap-mandatory items-center">
             {visibleCards.map((lesson, index) => (
-              <div key={`${lesson.id}-${index}`} className="snap-start">
+              <div key={`${lesson.id}-${index}`} className="snap-start w-full">
                 <LessonCard 
                   lesson={lesson} 
                   isBlurred={index === 0 || index === 4}
