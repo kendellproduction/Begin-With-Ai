@@ -1,9 +1,7 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useRef } from 'react';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import LessonCard from '../components/LessonCard';
 
-// Sample lesson data
 const lessons = [
   {
     id: 1,
@@ -47,13 +45,10 @@ const filterOptions = ["All", "Beginner", "Intermediate", "Advanced"];
 const Lessons = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
-  const scrollContainerRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Create repeated lessons array for infinite scroll effect
+  // Infinite loop effect (so the V always has cards)
   const repeatedLessons = [...lessons, ...lessons, ...lessons];
-
-  // Filter lessons based on search and active filter
   const filteredLessons = repeatedLessons.filter(lesson => {
     const matchesSearch =
       lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -62,80 +57,64 @@ const Lessons = () => {
     return matchesSearch && matchesFilter;
   });
 
-  // Get visible cards with wrapping
+  // Show 7 cards: center, 3 left, 3 right
   const getVisibleCards = () => {
-    const totalCards = filteredLessons.length;
-    if (totalCards === 0) return [];
-
-    // Get 5 cards centered around currentIndex
-    const cards = [];
-    for (let i = -2; i <= 2; i++) {
-      const index = (currentIndex + i + totalCards) % totalCards;
-      cards.push(filteredLessons[index]);
+    const total = filteredLessons.length;
+    if (total === 0) return [];
+    let arr = [];
+    for (let i = -3; i <= 3; i++) {
+      let idx = (currentIndex + i + total) % total;
+      arr.push(filteredLessons[idx]);
     }
-    return cards;
+    return arr;
   };
 
-  const scrollToNext = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    const cardWidth = 320; // Reduced card width
-    const gap = 24;
-    const scrollAmount = cardWidth + gap;
-    
-    container.scrollBy({
-      left: scrollAmount,
-      behavior: 'smooth'
-    });
-    
-    setCurrentIndex((prev) => (prev + 1) % filteredLessons.length);
+  // Desktop carousel next/prev
+  const scrollToNext = () => setCurrentIndex((prev) => (prev + 1) % filteredLessons.length);
+  const scrollToPrev = () => setCurrentIndex((prev) => (prev - 1 + filteredLessons.length) % filteredLessons.length);
+
+  // --- Mobile swipe support ---
+  const touchStartY = useRef(null);
+  const touchEndY = useRef(null);
+
+  const handleTouchStart = (e) => {
+    touchStartY.current = e.touches[0].clientY;
   };
 
-  const scrollToPrev = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    const cardWidth = 320; // Reduced card width
-    const gap = 24;
-    const scrollAmount = cardWidth + gap;
-    
-    container.scrollBy({
-      left: -scrollAmount,
-      behavior: 'smooth'
-    });
-    
-    setCurrentIndex((prev) => (prev - 1 + filteredLessons.length) % filteredLessons.length);
+  const handleTouchEnd = (e) => {
+    touchEndY.current = e.changedTouches[0].clientY;
+    const delta = touchEndY.current - touchStartY.current;
+    if (delta > 50) {
+      // Swipe down: previous
+      scrollToPrev();
+      if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(30); // Haptic
+    } else if (delta < -50) {
+      // Swipe up: next
+      scrollToNext();
+      if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(30); // Haptic
+    }
   };
-
-  // Handle scroll events to update current index
-  const handleScroll = () => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    const cardWidth = 320; // Reduced card width
-    const gap = 24;
-    const scrollPosition = container.scrollLeft;
-    const newIndex = Math.round(scrollPosition / (cardWidth + gap));
-    
-    setCurrentIndex(newIndex % filteredLessons.length);
-  };
-
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-    
-    container.addEventListener('scroll', handleScroll);
-    return () => container.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const visibleCards = getVisibleCards();
+
+  // Desktop V-formation classes
+  const getCardStyles = (pos) => {
+    switch (pos) {
+      case 0: return "z-10 -translate-x-40 scale-75 blur-sm opacity-40";
+      case 1: return "z-20 -translate-x-20 scale-90 blur-sm opacity-70";
+      case 2: return "z-30 scale-105 shadow-2xl"; // Main card
+      case 3: return "z-20 translate-x-20 scale-90 blur-sm opacity-70";
+      case 4: return "z-10 translate-x-40 scale-75 blur-sm opacity-40";
+      default: return "";
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-900 text-white flex flex-col">
       <LoggedInNavbar />
-      <main className="container mx-auto px-4 py-4 flex-1 flex flex-col">
-        {/* Search and Filter Section - Updated Layout */}
+
+      {/* Search & Filter */}
+      <main className="container mx-auto px-4 py-4 flex flex-col z-20">
         <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
           <input
             type="text"
@@ -144,7 +123,6 @@ const Lessons = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="bg-gray-800 text-white px-6 py-3 rounded-3xl w-full md:w-96 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
-
           <div className="flex gap-2 overflow-x-auto w-full md:w-auto">
             {filterOptions.map((filter) => (
               <button
@@ -160,60 +138,119 @@ const Lessons = () => {
             ))}
           </div>
         </div>
-
-        {/* Desktop View - Horizontal Scroll */}
-        <div className="relative flex-1">
-          {/* Navigation Buttons */}
-          <button
-            onClick={scrollToPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/80 hover:bg-gray-700 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <button
-            onClick={scrollToNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-gray-800/80 hover:bg-gray-700 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-
-          {/* Cards Container */}
-          <div
-            ref={scrollContainerRef}
-            className="flex gap-6 overflow-x-auto snap-x snap-mandatory h-full px-16 py-2"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-          >
-            {visibleCards.map((lesson, index) => (
-              <div
-                key={lesson.id + index}
-                className="flex-none w-[320px] snap-center"
-              >
-                <LessonCard lesson={lesson} />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Mobile View - Vertical Scroll */}
-        <div className="md:hidden mt-4">
-          <div className="flex flex-col gap-6 overflow-y-auto scroll-smooth snap-y snap-mandatory items-center">
-            {visibleCards.map((lesson, index) => (
-              <div key={`${lesson.id}-${index}`} className="snap-start w-full">
-                <LessonCard 
-                  lesson={lesson} 
-                  isBlurred={index === 0 || index === 4}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
       </main>
+
+      {/* Desktop V-Formation Carousel */}
+      <div className="hidden md:flex relative w-full flex-col items-center justify-center -mt-8 z-30 pointer-events-auto" style={{ minHeight: '540px' }}>
+        {/* Nav Buttons */}
+        <button
+          onClick={scrollToPrev}
+          className="absolute left-8 top-1/2 -translate-y-1/2 z-40 bg-gray-800/80 hover:bg-gray-700 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+        <button
+          onClick={scrollToNext}
+          className="absolute right-8 top-1/2 -translate-y-1/2 z-40 bg-gray-800/80 hover:bg-gray-700 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+
+        {/* Cards - Horizontal Stack */}
+        <div className="relative flex justify-center items-center w-full h-[520px] select-none">
+          {/* Background Cards */}
+          {[...Array(10)].map((_, bgIdx) => (
+            <div
+              key={`bg-${bgIdx}`}
+              className="absolute left-1/2 top-1/2 transition-all duration-500 w-[400px] h-[500px] bg-gray-800 rounded-3xl shadow-2xl"
+              style={{ 
+                transform: `translate(-50%, -50%) translateX(${(bgIdx - 5) * 25}px)`,
+                zIndex: 5 - Math.abs(bgIdx - 5),
+                opacity: 0.3
+              }}
+            />
+          ))}
+          
+          {/* Main Cards */}
+          {visibleCards.map((lesson, idx) => (
+            <div
+              key={lesson.id + '-' + idx}
+              className={`
+                absolute left-1/2 top-1/2 transition-all duration-500
+                w-[400px] max-w-[90vw] h-[500px]
+                ${idx === 3 ? 'z-30 scale-100' : 
+                  idx === 2 || idx === 4 ? 'z-20 scale-95' :
+                  idx === 1 || idx === 5 ? 'z-10 scale-90' :
+                  'z-5 scale-85'}
+                rounded-3xl overflow-hidden
+              `}
+              style={{ 
+                transform: `translate(-50%, -50%) translateX(${(idx - 3) * 120}px)`,
+                transition: 'all 0.5s ease-out',
+                filter: idx === 0 || idx === 6 ? 'blur(8px)' : 'none',
+                boxShadow: idx === 3 ? 
+                  `0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                    0 0 0 4px ${lesson.difficulty === 'Beginner' ? 'rgba(34, 197, 94, 0.5)' : 
+                               lesson.difficulty === 'Intermediate' ? 'rgba(234, 179, 8, 0.5)' : 
+                               'rgba(239, 68, 68, 0.5)'},
+                    0 0 30px ${lesson.difficulty === 'Beginner' ? 'rgba(34, 197, 94, 0.3)' : 
+                               lesson.difficulty === 'Intermediate' ? 'rgba(234, 179, 8, 0.3)' : 
+                               'rgba(239, 68, 68, 0.3)'}` : 
+                   idx === 2 || idx === 4 ?
+                   `0 20px 25px -5px rgba(0, 0, 0, 0.3),
+                    0 0 15px ${lesson.difficulty === 'Beginner' ? 'rgba(34, 197, 94, 0.2)' : 
+                               lesson.difficulty === 'Intermediate' ? 'rgba(234, 179, 8, 0.2)' : 
+                               'rgba(239, 68, 68, 0.2)'}` :
+                   idx === 1 || idx === 5 ?
+                   `0 15px 20px -5px rgba(0, 0, 0, 0.2),
+                    0 0 10px ${lesson.difficulty === 'Beginner' ? 'rgba(34, 197, 94, 0.15)' : 
+                               lesson.difficulty === 'Intermediate' ? 'rgba(234, 179, 8, 0.15)' : 
+                               'rgba(239, 68, 68, 0.15)'}` :
+                   `0 10px 15px -5px rgba(0, 0, 0, 0.15),
+                    0 0 5px ${lesson.difficulty === 'Beginner' ? 'rgba(34, 197, 94, 0.1)' : 
+                               lesson.difficulty === 'Intermediate' ? 'rgba(234, 179, 8, 0.1)' : 
+                               'rgba(239, 68, 68, 0.1)'}`
+              }}
+            >
+              <LessonCard lesson={lesson} />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Mobile - Vertical swipe */}
+      <div 
+        className="md:hidden flex flex-col items-center justify-center w-full relative h-[800px] select-none z-30"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
+          {visibleCards.map((lesson, idx) => (
+            <div
+              key={`${lesson.id}-${idx}`}
+              className={`
+                absolute left-1/2 top-1/2 transition-all duration-500
+                w-[340px] max-w-[90vw] h-[500px]
+                ${idx === 2 ? 'z-30 scale-100 opacity-100' : 
+                  idx === 1 || idx === 3 ? 'z-20 scale-95 opacity-85' :
+                  'z-10 scale-90 opacity-70'}
+              `}
+              style={{ 
+                transform: `translate(-50%, -50%) translateY(${(idx - 2) * 100}px)`,
+                transition: 'all 0.5s ease-out'
+              }}
+            >
+              <LessonCard lesson={lesson} />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
 
-export default Lessons; 
+export default Lessons;
