@@ -1,44 +1,7 @@
 import React, { useState, useRef } from 'react';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import LessonCard from '../components/LessonCard';
-
-const lessons = [
-  {
-    id: 1,
-    title: "Introduction to AI",
-    description: "Master the fundamentals of artificial intelligence and machine learning. Learn about neural networks, deep learning, and how AI is transforming industries.",
-    difficulty: "Beginner",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-  },
-  {
-    id: 2,
-    title: "AI Ethics",
-    description: "Explore the ethical implications of AI development and deployment. Understand bias, privacy concerns, and responsible AI practices.",
-    difficulty: "Beginner",
-    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-  },
-  {
-    id: 3,
-    title: "GPT-4 Mastery",
-    description: "Learn advanced techniques for working with OpenAI's GPT-4 model. Master prompt engineering, fine-tuning, and real-world applications.",
-    difficulty: "Intermediate",
-    image: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-  },
-  {
-    id: 4,
-    title: "Gemini Pro",
-    description: "Harness the power of Google's latest AI model. Learn to integrate Gemini Pro into your applications and leverage its advanced capabilities.",
-    difficulty: "Intermediate",
-    image: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-  },
-  {
-    id: 5,
-    title: "AI Tools Overview",
-    description: "Discover and master the most popular AI tools and platforms. Learn to choose the right tools for your needs and integrate them effectively.",
-    difficulty: "Beginner",
-    image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80"
-  }
-];
+import lessonsData from '../utils/lessonsData';
 
 const filterOptions = ["All", "Beginner", "Intermediate", "Advanced"];
 
@@ -48,7 +11,7 @@ const Lessons = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Infinite loop effect (so the V always has cards)
-  const repeatedLessons = [...lessons, ...lessons, ...lessons];
+  const repeatedLessons = [...lessonsData, ...lessonsData, ...lessonsData];
   const filteredLessons = repeatedLessons.filter(lesson => {
     const matchesSearch =
       lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -68,6 +31,8 @@ const Lessons = () => {
     }
     return arr;
   };
+
+  const visibleCards = getVisibleCards();
 
   // Desktop carousel next/prev
   const scrollToNext = () => setCurrentIndex((prev) => (prev + 1) % filteredLessons.length);
@@ -92,20 +57,6 @@ const Lessons = () => {
       // Swipe up: next
       scrollToNext();
       if (window.navigator && window.navigator.vibrate) window.navigator.vibrate(30); // Haptic
-    }
-  };
-
-  const visibleCards = getVisibleCards();
-
-  // Desktop V-formation classes
-  const getCardStyles = (pos) => {
-    switch (pos) {
-      case 0: return "z-10 -translate-x-40 scale-75 blur-sm opacity-40";
-      case 1: return "z-20 -translate-x-20 scale-90 blur-sm opacity-70";
-      case 2: return "z-30 scale-105 shadow-2xl"; // Main card
-      case 3: return "z-20 translate-x-20 scale-90 blur-sm opacity-70";
-      case 4: return "z-10 translate-x-40 scale-75 blur-sm opacity-40";
-      default: return "";
     }
   };
 

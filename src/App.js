@@ -13,6 +13,8 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Navigation from './components/Navigation';
 import LandingPage from './pages/LandingPage';
 import Layout from './components/Layout';
+import Quiz from './components/Quiz';
+import QuizResults from './components/QuizResults';
 
 function App() {
   return (
@@ -38,6 +40,8 @@ function App() {
                 <Route path="lessons" element={<Lessons />} />
                 <Route path="lessons/:lessonId" element={<LessonDetail />} />
                 <Route path="ai-news" element={<AiNews />} />
+                <Route path="lesson/:lessonId/quiz" element={<Quiz />} />
+                <Route path="lesson/:lessonId/results" element={<QuizResults />} />
               </Route>
             </Routes>
           </Layout>

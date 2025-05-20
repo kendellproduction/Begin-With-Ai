@@ -1,13 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const LessonCard = ({ lesson }) => {
+  const navigate = useNavigate();
+
   return (
     <div className="relative h-[500px] bg-[#1a1a1a] rounded-3xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-indigo-500/30 group transform hover:-translate-y-1 shadow-2xl shadow-black/50 flex flex-col">
       {/* Card Image with Overlay */}
       <div className="absolute inset-0">
         <img
-          src={lesson.image}
+          src={lesson.imageUrl}
           alt={lesson.title}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
         />
@@ -16,35 +18,29 @@ const LessonCard = ({ lesson }) => {
 
       {/* Card Content */}
       <div className="relative flex flex-col h-full p-8 z-10">
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-2xl font-bold text-white drop-shadow-lg">{lesson.title}</h3>
-            <span className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-lg ${
-              lesson.difficulty === 'Beginner' 
-                ? 'bg-green-900/80 text-green-400 shadow-green-500/20 backdrop-blur-sm'
-                : lesson.difficulty === 'Intermediate'
-                ? 'bg-yellow-900/80 text-yellow-400 shadow-yellow-500/20 backdrop-blur-sm'
-                : 'bg-red-900/80 text-red-400 shadow-red-500/20 backdrop-blur-sm'
-            }`}>
-              {lesson.difficulty}
-            </span>
-          </div>
-          <p className="text-gray-300 mb-8 line-clamp-3 drop-shadow-md text-lg">{lesson.description}</p>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-2xl font-bold text-white drop-shadow-lg">{lesson.title}</h3>
+          <span className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-lg ${
+            lesson.difficulty === 'Beginner' 
+              ? 'bg-green-900/80 text-green-400 shadow-green-500/20 backdrop-blur-sm'
+              : lesson.difficulty === 'Intermediate'
+              ? 'bg-yellow-900/80 text-yellow-400 shadow-yellow-500/20 backdrop-blur-sm'
+              : 'bg-red-900/80 text-red-400 shadow-red-500/20 backdrop-blur-sm'
+          }`}>
+            {lesson.difficulty}
+          </span>
         </div>
+        
+        <p className="text-gray-300 mb-8 line-clamp-3 drop-shadow-md text-lg">{lesson.description}</p>
 
-        {/* Start Lesson Button - always centered at bottom */}
+        {/* Start Lesson Button */}
         <div className="mt-auto flex justify-center">
-          <div className="relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-            <Link
-              to={`/lessons/${lesson.id}`}
-              className="relative block bg-gray-800/80 backdrop-blur-sm text-white text-lg font-bold px-8 py-4 rounded-3xl border border-gray-700/50 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-gray-700/80 hover:border-indigo-500/50"
-            >
-              <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:to-purple-300 transition-all duration-300">
-                Start Lesson
-              </span>
-            </Link>
-          </div>
+          <button
+            onClick={() => navigate(`/lessons/${lesson.id}`)}
+            className="px-8 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-all duration-300 shadow-lg shadow-indigo-500/20"
+          >
+            Start Lesson
+          </button>
         </div>
       </div>
 

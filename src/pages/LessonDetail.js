@@ -1,193 +1,89 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import lessonsData from '../utils/lessonsData';
+import LoggedInNavbar from '../components/LoggedInNavbar';
 
 const LessonDetail = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
-  const [currentSection, setCurrentSection] = useState('video');
-  const [quizAnswers, setQuizAnswers] = useState({});
-  const [showResults, setShowResults] = useState(false);
+  const lesson = lessonsData.find(l => l.id === parseInt(lessonId));
 
-  // Mock lesson data - in a real app, this would come from an API
-  const lesson = {
-    id: lessonId,
-    title: 'Introduction to Machine Learning',
-    description: 'Learn the fundamentals of machine learning and its applications in AI.',
-    imageUrl: 'https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80',
-    videoUrl: 'https://www.youtube.com/embed/aircAruvnKk',
-    keyConcepts: [
-      'What is Machine Learning?',
-      'Types of Machine Learning',
-      'Supervised vs Unsupervised Learning',
-      'Common Applications',
-    ],
-    quiz: [
-      {
-        id: 1,
-        question: 'What is the main goal of machine learning?',
-        options: [
-          'To create human-like robots',
-          'To enable computers to learn from data',
-          'To replace human decision making',
-          'To automate all tasks',
-        ],
-        correctAnswer: 1,
-      },
-      {
-        id: 2,
-        question: 'Which type of learning uses labeled data?',
-        options: [
-          'Unsupervised Learning',
-          'Reinforcement Learning',
-          'Supervised Learning',
-          'Deep Learning',
-        ],
-        correctAnswer: 2,
-      },
-    ],
-  };
-
-  const handleQuizSubmit = () => {
-    const correctAnswers = lesson.quiz.filter(
-      (q) => quizAnswers[q.id] === q.correctAnswer
-    ).length;
-    const score = (correctAnswers / lesson.quiz.length) * 100;
-    setShowResults(true);
-  };
-
-  const handleComplete = () => {
-    navigate('/dashboard');
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen bg-gray-900"
-    >
-      {/* Hero Banner */}
-      <div className="relative h-96">
-        <img
-          src={lesson.imageUrl}
-          alt={lesson.title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-gray-900 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-8">
-          <h1 className="text-4xl font-bold text-white mb-2">{lesson.title}</h1>
-          <p className="text-gray-300">{lesson.description}</p>
+  if (!lesson) {
+    return (
+      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Lesson not found</h1>
+          <button
+            onClick={() => navigate('/lessons')}
+            className="px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700"
+          >
+            Back to Lessons
+          </button>
         </div>
       </div>
+    );
+  }
 
-      {/* Navigation Tabs */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex space-x-4 mb-8">
-          {['video', 'concepts', 'quiz'].map((section) => (
-            <button
-              key={section}
-              onClick={() => setCurrentSection(section)}
-              className={`px-4 py-2 rounded-lg ${
-                currentSection === section
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              {section.charAt(0).toUpperCase() + section.slice(1)}
-            </button>
-          ))}
+  return (
+    <div className="min-h-screen bg-gray-900 text-white">
+      <LoggedInNavbar />
+      
+      <main className="container mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h1 className="text-3xl font-bold">{lesson.title}</h1>
+            <span className={`px-4 py-2 rounded-2xl text-sm font-medium shadow-lg ${
+              lesson.difficulty === 'Beginner' 
+                ? 'bg-green-900/80 text-green-400 shadow-green-500/20 backdrop-blur-sm'
+                : lesson.difficulty === 'Intermediate'
+                ? 'bg-yellow-900/80 text-yellow-400 shadow-yellow-500/20 backdrop-blur-sm'
+                : 'bg-red-900/80 text-red-400 shadow-red-500/20 backdrop-blur-sm'
+            }`}>
+              {lesson.difficulty}
+            </span>
+          </div>
+          <p className="text-xl text-gray-300">{lesson.description}</p>
         </div>
 
         {/* Content Sections */}
-        <div className="bg-gray-800 rounded-xl p-6">
-          {currentSection === 'video' && (
-            <div className="aspect-w-16 aspect-h-9">
-              <iframe
-                src={lesson.videoUrl}
-                title={lesson.title}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full rounded-lg"
-              />
-            </div>
-          )}
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Audio Section */}
+          <section className="bg-gray-800 rounded-3xl p-6 shadow-xl">
+            <h2 className="text-2xl font-bold mb-4">Listen to the Lesson</h2>
+            <audio 
+              controls 
+              src={lesson.audioUrl} 
+              className="w-full rounded-lg bg-gray-700/50 backdrop-blur-sm"
+            />
+          </section>
 
-          {currentSection === 'concepts' && (
-            <div className="space-y-4">
-              <h2 className="text-2xl font-bold text-white mb-4">Key Concepts</h2>
-              {lesson.keyConcepts.map((concept, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-700 rounded-lg p-4 flex items-start space-x-4"
-                >
-                  <span className="text-indigo-400 font-bold">{index + 1}.</span>
-                  <p className="text-white">{concept}</p>
-                </div>
-              ))}
-            </div>
-          )}
+          {/* Sandbox Section */}
+          <section className="bg-gray-800 rounded-3xl p-6 shadow-xl">
+            <h2 className="text-2xl font-bold mb-4">Interactive Sandbox</h2>
+            <iframe 
+              src={lesson.sandboxUrl} 
+              title={`${lesson.title} sandbox`} 
+              className="w-full h-[600px] rounded-lg border border-gray-700 bg-gray-700/50 backdrop-blur-sm"
+            />
+          </section>
 
-          {currentSection === 'quiz' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-white mb-4">Quiz</h2>
-              {lesson.quiz.map((question) => (
-                <div key={question.id} className="bg-gray-700 rounded-lg p-6">
-                  <h3 className="text-xl font-medium text-white mb-4">
-                    {question.question}
-                  </h3>
-                  <div className="space-y-3">
-                    {question.options.map((option, index) => (
-                      <label
-                        key={index}
-                        className="flex items-center space-x-3 p-3 bg-gray-600 rounded-lg cursor-pointer hover:bg-gray-500"
-                      >
-                        <input
-                          type="radio"
-                          name={`question-${question.id}`}
-                          value={index}
-                          checked={quizAnswers[question.id] === index}
-                          onChange={() =>
-                            setQuizAnswers({
-                              ...quizAnswers,
-                              [question.id]: index,
-                            })
-                          }
-                          className="form-radio text-indigo-600"
-                        />
-                        <span className="text-white">{option}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              ))}
-
-              {!showResults ? (
-                <button
-                  onClick={handleQuizSubmit}
-                  className="w-full bg-indigo-600 text-white py-3 rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                  Submit Quiz
-                </button>
-              ) : (
-                <div className="text-center">
-                  <p className="text-xl text-white mb-4">
-                    Great job! You've completed the quiz.
-                  </p>
-                  <button
-                    onClick={handleComplete}
-                    className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    Complete Lesson
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Quiz Section */}
+          <section className="bg-gray-800 rounded-3xl p-6 shadow-xl">
+            <h2 className="text-2xl font-bold mb-4">Test Your Knowledge</h2>
+            <p className="text-gray-300 mb-6">
+              Ready to test what you've learned? Take the quiz to reinforce your understanding.
+            </p>
+            <button
+              onClick={() => navigate(`/lesson/${lesson.id}/quiz`)}
+              className="px-8 py-3 bg-indigo-600 text-white rounded-full font-medium hover:bg-indigo-700 transition-all duration-300 shadow-lg shadow-indigo-500/20"
+            >
+              Start Quiz
+            </button>
+          </section>
         </div>
-      </div>
-    </motion.div>
+      </main>
+    </div>
   );
 };
 
