@@ -24,6 +24,8 @@ const LessonsOverview = () => {
       description: 'Perfect for newcomers to AI and machine learning',
       icon: '🌟',
       color: 'from-green-500 to-emerald-600',
+      shadowColor: 'shadow-green-500/20',
+      hoverShadowColor: 'hover:shadow-green-500/40',
       lessons: lessonsData.filter(lesson => 
         lesson.difficulty === 'Beginner' || 
         lesson.category === 'Fundamentals' ||
@@ -38,6 +40,8 @@ const LessonsOverview = () => {
       description: 'Learn about major AI platforms and their technologies',
       icon: '🏢',
       color: 'from-blue-500 to-cyan-600',
+      shadowColor: 'shadow-blue-500/20',
+      hoverShadowColor: 'hover:shadow-blue-500/40',
       lessons: lessonsData.filter(lesson => 
         ['OpenAI', 'Google', 'Meta', 'Anthropic'].includes(lesson.company)
       ).slice(0, 4),
@@ -50,6 +54,8 @@ const LessonsOverview = () => {
       description: 'Advanced topics for experienced practitioners',
       icon: '🧠',
       color: 'from-purple-500 to-indigo-600',
+      shadowColor: 'shadow-purple-500/20',
+      hoverShadowColor: 'hover:shadow-purple-500/40',
       lessons: lessonsData.filter(lesson => 
         lesson.difficulty === 'Advanced' ||
         lesson.category === 'Deep Learning' ||
@@ -100,6 +106,59 @@ const LessonsOverview = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
       <LoggedInNavbar />
       
+      {/* Custom CSS for animated shadows */}
+      <style jsx>{`
+        @keyframes snake-glow {
+          0% {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(236, 72, 153, 0.2);
+          }
+          25% {
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(236, 72, 153, 0.3), 0 0 60px rgba(59, 130, 246, 0.2);
+          }
+          50% {
+            box-shadow: 0 0 20px rgba(236, 72, 153, 0.4), 0 0 40px rgba(59, 130, 246, 0.3), 0 0 60px rgba(34, 197, 94, 0.2);
+          }
+          75% {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 40px rgba(34, 197, 94, 0.3), 0 0 60px rgba(99, 102, 241, 0.2);
+          }
+          100% {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(236, 72, 153, 0.2);
+          }
+        }
+
+        @keyframes explore-glow {
+          0% {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.5), 0 0 50px rgba(139, 92, 246, 0.4), 0 0 75px rgba(236, 72, 153, 0.3);
+          }
+          33% {
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.5), 0 0 50px rgba(236, 72, 153, 0.4), 0 0 75px rgba(6, 182, 212, 0.3);
+          }
+          66% {
+            box-shadow: 0 0 25px rgba(236, 72, 153, 0.5), 0 0 50px rgba(6, 182, 212, 0.4), 0 0 75px rgba(99, 102, 241, 0.3);
+          }
+          100% {
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.5), 0 0 50px rgba(139, 92, 246, 0.4), 0 0 75px rgba(236, 72, 153, 0.3);
+          }
+        }
+
+        .snake-shadow {
+          animation: snake-glow 3s ease-in-out infinite;
+        }
+
+        .explore-shadow {
+          animation: explore-glow 4s ease-in-out infinite;
+        }
+
+        .card-glow {
+          box-shadow: 0 10px 30px rgba(99, 102, 241, 0.1), 0 5px 15px rgba(139, 92, 246, 0.1);
+          transition: all 0.3s ease;
+        }
+
+        .card-glow:hover {
+          box-shadow: 0 20px 60px rgba(99, 102, 241, 0.2), 0 10px 30px rgba(139, 92, 246, 0.2);
+        }
+      `}</style>
+      
       <main className="container mx-auto px-4 py-8">
         {/* Hero Section */}
         <div className="text-center mb-12">
@@ -112,19 +171,19 @@ const LessonsOverview = () => {
           
           {/* Quick Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto mb-8">
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-blue-500/10">
               <div className="text-2xl font-bold text-blue-400">{stats.totalLessons}</div>
               <div className="text-sm text-gray-400">Lessons</div>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-purple-500/10">
               <div className="text-2xl font-bold text-purple-400">{stats.companies}</div>
               <div className="text-sm text-gray-400">Companies</div>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-cyan-500/10">
               <div className="text-2xl font-bold text-cyan-400">{stats.categories}</div>
               <div className="text-sm text-gray-400">Categories</div>
             </div>
-            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10">
+            <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-green-500/10">
               <div className="text-2xl font-bold text-green-400">{stats.avgDuration}</div>
               <div className="text-sm text-gray-400">Avg Min</div>
             </div>
@@ -141,7 +200,7 @@ const LessonsOverview = () => {
               <div
                 key={path.id}
                 onClick={() => handlePathSelect(path)}
-                className="group relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-2xl"
+                className={`group relative bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105 card-glow ${path.shadowColor} ${path.hoverShadowColor}`}
               >
                 <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${path.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
                 
@@ -169,7 +228,7 @@ const LessonsOverview = () => {
                     )}
                   </div>
                   
-                  <button className="w-full bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl transition-all duration-300 group-hover:bg-white/15">
+                  <button className="snake-shadow w-full bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl transition-all duration-300 group-hover:bg-white/15">
                     Start Learning Path
                   </button>
                 </div>
@@ -184,7 +243,7 @@ const LessonsOverview = () => {
             {/* Explore All */}
             <div
               onClick={handleExploreAll}
-              className="group relative bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-sm rounded-3xl p-8 border border-indigo-500/30 hover:border-indigo-400/50 transition-all duration-300 cursor-pointer hover:scale-105"
+              className="explore-shadow group relative bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-sm rounded-3xl p-8 border border-indigo-500/30 hover:border-indigo-400/50 transition-all duration-300 cursor-pointer hover:scale-105 shadow-indigo-500/20 hover:shadow-indigo-500/40"
             >
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-bold mb-3">Explore All Lessons</h3>
@@ -200,7 +259,7 @@ const LessonsOverview = () => {
             </div>
 
             {/* AI Recommended */}
-            <div className="group relative bg-gradient-to-br from-emerald-600/20 to-teal-600/20 backdrop-blur-sm rounded-3xl p-8 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300">
+            <div className="card-glow group relative bg-gradient-to-br from-emerald-600/20 to-teal-600/20 backdrop-blur-sm rounded-3xl p-8 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300 shadow-emerald-500/20 hover:shadow-emerald-500/40">
               <div className="text-6xl mb-4">🤖</div>
               <h3 className="text-2xl font-bold mb-3">AI Recommendations</h3>
               <p className="text-gray-300 mb-6 leading-relaxed">
@@ -226,7 +285,7 @@ const LessonsOverview = () => {
                 <div
                   key={lesson.id}
                   onClick={() => handleQuickStart(lesson)}
-                  className="group bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105"
+                  className="card-glow group bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105 shadow-blue-500/10 hover:shadow-blue-500/20"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="px-3 py-1 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium">
@@ -256,7 +315,7 @@ const LessonsOverview = () => {
                 <div
                   key={lesson.id}
                   onClick={() => handleQuickStart(lesson)}
-                  className="group bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105"
+                  className="card-glow group bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105 shadow-purple-500/10 hover:shadow-purple-500/20"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${

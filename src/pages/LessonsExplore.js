@@ -267,7 +267,7 @@ const LessonsExplore = () => {
           <div className="flex items-center justify-between p-4">
             <button
               onClick={handleBack}
-              className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+              className="p-2 rounded-full bg-white/10 backdrop-blur-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
             >
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -294,13 +294,13 @@ const LessonsExplore = () => {
                   setSearchQuery('');
                   setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
                 }}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95"
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
               >
                 Clear All Filters
               </button>
               <button
                 onClick={handleBack}
-                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95"
+                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-white/10 hover:shadow-white/20"
               >
                 Back to Lessons
               </button>
@@ -313,15 +313,65 @@ const LessonsExplore = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
+      {/* Custom CSS for animated shadows */}
+      <style jsx>{`
+        @keyframes start-lesson-glow {
+          0% {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.4), 0 0 90px rgba(236, 72, 153, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+          }
+          25% {
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.6), 0 0 60px rgba(236, 72, 153, 0.4), 0 0 90px rgba(6, 182, 212, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+          }
+          50% {
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.6), 0 0 60px rgba(6, 182, 212, 0.4), 0 0 90px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+          }
+          75% {
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.6), 0 0 60px rgba(34, 197, 94, 0.4), 0 0 90px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+          }
+          100% {
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.4), 0 0 90px rgba(236, 72, 153, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+          }
+        }
+
+        @keyframes tutorial-glow {
+          0% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(99, 102, 241, 0.2);
+          }
+          50% {
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.4), 0 0 60px rgba(99, 102, 241, 0.3);
+          }
+          100% {
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3), 0 0 40px rgba(99, 102, 241, 0.2);
+          }
+        }
+
+        .start-lesson-shadow {
+          animation: start-lesson-glow 4s ease-in-out infinite;
+        }
+
+        .tutorial-shadow {
+          animation: tutorial-glow 2s ease-in-out infinite;
+        }
+
+        .button-glow {
+          box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2);
+          transition: all 0.3s ease;
+        }
+
+        .button-glow:hover {
+          box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3), 0 5px 15px rgba(139, 92, 246, 0.2);
+        }
+      `}</style>
+
       {/* Mobile Navigation Bar */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl" style={{
+      <div className="absolute top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl shadow-lg shadow-indigo-500/10" style={{
         paddingTop: 'max(env(safe-area-inset-top), 0px)'
       }}>
         <div className="flex items-center justify-between p-4">
           {/* Back Button */}
           <button
             onClick={handleBack}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+            className="button-glow p-2 rounded-full bg-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
           >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -337,7 +387,7 @@ const LessonsExplore = () => {
           {/* Search/Menu Button */}
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm"
+            className="button-glow p-2 rounded-full bg-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
           >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -347,18 +397,18 @@ const LessonsExplore = () => {
 
         {/* Expandable Search */}
         {showSearch && (
-          <div className="px-4 pb-4 bg-black/60 backdrop-blur-xl">
+          <div className="px-4 pb-4 bg-black/60 backdrop-blur-xl border-t border-white/10">
             <div className="relative mb-4">
               <input
                 type="text"
                 placeholder="Search lessons, companies, models..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/10 backdrop-blur-sm text-white placeholder-white/60 px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30"
+                className="button-glow w-full bg-white/10 backdrop-blur-sm text-white placeholder-white/60 px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/10"
               />
               
               {searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden shadow-lg shadow-indigo-500/10">
                   {searchSuggestions.map((suggestion, index) => (
                     <button
                       key={index}
@@ -378,7 +428,7 @@ const LessonsExplore = () => {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="w-full bg-white/10 backdrop-blur-sm text-white px-4 py-3 rounded-2xl font-medium"
+              className="button-glow w-full bg-white/10 backdrop-blur-sm text-white px-4 py-3 rounded-2xl font-medium border border-white/10 hover:bg-white/20 transition-all duration-300"
             >
               {showFilters ? 'Hide Filters' : 'Show Filters'}
             </button>
@@ -388,7 +438,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.difficulty}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Levels</option>
                   {difficulties.map(diff => (
@@ -399,7 +449,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.company}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, company: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Companies</option>
                   {companies.map(company => (
@@ -410,7 +460,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.category}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, category: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Categories</option>
                   {categories.map(category => (
@@ -421,7 +471,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.useCase}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, useCase: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Use Cases</option>
                   {useCases.map(useCase => (
@@ -439,7 +489,7 @@ const LessonsExplore = () => {
                   setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
                   setShowSearch(false);
                 }}
-                className="w-full bg-red-500/20 backdrop-blur-sm text-white px-4 py-3 rounded-2xl font-medium mt-3 border border-red-500/30"
+                className="w-full bg-red-500/20 backdrop-blur-sm text-white px-4 py-3 rounded-2xl font-medium mt-3 border border-red-500/30 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-300"
               >
                 Clear All Filters
               </button>
@@ -476,7 +526,7 @@ const LessonsExplore = () => {
         <div className="absolute inset-0 flex flex-col justify-end p-6 pb-24 pointer-events-none">
           {/* Company Badge */}
           <div className="mb-4">
-            <span className="inline-block bg-white/20 backdrop-blur-xl px-4 py-2 rounded-full text-sm font-medium text-white border border-white/20">
+            <span className="inline-block bg-white/20 backdrop-blur-xl px-4 py-2 rounded-full text-sm font-medium text-white border border-white/20 shadow-lg shadow-white/10">
               {currentLesson.company}
             </span>
           </div>
@@ -493,17 +543,17 @@ const LessonsExplore = () => {
 
           {/* Meta Tags */}
           <div className="flex flex-wrap gap-2 mb-6">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-xl border border-white/20 ${
-              currentLesson.difficulty === 'Beginner' ? 'bg-green-500/80 text-white' :
-              currentLesson.difficulty === 'Intermediate' ? 'bg-yellow-500/80 text-white' :
-              'bg-red-500/80 text-white'
+            <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-xl border border-white/20 shadow-lg ${
+              currentLesson.difficulty === 'Beginner' ? 'bg-green-500/80 text-white shadow-green-500/20' :
+              currentLesson.difficulty === 'Intermediate' ? 'bg-yellow-500/80 text-white shadow-yellow-500/20' :
+              'bg-red-500/80 text-white shadow-red-500/20'
             }`}>
               {currentLesson.difficulty}
             </span>
-            <span className="bg-white/20 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20">
+            <span className="bg-white/20 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20 shadow-lg shadow-white/10">
               {currentLesson.duration}
             </span>
-            <span className="bg-indigo-500/80 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20">
+            <span className="bg-indigo-500/80 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20 shadow-lg shadow-indigo-500/20">
               {currentLesson.category}
             </span>
           </div>
@@ -511,14 +561,14 @@ const LessonsExplore = () => {
           {/* Start Button */}
           <button
             onClick={() => navigate(`/lessons/${currentLesson.id}`)}
-            className="w-full bg-white text-black font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-2xl pointer-events-auto"
+            className="start-lesson-shadow w-full bg-white text-black font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 pointer-events-auto border-2 border-white/20"
           >
             Start Lesson
           </button>
         </div>
 
         {/* Progress Indicator */}
-        <div className="absolute z-50 bg-black/60 backdrop-blur-xl rounded-full px-3 py-1 border border-white/20" style={{
+        <div className="absolute z-50 bg-black/60 backdrop-blur-xl rounded-full px-3 py-1 border border-white/20 shadow-lg shadow-indigo-500/20" style={{
           top: `max(calc(env(safe-area-inset-top) + 100px), 120px)`,
           right: '16px'
         }}>
@@ -535,10 +585,10 @@ const LessonsExplore = () => {
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
-              className={`transition-all duration-200 ${
+              className={`transition-all duration-200 shadow-lg ${
                 idx === currentIndex 
-                  ? 'w-8 h-3 bg-white rounded-full' 
-                  : 'w-3 h-3 bg-white/40 rounded-full hover:bg-white/60'
+                  ? 'w-8 h-3 bg-white rounded-full shadow-white/30' 
+                  : 'w-3 h-3 bg-white/40 rounded-full hover:bg-white/60 shadow-white/20'
               }`}
             />
           ))}
@@ -571,7 +621,7 @@ const LessonsExplore = () => {
       {/* Tutorial Overlay */}
       {showTutorial && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 text-center max-w-sm">
+          <div className="tutorial-shadow bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 text-center max-w-sm">
             <div className="text-6xl mb-6">👆</div>
             <h2 className="text-2xl font-bold text-white mb-4">Swipe to Explore</h2>
             <p className="text-white/80 mb-6 leading-relaxed">
@@ -579,7 +629,7 @@ const LessonsExplore = () => {
             </p>
             <button
               onClick={closeTutorial}
-              className="w-full bg-white text-black font-bold py-3 rounded-2xl transition-all duration-300 transform active:scale-95"
+              className="tutorial-shadow w-full bg-white text-black font-bold py-3 rounded-2xl transition-all duration-300 transform active:scale-95"
             >
               Got it!
             </button>
