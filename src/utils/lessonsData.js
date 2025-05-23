@@ -7,7 +7,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/intro-to-ai.mp3",
     sandboxUrl: "https://replit.com/@ai-course/intro-to-ai-sandbox",
-    quizId: 1
+    quizId: 1,
+    company: "General",
+    models: ["Neural Networks", "Deep Learning"],
+    useCases: ["Education", "Fundamentals", "Theory"],
+    tags: ["AI", "Machine Learning", "Neural Networks", "Beginner"],
+    category: "Fundamentals",
+    duration: "45 min",
+    hasCodeSandbox: true
   },
   {
     id: 2,
@@ -17,7 +24,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/ai-ethics.mp3",
     sandboxUrl: "https://replit.com/@ai-course/ai-ethics-sandbox",
-    quizId: 2
+    quizId: 2,
+    company: "General",
+    models: ["Ethics Framework", "Bias Detection"],
+    useCases: ["Ethics", "Compliance", "Responsible AI"],
+    tags: ["Ethics", "Bias", "Privacy", "Responsible AI"],
+    category: "Ethics & Policy",
+    duration: "30 min",
+    hasCodeSandbox: false
   },
   {
     id: 3,
@@ -27,7 +41,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/gpt4-mastery.mp3",
     sandboxUrl: "https://replit.com/@ai-course/gpt4-sandbox",
-    quizId: 3
+    quizId: 3,
+    company: "OpenAI",
+    models: ["GPT-4", "GPT-4 Turbo"],
+    useCases: ["Text Generation", "Code Generation", "Content Creation", "Chatbots"],
+    tags: ["OpenAI", "GPT-4", "Prompt Engineering", "NLP"],
+    category: "Language Models",
+    duration: "60 min",
+    hasCodeSandbox: true
   },
   {
     id: 4,
@@ -37,7 +58,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/gemini-pro.mp3",
     sandboxUrl: "https://replit.com/@ai-course/gemini-sandbox",
-    quizId: 4
+    quizId: 4,
+    company: "Google",
+    models: ["Gemini Pro", "Gemini Ultra"],
+    useCases: ["Multimodal AI", "Text Generation", "Code Analysis", "Reasoning"],
+    tags: ["Google", "Gemini", "Multimodal", "Reasoning"],
+    category: "Language Models",
+    duration: "55 min",
+    hasCodeSandbox: true
   },
   {
     id: 5,
@@ -47,7 +75,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/ai-tools.mp3",
     sandboxUrl: "https://replit.com/@ai-course/ai-tools-sandbox",
-    quizId: 5
+    quizId: 5,
+    company: "Multi-Platform",
+    models: ["Various AI APIs", "No-Code Tools"],
+    useCases: ["Tool Selection", "Integration", "Workflow Automation"],
+    tags: ["Tools", "APIs", "Integration", "No-Code"],
+    category: "Tools & Platforms",
+    duration: "40 min",
+    hasCodeSandbox: true
   },
   {
     id: 6,
@@ -57,7 +92,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/neural-networks.mp3",
     sandboxUrl: "https://replit.com/@ai-course/neural-networks-sandbox",
-    quizId: 6
+    quizId: 6,
+    company: "General",
+    models: ["CNN", "RNN", "LSTM", "Transformer"],
+    useCases: ["Deep Learning", "Model Architecture", "Research"],
+    tags: ["Neural Networks", "Deep Learning", "Backpropagation", "Mathematics"],
+    category: "Deep Learning",
+    duration: "90 min",
+    hasCodeSandbox: true
   },
   {
     id: 7,
@@ -67,7 +109,14 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/computer-vision.mp3",
     sandboxUrl: "https://replit.com/@ai-course/computer-vision-sandbox",
-    quizId: 7
+    quizId: 7,
+    company: "Multi-Platform",
+    models: ["YOLO", "ResNet", "DALL-E", "Stable Diffusion"],
+    useCases: ["Image Classification", "Object Detection", "Image Generation", "Face Recognition"],
+    tags: ["Computer Vision", "Image Processing", "Object Detection", "CNN"],
+    category: "Computer Vision",
+    duration: "70 min",
+    hasCodeSandbox: true
   },
   {
     id: 8,
@@ -77,7 +126,48 @@ const lessonsData = [
     imageUrl: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
     audioUrl: "https://storage.googleapis.com/ai-podcasts/nlp.mp3",
     sandboxUrl: "https://replit.com/@ai-course/nlp-sandbox",
-    quizId: 8
+    quizId: 8,
+    company: "Multi-Platform",
+    models: ["BERT", "Transformer", "Word2Vec", "T5"],
+    useCases: ["Text Analysis", "Sentiment Analysis", "Language Translation", "Chatbots"],
+    tags: ["NLP", "Transformers", "BERT", "Text Processing"],
+    category: "Natural Language",
+    duration: "85 min",
+    hasCodeSandbox: true
+  },
+  {
+    id: 9,
+    title: "Claude 3 Mastery",
+    description: "Master Anthropic's Claude 3 models. Learn about constitutional AI, safety features, and advanced reasoning capabilities.",
+    difficulty: "Intermediate",
+    imageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+    audioUrl: "https://storage.googleapis.com/ai-podcasts/claude3.mp3",
+    sandboxUrl: "https://replit.com/@ai-course/claude3-sandbox",
+    quizId: 9,
+    company: "Anthropic",
+    models: ["Claude 3 Opus", "Claude 3 Sonnet", "Claude 3 Haiku"],
+    useCases: ["Safe AI", "Reasoning", "Analysis", "Research"],
+    tags: ["Anthropic", "Claude", "Constitutional AI", "Safety"],
+    category: "Language Models",
+    duration: "50 min",
+    hasCodeSandbox: true
+  },
+  {
+    id: 10,
+    title: "Llama 3 Applications",
+    description: "Explore Meta's open-source Llama 3 model. Learn deployment strategies, fine-tuning, and building applications with local AI.",
+    difficulty: "Advanced",
+    imageUrl: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80",
+    audioUrl: "https://storage.googleapis.com/ai-podcasts/llama3.mp3",
+    sandboxUrl: "https://replit.com/@ai-course/llama3-sandbox",
+    quizId: 10,
+    company: "Meta",
+    models: ["Llama 3 8B", "Llama 3 70B", "Code Llama"],
+    useCases: ["Open Source AI", "Local Deployment", "Fine-tuning", "Code Generation"],
+    tags: ["Meta", "Llama", "Open Source", "Local AI"],
+    category: "Language Models",
+    duration: "75 min",
+    hasCodeSandbox: true
   }
 ];
 

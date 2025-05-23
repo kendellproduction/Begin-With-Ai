@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { register as registerSW } from './utils/serviceWorkerRegistration';
 
 // Error boundary component
 class ErrorBoundary extends React.Component {
@@ -49,6 +50,27 @@ root.render(
     </ErrorBoundary>
   </React.StrictMode>
 );
+
+// Register service worker for PWA functionality
+registerSW({
+  onSuccess: (registration) => {
+    console.log('SW: Content is cached for offline use.');
+    // You could show a toast notification here
+  },
+  onUpdate: (registration) => {
+    console.log('SW: New content is available; please refresh.');
+    // You could show an update notification here
+    if (window.confirm('New version available! Refresh to update?')) {
+      window.location.reload();
+    }
+  },
+  onOffline: () => {
+    console.log('App: Offline mode activated');
+  },
+  onOnline: () => {
+    console.log('App: Back online');
+  }
+});
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

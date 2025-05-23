@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
-import { Link } from 'react-router-dom';
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -75,6 +75,11 @@ const Dashboard = () => {
     // Implement subscription cancellation logic
     console.log('Cancelling subscription...');
     setShowCancelConfirm(false);
+  };
+
+  const handleLessonNavigation = () => {
+    // Navigate to lessons overview with reset filters state
+    navigate('/lessons', { state: { resetFilters: true } });
   };
 
   return (
@@ -190,12 +195,12 @@ const Dashboard = () => {
 
         {/* Continue Learning Section */}
         <div className="mt-8">
-          <Link
-            to="/lessons"
+          <button
+            onClick={handleLessonNavigation}
             className="inline-block bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-indigo-500/20"
           >
             Continue Learning
-          </Link>
+          </button>
         </div>
       </main>
     </div>

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+  
   // AI facts and quotes
   const aiFacts = [
     "AI will add $15.7 trillion to the global economy by 2030.",
@@ -27,12 +29,28 @@ const HomePage = () => {
 
   const [currentFact, setCurrentFact] = useState('');
   const [currentHeroQuote, setCurrentHeroQuote] = useState('');
+  const [hasStartedLessons, setHasStartedLessons] = useState(false);
 
   useEffect(() => {
     // Set initial fact and hero quote
     setCurrentFact(aiFacts[Math.floor(Math.random() * aiFacts.length)]);
     setCurrentHeroQuote(heroQuotes[Math.floor(Math.random() * heroQuotes.length)]);
+    
+    // Check if user has started lessons (you can enhance this with actual progress tracking)
+    const hasProgress = localStorage.getItem('lessons_tutorial_seen') || 
+                       localStorage.getItem('lessons_explore_tutorial_seen') ||
+                       localStorage.getItem('user_lesson_progress');
+    setHasStartedLessons(!!hasProgress);
   }, []);
+
+  const handleLessonNavigation = () => {
+    // Navigate to lessons overview with reset filters state
+    navigate('/lessons', { state: { resetFilters: true } });
+  };
+
+  const getButtonText = () => {
+    return hasStartedLessons ? 'Continue Learning' : 'Start Your First Lesson';
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0F172A] to-[#1E293B]">
@@ -58,14 +76,14 @@ const HomePage = () => {
             </h1>
             <div className="relative group">
               <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-3xl blur opacity-30 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
-              <Link
-                to="/lessons"
+              <button
+                onClick={handleLessonNavigation}
                 className="relative block bg-gray-800/80 backdrop-blur-sm text-white text-xl font-bold px-8 py-4 rounded-3xl border border-gray-700/50 shadow-lg transition-all duration-300 hover:scale-105 hover:bg-gray-700/80 hover:border-indigo-500/50"
               >
                 <span className="bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent group-hover:from-indigo-300 group-hover:to-purple-300 transition-all duration-300">
-                  Start Your First Lesson
+                  {getButtonText()}
                 </span>
-              </Link>
+              </button>
             </div>
           </div>
         </section>
