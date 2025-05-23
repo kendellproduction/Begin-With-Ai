@@ -2,12 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from 'framer-motion';
 import { useAuth } from "../contexts/AuthContext";
+import { sanitizeText, checkRateLimit } from "../utils/sanitization";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: "" });
   const { user, signInWithEmail, signInWithGoogle, signUpWithEmail } = useAuth();
   const navigate = useNavigate();
 
@@ -18,8 +20,76 @@ function Login() {
     }
   }, [user, navigate]);
 
+  // Password strength validation function
+  const isPasswordStrong = (password) => {
+    const minLength = 8;
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSymbol = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return password.length >= minLength && hasLetter && hasNumber && hasSymbol;
+  };
+
+  // Calculate password strength
+  const calculatePasswordStrength = (password) => {
+    if (!password) return { score: 0, feedback: "" };
+    
+    let score = 0;
+    let feedback = [];
+    
+    if (password.length >= 8) score += 1;
+    else feedback.push("at least 8 characters");
+    
+    if (/[a-z]/.test(password)) score += 1;
+    else feedback.push("lowercase letters");
+    
+    if (/[A-Z]/.test(password)) score += 1;
+    else feedback.push("uppercase letters");
+    
+    if (/\d/.test(password)) score += 1;
+    else feedback.push("numbers");
+    
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) score += 1;
+    else feedback.push("symbols");
+    
+    const strengthLabels = ["Very Weak", "Weak", "Fair", "Good", "Strong"];
+    const strengthColors = ["text-red-500", "text-orange-500", "text-yellow-500", "text-blue-500", "text-green-500"];
+    
+    return {
+      score,
+      label: strengthLabels[score],
+      color: strengthColors[score],
+      feedback: feedback.length > 0 ? `Missing: ${feedback.join(", ")}` : "Strong password!"
+    };
+  };
+
+  const handleEmailChange = (e) => {
+    const sanitizedEmail = sanitizeText(e.target.value);
+    setEmail(sanitizedEmail);
+  };
+
+  const handlePasswordChange = (e) => {
+    const sanitizedPassword = sanitizeText(e.target.value);
+    setPassword(sanitizedPassword);
+    setPasswordStrength(calculatePasswordStrength(sanitizedPassword));
+  };
+
   const handleRegister = async () => {
     setError("");
+    
+    // Rate limiting check
+    const clientId = `register_${email}`;
+    const rateCheck = checkRateLimit(clientId, 3, 60000); // 3 attempts per minute
+    if (!rateCheck.allowed) {
+      setError("Too many registration attempts. Please wait a minute before trying again.");
+      return;
+    }
+    
+    // Validate password strength
+    if (!isPasswordStrong(password)) {
+      setError("Password must be at least 8 characters with letters, numbers, and symbols");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       console.log('Attempting to register with email:', email);
@@ -36,6 +106,15 @@ function Login() {
 
   const handleLogin = async () => {
     setError("");
+    
+    // Rate limiting check
+    const clientId = `login_${email}`;
+    const rateCheck = checkRateLimit(clientId, 5, 60000); // 5 attempts per minute
+    if (!rateCheck.allowed) {
+      setError("Too many login attempts. Please wait a minute before trying again.");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       console.log('Attempting to login with email:', email);
@@ -52,6 +131,15 @@ function Login() {
 
   const handleGoogleLogin = async () => {
     setError("");
+    
+    // Rate limiting check for Google login
+    const clientId = `google_login_${Date.now()}`;
+    const rateCheck = checkRateLimit(clientId, 10, 60000); // 10 attempts per minute
+    if (!rateCheck.allowed) {
+      setError("Too many login attempts. Please wait a minute before trying again.");
+      return;
+    }
+    
     setIsLoading(true);
     try {
       console.log('Attempting Google login...');
@@ -117,7 +205,8 @@ function Login() {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-500 text-white bg-gray-800 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Email address"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
+                maxLength={254}
               />
             </div>
             <div>
@@ -128,10 +217,35 @@ function Login() {
                 className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-700 placeholder-gray-500 text-white bg-gray-800 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
+                maxLength={128}
               />
             </div>
           </div>
+
+          {/* Password Strength Indicator */}
+          {password && (
+            <div className="mt-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400">Password Strength:</span>
+                <span className={passwordStrength.color}>{passwordStrength.label}</span>
+              </div>
+              <div className="mt-1 w-full bg-gray-700 rounded-full h-1">
+                <div
+                  className={`h-1 rounded-full transition-all duration-300 ${
+                    passwordStrength.score >= 4 ? 'bg-green-500' :
+                    passwordStrength.score >= 3 ? 'bg-blue-500' :
+                    passwordStrength.score >= 2 ? 'bg-yellow-500' :
+                    passwordStrength.score >= 1 ? 'bg-orange-500' : 'bg-red-500'
+                  }`}
+                  style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                ></div>
+              </div>
+              {passwordStrength.feedback && (
+                <p className="text-xs text-gray-400 mt-1">{passwordStrength.feedback}</p>
+              )}
+            </div>
+          )}
 
           <div className="flex items-center justify-between space-x-4">
             <button

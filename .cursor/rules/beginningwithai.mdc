@@ -1,0 +1,83 @@
+---
+description: 
+globs: **/*.js,**/*.jsx,**/*.ts,**/*.tsx,**/*.py,**/*.sql,**/*.json
+alwaysApply: false
+---
+---
+description: Security, functional, and lesson plan guidelines for BeginningWithAi with real-time code preview
+globs: ["**/*.js", "**/*.jsx", "**/*.ts", "**/*.tsx", "**/*.py", "**/*.sql", "**/*.json"]
+alwaysApply: false
+---
+# PROJECT RULES: BeginningWithAi Security & Functional Guidelines
+
+## Project Overview
+- BeginningWithAi is a learning platform for users to explore AI through lessons, quizzes, and games.
+- Use Firebase Auth for user authentication and Firestore for storing user data (progress, XP, lesson history).
+- Use Stripe for secure subscription payments.
+- Lesson pages include interactive coding exercises (e.g., Pac-Man game) with WebAssembly-based real-time code preview and AI-driven feedback.
+
+## Coding Standards
+- Use 2-space indentation for `.js`, `.jsx`, `.ts`, `.tsx`, and `.json` files.
+- Use 4-space indentation for `.py` and `.sql` files.
+- Follow PEP 8 for `.py` files.
+- Use TypeScript interfaces for props in `.ts` and `.tsx` files.
+- Write unit tests in `.test.js` or `.test.ts` for critical functionality (auth, payments, sanitization, sandboxing).
+
+## User Access
+- Support sign-up with Google, Apple, or email/password using Firebase Auth in `.ts` or `.py` backend files.
+- Require email verification via Firebase Auth before allowing access to lessons, payments, or sandboxed coding exercises.
+- Store user data (progress, XP, lesson history) in Firestore under `users/{uid}` in `.ts` or `.py` files.
+
+## Lesson Pages
+- Execute user-submitted code in a WebAssembly-based sandbox (Pyodide for `.py`, Wasmer for `.js`/`.ts`) in the browser for real-time preview (e.g., playable Pac-Man game).
+- Embed sandboxed coding exercises in `.jsx` or `.tsx` components using Pyodide for Python or Phaser for JavaScript/TypeScript game rendering.
+- Store user code in `localStorage` to minimize server load; sync to Firestore (`users/{uid}/exercises`) for progress persistence.
+- Use xAI Grok API (`https://api.x.ai/v1`) for AI-driven code review, providing feedback to align with lesson objectives (e.g., "Optimize Pac-Man ghost AI for performance").
+- For `.sql` exercises, parse queries in a `.py` or `.ts` backend and simulate execution against a mock database to prevent injection risks.
+- Validate `.json` submissions using a JSON schema validator (e.g., `ajv` in `.ts`) in `.ts` or `.py` files.
+
+## Lesson Plan Guidelines
+- Create lessons teaching users to build projects (e.g., a Pac-Man game in `.js`/`.tsx` or a data analyzer in `.py`).
+- Structure lessons with:
+  - **Objective**: Define what users will build (e.g., "Create a Pac-Man game with player movement, ghost AI, and scoring").
+  - **Scaffolded Exercises**: Provide starter code in `.js`, `.ts`, or `.py` and guide users through steps in a `.jsx`/`.tsx` interface with real-time preview via WebAssembly.
+  - **Real-Time Preview**: Use Pyodide for Python or Phaser/Wasmer for JavaScript/TypeScript to render game output (e.g., playable Pac-Man) in a `<canvas>` element.
+  - **AI Feedback**: Send code to xAI Grok API to review against lesson objectives and suggest improvements (e.g., "Add collision detection for Pac-Man walls").
+  - **Progress Tracking**: Save code and progress in `localStorage` for temporary storage, sync to Firestore for persistence.
+- Example Lesson Plan (Pac-Man Game):
+  - **Topic**: Build a Pac-Man Game (JavaScript or Python).
+  - **Grade Level**: Intermediate (assumes basic JavaScript/Python knowledge).
+  - **Objective**: Create a playable Pac-Man game with player movement, ghost AI, and scoring.
+  - **Existing Knowledge**: Basic understanding of functions, arrays, and event handling (prompt users to confirm).
+  - **Activities**:
+    - Provide starter code for maze rendering in `.js` or `.py`.
+    - Guide users to implement player movement, ghost AI, and collision detection in a `.jsx`/`.tsx` editor.
+    - Execute code in Pyodide (Python) or Wasmer/Phaser (JavaScript) for real-time game preview in a `<canvas>`.
+    - Send code to xAI Grok API for feedback (e.g., "Use a state machine for ghost behavior").
+    - Display AI feedback in the UI.
+  - **Assignment**: Add scoring and power-up pellets, submit for AI review, and test in real-time.
+
+## User Privacy
+- Collect only essential user info (email, progress, subscription status, code submissions) in Firestore.
+- Implement `deleteUserData` function in `.ts` or `.py` to delete Firestore user documents and Stripe subscriptions.
+- Never store credit card info; use Stripe APIs in `.ts` or `.py` backend routes.
+- Store user code in `localStorage` for temporary session data, syncing to Firestore only for progress tracking.
+
+## Payments
+- Use Stripe Checkout for all paid plans, implemented in `.ts` or `.py` backend routes.
+- Verify user authentication (`user.uid`) via Firebase before initiating Stripe Checkout sessions.
+- Display a subscription summary in `.jsx` or `.tsx` components before confirming payments.
+
+## Content Handling
+- Sanitize user-submitted content (e.g., code inputs, community prompts) using DOMPurify in `.js`, `.jsx`, `.ts`, or `.tsx` files.
+- Prevent XSS and content injection in user inputs in `.js`, `.jsx`, `.ts`, or `.tsx` files.
+- Use parameterized queries in `.py` and `.sql` files to prevent SQL injection.
+- Plan for moderation tools in `.ts` or `.py` for future community features.
+
+## Legal & Compliance
+- Display Privacy Policy and Terms of Service in `.jsx` or `.tsx` components before signup.
+- Follow GDPR/CCPA: Implement `deleteUserData` and `requestUserData` endpoints in `.ts` or `.py` for data deletion/export.
+- Use `HttpOnly`, `Secure`, and `SameSite=Strict` cookies in `.js` or `.ts` files, with user consent notice if tracking is used.
+
+@tsconfig.json
+@package.json

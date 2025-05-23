@@ -1,8 +1,9 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import EmailVerificationGuard from './EmailVerificationGuard';
 
-const ProtectedRoute = () => {
+const ProtectedRoute = ({ requireEmailVerification = true }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -13,7 +14,12 @@ const ProtectedRoute = () => {
     return <Navigate to="/login" />;
   }
 
-  return <Outlet />;
+  // Wrap the outlet with email verification guard
+  return (
+    <EmailVerificationGuard requireVerification={requireEmailVerification}>
+      <Outlet />
+    </EmailVerificationGuard>
+  );
 };
 
 export default ProtectedRoute; 
