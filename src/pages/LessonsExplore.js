@@ -317,19 +317,19 @@ const LessonsExplore = () => {
       <style jsx>{`
         @keyframes start-lesson-glow {
           0% {
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.4), 0 0 90px rgba(236, 72, 153, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.8), 0 0 60px rgba(139, 92, 246, 0.6), 0 0 90px rgba(236, 72, 153, 0.4);
           }
           25% {
-            box-shadow: 0 0 30px rgba(139, 92, 246, 0.6), 0 0 60px rgba(236, 72, 153, 0.4), 0 0 90px rgba(6, 182, 212, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(139, 92, 246, 0.8), 0 0 60px rgba(236, 72, 153, 0.6), 0 0 90px rgba(6, 182, 212, 0.4);
           }
           50% {
-            box-shadow: 0 0 30px rgba(236, 72, 153, 0.6), 0 0 60px rgba(6, 182, 212, 0.4), 0 0 90px rgba(34, 197, 94, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.8), 0 0 60px rgba(6, 182, 212, 0.6), 0 0 90px rgba(34, 197, 94, 0.4);
           }
           75% {
-            box-shadow: 0 0 30px rgba(6, 182, 212, 0.6), 0 0 60px rgba(34, 197, 94, 0.4), 0 0 90px rgba(99, 102, 241, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.8), 0 0 60px rgba(34, 197, 94, 0.6), 0 0 90px rgba(99, 102, 241, 0.4);
           }
           100% {
-            box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), 0 0 60px rgba(139, 92, 246, 0.4), 0 0 90px rgba(236, 72, 153, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 30px rgba(99, 102, 241, 0.8), 0 0 60px rgba(139, 92, 246, 0.6), 0 0 90px rgba(236, 72, 153, 0.4);
           }
         }
 
@@ -428,9 +428,9 @@ const LessonsExplore = () => {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="button-glow w-full bg-white/10 backdrop-blur-sm text-white px-4 py-3 rounded-2xl font-medium border border-white/10 hover:bg-white/20 transition-all duration-300"
+              className="button-glow w-full bg-white/10 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium border border-white/10 hover:bg-white/20 transition-all duration-300 shadow-lg shadow-white/10 hover:shadow-white/20 text-lg"
             >
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
+              {showFilters ? '🔼 Hide Filters' : '🔽 Show Filters'}
             </button>
 
             {showFilters && (
@@ -485,13 +485,14 @@ const LessonsExplore = () => {
             {(searchQuery || Object.values(selectedFilters).some(filter => filter)) && (
               <button
                 onClick={() => {
+                  triggerHapticFeedback('medium');
                   setSearchQuery('');
                   setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
                   setShowSearch(false);
                 }}
-                className="w-full bg-red-500/20 backdrop-blur-sm text-white px-4 py-3 rounded-2xl font-medium mt-3 border border-red-500/30 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-300"
+                className="w-full bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium mt-4 border border-red-500/30 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-300 text-lg hover:from-red-500/30 hover:to-pink-500/30"
               >
-                Clear All Filters
+                🗑️ Clear All Filters
               </button>
             )}
           </div>
@@ -560,58 +561,47 @@ const LessonsExplore = () => {
 
           {/* Start Button */}
           <button
-            onClick={() => navigate(`/lessons/${currentLesson.id}`)}
-            className="start-lesson-shadow w-full bg-white text-black font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 pointer-events-auto border-2 border-white/20"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Button clicked! Navigating to:', `/lessons/${currentLesson.id}`);
+              triggerHapticFeedback('success');
+              navigate(`/lessons/${currentLesson.id}`);
+            }}
+            onTouchStart={(e) => {
+              e.stopPropagation();
+            }}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Button touched! Navigating to:', `/lessons/${currentLesson.id}`);
+              triggerHapticFeedback('success');
+              navigate(`/lessons/${currentLesson.id}`);
+            }}
+            className="start-lesson-shadow relative z-20 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-6 rounded-3xl transition-all duration-300 transform active:scale-95 pointer-events-auto border-2 border-white/30 shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 text-xl touch-manipulation"
           >
-            Start Lesson
-          </button>
-        </div>
-
-        {/* Progress Indicator */}
-        <div className="absolute z-50 bg-black/60 backdrop-blur-xl rounded-full px-3 py-1 border border-white/20 shadow-lg shadow-indigo-500/20" style={{
-          top: `max(calc(env(safe-area-inset-top) + 100px), 120px)`,
-          right: '16px'
-        }}>
-          <span className="text-sm text-white font-medium">
-            {currentIndex + 1}/{filteredLessons.length}
-          </span>
-        </div>
-
-        {/* Navigation Indicators */}
-        <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-3" style={{
-          bottom: `max(calc(env(safe-area-inset-bottom) + 16px), 36px)`
-        }}>
-          {filteredLessons.slice(0, Math.min(7, filteredLessons.length)).map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIndex(idx)}
-              className={`transition-all duration-200 shadow-lg ${
-                idx === currentIndex 
-                  ? 'w-8 h-3 bg-white rounded-full shadow-white/30' 
-                  : 'w-3 h-3 bg-white/40 rounded-full hover:bg-white/60 shadow-white/20'
-              }`}
-            />
-          ))}
-          {filteredLessons.length > 7 && (
-            <span className="text-white/60 text-sm ml-2">
-              +{filteredLessons.length - 7}
+            <span className="flex items-center justify-center space-x-2">
+              <span>🚀</span>
+              <span>Start Learning</span>
             </span>
-          )}
+          </button>
         </div>
       </div>
 
       {/* End of Lessons Creative Message */}
       {showEndMessage && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center">
-          <div className="text-center px-6 animate-pulse">
-            <div className="text-8xl mb-4">🎯</div>
-            <h2 className="text-3xl font-bold text-white mb-2">
-              {currentIndex === 0 ? "You're at the beginning!" : "You've seen them all!"}
+        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-6">
+          <div className="text-center px-6 animate-pulse bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/30">
+            <div className="text-8xl mb-4">
+              {currentIndex === 0 ? "🎯" : "🎉"}
+            </div>
+            <h2 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+              {currentIndex === 0 ? "Ready to Start?" : "Mission Complete!"}
             </h2>
-            <p className="text-white/80 text-lg">
+            <p className="text-white/90 text-lg leading-relaxed">
               {currentIndex === 0 
-                ? "Swipe up to start exploring lessons" 
-                : `You've explored all ${filteredLessons.length} lessons in this filter!`
+                ? "Swipe up ⬆️ to begin your AI learning journey!" 
+                : `Amazing! You've explored all ${filteredLessons.length} lessons. Try different filters to discover more!`
               }
             </p>
           </div>
@@ -621,17 +611,19 @@ const LessonsExplore = () => {
       {/* Tutorial Overlay */}
       {showTutorial && (
         <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-          <div className="tutorial-shadow bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 text-center max-w-sm">
-            <div className="text-6xl mb-6">👆</div>
-            <h2 className="text-2xl font-bold text-white mb-4">Swipe to Explore</h2>
-            <p className="text-white/80 mb-6 leading-relaxed">
-              Swipe up and down to discover amazing AI lessons. Use the search icon to filter by company, difficulty, or topic!
+          <div className="tutorial-shadow bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-indigo-500/30 text-center max-w-sm">
+            <div className="text-6xl mb-6 animate-bounce">📱</div>
+            <h2 className="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+              Welcome to AI Discovery!
+            </h2>
+            <p className="text-white/90 mb-6 leading-relaxed">
+              Swipe up ⬆️ and down ⬇️ to discover lessons. Tap the search icon 🔍 to find exactly what you're looking for!
             </p>
             <button
               onClick={closeTutorial}
-              className="tutorial-shadow w-full bg-white text-black font-bold py-3 rounded-2xl transition-all duration-300 transform active:scale-95"
+              className="tutorial-shadow w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/30"
             >
-              Got it!
+              Let's Explore! 🚀
             </button>
           </div>
         </div>

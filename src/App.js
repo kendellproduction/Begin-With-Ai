@@ -5,6 +5,7 @@ import { GamificationProvider } from './contexts/GamificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Navigation from './components/Navigation';
+import SwipeNavigationWrapper from './components/SwipeNavigationWrapper';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineStatus from './components/OfflineStatus';
 
@@ -17,6 +18,8 @@ import Profile from './pages/Profile';
 import LessonsOverview from './pages/LessonsOverview';
 import LessonsExplore from './pages/LessonsExplore';
 import LessonDetail from './pages/LessonDetail';
+import LearningPathQuiz from './pages/LearningPathQuiz';
+import LearningPathResults from './pages/LearningPathResults';
 import AiNews from './pages/AiNews';
 import Quiz from './pages/Quiz';
 import QuizResults from './pages/QuizResults';
@@ -39,13 +42,35 @@ function App() {
                 }
               >
                 <Route index element={<Navigate to="/home" replace />} />
-                <Route path="home" element={<HomePage />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="settings" element={<Profile />} />
-                <Route path="lessons" element={<LessonsOverview />} />
+                <Route path="home" element={
+                  <SwipeNavigationWrapper>
+                    <HomePage />
+                  </SwipeNavigationWrapper>
+                } />
+                <Route path="dashboard" element={
+                  <SwipeNavigationWrapper>
+                    <Dashboard />
+                  </SwipeNavigationWrapper>
+                } />
+                <Route path="profile" element={
+                  <SwipeNavigationWrapper>
+                    <Profile />
+                  </SwipeNavigationWrapper>
+                } />
+                <Route path="settings" element={
+                  <SwipeNavigationWrapper>
+                    <Profile />
+                  </SwipeNavigationWrapper>
+                } />
+                <Route path="lessons" element={
+                  <SwipeNavigationWrapper>
+                    <LessonsOverview />
+                  </SwipeNavigationWrapper>
+                } />
                 <Route path="lessons/explore" element={<LessonsExplore />} />
                 <Route path="lessons/:lessonId" element={<LessonDetail />} />
+                <Route path="learning-path/quiz" element={<LearningPathQuiz />} />
+                <Route path="learning-path/results" element={<LearningPathResults />} />
                 <Route path="ai-news" element={<AiNews />} />
                 <Route path="lesson/:lessonId/quiz" element={<Quiz />} />
                 <Route path="lesson/:lessonId/results" element={<QuizResults />} />
