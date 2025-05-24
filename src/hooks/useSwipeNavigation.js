@@ -6,6 +6,7 @@ const useSwipeNavigation = () => {
   const location = useLocation();
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
+  const touchStartTime = useRef(null);
   const isDragging = useRef(false);
 
   // Define the main pages in order for horizontal navigation
@@ -56,6 +57,7 @@ const useSwipeNavigation = () => {
     if (location.pathname.includes('/lessons/explore')) return;
     
     touchStartX.current = e.touches[0].clientX;
+    touchStartTime.current = Date.now();
     isDragging.current = false;
     
     triggerHapticFeedback('light');
@@ -68,8 +70,8 @@ const useSwipeNavigation = () => {
     const currentX = e.touches[0].clientX;
     const deltaX = Math.abs(currentX - touchStartX.current);
     
-    // Start tracking as drag if moved more than 10px
-    if (deltaX > 10) {
+    // Start tracking as drag if moved more than 20px (increased from 10px)
+    if (deltaX > 20) {
       isDragging.current = true;
     }
   };
@@ -77,21 +79,28 @@ const useSwipeNavigation = () => {
   const handleTouchEnd = (e) => {
     if (!touchStartX.current || !isDragging.current || window.innerWidth >= 768) {
       touchStartX.current = null;
+      touchStartTime.current = null;
       isDragging.current = false;
       return;
     }
 
     if (location.pathname.includes('/lessons/explore')) {
       touchStartX.current = null;
+      touchStartTime.current = null;
       isDragging.current = false;
       return;
     }
     
     touchEndX.current = e.changedTouches[0].clientX;
     const deltaX = touchEndX.current - touchStartX.current;
+    const timeElapsed = Date.now() - touchStartTime.current;
+    const velocity = Math.abs(deltaX) / timeElapsed; // pixels per millisecond
     
-    // Reduced swipe distance (60px) for more responsive navigation
-    if (Math.abs(deltaX) > 60) {
+    // Much stricter requirements for swipe:
+    // 1. Minimum distance of 120px (increased from 60px)
+    // 2. Minimum velocity of 0.3 pixels/ms
+    // 3. Maximum time of 800ms (prevent slow drags)
+    if (Math.abs(deltaX) > 120 && velocity > 0.3 && timeElapsed < 800) {
       const currentIndex = getCurrentPageIndex();
       let targetIndex = currentIndex;
       
@@ -118,6 +127,7 @@ const useSwipeNavigation = () => {
     // Reset
     touchStartX.current = null;
     touchEndX.current = null;
+    touchStartTime.current = null;
     isDragging.current = false;
   };
 

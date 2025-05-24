@@ -23,6 +23,7 @@ const LessonsExplore = () => {
   });
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showEndMessage, setShowEndMessage] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Touch handling refs
   const touchStartY = useRef(null);
@@ -30,8 +31,24 @@ const LessonsExplore = () => {
   const isDragging = useRef(false);
   const containerRef = useRef(null);
 
-  // Prevent default scroll behavior on mobile
+  // Detect mobile vs desktop
   useEffect(() => {
+    const checkMobile = () => {
+      const isMobileDevice = window.innerWidth < 768 && 
+        ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      setIsMobile(isMobileDevice);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Only prevent scroll on mobile
+  useEffect(() => {
+    if (!isMobile) return;
+    
     const preventScroll = (e) => {
       if (containerRef.current && containerRef.current.contains(e.target)) {
         e.preventDefault();
@@ -45,7 +62,7 @@ const LessonsExplore = () => {
       document.removeEventListener('touchmove', preventScroll);
       document.removeEventListener('touchstart', preventScroll);
     };
-  }, []);
+  }, [isMobile]);
 
   // Get unique filter options from data
   const getUniqueValues = (field) => {
@@ -87,6 +104,29 @@ const LessonsExplore = () => {
   const filteredLessons = getFilteredLessons();
   const currentLesson = filteredLessons[currentIndex];
 
+  // Reset currentIndex when filters change (mobile only)
+  useEffect(() => {
+    if (isMobile) {
+      setCurrentIndex(0);
+      setIsTransitioning(false);
+      setShowEndMessage(false);
+    }
+  }, [searchQuery, selectedFilters, isMobile]);
+
+  // Ensure currentIndex is within bounds (mobile only)
+  useEffect(() => {
+    if (isMobile && filteredLessons.length > 0 && currentIndex >= filteredLessons.length) {
+      setCurrentIndex(0);
+    }
+  }, [filteredLessons.length, currentIndex, isMobile]);
+
+  // Only show tutorial on mobile
+  useEffect(() => {
+    if (!isMobile) {
+      setShowTutorial(false);
+    }
+  }, [isMobile]);
+
   // Generate search suggestions
   useEffect(() => {
     if (searchQuery.length > 0) {
@@ -115,8 +155,10 @@ const LessonsExplore = () => {
     }
   }, [searchQuery]);
 
-  // Enhanced haptic feedback function
+  // Enhanced haptic feedback function (mobile only)
   const triggerHapticFeedback = (type = 'light') => {
+    if (!isMobile) return;
+    
     try {
       if (window.navigator && window.navigator.vibrate) {
         const patterns = {
@@ -133,8 +175,10 @@ const LessonsExplore = () => {
     }
   };
 
-  // Show creative end message
+  // Mobile-only functions
   const showEndOfLessonsMessage = (direction = 'up') => {
+    if (!isMobile) return;
+    
     setShowEndMessage(true);
     triggerHapticFeedback('bounce');
     
@@ -143,45 +187,39 @@ const LessonsExplore = () => {
     }, 2000);
   };
 
-  // Improved touch handlers with immediate response
+  // Mobile-only touch handlers
   const handleTouchStart = (e) => {
-    if (showSearch || showFilters || isTransitioning || showEndMessage) return;
+    if (!isMobile || showSearch || showFilters || isTransitioning || showEndMessage) return;
     
     touchStartY.current = e.touches[0].clientY;
     isDragging.current = false;
     
-    // Immediate feedback
     triggerHapticFeedback('light');
-    
-    // Prevent all scrolling immediately
     e.preventDefault();
     e.stopPropagation();
   };
 
   const handleTouchMove = (e) => {
-    if (!touchStartY.current || showSearch || showFilters || isTransitioning || showEndMessage) return;
+    if (!isMobile || !touchStartY.current || showSearch || showFilters || isTransitioning || showEndMessage) return;
     
     const currentY = e.touches[0].clientY;
     const deltaY = Math.abs(currentY - touchStartY.current);
     
-    // More immediate drag detection
     if (deltaY > 5) {
       isDragging.current = true;
     }
     
-    // Always prevent default to stop page movement
     e.preventDefault();
     e.stopPropagation();
   };
 
   const handleTouchEnd = (e) => {
-    if (!touchStartY.current || showSearch || showFilters || isTransitioning || showEndMessage) {
+    if (!isMobile || !touchStartY.current || showSearch || showFilters || isTransitioning || showEndMessage) {
       touchStartY.current = null;
       isDragging.current = false;
       return;
     }
     
-    // Prevent any default behavior
     e.preventDefault();
     e.stopPropagation();
     
@@ -198,119 +236,172 @@ const LessonsExplore = () => {
       setIsTransitioning(true);
       
       if (delta > 0 && currentIndex > 0) {
-        // Swipe down: previous
-        setCurrentIndex(prev => prev - 1);
+        // Swipe down: previous lesson
         triggerHapticFeedback('medium');
+        setTimeout(() => {
+          setCurrentIndex(currentIndex - 1);
+          setIsTransitioning(false);
+        }, 150);
       } else if (delta < 0 && currentIndex < filteredLessons.length - 1) {
-        // Swipe up: next
-        setCurrentIndex(prev => prev + 1);
+        // Swipe up: next lesson
         triggerHapticFeedback('medium');
+        setTimeout(() => {
+          setCurrentIndex(currentIndex + 1);
+          setIsTransitioning(false);
+        }, 150);
       } else {
-        // End of list - show creative feedback
+        // At boundaries
+        setTimeout(() => {
+          setIsTransitioning(false);
+        }, 150);
         showEndOfLessonsMessage(delta < 0 ? 'up' : 'down');
       }
-      
-      // Reset transition state
-      setTimeout(() => setIsTransitioning(false), 300);
+    } else {
+      setIsTransitioning(false);
     }
     
-    // Reset
     touchStartY.current = null;
     isDragging.current = false;
   };
 
-  // Reset currentIndex when filters change, with proper bounds checking
-  useEffect(() => {
-    setCurrentIndex(0);
-    setIsTransitioning(false);
-    setShowEndMessage(false);
-  }, [searchQuery, selectedFilters]);
-
-  // Ensure currentIndex is within bounds
-  useEffect(() => {
-    if (filteredLessons.length > 0 && currentIndex >= filteredLessons.length) {
-      setCurrentIndex(0);
-    }
-  }, [filteredLessons.length, currentIndex]);
-
-  // Tutorial overlay functions
   const closeTutorial = () => {
     setShowTutorial(false);
     localStorage.setItem('lessons_explore_tutorial_seen', 'true');
   };
 
-  // Handle back navigation
   const handleBack = () => {
     navigate('/lessons');
   };
 
-  // Get filter summary text
   const getFilterSummary = () => {
-    const activeFilters = [];
-    if (selectedFilters.difficulty) activeFilters.push(selectedFilters.difficulty);
-    if (selectedFilters.company) activeFilters.push(selectedFilters.company);
-    if (selectedFilters.category) activeFilters.push(selectedFilters.category);
-    if (selectedFilters.useCase) activeFilters.push(selectedFilters.useCase);
-    if (searchQuery) activeFilters.push(`"${searchQuery}"`);
-    
-    if (activeFilters.length === 0) return "All Lessons";
-    return activeFilters.join(" • ");
+    const activeFilters = Object.values(selectedFilters).filter(Boolean);
+    if (searchQuery && activeFilters.length > 0) {
+      return `"${searchQuery}" + ${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`;
+    } else if (searchQuery) {
+      return `"${searchQuery}"`;
+    } else if (activeFilters.length > 0) {
+      return `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} active`;
+    }
+    return 'All lessons';
   };
 
-  if (!currentLesson) {
+  // Render desktop V-shape layout
+  if (!isMobile) {
     return (
-      <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
-        {/* Mobile Navigation Bar */}
-        <div className="absolute top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl" style={{
-          paddingTop: 'max(env(safe-area-inset-top), 0px)'
-        }}>
-          <div className="flex items-center justify-between p-4">
+      <div className="min-h-screen bg-gray-900">
+        <LoggedInNavbar />
+        
+        <div className="container mx-auto px-4 py-8">
+          {/* Desktop Header */}
+          <div className="mb-8">
             <button
               onClick={handleBack}
-              className="p-2 rounded-full bg-white/10 backdrop-blur-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
+              className="mb-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+              ← Back to Lessons
             </button>
-            <h1 className="text-lg font-semibold text-white">Explore</h1>
-            <div className="w-10" />
-          </div>
-        </div>
+            
+            <h1 className="text-4xl font-bold text-white mb-6">Explore All Lessons</h1>
+            
+            {/* Desktop Search and Filters */}
+            <div className="bg-gray-800 rounded-xl p-6 mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input
+                  type="text"
+                  placeholder="Search lessons, companies, models..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-gray-700 text-white placeholder-gray-400 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
+                <div className="text-white text-sm flex items-center">
+                  Showing {filteredLessons.length} of {lessonsData.length} lessons
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <select
+                  value={selectedFilters.difficulty}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))}
+                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Levels</option>
+                  {difficulties.map(diff => (
+                    <option key={diff} value={diff}>{diff}</option>
+                  ))}
+                </select>
 
-        {/* No Results Screen */}
-        <div className="flex-1 flex items-center justify-center p-6" style={{
-          paddingTop: `max(calc(env(safe-area-inset-top) + 80px), 100px)`
-        }}>
-          <div className="text-center max-w-md">
-            <div className="text-8xl mb-6">🔍</div>
-            <h2 className="text-3xl font-bold mb-4">No lessons found</h2>
-            <p className="text-gray-400 mb-8 text-lg leading-relaxed">
-              We couldn't find any lessons matching your criteria. Try adjusting your search or filters.
-            </p>
-            <div className="space-y-4">
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
-                }}
-                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
-              >
-                Clear All Filters
-              </button>
-              <button
-                onClick={handleBack}
-                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-white/10 hover:shadow-white/20"
-              >
-                Back to Lessons
-              </button>
+                <select
+                  value={selectedFilters.company}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, company: e.target.value }))}
+                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Companies</option>
+                  {companies.map(company => (
+                    <option key={company} value={company}>{company}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedFilters.category}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, category: e.target.value }))}
+                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedFilters.useCase}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, useCase: e.target.value }))}
+                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="">All Use Cases</option>
+                  {useCases.map(useCase => (
+                    <option key={useCase} value={useCase}>{useCase}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {(searchQuery || Object.values(selectedFilters).some(filter => filter)) && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
+                  }}
+                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Clear All Filters
+                </button>
+              )}
             </div>
           </div>
+
+          {/* Desktop V-Shape Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredLessons.map((lesson) => (
+              <LessonCard
+                key={lesson.id}
+                lesson={lesson}
+                onClick={() => navigate(`/lessons/${lesson.id}`)}
+              />
+            ))}
+          </div>
+
+          {filteredLessons.length === 0 && (
+            <div className="text-center text-gray-400 py-12">
+              <div className="text-6xl mb-4">🔍</div>
+              <h3 className="text-xl font-semibold mb-2">No lessons found</h3>
+              <p>Try adjusting your search or filters</p>
+            </div>
+          )}
         </div>
       </div>
     );
   }
 
+  // Mobile layout continues here (existing mobile code)
   return (
     <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
       {/* Custom CSS for animated shadows */}
@@ -364,30 +455,25 @@ const LessonsExplore = () => {
       `}</style>
 
       {/* Mobile Navigation Bar */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl shadow-lg shadow-indigo-500/10" style={{
+      <div className="absolute top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl" style={{
         paddingTop: 'max(env(safe-area-inset-top), 0px)'
       }}>
         <div className="flex items-center justify-between p-4">
-          {/* Back Button */}
           <button
             onClick={handleBack}
-            className="button-glow p-2 rounded-full bg-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
+            className="p-2 rounded-full bg-white/10 backdrop-blur-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
           >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-
-          {/* Title with Filter Summary */}
           <div className="text-center">
             <h1 className="text-lg font-semibold text-white">Explore</h1>
             <p className="text-xs text-gray-400 max-w-40 truncate">{getFilterSummary()}</p>
           </div>
-
-          {/* Search/Menu Button */}
           <button
             onClick={() => setShowSearch(!showSearch)}
-            className="button-glow p-2 rounded-full bg-white/10 backdrop-blur-sm transition-all duration-300 hover:bg-white/20"
+            className="p-2 rounded-full bg-white/10 backdrop-blur-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
           >
             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -395,7 +481,7 @@ const LessonsExplore = () => {
           </button>
         </div>
 
-        {/* Expandable Search */}
+        {/* Mobile Search Panel */}
         {showSearch && (
           <div className="px-4 pb-4 bg-black/60 backdrop-blur-xl border-t border-white/10">
             <div className="relative mb-4">
@@ -404,7 +490,7 @@ const LessonsExplore = () => {
                 placeholder="Search lessons, companies, models..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="button-glow w-full bg-white/10 backdrop-blur-sm text-white placeholder-white/60 px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/10"
+                className="w-full bg-white/10 backdrop-blur-sm text-white placeholder-white/60 px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/10"
               />
               
               {searchSuggestions.length > 0 && (
@@ -428,7 +514,7 @@ const LessonsExplore = () => {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="button-glow w-full bg-white/10 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium border border-white/10 hover:bg-white/20 transition-all duration-300 shadow-lg shadow-white/10 hover:shadow-white/20 text-lg"
+              className="w-full bg-white/10 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium border border-white/10 hover:bg-white/20 transition-all duration-300 shadow-lg shadow-white/10 hover:shadow-white/20 text-lg"
             >
               {showFilters ? '🔼 Hide Filters' : '🔽 Show Filters'}
             </button>
@@ -438,7 +524,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.difficulty}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Levels</option>
                   {difficulties.map(diff => (
@@ -449,7 +535,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.company}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, company: e.target.value }))}
-                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Companies</option>
                   {companies.map(company => (
@@ -460,7 +546,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.category}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, category: e.target.value }))}
-                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Categories</option>
                   {categories.map(category => (
@@ -471,7 +557,7 @@ const LessonsExplore = () => {
                 <select
                   value={selectedFilters.useCase}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, useCase: e.target.value }))}
-                  className="button-glow bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
                   <option value="" className="bg-gray-800">All Use Cases</option>
                   {useCases.map(useCase => (
@@ -499,134 +585,171 @@ const LessonsExplore = () => {
         )}
       </div>
 
-      {/* Full-Screen Lesson Display */}
-      <div 
-        ref={containerRef}
-        className="absolute inset-0 bg-black touch-none"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        style={{ 
-          paddingTop: `max(calc(env(safe-area-inset-top) + 80px), 100px)`,
-          paddingBottom: `max(calc(env(safe-area-inset-bottom) + 80px), 100px)`
-        }}
-      >
-        {/* Background Image */}
-        <div className="absolute inset-0">
-          <img
-            src={currentLesson.imageUrl}
-            alt={currentLesson.title}
-            className="w-full h-full object-cover"
-            loading="lazy"
-            draggable={false}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
-        </div>
-
-        {/* Content */}
-        <div className="absolute inset-0 flex flex-col justify-end p-6 pb-24 pointer-events-none">
-          {/* Company Badge */}
-          <div className="mb-4">
-            <span className="inline-block bg-white/20 backdrop-blur-xl px-4 py-2 rounded-full text-sm font-medium text-white border border-white/20 shadow-lg shadow-white/10">
-              {currentLesson.company}
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-4xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
-            {currentLesson.title}
-          </h1>
-
-          {/* Description */}
-          <p className="text-white/90 text-lg mb-6 leading-relaxed drop-shadow-md">
-            {currentLesson.description}
-          </p>
-
-          {/* Meta Tags */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-xl border border-white/20 shadow-lg ${
-              currentLesson.difficulty === 'Beginner' ? 'bg-green-500/80 text-white shadow-green-500/20' :
-              currentLesson.difficulty === 'Intermediate' ? 'bg-yellow-500/80 text-white shadow-yellow-500/20' :
-              'bg-red-500/80 text-white shadow-red-500/20'
-            }`}>
-              {currentLesson.difficulty}
-            </span>
-            <span className="bg-white/20 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20 shadow-lg shadow-white/10">
-              {currentLesson.duration}
-            </span>
-            <span className="bg-indigo-500/80 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20 shadow-lg shadow-indigo-500/20">
-              {currentLesson.category}
-            </span>
-          </div>
-
-          {/* Start Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Button clicked! Navigating to:', `/lessons/${currentLesson.id}`);
-              triggerHapticFeedback('success');
-              navigate(`/lessons/${currentLesson.id}`);
-            }}
-            onTouchStart={(e) => {
-              e.stopPropagation();
-            }}
-            onTouchEnd={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Button touched! Navigating to:', `/lessons/${currentLesson.id}`);
-              triggerHapticFeedback('success');
-              navigate(`/lessons/${currentLesson.id}`);
-            }}
-            className="start-lesson-shadow relative z-20 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-6 rounded-3xl transition-all duration-300 transform active:scale-95 pointer-events-auto border-2 border-white/30 shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 text-xl touch-manipulation"
-          >
-            <span className="flex items-center justify-center space-x-2">
-              <span>🚀</span>
-              <span>Start Learning</span>
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* End of Lessons Creative Message */}
-      {showEndMessage && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-6">
-          <div className="text-center px-6 animate-pulse bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/30">
-            <div className="text-8xl mb-4">
-              {currentIndex === 0 ? "🎯" : "🎉"}
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
-              {currentIndex === 0 ? "Ready to Start?" : "Mission Complete!"}
-            </h2>
-            <p className="text-white/90 text-lg leading-relaxed">
-              {currentIndex === 0 
-                ? "Swipe up ⬆️ to begin your AI learning journey!" 
-                : `Amazing! You've explored all ${filteredLessons.length} lessons. Try different filters to discover more!`
-              }
+      {/* No Results Mobile Screen */}
+      {!currentLesson && (
+        <div className="flex-1 flex items-center justify-center p-6" style={{
+          paddingTop: `max(calc(env(safe-area-inset-top) + 80px), 100px)`
+        }}>
+          <div className="text-center max-w-md">
+            <div className="text-8xl mb-6">🔍</div>
+            <h2 className="text-3xl font-bold mb-4">No lessons found</h2>
+            <p className="text-gray-400 mb-8 text-lg leading-relaxed">
+              We couldn't find any lessons matching your criteria. Try adjusting your search or filters.
             </p>
+            <div className="space-y-4">
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
+                }}
+                className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
+              >
+                Clear All Filters
+              </button>
+              <button
+                onClick={handleBack}
+                className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-white/10 hover:shadow-white/20"
+              >
+                Back to Lessons
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Tutorial Overlay */}
-      {showTutorial && (
-        <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
-          <div className="tutorial-shadow bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-indigo-500/30 text-center max-w-sm">
-            <div className="text-6xl mb-6 animate-bounce">📱</div>
-            <h2 className="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              Welcome to AI Discovery!
-            </h2>
-            <p className="text-white/90 mb-6 leading-relaxed">
-              Swipe up ⬆️ and down ⬇️ to discover lessons. Tap the search icon 🔍 to find exactly what you're looking for!
-            </p>
-            <button
-              onClick={closeTutorial}
-              className="tutorial-shadow w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/30"
-            >
-              Let's Explore! 🚀
-            </button>
+      {/* Mobile content continues only if currentLesson exists */}
+      {currentLesson && (
+        <>
+          {/* Full-Screen Lesson Display */}
+          <div 
+            ref={containerRef}
+            className="absolute inset-0 bg-black touch-none"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ 
+              paddingTop: `max(calc(env(safe-area-inset-top) + 80px), 100px)`,
+              paddingBottom: `max(calc(env(safe-area-inset-bottom) + 80px), 100px)`
+            }}
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={currentLesson.imageUrl}
+                alt={currentLesson.title}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                draggable={false}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/30" />
+            </div>
+
+            {/* Content */}
+            <div className="absolute inset-0 flex flex-col justify-end p-6 pb-24 pointer-events-none">
+              {/* Company Badge */}
+              <div className="mb-4">
+                <span className="inline-block bg-white/20 backdrop-blur-xl px-4 py-2 rounded-full text-sm font-medium text-white border border-white/20 shadow-lg shadow-white/10">
+                  {currentLesson.company}
+                </span>
+              </div>
+
+              {/* Title */}
+              <h1 className="text-4xl font-bold mb-4 leading-tight text-white drop-shadow-lg">
+                {currentLesson.title}
+              </h1>
+
+              {/* Description */}
+              <p className="text-white/90 text-lg mb-6 leading-relaxed drop-shadow-md">
+                {currentLesson.description}
+              </p>
+
+              {/* Meta Tags */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-xl border border-white/20 shadow-lg ${
+                  currentLesson.difficulty === 'Beginner' ? 'bg-green-500/80 text-white shadow-green-500/20' :
+                  currentLesson.difficulty === 'Intermediate' ? 'bg-yellow-500/80 text-white shadow-yellow-500/20' :
+                  'bg-red-500/80 text-white shadow-red-500/20'
+                }`}>
+                  {currentLesson.difficulty}
+                </span>
+                <span className="bg-white/20 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20 shadow-lg shadow-white/10">
+                  {currentLesson.duration}
+                </span>
+                <span className="bg-indigo-500/80 backdrop-blur-xl text-white px-3 py-1 rounded-full text-sm border border-white/20 shadow-lg shadow-indigo-500/20">
+                  {currentLesson.category}
+                </span>
+              </div>
+
+              {/* Start Button */}
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Button clicked! Navigating to:', `/lessons/${currentLesson.id}`);
+                  triggerHapticFeedback('success');
+                  navigate(`/lessons/${currentLesson.id}`);
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  console.log('Button touched! Navigating to:', `/lessons/${currentLesson.id}`);
+                  triggerHapticFeedback('success');
+                  navigate(`/lessons/${currentLesson.id}`);
+                }}
+                className="start-lesson-shadow relative z-20 w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 hover:from-indigo-600 hover:via-purple-600 hover:to-pink-600 text-white font-bold py-6 rounded-3xl transition-all duration-300 transform active:scale-95 pointer-events-auto border-2 border-white/30 shadow-xl shadow-indigo-500/40 hover:shadow-indigo-500/60 text-xl touch-manipulation"
+              >
+                <span className="flex items-center justify-center space-x-2">
+                  <span>🚀</span>
+                  <span>Start Learning</span>
+                </span>
+              </button>
+            </div>
           </div>
-        </div>
+
+          {/* End of Lessons Creative Message */}
+          {showEndMessage && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[70] flex items-center justify-center p-6">
+              <div className="text-center px-6 animate-pulse bg-gradient-to-br from-emerald-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-8 border border-emerald-500/30">
+                <div className="text-8xl mb-4">
+                  {currentIndex === 0 ? "🎯" : "🎉"}
+                </div>
+                <h2 className="text-3xl font-bold text-white mb-3 bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">
+                  {currentIndex === 0 ? "Ready to Start?" : "Mission Complete!"}
+                </h2>
+                <p className="text-white/90 text-lg leading-relaxed">
+                  {currentIndex === 0 
+                    ? "Swipe up ⬆️ to begin your AI learning journey!" 
+                    : `Amazing! You've explored all ${filteredLessons.length} lessons. Try different filters to discover more!`
+                  }
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Tutorial Overlay */}
+          {showTutorial && (
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-[60] flex items-center justify-center p-6">
+              <div className="tutorial-shadow bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-indigo-500/30 text-center max-w-sm">
+                <div className="text-6xl mb-6 animate-bounce">📱</div>
+                <h2 className="text-2xl font-bold text-white mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  Welcome to AI Discovery!
+                </h2>
+                <p className="text-white/90 mb-6 leading-relaxed">
+                  Swipe up ⬆️ and down ⬇️ to discover lessons. Tap the search icon 🔍 to find exactly what you're looking for!
+                </p>
+                <button
+                  onClick={closeTutorial}
+                  className="tutorial-shadow w-full bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/30"
+                >
+                  Let's Explore! 🚀
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

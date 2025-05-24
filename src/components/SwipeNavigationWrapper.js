@@ -16,10 +16,13 @@ const SwipeNavigationWrapper = ({ children }) => {
     currentPageName
   } = useSwipeNavigation();
 
-  // Check if on mobile
+  // Check if on mobile - more strict detection
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      // More strict mobile detection
+      const isMobileDevice = window.innerWidth < 768 && 
+        ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+      setIsMobile(isMobileDevice);
     };
     
     checkMobile();
@@ -28,7 +31,7 @@ const SwipeNavigationWrapper = ({ children }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Show swipe indicator on first visit
+  // Show swipe indicator on first visit - ONLY on mobile
   useEffect(() => {
     const hasSeenSwipeIndicator = localStorage.getItem('hasSeenSwipeIndicator');
     if (!hasSeenSwipeIndicator && isMobile) {
@@ -40,7 +43,7 @@ const SwipeNavigationWrapper = ({ children }) => {
     }
   }, [isMobile]);
 
-  // Add transition effect when location changes
+  // Add transition effect when location changes - ONLY on mobile
   useEffect(() => {
     if (isMobile) {
       setIsTransitioning(true);
@@ -52,8 +55,10 @@ const SwipeNavigationWrapper = ({ children }) => {
     }
   }, [location.pathname, isMobile]);
 
-  // Don't add swipe functionality to certain pages
+  // Don't add swipe functionality to certain pages OR on desktop
   const shouldEnableSwipe = () => {
+    if (!isMobile) return false; // Never enable on desktop
+    
     const excludedPaths = [
       '/lessons/explore',
       '/learning-path',
@@ -63,15 +68,21 @@ const SwipeNavigationWrapper = ({ children }) => {
     return !excludedPaths.some(path => location.pathname.includes(path));
   };
 
-  const swipeProps = shouldEnableSwipe() && isMobile ? {
+  // Only apply swipe props if we're on mobile and should enable swipe
+  const swipeProps = shouldEnableSwipe() ? {
     onTouchStart,
     onTouchMove,
     onTouchEnd
   } : {};
 
+  // If not mobile, just return children without any wrapper modifications
+  if (!isMobile) {
+    return <>{children}</>;
+  }
+
   return (
     <>
-      {/* CSS for page transition animations */}
+      {/* CSS for page transition animations - ONLY on mobile */}
       <style jsx>{`
         @keyframes slideInFromRight {
           from {
@@ -119,8 +130,8 @@ const SwipeNavigationWrapper = ({ children }) => {
       >
         {children}
         
-        {/* Swipe Indicator Tutorial */}
-        {showSwipeIndicator && isMobile && (
+        {/* Swipe Indicator Tutorial - ONLY on mobile */}
+        {showSwipeIndicator && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center pointer-events-none">
             <div className="bg-gradient-to-br from-indigo-600/90 to-purple-600/90 backdrop-blur-xl rounded-3xl p-6 m-6 text-center border border-white/20 shadow-xl animate-pulse">
               <div className="text-4xl mb-4">👆</div>
@@ -137,8 +148,8 @@ const SwipeNavigationWrapper = ({ children }) => {
           </div>
         )}
 
-        {/* Page Indicator (only on mobile) */}
-        {shouldEnableSwipe() && isMobile && (
+        {/* Page Indicator - ONLY on mobile */}
+        {shouldEnableSwipe() && (
           <div 
             className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-black/60 backdrop-blur-xl rounded-full px-4 py-2 border border-white/20 shadow-lg z-40"
             style={{
