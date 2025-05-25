@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
+import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -130,7 +131,7 @@ const HomePage = () => {
       setShowAchievement(true);
       localStorage.setItem('streak_achievement_shown', 'true');
     }
-  }, [userStats]);
+  }, [userStats]); // Added userStats as dependency
 
   const getUserGreeting = () => {
     const name = user?.displayName || user?.email?.split('@')[0] || 'AI Learner';
@@ -150,220 +151,208 @@ const HomePage = () => {
     // Simulate completing today's challenge
     if (todaysChallenge) {
       completeLesson(`challenge-${Date.now()}`, todaysChallenge.xp);
-      setShowAchievement(true);
-      setTimeout(() => setShowAchievement(false), 3000);
+      // setShowAchievement(true); // This was in backup, consider re-enabling if AchievementPopup is used
+      // setTimeout(() => setShowAchievement(false), 3000);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
-      <LoggedInNavbar />
-      
-      {/* Achievement Popup */}
-      {showAchievement && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl p-8 text-center max-w-md animate-bounce">
-            <div className="text-6xl mb-4">🏆</div>
-            <h3 className="text-2xl font-bold text-white mb-2">Achievement Unlocked!</h3>
-            <p className="text-white/90 mb-6">You're on fire! Keep up the amazing progress!</p>
-            <button
-              onClick={() => setShowAchievement(false)}
-              className="bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-full hover:bg-white/30 transition-all"
-            >
-              Awesome! 🎉
-            </button>
-          </div>
-        </div>
-      )}
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Hero Section */}
-        <section className="mb-12">
-          <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-white/10">
-            <div className="text-center">
-              <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
-                {getUserGreeting()}
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed max-w-4xl mx-auto">
-                {currentQuote}
-              </p>
-              
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-3xl font-bold text-indigo-400">{userStats.streak || 0}</div>
-                  <div className="text-sm text-gray-400">Day Streak 🔥</div>
-                </div>
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-3xl font-bold text-green-400">{userStats.lessonsCompleted || 0}</div>
-                  <div className="text-sm text-gray-400">Lessons Done ✅</div>
-                </div>
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-3xl font-bold text-yellow-400">{userStats.xp || 0}</div>
-                  <div className="text-sm text-gray-400">Total XP ⭐</div>
-                </div>
-                <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                  <div className="text-3xl font-bold text-purple-400">Lv.{userStats.level || 1}</div>
-                  <div className="text-sm text-gray-400">Current Level 🏆</div>
-                </div>
-              </div>
-
-              {/* Main CTA */}
+    <SwipeNavigationWrapper>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+        <LoggedInNavbar />
+        
+        {showAchievement && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+            <div className="bg-gradient-to-br from-yellow-500 to-orange-500 rounded-3xl p-8 text-center max-w-md animate-bounce">
+              <div className="text-6xl mb-4">🏆</div>
+              <h3 className="text-2xl font-bold text-white mb-2">Achievement Unlocked!</h3>
+              <p className="text-white/90 mb-6">You're on fire! Keep up the amazing progress!</p>
               <button
-                onClick={handleStartLearning}
-                className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                onClick={() => setShowAchievement(false)}
+                className="bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-full hover:bg-white/30 transition-all"
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
-                <span className="relative flex items-center gap-2">
-                  🚀 Continue Your AI Journey
-                </span>
+                Awesome! 🎉
               </button>
             </div>
           </div>
-        </section>
+        )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Weekly Goal Progress */}
-            <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                🎯 Weekly Learning Goal
-              </h2>
-              <div className="mb-4">
-                <div className="flex justify-between text-sm text-gray-400 mb-2">
-                  <span>Progress this week</span>
-                  <span>{weeklyGoalProgress}%</span>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <section className="mb-12">
+            <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-white/10">
+              <div className="text-center">
+                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+                  {getUserGreeting()}
+                </h1>
+                <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed max-w-4xl mx-auto">
+                  {currentQuote}
+                </p>
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-3xl font-bold text-indigo-400">{userStats.streak || 0}</div>
+                    <div className="text-sm text-gray-400">Day Streak 🔥</div>
+                  </div>
+                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-3xl font-bold text-green-400">{userStats.lessonsCompleted || 0}</div>
+                    <div className="text-sm text-gray-400">Lessons Done ✅</div>
+                  </div>
+                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-3xl font-bold text-yellow-400">{userStats.xp || 0}</div>
+                    <div className="text-sm text-gray-400">Total XP ⭐</div>
+                  </div>
+                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
+                    <div className="text-3xl font-bold text-purple-400">Lv.{userStats.level || 1}</div>
+                    <div className="text-sm text-gray-400">Current Level 🏆</div>
+                  </div>
                 </div>
-                <div className="w-full bg-gray-700 rounded-full h-3">
-                  <div 
-                    className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
-                    style={{ width: `${weeklyGoalProgress}%` }}
-                  ></div>
-                </div>
+
+                <button
+                  onClick={handleStartLearning}
+                  className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
+                  <span className="relative flex items-center gap-2">
+                    🚀 Continue Your AI Journey
+                  </span>
+                </button>
               </div>
-              <p className="text-gray-300">
-                {weeklyGoalProgress >= 100 
-                  ? "🎉 Amazing! You've crushed this week's goal!" 
-                  : `Just ${Math.ceil((100 - weeklyGoalProgress) / 20)} more lessons to hit your weekly goal!`
-                }
-              </p>
             </div>
+          </section>
 
-            {/* Today's Challenge */}
-            {todaysChallenge && (
-              <div className="bg-gradient-to-br from-orange-600/20 to-red-600/20 backdrop-blur-xl rounded-3xl p-6 border border-orange-500/30">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-8">
+              {userStats && (
+                <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                    🎯 Weekly Learning Goal
+                  </h2>
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm text-gray-400 mb-2">
+                      <span>Progress this week</span>
+                      <span>{weeklyGoalProgress}%</span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-3">
+                      <div 
+                        className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
+                        style={{ width: `${weeklyGoalProgress}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  <p className="text-gray-300">
+                    {weeklyGoalProgress >= 100 
+                      ? "🎉 Amazing! You've crushed this week's goal!" 
+                      : `Just ${Math.max(0, 5 - (userStats.lessonsCompletedThisWeek || 0))} more lessons to hit your weekly goal!`
+                    }
+                  </p>
+                </div>
+              )}
+
+              {todaysChallenge && (
+                <div className="bg-gradient-to-br from-purple-700/60 to-pink-700/60 backdrop-blur-xl rounded-3xl p-6 border border-purple-500/30">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                    ⚡ Today's Challenge
+                  </h2>
+                  <div className="flex items-start space-x-4">
+                    <div className="text-4xl mt-1">{todaysChallenge.icon}</div>
+                    <div>
+                      <h3 className="text-xl font-semibold text-white">{todaysChallenge.title}</h3>
+                      <p className="text-purple-200 mb-3">{todaysChallenge.description}</p>
+                      <div className="flex items-center space-x-2 mb-4">
+                        <span className="px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded-full text-xs font-medium">+{todaysChallenge.xp} XP</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          todaysChallenge.difficulty === 'Easy' ? 'bg-green-500/20 text-green-300' :
+                          todaysChallenge.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-300' :
+                          'bg-red-500/20 text-red-300'
+                        }`}>{todaysChallenge.difficulty}</span>
+                      </div>
+                      <button 
+                        onClick={handleCompleteChallenge}
+                        className="group relative px-6 py-2.5 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl text-white font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                      >
+                        <span className="absolute inset-0 bg-gradient-to-r from-orange-400 to-red-400 rounded-xl blur opacity-20 group-hover:opacity-50 transition-opacity"></span>
+                        <span className="relative">Accept Challenge 💪</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/30">
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                  ⚡ Today's Challenge
+                  💡 AI Insight of the Day
                 </h2>
-                <div className="flex items-start gap-4">
-                  <div className="text-4xl">{todaysChallenge.icon}</div>
-                  <div className="flex-1">
-                    <h3 className="text-xl font-bold text-white mb-2">{todaysChallenge.title}</h3>
-                    <p className="text-gray-300 mb-4">{todaysChallenge.description}</p>
-                    <div className="flex items-center gap-4">
-                      <span className="bg-yellow-500/20 text-yellow-400 px-3 py-1 rounded-full text-sm">
-                        +{todaysChallenge.xp} XP
-                      </span>
-                      <span className="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm">
-                        {todaysChallenge.difficulty}
-                      </span>
-                    </div>
-                  </div>
+                <p className="text-xl text-blue-200 leading-relaxed">
+                  {currentFact}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => navigate('/lessons/explore')}
+                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 text-left flex items-center gap-2"
+                  >
+                    <span className="text-lg">🔍</span> Explore All Lessons
+                  </button>
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2"
+                  >
+                    <span className="text-lg">📊</span> View Progress
+                  </button>
+                  <button
+                    onClick={() => navigate('/ai-news')}
+                    className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 text-left flex items-center gap-2"
+                  >
+                    <span className="text-lg">📰</span> AI News
+                  </button>
                 </div>
-                <button
-                  onClick={handleCompleteChallenge}
-                  className="w-full mt-4 bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-3 rounded-2xl hover:from-orange-600 hover:to-red-600 transition-all duration-300"
-                >
-                  Accept Challenge 🎯
-                </button>
               </div>
-            )}
 
-            {/* AI Fact of the Day */}
-            <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/30">
-              <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                💡 AI Insight of the Day
-              </h2>
-              <p className="text-xl text-blue-200 leading-relaxed">
-                {currentFact}
-              </p>
+              <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+                <h2 className="text-xl font-bold text-white mb-4">🧠 Recommended for You</h2>
+                <div className="space-y-4">
+                  {recommendations.map((rec, index) => (
+                    <Link 
+                      to={`/lessons/overview`}
+                      key={index} 
+                      className="block bg-black/30 hover:bg-black/50 p-4 rounded-xl transition-all duration-300 group"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-md font-semibold text-white group-hover:text-indigo-300 transition-colors">{rec.title}</h3>
+                        <span className={`px-2 py-0.5 text-xs rounded-full ${
+                          rec.popularity === 'Trending' ? 'bg-red-500/30 text-red-300' :
+                          rec.popularity === 'Popular' ? 'bg-yellow-500/30 text-yellow-300' :
+                          'bg-green-500/30 text-green-300'
+                        }`}>{rec.popularity}</span>
+                      </div>
+                      <p className="text-sm text-gray-400 mb-2">{rec.description}</p>
+                      <div className="flex items-center justify-between text-xs text-gray-500">
+                        <span>{rec.icon} {rec.category}</span>
+                        <span>{rec.time}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-xl rounded-3xl p-6 border border-white/10 text-center">
+                <div className="text-4xl mb-3">🌟</div>
+                <p className="text-lg font-medium text-purple-200 italic">
+                  "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
+                </p>
+                <p className="text-sm text-purple-300 mt-2">- Your AI Coach</p>
+              </div>
+
             </div>
           </div>
-
-          {/* Right Column */}
-          <div className="space-y-8">
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
-              <div className="space-y-3">
-                <button
-                  onClick={() => navigate('/lessons/explore')}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 text-left"
-                >
-                  🔍 Explore All Lessons
-                </button>
-                <button
-                  onClick={() => navigate('/dashboard')}
-                  className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left"
-                >
-                  📊 View Progress
-                </button>
-                <button
-                  onClick={() => navigate('/ai-news')}
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-3 rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 text-left"
-                >
-                  📰 AI News
-                </button>
-              </div>
-            </div>
-
-            {/* Recommended for You */}
-            <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
-              <h2 className="text-xl font-bold text-white mb-4">🎯 Recommended for You</h2>
-              <div className="space-y-4">
-                {recommendations.map((rec, index) => (
-                  <div key={index} className="bg-black/30 backdrop-blur-sm rounded-2xl p-4 hover:bg-black/40 transition-all cursor-pointer group">
-                    <div className="flex items-start gap-3">
-                      <div className="text-2xl group-hover:scale-110 transition-transform">
-                        {rec.icon}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-white text-sm group-hover:text-indigo-400 transition-colors">
-                          {rec.title}
-                        </h3>
-                        <p className="text-xs text-gray-400 mb-2">{rec.description}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="bg-indigo-500/20 text-indigo-400 px-2 py-1 rounded text-xs">
-                            {rec.time}
-                          </span>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            rec.popularity === 'Trending' ? 'bg-red-500/20 text-red-400' :
-                            rec.popularity === 'Popular' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-green-500/20 text-green-400'
-                          }`}>
-                            {rec.popularity}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Motivation Quote */}
-            <div className="bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-xl rounded-3xl p-6 border border-purple-500/30 text-center">
-              <div className="text-4xl mb-4">🌟</div>
-              <p className="text-lg text-purple-200 leading-relaxed">
-                "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
-              </p>
-              <p className="text-sm text-purple-400 mt-4">— Your AI Learning Journey</p>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </SwipeNavigationWrapper>
   );
 };
 

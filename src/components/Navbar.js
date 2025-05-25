@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const Navbar = () => {
+const Navbar = ({ openAuthModal }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const handleAuthClick = (mode) => {
+    if (openAuthModal) {
+      openAuthModal(mode);
+    }
   };
 
   return (
@@ -32,16 +38,33 @@ const Navbar = () => {
             <Link to="/contact" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:bg-white/10">
               Contact
             </Link>
-            <Link to="/login" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:bg-white/10">
-              Login
-            </Link>
-            <Link
-              to="/signup"
-              className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
-              <span className="relative">Start Free Trial</span>
-            </Link>
+            {openAuthModal ? (
+              <>
+                <button onClick={() => handleAuthClick('login')} className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:bg-white/10">
+                  Login
+                </button>
+                <button
+                  onClick={() => handleAuthClick('signup')}
+                  className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
+                  <span className="relative">Start Free Trial</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:bg-white/10">
+                  Login
+                </Link>
+                <Link
+                  to="/signup"
+                  className="group relative bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
+                  <span className="relative">Start Free Trial</span>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -83,18 +106,37 @@ const Navbar = () => {
           >
             Contact
           </Link>
-          <Link
-            to="/login"
-            className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-white/10 transition-all duration-300"
-          >
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white block px-3 py-2 rounded-md text-base font-bold mx-3 mt-4 text-center hover:from-indigo-700 hover:to-purple-700 transition-all duration-300"
-          >
-            Start Free Trial
-          </Link>
+          {openAuthModal ? (
+            <>
+              <button
+                onClick={() => handleAuthClick('login')}
+                className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-white/10 transition-all duration-300 w-full text-left"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => handleAuthClick('signup')}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white block px-3 py-2 rounded-md text-base font-bold mx-3 mt-4 text-center hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 w-auto"
+              >
+                Start Free Trial
+              </button>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-white/10 transition-all duration-300"
+              >
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white block px-3 py-2 rounded-md text-base font-bold mx-3 mt-4 text-center hover:from-indigo-700 hover:to-purple-700 transition-all duration-300"
+              >
+                Start Free Trial
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </nav>

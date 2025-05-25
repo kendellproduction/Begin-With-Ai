@@ -13,7 +13,7 @@ import OfflineStatus from './components/OfflineStatus';
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
-import HomePage from './pages/HomePage';
+import HomePage from './pages/HomePage'; // Simplified version
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import LessonsOverview from './pages/LessonsOverview';
@@ -26,6 +26,14 @@ import Quiz from './pages/Quiz';
 import QuizResults from './pages/QuizResults';
 
 function App() {
+  // Simple inline component for testing
+  const SimpleHomeTest = () => (
+    <div style={{ padding: "100px", textAlign: "center", fontSize: "30px", background: "orange", color: "black" }}>
+      <h1>RAW APP.JS /home TEST</h1>
+      <p>If you see this, App.js can render a component at /home.</p>
+    </div>
+  );
+
   return (
     <Router>
       <AuthProvider>
@@ -33,50 +41,71 @@ function App() {
           <Layout>
             <OfflineStatus />
             <Routes>
+              {/* Public routes */}
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <Navigation />
-                  </ProtectedRoute>
-                }
-              >
-                <Route index element={<Navigate to="/home" replace />} />
-                <Route path="home" element={
-                  <SwipeNavigationWrapper>
-                    <HomePage />
-                  </SwipeNavigationWrapper>
-                } />
-                <Route path="dashboard" element={
-                  <SwipeNavigationWrapper>
-                    <Dashboard />
-                  </SwipeNavigationWrapper>
-                } />
-                <Route path="profile" element={
-                  <SwipeNavigationWrapper>
-                    <Profile />
-                  </SwipeNavigationWrapper>
-                } />
-                <Route path="settings" element={
-                  <SwipeNavigationWrapper>
-                    <Profile />
-                  </SwipeNavigationWrapper>
-                } />
-                <Route path="lessons" element={
-                  <SwipeNavigationWrapper>
-                    <LessonsOverview />
-                  </SwipeNavigationWrapper>
-                } />
-                <Route path="lessons/explore" element={<LessonsExplore />} />
-                <Route path="lessons/:lessonId" element={<LessonDetail />} />
-                <Route path="learning-path/quiz" element={<LearningPathQuiz />} />
-                <Route path="learning-path/results" element={<LearningPathResults />} />
-                <Route path="ai-news" element={<AiNews />} />
-                <Route path="lesson/:lessonId/quiz" element={<Quiz />} />
-                <Route path="lesson/:lessonId/results" element={<QuizResults />} />
+              
+              {/* Protected /home path */}
+              <Route path="/home" element={<ProtectedRoute />}>
+                <Route index element={<HomePage />} />
               </Route>
+
+              {/* Other protected routes - REFACTORED */}
+              <Route path="/dashboard" element={<ProtectedRoute requireEmailVerification={false} />}>
+                <Route index element={<Dashboard />} />
+              </Route>
+
+              <Route path="/profile" element={<ProtectedRoute />}>
+                {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile or a new layout */}
+                <Route index element={<Profile />} />
+              </Route>
+
+              <Route path="/settings" element={<ProtectedRoute />}>
+                {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile (or a new SettingsPage) or a new layout */}
+                <Route index element={<Profile />} /> {/* Assuming settings uses Profile page for now */}
+              </Route>
+
+              <Route path="/lessons" element={<ProtectedRoute />}>
+                {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside LessonsOverview or a new layout */}
+                <Route index element={<LessonsOverview />} />
+              </Route>
+
+              <Route path="/lessons/explore" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside LessonsExplore or a new layout */}
+                <Route index element={<LessonsExplore />} />
+              </Route>
+
+              <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside LessonDetail or a new layout */}
+                <Route index element={<LessonDetail />} />
+              </Route>
+
+              <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside LearningPathQuiz or a new layout */}
+                <Route index element={<LearningPathQuiz />} />
+              </Route>
+
+              <Route path="/learning-path/results" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside LearningPathResults or a new layout */}
+                <Route index element={<LearningPathResults />} />
+              </Route>
+
+              <Route path="/ai-news" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside AiNews or a new layout */}
+                <Route index element={<AiNews />} />
+              </Route>
+
+              <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside Quiz or a new layout */}
+                <Route index element={<Quiz />} />
+              </Route>
+
+              <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
+                {/* <Navigation /> would need to be inside QuizResults or a new layout */}
+                <Route index element={<QuizResults />} />
+              </Route>
+
             </Routes>
             <PWAInstallPrompt />
           </Layout>
