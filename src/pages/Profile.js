@@ -1,11 +1,12 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import { useAuth } from '../contexts/AuthContext';
+import { upsertUserProfile } from '../services/firestoreService';
 import { motion } from 'framer-motion';
 
 const Profile = () => {
-  const { currentUser, updateUserProfile } = useAuth();
+  const { user: currentUser } = useAuth();
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -14,17 +15,33 @@ const Profile = () => {
 
   // Form state
   const [formData, setFormData] = useState({
-    displayName: currentUser?.displayName || '',
-    bio: currentUser?.bio || '',
-    location: currentUser?.location || '',
-    website: currentUser?.website || '',
-    twitter: currentUser?.twitter || '',
-    linkedin: currentUser?.linkedin || '',
+    displayName: '',
+    bio: '',
+    location: '',
+    website: '',
+    twitter: '',
+    linkedin: '',
   });
 
   // Profile photo state
-  const [photoURL, setPhotoURL] = useState(currentUser?.photoURL || `https://ui-avatars.com/api/?name=${currentUser?.email}`);
+  const [photoURL, setPhotoURL] = useState('');
   const [photoPreview, setPhotoPreview] = useState(null);
+
+  // Effect to populate form data once currentUser and their Firestore profile are loaded
+  useEffect(() => {
+    if (currentUser) {
+      setPhotoURL(currentUser.photoURL || `https://ui-avatars.com/api/?name=${currentUser.email}`);
+      setFormData(prev => ({
+        ...prev,
+        displayName: currentUser.displayName || '',
+        bio: currentUser.bio || '',
+        location: currentUser.location || '',
+        website: currentUser.website || '',
+        twitter: currentUser.twitter || '',
+        linkedin: currentUser.linkedin || ''
+      }));
+    }
+  }, [currentUser]);
 
   // Mock data for gamification
   const userStats = {
@@ -73,16 +90,30 @@ const Profile = () => {
     setError('');
     setSuccess('');
 
+    if (!currentUser) {
+      setError('User not authenticated.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Update profile data
-      await updateUserProfile({
+      const profileDataToSave = {
         ...formData,
-        photoURL: photoPreview || photoURL
-      });
+      };
+      if (photoPreview) {
+        profileDataToSave.photoURL = photoPreview;
+      } else {
+        profileDataToSave.photoURL = photoURL;
+      }
+      
+      await upsertUserProfile(currentUser, profileDataToSave);
 
       setSuccess('Profile updated successfully!');
-      setPhotoURL(photoPreview || photoURL);
-      setPhotoPreview(null);
+      if (photoPreview) {
+        setPhotoURL(photoPreview);
+        setPhotoPreview(null);
+      }
+
     } catch (err) {
       setError(err.message);
     } finally {

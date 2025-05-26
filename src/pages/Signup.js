@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const { user, signUpWithEmail, signInWithGoogle } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -13,6 +13,13 @@ const Signup = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (user) {
+      console.log('SignupPage: User is logged in, redirecting to /home');
+      navigate('/home', { replace: true });
+    }
+  }, [user, navigate]);
 
   const handleChange = (e) => {
     setFormData({

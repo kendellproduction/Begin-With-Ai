@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
+import { getLearningPaths } from '../services/firestoreService';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -16,6 +17,11 @@ const HomePage = () => {
   const [weeklyGoalProgress, setWeeklyGoalProgress] = useState(0);
   const [showAchievement, setShowAchievement] = useState(false);
   const [todaysChallenge, setTodaysChallenge] = useState(null);
+
+  // State for learning paths
+  const [learningPaths, setLearningPaths] = useState([]);
+  const [loadingPaths, setLoadingPaths] = useState(true);
+  const [pathsError, setPathsError] = useState(null);
 
   // Inspirational quotes based on time of day
   const quotes = {
@@ -131,6 +137,25 @@ const HomePage = () => {
       setShowAchievement(true);
       localStorage.setItem('streak_achievement_shown', 'true');
     }
+
+    // Fetch learning paths
+    const fetchLearningPaths = async () => {
+      try {
+        setLoadingPaths(true);
+        const paths = await getLearningPaths();
+        setLearningPaths(paths);
+        setPathsError(null);
+      } catch (err) {
+        console.error("Error fetching learning paths:", err);
+        setPathsError(err.message);
+        setLearningPaths([]); // Clear paths on error
+      } finally {
+        setLoadingPaths(false);
+      }
+    };
+
+    fetchLearningPaths();
+
   }, [userStats]); // Added userStats as dependency
 
   const getUserGreeting = () => {
@@ -350,6 +375,56 @@ const HomePage = () => {
 
             </div>
           </div>
+
+          {/* Learning Paths Section */}
+          <section className="mb-12">
+            <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+              <h2 className="text-2xl font-bold text-white mb-6">Available Learning Paths</h2>
+              {loadingPaths && <p className="text-gray-300">Loading learning paths...</p>}
+              {pathsError && <p className="text-red-400">Error loading paths: {pathsError}</p>}
+              {!loadingPaths && !pathsError && learningPaths.length === 0 && (
+                <p className="text-gray-400">No learning paths available at the moment. Check back soon!</p>
+              )}
+              {!loadingPaths && !pathsError && learningPaths.length > 0 && (
+                <ul className="space-y-4">
+                  {learningPaths.map(path => {
+                    const canAccess = !path.isPremium || 
+                                      (user && user.role === 'admin') || 
+                                      (user && user.role === 'developer') || 
+                                      (user && user.subscriptionTier !== 'free'); // Simplified: any non-free tier can access
+                                      // Add more nuanced subscription checks later if needed (e.g., subscriptionValidUntil)
+
+                    return (
+                      <li key={path.id} className={`p-4 bg-black/30 rounded-lg shadow ${!canAccess ? 'opacity-70' : ''}`}>
+                        <div className="flex justify-between items-center">
+                          <h3 className={`text-xl font-semibold ${canAccess ? 'text-indigo-400' : 'text-gray-500'}`}>{path.title}</h3>
+                          {path.isPremium && (
+                            <span className={`px-2 py-0.5 text-xs rounded-full font-semibold ${canAccess && user?.role !== 'admin' && user?.role !== 'developer' ? 'bg-green-500/30 text-green-300' : 'bg-yellow-500/30 text-yellow-300'}`}>
+                              {canAccess && user?.role !== 'admin' && user?.role !== 'developer' ? 'Subscribed' : 'Premium'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-400">{path.description}</p>
+                        <div className="mt-3">
+                          {canAccess ? (
+                            <Link to={`/lessons/overview/${path.id}`} className="text-indigo-300 hover:text-indigo-200 font-medium hover:underline">
+                              Start Learning →
+                            </Link>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <span className="text-yellow-400 font-semibold">🔒 Upgrade to Access</span>
+                              {/* Optionally, add a Link to a subscription page */}
+                              {/* <Link to="/subscribe" className="text-sm text-indigo-400 hover:underline">Subscribe Now</Link> */}
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
         </main>
       </div>
     </SwipeNavigationWrapper>

@@ -8,6 +8,7 @@ import {
   createUserWithEmailAndPassword
 } from 'firebase/auth';
 import { auth } from '../firebase';
+import { upsertUserProfile, getUserProfile } from '../services/firestoreService';
 
 const AuthContext = createContext({});
 
@@ -19,9 +20,37 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     console.log('Setting up auth state listener...');
     const unsubscribe = onAuthStateChanged(auth, 
-      (user) => {
-        console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-        setUser(user);
+      async (authUser) => {
+        console.log('Auth state changed:', authUser ? 'User logged in' : 'No user');
+        if (authUser) {
+          try {
+            // First, ensure the profile is created or updated in Firestore
+            await upsertUserProfile(authUser);
+            console.log('User profile upserted after auth state change.');
+
+            // Then, fetch the complete profile from Firestore
+            const firestoreProfile = await getUserProfile(authUser.uid);
+            console.log('Fetched Firestore profile:', firestoreProfile);
+
+            if (firestoreProfile) {
+              // Combine authUser properties (like emailVerified, providerData) with Firestore profile
+              setUser({ ...authUser, ...firestoreProfile }); 
+            } else {
+              // This case should ideally not happen if upsertUserProfile worked,
+              // but as a fallback, set user to the authUser.
+              // Log a warning, as this means Firestore data is missing.
+              console.warn(`Firestore profile not found for ${authUser.uid} after upsert. Setting user to authUser only.`);
+              setUser(authUser); 
+            }
+          } catch (profileError) {
+            console.error('Error during profile processing after auth state change:', profileError);
+            // If profile operations fail, set user to basic authUser and potentially set an error state
+            setUser(authUser); 
+            // setError(profileError.message); // Or a more specific error
+          }
+        } else {
+          setUser(null); // No authenticated user
+        }
         setLoading(false);
       }, 
       (error) => {
@@ -42,8 +71,9 @@ export const AuthProvider = ({ children }) => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
-      console.log('Google sign in successful');
-      return result.user;
+      // onAuthStateChanged will handle user profile creation/fetching
+      console.log('Google sign in successful, onAuthStateChanged will process profile.');
+      return result.user; // Still return the auth user for immediate use if needed by caller
     } catch (error) {
       console.error('Error signing in with Google:', error);
       throw error;
@@ -54,7 +84,8 @@ export const AuthProvider = ({ children }) => {
     console.log('Attempting email sign in...');
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Email sign in successful');
+      // onAuthStateChanged will handle user profile creation/fetching
+      console.log('Email sign in successful, onAuthStateChanged will process profile.');
       return result.user;
     } catch (error) {
       console.error('Error signing in with email:', error);
@@ -66,7 +97,8 @@ export const AuthProvider = ({ children }) => {
     console.log('Attempting email sign up...');
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Email sign up successful');
+      // onAuthStateChanged will handle user profile creation/fetching
+      console.log('Email sign up successful, onAuthStateChanged will process profile.');
       return result.user;
     } catch (error) {
       console.error('Error signing up with email:', error);

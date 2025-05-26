@@ -10,9 +10,16 @@ const LandingPage = () => {
   console.log('🚀 NEW LANDING PAGE IS LOADING!!!');
   
   const navigate = useNavigate();
+  const { user, signInWithEmail, signInWithGoogle, signUpWithEmail } = useAuth(); // RESTORED
   
-  const { user, signInWithEmail, signInWithGoogle, signUpWithEmail } = useAuth();
-  
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      console.log('LandingPage: User is logged in, redirecting to /home');
+      navigate('/home', { replace: true });
+    }
+  }, [user, navigate]);
+
   console.log('👤 User state:', user);
   console.log('📍 Current URL:', window.location.href);
   
