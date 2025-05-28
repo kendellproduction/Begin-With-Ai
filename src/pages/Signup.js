@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
+import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
+import { checkPasswordStrength } from '../utils/validation'; // Import from utils
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -11,6 +13,7 @@ const Signup = () => {
     password: '',
     confirmPassword: ''
   });
+  const [passwordStrengthDetails, setPasswordStrengthDetails] = useState(checkPasswordStrength(''));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -22,28 +25,48 @@ const Signup = () => {
   }, [user, navigate]);
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+    if (name === 'password') {
+      setPasswordStrengthDetails(checkPasswordStrength(value));
+    }
+    setError(''); // Clear error on any change
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError(''); // Clear previous errors
+
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError('Password must be at least 6 characters');
+    const { criteria, strength } = checkPasswordStrength(formData.password);
+
+    let errorMessages = [];
+    if (!criteria.length) errorMessages.push('Password must be at least 8 characters.');
+    if (!criteria.uppercase) errorMessages.push('Password must contain an uppercase letter.');
+    if (!criteria.lowercase) errorMessages.push('Password must contain a lowercase letter.');
+    if (!criteria.number) errorMessages.push('Password must contain a number.');
+    if (!criteria.specialChar) errorMessages.push('Password must contain a special character.');
+
+    if (errorMessages.length > 0) {
+      // For now, setting the first error message. We can enhance this to show all.
+      setError(errorMessages.join(' ')); 
       return;
+    }
+    
+    // If all criteria are met (strength === 5)
+    if (strength < 5) { // This check is a bit redundant if errorMessages is empty, but good for explicit clarity
+        setError('Password does not meet all strength requirements.'); // Generic fallback
+        return;
     }
 
     setLoading(true);
-    setError('');
-
     try {
       await signUpWithEmail(formData.email, formData.password);
       navigate('/home');
@@ -126,6 +149,9 @@ const Signup = () => {
                   className="w-full px-4 py-3 bg-black/30 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-300"
                   placeholder="Create a password"
                 />
+                {(formData.password !== '' || passwordStrengthDetails.strength > 0) && (
+                   <PasswordStrengthIndicator strengthDetails={passwordStrengthDetails} />
+                )}
               </div>
 
               <div>

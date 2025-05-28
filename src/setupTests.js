@@ -3,3 +3,9 @@
 // expect(element).toHaveTextContent(/react/i)
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+
+// Mock Firebase Analytics to prevent errors in test environment
+jest.mock('firebase/analytics', () => ({
+  getAnalytics: jest.fn(),
+  logEvent: jest.fn(), // if you use logEvent, mock it too
+}));

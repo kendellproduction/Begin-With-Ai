@@ -24,6 +24,7 @@ import LearningPathResults from './pages/LearningPathResults';
 import AiNews from './pages/AiNews';
 import Quiz from './pages/Quiz';
 import QuizResults from './pages/QuizResults';
+import ForgotPassword from './pages/ForgotPassword';
 
 function App() {
   // Simple inline component for testing
@@ -45,6 +46,7 @@ function App() {
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
               
               {/* Protected /home path */}
               <Route path="/home" element={<ProtectedRoute />}>

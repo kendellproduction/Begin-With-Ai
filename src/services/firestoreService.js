@@ -1,4 +1,4 @@
-import { doc, setDoc, serverTimestamp, getDoc, collection, getDocs } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, getDoc, collection, getDocs, deleteDoc, query, orderBy, where } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth'; // Import updateProfile from Firebase Auth
 import { db, auth } from '../firebase'; // Adjust path as necessary, ensure auth is exported from firebase.js
 
@@ -143,6 +143,131 @@ export const getLearningPaths = async () => {
     return paths;
   } catch (error) {
     console.error('Error fetching learning paths:', error);
+    throw error;
+  }
+};
+
+/**
+ * Deletes a user's profile document from Firestore.
+ * @param {string} uid - The user's UID.
+ * @returns {Promise<void>} A promise that resolves when the user's Firestore data is deleted.
+ */
+export const deleteUserFirestoreData = async (uid) => {
+  if (!uid) {
+    console.error('UID is required to delete user Firestore data.');
+    throw new Error('UID is required to delete user Firestore data.');
+  }
+  const userRef = doc(db, 'users', uid);
+  try {
+    await deleteDoc(userRef);
+    console.log(`Firestore data for user ${uid} deleted successfully.`);
+    // If you have other collections keyed by UID (e.g., user_lessons, user_activity),
+    // you would need to delete those documents here as well. This might involve
+    // querying for those documents and deleting them in a batch or individually.
+    // For now, this only deletes the main user document.
+  } catch (error) {
+    console.error(`Error deleting Firestore data for user ${uid}:`, error);
+    throw error; // Re-throw for further handling
+  }
+};
+
+/**
+ * Fetches a specific learning path by its ID.
+ * @param {string} pathId - The ID of the learning path.
+ * @returns {Promise<object|null>} Learning path data or null if not found.
+ */
+export const getLearningPathById = async (pathId) => {
+  if (!pathId) {
+    console.error('pathId is required to fetch a learning path.');
+    return null;
+  }
+  const pathRef = doc(db, 'learningPaths', pathId);
+  try {
+    const docSnap = await getDoc(pathRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    console.warn(`Learning path with ID ${pathId} not found.`);
+    return null;
+  } catch (error) {
+    console.error(`Error fetching learning path ${pathId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches all modules for a specific learning path, ordered by 'order' field.
+ * @param {string} pathId - The ID of the learning path.
+ * @returns {Promise<Array<object>>} Array of module objects.
+ */
+export const getModulesForPath = async (pathId) => {
+  if (!pathId) {
+    console.error('pathId is required to fetch modules.');
+    return [];
+  }
+  const modulesCollectionRef = collection(db, 'learningPaths', pathId, 'modules');
+  const q = query(modulesCollectionRef, orderBy('order', 'asc')); // Assuming an 'order' field
+  try {
+    const querySnapshot = await getDocs(q);
+    const modules = [];
+    querySnapshot.forEach((doc) => {
+      modules.push({ id: doc.id, ...doc.data() });
+    });
+    return modules;
+  } catch (error) {
+    console.error(`Error fetching modules for path ${pathId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches all lessons for a specific module within a learning path, ordered by 'order' field.
+ * @param {string} pathId - The ID of the learning path.
+ * @param {string} moduleId - The ID of the module.
+ * @returns {Promise<Array<object>>} Array of lesson objects.
+ */
+export const getLessonsForModule = async (pathId, moduleId) => {
+  if (!pathId || !moduleId) {
+    console.error('pathId and moduleId are required to fetch lessons.');
+    return [];
+  }
+  const lessonsCollectionRef = collection(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons');
+  const q = query(lessonsCollectionRef, orderBy('order', 'asc')); // Assuming an 'order' field
+  try {
+    const querySnapshot = await getDocs(q);
+    const lessons = [];
+    querySnapshot.forEach((doc) => {
+      lessons.push({ id: doc.id, ...doc.data() });
+    });
+    return lessons;
+  } catch (error) {
+    console.error(`Error fetching lessons for module ${moduleId} in path ${pathId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches a specific lesson by its IDs.
+ * @param {string} pathId - The ID of the learning path.
+ * @param {string} moduleId - The ID of the module.
+ * @param {string} lessonId - The ID of the lesson.
+ * @returns {Promise<object|null>} Lesson data or null if not found.
+ */
+export const getLessonById = async (pathId, moduleId, lessonId) => {
+  if (!pathId || !moduleId || !lessonId) {
+    console.error('pathId, moduleId, and lessonId are required to fetch a lesson.');
+    return null;
+  }
+  const lessonRef = doc(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons', lessonId);
+  try {
+    const docSnap = await getDoc(lessonRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    console.warn(`Lesson with ID ${lessonId} in module ${moduleId}, path ${pathId} not found.`);
+    return null;
+  } catch (error) {
+    console.error(`Error fetching lesson ${lessonId}:`, error);
     throw error;
   }
 };

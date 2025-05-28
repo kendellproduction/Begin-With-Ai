@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCvdEGVr6QRX5fFF4ma33RGY6Dnlbbc8c4",
@@ -36,5 +36,12 @@ console.log('Firebase analytics initialized');
 // Initialize Firestore Database
 const db = getFirestore(app);
 console.log('Firebase Firestore initialized');
+
+// TEMPORARY - REMOVE AFTER DATA POPULATION
+window.db = db;
+window.doc = doc;
+window.setDoc = setDoc;
+console.log("Firebase db, doc, setDoc are now temporarily on the window object for data seeding.");
+// END TEMPORARY
 
 export { auth, googleProvider, analytics, db }; 
