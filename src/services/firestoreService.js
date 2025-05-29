@@ -274,3 +274,488 @@ export const getLessonById = async (pathId, moduleId, lessonId) => {
 
 // We can add more functions here to interact with other collections:
 // e.g., getLessonsForModule, updateUserProgress, etc. 
+
+/**
+ * Records or updates user progress for a specific lesson.
+ * @param {string} userId - The user's UID.
+ * @param {string} lessonId - The lesson ID.
+ * @param {string} lessonModuleId - The module ID.
+ * @param {string} learningPathId - The learning path ID.
+ * @param {object} progressData - Progress data including status, score, userInputs, etc.
+ * @returns {Promise<void>}
+ */
+export const updateUserProgress = async (userId, lessonId, lessonModuleId, learningPathId, progressData) => {
+  if (!userId || !lessonId) {
+    console.error('userId and lessonId are required to update progress.');
+    throw new Error('userId and lessonId are required to update progress.');
+  }
+
+  const progressRef = doc(db, 'userProgress', `${userId}_${lessonId}`);
+  
+  const progressDoc = {
+    userId,
+    lessonId,
+    lessonModuleId,
+    learningPathId,
+    status: progressData.status || 'in_progress',
+    score: progressData.score || null,
+    userInputs: progressData.userInputs || [],
+    notes: progressData.notes || '',
+    updatedAt: serverTimestamp(),
+    ...progressData
+  };
+
+  // If completing a lesson, set completedAt timestamp
+  if (progressData.status === 'completed') {
+    progressDoc.completedAt = serverTimestamp();
+  }
+
+  try {
+    await setDoc(progressRef, progressDoc, { merge: true });
+    console.log(`Progress updated for user ${userId}, lesson ${lessonId}`);
+  } catch (error) {
+    console.error('Error updating user progress:', error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches user progress for a specific lesson.
+ * @param {string} userId - The user's UID.
+ * @param {string} lessonId - The lesson ID.
+ * @returns {Promise<object|null>} Progress data or null if not found.
+ */
+export const getUserProgressForLesson = async (userId, lessonId) => {
+  if (!userId || !lessonId) {
+    console.error('userId and lessonId are required to fetch progress.');
+    return null;
+  }
+
+  const progressRef = doc(db, 'userProgress', `${userId}_${lessonId}`);
+  
+  try {
+    const docSnap = await getDoc(progressRef);
+    if (docSnap.exists()) {
+      return { id: docSnap.id, ...docSnap.data() };
+    }
+    return null;
+  } catch (error) {
+    console.error(`Error fetching progress for lesson ${lessonId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Fetches all user progress for a specific learning path.
+ * @param {string} userId - The user's UID.
+ * @param {string} learningPathId - The learning path ID.
+ * @returns {Promise<Array<object>>} Array of progress objects.
+ */
+export const getUserProgressForPath = async (userId, learningPathId) => {
+  if (!userId || !learningPathId) {
+    console.error('userId and learningPathId are required to fetch path progress.');
+    return [];
+  }
+
+  const progressCollectionRef = collection(db, 'userProgress');
+  const q = query(
+    progressCollectionRef, 
+    where('userId', '==', userId),
+    where('learningPathId', '==', learningPathId)
+  );
+
+  try {
+    const querySnapshot = await getDocs(q);
+    const progressList = [];
+    querySnapshot.forEach((doc) => {
+      progressList.push({ id: doc.id, ...doc.data() });
+    });
+    return progressList;
+  } catch (error) {
+    console.error(`Error fetching path progress for ${learningPathId}:`, error);
+    throw error;
+  }
+};
+
+/**
+ * Awards XP to a user and updates their profile.
+ * @param {string} userId - The user's UID.
+ * @param {number} xpAmount - Amount of XP to award.
+ * @param {string} reason - Reason for XP award (e.g., 'lesson_completion').
+ * @returns {Promise<object>} Updated user stats including new level if applicable.
+ */
+export const awardXP = async (userId, xpAmount, reason = 'lesson_completion') => {
+  if (!userId || !xpAmount) {
+    console.error('userId and xpAmount are required to award XP.');
+    throw new Error('userId and xpAmount are required to award XP.');
+  }
+
+  const userRef = doc(db, 'users', userId);
+  
+  try {
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+      throw new Error(`User ${userId} not found.`);
+    }
+
+    const userData = userDoc.data();
+    const currentXP = userData.xp || 0;
+    const newXP = currentXP + xpAmount;
+    
+    // Calculate level based on XP (100 XP per level for simplicity)
+    const newLevel = Math.floor(newXP / 100) + 1;
+    const currentLevel = Math.floor(currentXP / 100) + 1;
+    const leveledUp = newLevel > currentLevel;
+
+    // Update user profile
+    await setDoc(userRef, {
+      xp: newXP,
+      level: newLevel,
+      lastXPAward: {
+        amount: xpAmount,
+        reason,
+        timestamp: serverTimestamp()
+      }
+    }, { merge: true });
+
+    console.log(`Awarded ${xpAmount} XP to user ${userId}. New total: ${newXP}`);
+
+    return {
+      newXP,
+      newLevel,
+      leveledUp,
+      xpAwarded: xpAmount
+    };
+  } catch (error) {
+    console.error('Error awarding XP:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates user's streak information.
+ * @param {string} userId - The user's UID.
+ * @returns {Promise<object>} Updated streak information.
+ */
+export const updateUserStreak = async (userId) => {
+  if (!userId) {
+    console.error('userId is required to update streak.');
+    throw new Error('userId is required to update streak.');
+  }
+
+  const userRef = doc(db, 'users', userId);
+  
+  try {
+    const userDoc = await getDoc(userRef);
+    if (!userDoc.exists()) {
+      throw new Error(`User ${userId} not found.`);
+    }
+
+    const userData = userDoc.data();
+    const streaks = userData.streaks || { currentStreak: 0, longestStreak: 0, lastActivityDate: null };
+    
+    const today = new Date().toDateString();
+    const lastActivity = streaks.lastActivityDate ? new Date(streaks.lastActivityDate.toDate()).toDateString() : null;
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toDateString();
+
+    let newCurrentStreak = streaks.currentStreak;
+    
+    if (lastActivity === today) {
+      // Already counted today, no change
+      return streaks;
+    } else if (lastActivity === yesterday) {
+      // Consecutive day, increment streak
+      newCurrentStreak = streaks.currentStreak + 1;
+    } else {
+      // Streak broken or first activity, reset to 1
+      newCurrentStreak = 1;
+    }
+
+    const newLongestStreak = Math.max(streaks.longestStreak, newCurrentStreak);
+    
+    const updatedStreaks = {
+      currentStreak: newCurrentStreak,
+      longestStreak: newLongestStreak,
+      lastActivityDate: serverTimestamp()
+    };
+
+    await setDoc(userRef, { streaks: updatedStreaks }, { merge: true });
+    
+    console.log(`Updated streak for user ${userId}: ${newCurrentStreak} days`);
+    
+    return {
+      ...updatedStreaks,
+      streakIncreased: newCurrentStreak > streaks.currentStreak
+    };
+  } catch (error) {
+    console.error('Error updating user streak:', error);
+    throw error;
+  }
+};
+
+/**
+ * Checks and awards badges to a user based on their progress.
+ * @param {string} userId - The user's UID.
+ * @returns {Promise<Array<object>>} Array of newly awarded badges.
+ */
+export const checkAndAwardBadges = async (userId) => {
+  if (!userId) {
+    console.error('userId is required to check badges.');
+    return [];
+  }
+
+  try {
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) {
+      throw new Error(`User ${userId} not found.`);
+    }
+
+    const userData = userDoc.data();
+    const currentBadges = userData.badges || [];
+    const newBadges = [];
+
+    // Define badge criteria
+    const badgeCriteria = [
+      {
+        id: 'first_lesson',
+        name: 'First Steps',
+        description: 'Completed your first lesson',
+        check: async () => {
+          const progressQuery = query(
+            collection(db, 'userProgress'),
+            where('userId', '==', userId),
+            where('status', '==', 'completed')
+          );
+          const snapshot = await getDocs(progressQuery);
+          return snapshot.size >= 1;
+        }
+      },
+      {
+        id: 'lesson_streak_3',
+        name: 'Consistent Learner',
+        description: 'Maintained a 3-day learning streak',
+        check: () => (userData.streaks?.currentStreak || 0) >= 3
+      },
+      {
+        id: 'lesson_streak_7',
+        name: 'Week Warrior',
+        description: 'Maintained a 7-day learning streak',
+        check: () => (userData.streaks?.currentStreak || 0) >= 7
+      },
+      {
+        id: 'xp_100',
+        name: 'XP Collector',
+        description: 'Earned 100 XP',
+        check: () => (userData.xp || 0) >= 100
+      },
+      {
+        id: 'xp_500',
+        name: 'XP Master',
+        description: 'Earned 500 XP',
+        check: () => (userData.xp || 0) >= 500
+      },
+      {
+        id: 'lessons_10',
+        name: 'Dedicated Student',
+        description: 'Completed 10 lessons',
+        check: async () => {
+          const progressQuery = query(
+            collection(db, 'userProgress'),
+            where('userId', '==', userId),
+            where('status', '==', 'completed')
+          );
+          const snapshot = await getDocs(progressQuery);
+          return snapshot.size >= 10;
+        }
+      }
+    ];
+
+    // Check each badge
+    for (const badge of badgeCriteria) {
+      if (!currentBadges.includes(badge.id)) {
+        const earned = typeof badge.check === 'function' ? await badge.check() : badge.check;
+        if (earned) {
+          newBadges.push(badge);
+          currentBadges.push(badge.id);
+        }
+      }
+    }
+
+    // Update user badges if any new ones were earned
+    if (newBadges.length > 0) {
+      await setDoc(doc(db, 'users', userId), { badges: currentBadges }, { merge: true });
+      console.log(`Awarded ${newBadges.length} new badges to user ${userId}`);
+    }
+
+    return newBadges;
+  } catch (error) {
+    console.error('Error checking and awarding badges:', error);
+    throw error;
+  }
+};
+
+/**
+ * Completes a lesson for a user, updating progress, awarding XP, updating streaks, and checking badges.
+ * @param {string} userId - The user's UID.
+ * @param {string} lessonId - The lesson ID.
+ * @param {string} lessonModuleId - The module ID.
+ * @param {string} learningPathId - The learning path ID.
+ * @param {object} completionData - Additional completion data (score, userInputs, etc.).
+ * @returns {Promise<object>} Completion results including XP, level changes, badges, etc.
+ */
+export const completeLesson = async (userId, lessonId, lessonModuleId, learningPathId, completionData = {}) => {
+  if (!userId || !lessonId) {
+    console.error('userId and lessonId are required to complete lesson.');
+    throw new Error('userId and lessonId are required to complete lesson.');
+  }
+
+  try {
+    // 1. Update lesson progress
+    await updateUserProgress(userId, lessonId, lessonModuleId, learningPathId, {
+      status: 'completed',
+      score: completionData.score || 100,
+      userInputs: completionData.userInputs || [],
+      notes: completionData.notes || ''
+    });
+
+    // 2. Award XP (default 10 XP per lesson, can be customized)
+    const xpAmount = completionData.xpAward || 10;
+    const xpResult = await awardXP(userId, xpAmount, 'lesson_completion');
+
+    // 3. Update streak
+    const streakResult = await updateUserStreak(userId);
+
+    // 4. Check and award badges
+    const newBadges = await checkAndAwardBadges(userId);
+
+    // 5. Update user's current lesson tracking
+    await setDoc(doc(db, 'users', userId), {
+      currentLessonId: lessonId,
+      currentLessonModuleId: lessonModuleId,
+      currentLearningPathId: learningPathId,
+      lastActivityAt: serverTimestamp()
+    }, { merge: true });
+
+    console.log(`Lesson ${lessonId} completed for user ${userId}`);
+
+    return {
+      lessonCompleted: true,
+      xp: xpResult,
+      streak: streakResult,
+      badges: newBadges,
+      completedAt: new Date()
+    };
+  } catch (error) {
+    console.error('Error completing lesson:', error);
+    throw error;
+  }
+};
+
+/**
+ * Gets comprehensive user statistics including progress, XP, streaks, and badges.
+ * @param {string} userId - The user's UID.
+ * @returns {Promise<object>} User statistics object.
+ */
+export const getUserStats = async (userId) => {
+  if (!userId) {
+    console.error('userId is required to get user stats.');
+    return null;
+  }
+
+  try {
+    // Get user profile
+    const userDoc = await getDoc(doc(db, 'users', userId));
+    if (!userDoc.exists()) {
+      throw new Error(`User ${userId} not found.`);
+    }
+
+    const userData = userDoc.data();
+
+    // Get completed lessons count
+    const progressQuery = query(
+      collection(db, 'userProgress'),
+      where('userId', '==', userId),
+      where('status', '==', 'completed')
+    );
+    const progressSnapshot = await getDocs(progressQuery);
+    const completedLessons = progressSnapshot.size;
+
+    // Calculate level and XP to next level
+    const currentXP = userData.xp || 0;
+    const currentLevel = Math.floor(currentXP / 100) + 1;
+    const xpToNextLevel = 100 - (currentXP % 100);
+
+    return {
+      userId,
+      xp: currentXP,
+      level: currentLevel,
+      xpToNextLevel,
+      completedLessons,
+      badges: userData.badges || [],
+      badgeCount: (userData.badges || []).length,
+      streaks: userData.streaks || { currentStreak: 0, longestStreak: 0 },
+      currentStreak: userData.streaks?.currentStreak || 0,
+      longestStreak: userData.streaks?.longestStreak || 0,
+      currentLearningPathId: userData.currentLearningPathId,
+      currentLessonModuleId: userData.currentLessonModuleId,
+      currentLessonId: userData.currentLessonId,
+      lastActivityAt: userData.lastActivityAt,
+      createdAt: userData.createdAt
+    };
+  } catch (error) {
+    console.error('Error getting user stats:', error);
+    throw error;
+  }
+};
+
+/**
+ * Syncs localStorage progress data to Firestore for a user.
+ * @param {string} userId - The user's UID.
+ * @returns {Promise<void>}
+ */
+export const syncLocalProgressToFirestore = async (userId) => {
+  if (!userId) {
+    console.error('userId is required to sync progress.');
+    return;
+  }
+
+  try {
+    // Get learning path from localStorage
+    const localPath = localStorage.getItem('userLearningPath');
+    if (!localPath) {
+      console.log('No local learning path found to sync.');
+      return;
+    }
+
+    const pathData = JSON.parse(localPath);
+    const completedLessons = pathData.completedLessons || [];
+
+    // Sync each completed lesson
+    for (const lessonId of completedLessons) {
+      const lesson = pathData.lessons?.find(l => l.id === lessonId);
+      if (lesson) {
+        await updateUserProgress(userId, lessonId, null, null, {
+          status: 'completed',
+          score: 100,
+          syncedFromLocal: true
+        });
+      }
+    }
+
+    // Update user's current position
+    if (pathData.nextLessonIndex !== undefined && pathData.lessons) {
+      const currentLesson = pathData.lessons[pathData.nextLessonIndex];
+      if (currentLesson) {
+        await setDoc(doc(db, 'users', userId), {
+          currentLessonId: currentLesson.id,
+          currentLearningPathId: pathData.pathId || 'local_path'
+        }, { merge: true });
+      }
+    }
+
+    console.log(`Synced ${completedLessons.length} lessons from localStorage to Firestore`);
+  } catch (error) {
+    console.error('Error syncing local progress to Firestore:', error);
+    throw error;
+  }
+}; 

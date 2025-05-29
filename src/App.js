@@ -9,6 +9,12 @@ import SwipeNavigationWrapper from './components/SwipeNavigationWrapper';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineStatus from './components/OfflineStatus';
 
+// Import gamification components
+import GamificationNotifications from './components/GamificationNotifications';
+import LevelUpModal from './components/LevelUpModal';
+import BadgeModal from './components/BadgeModal';
+import AdaptiveDatabaseSeeder from './components/AdaptiveDatabaseSeeder';
+
 // Import pages
 import LandingPage from './pages/LandingPage';
 import Login from './pages/Login';
@@ -20,6 +26,7 @@ import LessonsOverview from './pages/LessonsOverview';
 import LessonsExplore from './pages/LessonsExplore';
 import LessonDetail from './pages/LessonDetail';
 import LearningPathQuiz from './pages/LearningPathQuiz';
+import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
 import LearningPathResults from './pages/LearningPathResults';
 import AiNews from './pages/AiNews';
 import Quiz from './pages/Quiz';
@@ -88,6 +95,11 @@ function App() {
                 <Route index element={<LearningPathQuiz />} />
               </Route>
 
+              <Route path="/learning-path/adaptive-quiz" element={<ProtectedRoute />}>
+                {/* New adaptive quiz for better skill assessment */}
+                <Route index element={<AdaptiveLearningPathQuiz />} />
+              </Route>
+
               <Route path="/learning-path/results" element={<ProtectedRoute />}>
                 {/* <Navigation /> would need to be inside LearningPathResults or a new layout */}
                 <Route index element={<LearningPathResults />} />
@@ -109,6 +121,15 @@ function App() {
               </Route>
 
             </Routes>
+            
+            {/* Gamification Components - Available throughout the app */}
+            <GamificationNotifications />
+            <LevelUpModal />
+            <BadgeModal />
+            
+            {/* Development Tools */}
+            <AdaptiveDatabaseSeeder />
+            
             <PWAInstallPrompt />
           </Layout>
         </GamificationProvider>

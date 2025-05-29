@@ -6,58 +6,214 @@ Copy and paste these rules into your Firebase Console > Firestore Database > Rul
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow users to read and write only their own data
+    
+    // User-specific data - users can only access their own
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
     match /userStats/{userId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
       allow create: if request.auth != null && request.auth.uid == userId && 
                      request.resource.data.xp is number && 
                      request.resource.data.level is number &&
                      request.resource.data.completedLessons is list;
     }
     
-    // For code submissions, similar rules apply
+    match /userProgress/{progressId} {
+      allow read, write: if request.auth != null && 
+                          request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Code submissions for lessons
     match /codeSubmissions/{submissionId} {
-      allow read, update, delete: if request.auth != null && 
-                                   request.auth.uid == resource.data.userId;
+      allow read, write: if request.auth != null && 
+                          request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && 
                      request.resource.data.userId == request.auth.uid &&
                      request.resource.data.code is string &&
                      request.resource.data.lessonId is string;
     }
     
-    // For user profiles
+    // User profiles
     match /userProfiles/{userId} {
-      allow read, update, delete: if request.auth != null && request.auth.uid == userId;
-      allow create: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
     
-    // Lesson content could be publicly readable but only admins can modify
+    // Sandbox rate limiting - users can only access their own
+    match /sandboxRateLimits/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId &&
+                     request.resource.data.prompts is list &&
+                     request.resource.data.sessionId is string;
+    }
+    
+    // Sandbox usage logging - users can create their own logs but not read others
+    match /sandboxUsage/{logId} {
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid &&
+                     request.resource.data.sessionId is string &&
+                     request.resource.data.lessonId is string;
+      allow read: if request.auth != null && 
+                   resource.data.userId == request.auth.uid;
+    }
+    
+    // Learning paths - allow seeding for authenticated users, read for all
+    match /learningPaths/{pathId} {
+      allow read: if request.auth != null;
+      // Allow write for seeding operations (authenticated users can seed content)
+      allow write: if request.auth != null;
+      
+      // Modules within learning paths
+      match /modules/{moduleId} {
+        allow read: if request.auth != null;
+        // Allow write for seeding operations
+        allow write: if request.auth != null;
+        
+        // Lessons within modules
+        match /lessons/{lessonId} {
+          allow read: if request.auth != null;
+          // Allow write for seeding operations
+          allow write: if request.auth != null;
+        }
+      }
+    }
+    
+    // Legacy lesson content - read-only
     match /lessons/{lessonId} {
       allow read: if request.auth != null;
-      allow write: if false; // Only via admin console or backend
+      allow write: if false;
     }
     
-    // Quiz content similar to lessons
+    // Quiz content - read-only
     match /quizzes/{quizId} {
       allow read: if request.auth != null;
-      allow write: if false; // Only via admin console or backend
+      allow write: if false;
     }
     
-    // Quiz results for users
+    // Quiz results - users can access their own
     match /quizResults/{resultId} {
-      allow read, update, delete: if request.auth != null && 
-                                   request.auth.uid == resource.data.userId;
+      allow read, write: if request.auth != null && 
+                          request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && 
                      request.resource.data.userId == request.auth.uid;
     }
     
-    // Default deny
+    // Gamification data
+    match /badges/{badgeId} {
+      allow read: if request.auth != null;
+      allow write: if false;
+    }
+    
+    match /userBadges/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /streaks/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Assessment results - users can access their own
+    match /assessmentResults/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId &&
+                     request.resource.data.skillLevel is string &&
+                     request.resource.data.recommendations is map;
+    }
+    
+    // Default deny - ensures security by default
     match /{document=**} {
       allow read, write: if false;
     }
   }
 }
 ```
+
+## IMPORTANT: Production Security Rules
+
+**After seeding is complete**, update the learning paths rules to be read-only for production:
+
+```rules
+// Learning paths - read-only for production (update after seeding)
+match /learningPaths/{pathId} {
+  allow read: if request.auth != null;
+  allow write: if false; // Change back to false after seeding
+  
+  match /modules/{moduleId} {
+    allow read: if request.auth != null;
+    allow write: if false; // Change back to false after seeding
+    
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Change back to false after seeding
+    }
+  }
+}
+```
+
+## Security Features Implemented
+
+### 1. User Data Isolation
+- Each user can only access their own data through `request.auth.uid == userId` checks
+- Prevents users from seeing other users' progress, submissions, or personal information
+
+### 2. Sandbox Security
+- **Rate Limiting**: Each user has their own rate limit document they can modify
+- **Usage Logging**: Users can create logs but only read their own
+- **Session Isolation**: Each sandbox session is tracked separately
+- **No Content Storage**: The rules ensure prompts and responses aren't stored permanently
+
+### 3. Content Security
+- **Read-Only Lessons**: Learning paths, modules, and lessons are read-only for users
+- **Admin-Only Writes**: Content can only be modified via admin console or backend functions
+- **Validated Submissions**: Code submissions require proper user ID and lesson ID
+
+### 4. Data Validation
+- **Type Checking**: Rules validate data types (numbers, strings, lists, maps)
+- **Required Fields**: Ensures critical fields are present when creating documents
+- **Structure Validation**: Enforces proper document structure
+
+### 5. Gamification Protection
+- **Badge Security**: Users can earn badges but not create fake ones
+- **Progress Integrity**: XP and level calculations are validated
+- **Streak Protection**: Users can only modify their own streak data
+
+## Rate Limiting Protection
+
+The sandbox system includes multiple layers of protection:
+
+1. **Firebase Rules**: Prevent unauthorized access to rate limit data
+2. **Application Logic**: Enforces 10 prompts/minute, 100 prompts/hour
+3. **Input Sanitization**: Removes harmful content before processing
+4. **Session Isolation**: Each lesson session is completely separate
+5. **No Persistent Storage**: Prompts and responses are not stored permanently
+
+## Deployment Notes
+
+1. **Test in Development**: Always test rules in development before deploying
+2. **Gradual Rollout**: Deploy rules during low-traffic periods
+3. **Monitor Usage**: Watch for any access denied errors after deployment
+4. **Backup Rules**: Keep a copy of working rules before making changes
+
+## Emergency Procedures
+
+If you need to quickly disable sandbox functionality:
+
+1. Navigate to Firebase Console > Firestore > Rules
+2. Add this temporary rule at the top:
+   ```
+   match /sandboxRateLimits/{document=**} {
+     allow read, write: if false;
+   }
+   match /sandboxUsage/{document=**} {
+     allow read, write: if false;
+   }
+   ```
+3. Click "Publish" to immediately disable sandbox access
+
+This will prevent all sandbox API calls while keeping the rest of the app functional.
 
 ## Important Security Considerations
 

@@ -14,8 +14,8 @@ const ProtectedRoute = ({ children, requireEmailVerification = true }) => {
   }
 
   if (!user) {
-    console.log('ProtectedRoute - No user, navigating to /login');
-    return <Navigate to="/login" replace />;
+    console.log('ProtectedRoute - No user, navigating to /');
+    return <Navigate to="/" replace />;
   }
 
   console.log('ProtectedRoute - User found, rendering Outlet');

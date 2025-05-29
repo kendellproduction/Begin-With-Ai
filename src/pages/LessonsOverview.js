@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
-import lessonsData from '../utils/lessonsData';
+import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 
 const LessonsOverview = () => {
@@ -10,6 +10,8 @@ const LessonsOverview = () => {
   const [selectedPath, setSelectedPath] = useState(null);
   const [userLearningPath, setUserLearningPath] = useState(null);
   const [learningProgress, setLearningProgress] = useState(null);
+  const [adaptiveLessons, setAdaptiveLessons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Clear any previous state
   useEffect(() => {
@@ -25,83 +27,116 @@ const LessonsOverview = () => {
       setUserLearningPath(pathData);
       setLearningProgress(progress);
     }
+
+    // Load adaptive lessons
+    loadAdaptiveLessons();
   }, [location.state, navigate, location.pathname]);
 
-  // Learning paths with curated lessons
+  const loadAdaptiveLessons = async () => {
+    setIsLoading(true);
+    try {
+      // Get the adaptive learning path
+      const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(
+        'prompt-engineering-mastery',
+        { skillLevel: 'intermediate' }
+      );
+      
+      if (adaptivePath && adaptivePath.modules) {
+        // Flatten lessons from all modules
+        const allLessons = adaptivePath.modules.flatMap(module => 
+          module.lessons.map(lesson => ({
+            ...lesson,
+            moduleTitle: module.title,
+            pathTitle: adaptivePath.title,
+            difficulty: lesson.adaptedContent?.difficulty || 'Intermediate',
+            duration: `${lesson.adaptedContent?.estimatedTime || 15} min`,
+            company: 'BeginningWithAI',
+            category: 'AI Learning',
+            description: lesson.adaptedContent?.content?.introduction || lesson.coreConcept,
+            tags: ['AI', 'Prompt Engineering', 'Interactive'],
+            hasCodeSandbox: lesson.sandbox?.required || false
+          }))
+        );
+        setAdaptiveLessons(allLessons);
+      }
+    } catch (error) {
+      console.error('Failed to load adaptive lessons:', error);
+      // Fallback to empty array if loading fails
+      setAdaptiveLessons([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Learning paths with real adaptive lessons
   const learningPaths = [
     {
-      id: 'beginner',
-      title: 'AI Fundamentals',
-      description: 'Perfect for newcomers to AI and machine learning',
+      id: 'prompt-engineering',
+      title: 'Prompt Engineering Mastery',
+      description: 'Master the art of communicating with AI - adaptive to your skill level',
+      icon: '🎯',
+      color: 'from-blue-500 to-purple-600',
+      shadowColor: 'shadow-blue-500/20',
+      hoverShadowColor: 'hover:shadow-blue-500/40',
+      lessons: adaptiveLessons.slice(0, 4),
+      duration: '6-8 hours',
+      level: 'Adaptive',
+      isAdaptive: true
+    },
+    {
+      id: 'ai-foundations',
+      title: 'AI Foundations',
+      description: 'Understanding AI fundamentals and core concepts',
       icon: '🌟',
       color: 'from-green-500 to-emerald-600',
       shadowColor: 'shadow-green-500/20',
       hoverShadowColor: 'hover:shadow-green-500/40',
-      lessons: lessonsData.filter(lesson => 
-        lesson.difficulty === 'Beginner' || 
-        lesson.category === 'Fundamentals' ||
-        lesson.title.includes('Introduction')
-      ).slice(0, 4),
+      lessons: adaptiveLessons.filter(lesson => lesson.moduleId === 'ai-foundations').slice(0, 3),
       duration: '3-4 hours',
       level: 'Beginner Friendly'
     },
     {
-      id: 'companies',
-      title: 'AI Companies',
-      description: 'Learn about major AI platforms and their technologies',
-      icon: '🏢',
-      color: 'from-blue-500 to-cyan-600',
-      shadowColor: 'shadow-blue-500/20',
-      hoverShadowColor: 'hover:shadow-blue-500/40',
-      lessons: lessonsData.filter(lesson => 
-        ['OpenAI', 'Google', 'Meta', 'Anthropic'].includes(lesson.company)
-      ).slice(0, 4),
-      duration: '4-5 hours',
-      level: 'Intermediate'
-    },
-    {
-      id: 'advanced',
-      title: 'Deep Learning',
-      description: 'Advanced topics for experienced practitioners',
-      icon: '🧠',
-      color: 'from-purple-500 to-indigo-600',
+      id: 'creative-ai',
+      title: 'Creative AI Applications',
+      description: 'Use AI for images, video, and voice generation',
+      icon: '🎨',
+      color: 'from-purple-500 to-pink-600',
       shadowColor: 'shadow-purple-500/20',
       hoverShadowColor: 'hover:shadow-purple-500/40',
-      lessons: lessonsData.filter(lesson => 
-        lesson.difficulty === 'Advanced' ||
-        lesson.category === 'Deep Learning' ||
-        lesson.tags.includes('Neural Networks')
-      ).slice(0, 4),
-      duration: '6+ hours',
-      level: 'Advanced'
+      lessons: adaptiveLessons.filter(lesson => lesson.moduleId === 'creative-applications').slice(0, 3),
+      duration: '4-5 hours',
+      level: 'Intermediate'
     }
   ];
 
   // Quick stats
   const stats = {
-    totalLessons: lessonsData.length,
-    companies: [...new Set(lessonsData.map(lesson => lesson.company))].length,
-    categories: [...new Set(lessonsData.map(lesson => lesson.category))].length,
+    totalLessons: adaptiveLessons.length,
+    companies: 1, // BeginningWithAI
+    categories: 4, // Number of modules
     avgDuration: Math.round(
-      lessonsData.reduce((acc, lesson) => {
-        const minutes = parseInt(lesson.duration);
+      adaptiveLessons.reduce((acc, lesson) => {
+        const minutes = parseInt(lesson.duration) || 15;
         return acc + minutes;
-      }, 0) / lessonsData.length
+      }, 0) / (adaptiveLessons.length || 1)
     )
   };
 
-  // Recently added lessons
-  const recentLessons = lessonsData.slice(-3);
+  // Recently added lessons (latest 3)
+  const recentLessons = adaptiveLessons.slice(-3);
 
-  // Popular lessons (mock data - in real app this would come from analytics)
-  const popularLessons = lessonsData.filter(lesson => 
-    ['Introduction to AI', 'GPT-4 Mastery', 'AI Ethics'].includes(lesson.title)
-  );
+  // Popular lessons (first 3 from the adaptive path)
+  const popularLessons = adaptiveLessons.slice(0, 3);
 
   const handlePathSelect = (path) => {
     setSelectedPath(path);
-    // Navigate to guided experience with selected path
-    navigate('/lessons/guided', { state: { learningPath: path } });
+    if (path.isAdaptive) {
+      // Navigate to adaptive quiz for skill assessment
+      navigate('/learning-path/adaptive-quiz');
+    } else {
+      // Navigate to specific module lessons
+      navigate('/lessons/explore', { state: { moduleFilter: path.id } });
+    }
   };
 
   const handleExploreAll = () => {
@@ -110,13 +145,32 @@ const LessonsOverview = () => {
   };
 
   const handleQuickStart = (lesson) => {
-    navigate(`/lessons/${lesson.id}`);
+    navigate(`/lessons/${lesson.id}`, { 
+      state: { 
+        pathId: 'prompt-engineering-mastery',
+        moduleId: lesson.moduleId 
+      } 
+    });
   };
 
   const handleCreateLearningPath = () => {
-    // Navigate to learning path quiz
-    navigate('/learning-path/quiz');
+    // Navigate to adaptive learning path quiz
+    navigate('/learning-path/adaptive-quiz');
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+        <LoggedInNavbar />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
+            <p className="text-xl text-gray-300">Loading your AI learning experience...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
@@ -182,7 +236,7 @@ const LessonsOverview = () => {
             Your AI Learning Journey
           </h1>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Master artificial intelligence through structured learning paths or discover lessons at your own pace
+            Master artificial intelligence through our adaptive learning system that adjusts to your skill level
           </p>
           
           {/* Quick Stats */}
@@ -192,12 +246,12 @@ const LessonsOverview = () => {
               <div className="text-sm text-gray-400">Lessons</div>
             </div>
             <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-purple-500/10">
-              <div className="text-2xl font-bold text-purple-400">{stats.companies}</div>
-              <div className="text-sm text-gray-400">Companies</div>
+              <div className="text-2xl font-bold text-purple-400">{stats.categories}</div>
+              <div className="text-sm text-gray-400">Modules</div>
             </div>
             <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-cyan-500/10">
-              <div className="text-2xl font-bold text-cyan-400">{stats.categories}</div>
-              <div className="text-sm text-gray-400">Categories</div>
+              <div className="text-2xl font-bold text-cyan-400">Adaptive</div>
+              <div className="text-sm text-gray-400">Difficulty</div>
             </div>
             <div className="card-glow bg-white/5 backdrop-blur-sm rounded-2xl p-4 border border-white/10 shadow-green-500/10">
               <div className="text-2xl font-bold text-green-400">{stats.avgDuration}</div>
@@ -231,124 +285,38 @@ const LessonsOverview = () => {
                       <div className="text-2xl font-bold text-purple-400">{Math.floor(userLearningPath.estimatedDuration / 60)}h</div>
                       <div className="text-xs text-gray-300">Total Time</div>
                     </div>
-                    <div className="bg-cyan-500/20 rounded-2xl p-3 text-center border border-cyan-500/30">
-                      <div className="text-2xl font-bold text-cyan-400">{learningProgress.progressPercentage}%</div>
+                    <div className="bg-yellow-500/20 rounded-2xl p-3 text-center border border-yellow-500/30">
+                      <div className="text-2xl font-bold text-yellow-400">{Math.round((learningProgress.completedLessons / learningProgress.totalLessons) * 100)}%</div>
                       <div className="text-xs text-gray-300">Progress</div>
                     </div>
                   </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-green-900/30 rounded-full h-3 mb-4">
+                    <div 
+                      className="bg-gradient-to-r from-green-400 to-emerald-500 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${(learningProgress.completedLessons / learningProgress.totalLessons) * 100}%` }}
+                    ></div>
+                  </div>
                 </div>
                 
-                {/* Progress Visualization */}
-                <div className="lg:ml-8 lg:min-w-[300px]">
-                  <div className="text-center mb-4">
-                    <div className="relative w-32 h-32 mx-auto">
-                      {/* Background Circle */}
-                      <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
-                        <circle
-                          cx="60"
-                          cy="60"
-                          r="50"
-                          stroke="rgba(75, 85, 99, 0.3)"
-                          strokeWidth="10"
-                          fill="none"
-                        />
-                        {/* Progress Circle */}
-                        <circle
-                          cx="60"
-                          cy="60"
-                          r="50"
-                          stroke="url(#progressGradient)"
-                          strokeWidth="10"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeDasharray={`${2 * Math.PI * 50 * (learningProgress.progressPercentage / 100)} ${2 * Math.PI * 50}`}
-                          className="transition-all duration-1000 ease-out"
-                        />
-                        <defs>
-                          <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#10b981" />
-                            <stop offset="100%" stopColor="#06d6a0" />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      {/* Center Text */}
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-2xl font-bold text-green-400">{learningProgress.progressPercentage}%</div>
-                          <div className="text-xs text-gray-400">Complete</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="lg:ml-8">
+                  <button
+                    onClick={() => navigate('/lessons/continue')}
+                    className="snake-shadow bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 transform hover:scale-105 text-lg shadow-lg shadow-green-500/30 hover:shadow-green-500/50"
+                  >
+                    Continue Learning 🚀
+                  </button>
                 </div>
               </div>
-              
-              {learningProgress.nextLesson && (
-                <div className="border-t border-green-500/30 pt-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between">
-                    <div className="flex-1 mb-4 md:mb-0">
-                      <h4 className="text-lg font-semibold mb-3 text-green-400">🚀 Up Next in Your Journey:</h4>
-                      <div className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
-                          <div className="flex items-center space-x-3 mb-2 sm:mb-0">
-                            <span className="px-3 py-1 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium">
-                              {learningProgress.nextLesson.company}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                              learningProgress.nextLesson.difficulty === 'Beginner' ? 'bg-green-600/30 text-green-300' :
-                              learningProgress.nextLesson.difficulty === 'Intermediate' ? 'bg-yellow-600/30 text-yellow-300' :
-                              'bg-red-600/30 text-red-300'
-                            }`}>
-                              {learningProgress.nextLesson.difficulty}
-                            </span>
-                          </div>
-                          <span className="text-sm text-gray-400">{learningProgress.nextLesson.duration}</span>
-                        </div>
-                        <h5 className="font-semibold text-white mb-2">{learningProgress.nextLesson.title}</h5>
-                        <p className="text-gray-300 text-sm leading-relaxed">{learningProgress.nextLesson.description}</p>
-                      </div>
-                    </div>
-                    <div className="md:ml-6">
-                      <button
-                        onClick={() => navigate(`/lessons/${learningProgress.nextLesson.id}`)}
-                        className="snake-shadow w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 text-lg"
-                      >
-                        Continue Learning 🚀
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {learningProgress.progressPercentage === 100 && (
-                <div className="border-t border-green-500/30 pt-6 text-center">
-                  <div className="text-6xl mb-4">🎉</div>
-                  <h4 className="text-2xl font-bold text-green-400 mb-2">Congratulations!</h4>
-                  <p className="text-gray-300 mb-6">You've completed your learning path! Ready for a new challenge?</p>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-md mx-auto">
-                    <button
-                      onClick={handleCreateLearningPath}
-                      className="snake-shadow bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-600 text-white font-bold py-3 px-6 rounded-2xl transition-all duration-300"
-                    >
-                      Create New Path
-                    </button>
-                    <button
-                      onClick={handleExploreAll}
-                      className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-2xl transition-all duration-300"
-                    >
-                      Explore All Lessons
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
           </section>
         )}
 
-        {/* Quick Actions - Main Ways to Start */}
+        {/* Call to Action */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-8 text-center">
-            Choose Your Own Adventure
+            Start Your AI Adventure
           </h2>
           <div className="grid md:grid-cols-2 gap-8">
             {/* Explore All */}
@@ -359,7 +327,7 @@ const LessonsOverview = () => {
               <div className="text-6xl mb-4">🔍</div>
               <h3 className="text-2xl font-bold mb-3">Explore All Lessons</h3>
               <p className="text-gray-300 mb-6 leading-relaxed">
-                Browse through all lessons with our TikTok-style discovery interface. Swipe to explore!
+                Browse through our adaptive lessons with our discovery interface. Each lesson adjusts to your skill level!
               </p>
               <div className="flex items-center space-x-2 text-indigo-400 font-medium">
                 <span>Start Exploring</span>
@@ -372,15 +340,15 @@ const LessonsOverview = () => {
             {/* Create My Learning Path */}
             <div
               onClick={handleCreateLearningPath}
-              className="snake-shadow group relative bg-gradient-to-br from-emerald-600/20 to-teal-600/20 backdrop-blur-sm rounded-3xl p-8 border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300 cursor-pointer hover:scale-105 shadow-emerald-500/20 hover:shadow-emerald-500/40"
+              className="snake-shadow group relative bg-gradient-to-br from-purple-600/20 to-pink-600/20 backdrop-blur-sm rounded-3xl p-8 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 cursor-pointer hover:scale-105 shadow-purple-500/20 hover:shadow-purple-500/40"
             >
               <div className="text-6xl mb-4">🎯</div>
-              <h3 className="text-2xl font-bold mb-3">Create My Learning Path</h3>
+              <h3 className="text-2xl font-bold mb-3">Get My Learning Path</h3>
               <p className="text-gray-300 mb-6 leading-relaxed">
-                Take our smart quiz to get a personalized learning journey tailored to your interests and goals.
+                Take our adaptive assessment to get a personalized learning path that matches your experience and goals.
               </p>
-              <div className="flex items-center space-x-2 text-emerald-400 font-medium">
-                <span>Get My Path</span>
+              <div className="flex items-center space-x-2 text-purple-400 font-medium">
+                <span>Take Assessment</span>
                 <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
@@ -392,7 +360,7 @@ const LessonsOverview = () => {
         {/* Learning Paths */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-8 text-center">
-            Or Follow a Structured Path
+            Choose Your Learning Focus
           </h2>
           <div className="grid md:grid-cols-3 gap-8">
             {learningPaths.map((path) => (
@@ -404,7 +372,14 @@ const LessonsOverview = () => {
                 <div className={`absolute inset-0 rounded-3xl bg-gradient-to-br ${path.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
                 
                 <div className="relative z-10 flex flex-col h-full">
-                  <div className="text-4xl mb-4">{path.icon}</div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="text-4xl">{path.icon}</div>
+                    {path.isAdaptive && (
+                      <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full border border-yellow-500/30">
+                        ADAPTIVE
+                      </span>
+                    )}
+                  </div>
                   <h3 className="text-2xl font-bold mb-3">{path.title}</h3>
                   <p className="text-gray-300 mb-6 leading-relaxed flex-1">{path.description}</p>
                   
@@ -428,7 +403,7 @@ const LessonsOverview = () => {
                   </div>
                   
                   <button className="snake-shadow w-full bg-white/10 hover:bg-white/20 text-white font-semibold py-3 rounded-2xl transition-all duration-300 group-hover:bg-white/15 mt-auto">
-                    Start Learning Path
+                    {path.isAdaptive ? 'Start Assessment' : 'Explore Lessons'}
                   </button>
                 </div>
               </div>
@@ -442,7 +417,7 @@ const LessonsOverview = () => {
           <div>
             <h3 className="text-2xl font-bold mb-6 flex items-center">
               <span className="text-2xl mr-3">✨</span>
-              Recently Added
+              Latest Lessons
             </h3>
             <div className="space-y-4">
               {recentLessons.map((lesson) => (
@@ -453,7 +428,7 @@ const LessonsOverview = () => {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <span className="px-3 py-1 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium">
-                      {lesson.company}
+                      {lesson.moduleTitle}
                     </span>
                     <span className="text-sm text-gray-400">{lesson.duration}</span>
                   </div>
@@ -472,7 +447,7 @@ const LessonsOverview = () => {
           <div>
             <h3 className="text-2xl font-bold mb-6 flex items-center">
               <span className="text-2xl mr-3">🔥</span>
-              Most Popular
+              Featured Lessons
             </h3>
             <div className="space-y-4">
               {popularLessons.map((lesson) => (

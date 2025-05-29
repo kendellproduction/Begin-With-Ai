@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import LessonCard from '../components/LessonCard';
-import lessonsData from '../utils/lessonsData';
+import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 
 const LessonsExplore = () => {
   const navigate = useNavigate();
@@ -11,9 +11,9 @@ const LessonsExplore = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState({
     difficulty: '',
-    company: '',
+    module: '',
     category: '',
-    useCase: ''
+    hasInteractive: ''
   });
   const [showSearch, setShowSearch] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -25,11 +25,68 @@ const LessonsExplore = () => {
   const [showEndMessage, setShowEndMessage] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
+  // Adaptive lessons state
+  const [adaptiveLessons, setAdaptiveLessons] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
+
   // Touch handling refs
   const touchStartY = useRef(null);
   const touchEndY = useRef(null);
   const isDragging = useRef(false);
   const containerRef = useRef(null);
+
+  // Load adaptive lessons on component mount
+  useEffect(() => {
+    loadAdaptiveLessons();
+  }, []);
+
+  const loadAdaptiveLessons = async () => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Get user's skill level from assessment or default to intermediate
+      const assessmentResults = localStorage.getItem('aiAssessmentResults');
+      const skillLevel = assessmentResults ? JSON.parse(assessmentResults).skillLevel : 'intermediate';
+
+      const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(
+        'prompt-engineering-mastery',
+        { skillLevel }
+      );
+      
+      if (adaptivePath && adaptivePath.modules) {
+        // Flatten lessons from all modules for explore mode
+        const allLessons = adaptivePath.modules.flatMap(module => 
+          module.lessons.map(lesson => ({
+            ...lesson,
+            moduleTitle: module.title,
+            moduleId: module.id,
+            pathTitle: adaptivePath.title,
+            difficulty: lesson.adaptedContent?.difficulty || skillLevel,
+            duration: lesson.adaptedContent?.estimatedTime || 15,
+            description: lesson.adaptedContent?.content?.introduction || lesson.coreConcept,
+            company: 'BeginningWithAI',
+            category: 'AI Learning',
+            tags: ['AI', 'Prompt Engineering', 'Interactive'],
+            hasCodeSandbox: lesson.sandbox?.required || false,
+            // Transform for compatibility with existing lesson card
+            models: ['xAI Grok', 'GPT-4', 'Claude'],
+            useCases: ['Learning', 'Skill Building', 'AI Mastery']
+          }))
+        );
+        setAdaptiveLessons(allLessons);
+      } else {
+        setError('No lessons found. Please seed the database first.');
+      }
+    } catch (err) {
+      console.error('Failed to load adaptive lessons:', err);
+      setError('Failed to load lessons. Please try again or seed the database.');
+      setAdaptiveLessons([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Detect mobile vs desktop
   useEffect(() => {
@@ -64,10 +121,10 @@ const LessonsExplore = () => {
     };
   }, [isMobile]);
 
-  // Get unique filter options from data
+  // Get unique filter options from adaptive lessons
   const getUniqueValues = (field) => {
     const values = new Set();
-    lessonsData.forEach(lesson => {
+    adaptiveLessons.forEach(lesson => {
       if (Array.isArray(lesson[field])) {
         lesson[field].forEach(item => values.add(item));
       } else if (lesson[field]) {
@@ -77,27 +134,28 @@ const LessonsExplore = () => {
     return Array.from(values).sort();
   };
 
-  const difficulties = ['Beginner', 'Intermediate', 'Advanced'];
-  const companies = getUniqueValues('company');
+  const difficulties = ['beginner', 'intermediate', 'advanced'];
+  const modules = getUniqueValues('moduleTitle');
   const categories = getUniqueValues('category');
-  const useCases = getUniqueValues('useCases');
 
   // Advanced search and filtering
   const getFilteredLessons = () => {
-    return lessonsData.filter(lesson => {
+    return adaptiveLessons.filter(lesson => {
       const matchesSearch = searchQuery === '' || 
         lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lesson.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         lesson.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        lesson.models.some(model => model.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        lesson.useCases.some(useCase => useCase.toLowerCase().includes(searchQuery.toLowerCase()));
+        lesson.moduleTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        lesson.coreConcept.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesDifficulty = !selectedFilters.difficulty || lesson.difficulty === selectedFilters.difficulty;
-      const matchesCompany = !selectedFilters.company || lesson.company === selectedFilters.company;
+      const matchesModule = !selectedFilters.module || lesson.moduleTitle === selectedFilters.module;
       const matchesCategory = !selectedFilters.category || lesson.category === selectedFilters.category;
-      const matchesUseCase = !selectedFilters.useCase || lesson.useCases.includes(selectedFilters.useCase);
+      const matchesInteractive = !selectedFilters.hasInteractive || 
+        (selectedFilters.hasInteractive === 'yes' && lesson.hasCodeSandbox) ||
+        (selectedFilters.hasInteractive === 'no' && !lesson.hasCodeSandbox);
 
-      return matchesSearch && matchesDifficulty && matchesCompany && matchesCategory && matchesUseCase;
+      return matchesSearch && matchesDifficulty && matchesModule && matchesCategory && matchesInteractive;
     });
   };
 
@@ -131,7 +189,7 @@ const LessonsExplore = () => {
   useEffect(() => {
     if (searchQuery.length > 0) {
       const suggestions = new Set();
-      lessonsData.forEach(lesson => {
+      adaptiveLessons.forEach(lesson => {
         if (lesson.title.toLowerCase().includes(searchQuery.toLowerCase())) {
           suggestions.add(lesson.title);
         }
@@ -140,20 +198,15 @@ const LessonsExplore = () => {
             suggestions.add(tag);
           }
         });
-        lesson.models.forEach(model => {
-          if (model.toLowerCase().includes(searchQuery.toLowerCase())) {
-            suggestions.add(model);
-          }
-        });
-        if (lesson.company.toLowerCase().includes(searchQuery.toLowerCase())) {
-          suggestions.add(lesson.company);
+        if (lesson.moduleTitle.toLowerCase().includes(searchQuery.toLowerCase())) {
+          suggestions.add(lesson.moduleTitle);
         }
       });
       setSearchSuggestions(Array.from(suggestions).slice(0, 5));
     } else {
       setSearchSuggestions([]);
     }
-  }, [searchQuery]);
+  }, [searchQuery, adaptiveLessons]);
 
   // Enhanced haptic feedback function (mobile only)
   const triggerHapticFeedback = (type = 'light') => {
@@ -202,66 +255,58 @@ const LessonsExplore = () => {
   const handleTouchMove = (e) => {
     if (!isMobile || !touchStartY.current || showSearch || showFilters || isTransitioning || showEndMessage) return;
     
-    const currentY = e.touches[0].clientY;
-    const deltaY = Math.abs(currentY - touchStartY.current);
-    
-    if (deltaY > 5) {
-      isDragging.current = true;
-    }
-    
+    touchEndY.current = e.touches[0].clientY;
+    isDragging.current = true;
     e.preventDefault();
     e.stopPropagation();
   };
 
   const handleTouchEnd = (e) => {
-    if (!isMobile || !touchStartY.current || showSearch || showFilters || isTransitioning || showEndMessage) {
+    if (!isMobile || !touchStartY.current || !isDragging.current || showSearch || showFilters || isTransitioning || showEndMessage) {
       touchStartY.current = null;
+      touchEndY.current = null;
       isDragging.current = false;
       return;
     }
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isDragging.current) {
-      touchStartY.current = null;
-      return;
-    }
-    
-    const touchEndY = e.changedTouches[0].clientY;
-    const delta = touchEndY - touchStartY.current;
-    
-    // Lower threshold for easier swiping
-    if (Math.abs(delta) > 50) {
+
+    const deltaY = touchStartY.current - touchEndY.current;
+    const threshold = 80;
+
+    if (Math.abs(deltaY) > threshold) {
       setIsTransitioning(true);
       
-      if (delta > 0 && currentIndex > 0) {
-        // Swipe down: previous lesson
-        triggerHapticFeedback('medium');
-        setTimeout(() => {
-          setCurrentIndex(currentIndex - 1);
+      if (deltaY > 0) {
+        // Swipe up - next lesson
+        if (currentIndex < filteredLessons.length - 1) {
+          triggerHapticFeedback('medium');
+          setTimeout(() => {
+            setCurrentIndex(prev => prev + 1);
+            setIsTransitioning(false);
+          }, 150);
+        } else {
+          showEndOfLessonsMessage('up');
           setIsTransitioning(false);
-        }, 150);
-      } else if (delta < 0 && currentIndex < filteredLessons.length - 1) {
-        // Swipe up: next lesson
-        triggerHapticFeedback('medium');
-        setTimeout(() => {
-          setCurrentIndex(currentIndex + 1);
-          setIsTransitioning(false);
-        }, 150);
+        }
       } else {
-        // At boundaries
-        setTimeout(() => {
+        // Swipe down - previous lesson
+        if (currentIndex > 0) {
+          triggerHapticFeedback('medium');
+          setTimeout(() => {
+            setCurrentIndex(prev => prev - 1);
+            setIsTransitioning(false);
+          }, 150);
+        } else {
+          showEndOfLessonsMessage('down');
           setIsTransitioning(false);
-        }, 150);
-        showEndOfLessonsMessage(delta < 0 ? 'up' : 'down');
+        }
       }
-    } else {
-      setIsTransitioning(false);
     }
-    
+
     touchStartY.current = null;
+    touchEndY.current = null;
     isDragging.current = false;
+    e.preventDefault();
+    e.stopPropagation();
   };
 
   const closeTutorial = () => {
@@ -274,16 +319,91 @@ const LessonsExplore = () => {
   };
 
   const getFilterSummary = () => {
-    const activeFilters = Object.values(selectedFilters).filter(Boolean);
-    if (searchQuery && activeFilters.length > 0) {
-      return `"${searchQuery}" + ${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''}`;
-    } else if (searchQuery) {
-      return `"${searchQuery}"`;
-    } else if (activeFilters.length > 0) {
-      return `${activeFilters.length} filter${activeFilters.length > 1 ? 's' : ''} active`;
-    }
-    return 'All lessons';
+    const activeFilters = [];
+    if (selectedFilters.difficulty) activeFilters.push(selectedFilters.difficulty);
+    if (selectedFilters.module) activeFilters.push(selectedFilters.module);
+    if (selectedFilters.category) activeFilters.push(selectedFilters.category);
+    if (selectedFilters.hasInteractive) activeFilters.push(selectedFilters.hasInteractive === 'yes' ? 'Interactive' : 'Text-only');
+    if (searchQuery) activeFilters.push(`"${searchQuery}"`);
+    
+    return activeFilters.length > 0 ? activeFilters.join(', ') : 'All lessons';
   };
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+        <LoggedInNavbar />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
+            <p className="text-xl text-gray-300">Loading your AI lessons...</p>
+            <p className="text-sm text-gray-500 mt-2">This may take a moment if the database needs to be seeded</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+        <LoggedInNavbar />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="text-6xl mb-4">❌</div>
+            <h1 className="text-2xl font-bold mb-4">Unable to Load Lessons</h1>
+            <p className="text-gray-300 mb-6 leading-relaxed">{error}</p>
+            <div className="space-y-3">
+              <button
+                onClick={() => {
+                  setError('');
+                  loadAdaptiveLessons();
+                }}
+                className="w-full px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-colors font-medium"
+              >
+                Try Again
+              </button>
+              <p className="text-sm text-gray-400">
+                💡 If this persists, try using the "Adaptive Database Seeder" tool in the bottom-right corner to populate the database with lessons.
+              </p>
+              <button
+                onClick={() => navigate('/lessons')}
+                className="w-full px-6 py-3 bg-gray-600 text-white rounded-2xl hover:bg-gray-700 transition-colors font-medium"
+              >
+                Back to Lessons Overview
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no lessons after loading
+  if (!isLoading && adaptiveLessons.length === 0) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+        <LoggedInNavbar />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-center max-w-md mx-auto px-4">
+            <div className="text-6xl mb-4">📚</div>
+            <h1 className="text-2xl font-bold mb-4">No Lessons Available</h1>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              It looks like the lesson database hasn't been seeded yet. Please use the database seeder to add lessons.
+            </p>
+            <button
+              onClick={() => navigate('/lessons')}
+              className="px-6 py-3 bg-indigo-600 text-white rounded-2xl hover:bg-indigo-700 transition-colors font-medium"
+            >
+              Back to Lessons Overview
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Render desktop V-shape layout
   if (!isMobile) {
@@ -314,7 +434,7 @@ const LessonsExplore = () => {
                   className="bg-gray-700 text-white placeholder-gray-400 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 />
                 <div className="text-white text-sm flex items-center">
-                  Showing {filteredLessons.length} of {lessonsData.length} lessons
+                  Showing {filteredLessons.length} of {adaptiveLessons.length} lessons
                 </div>
               </div>
               
@@ -331,13 +451,13 @@ const LessonsExplore = () => {
                 </select>
 
                 <select
-                  value={selectedFilters.company}
-                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, company: e.target.value }))}
+                  value={selectedFilters.module}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, module: e.target.value }))}
                   className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="">All Companies</option>
-                  {companies.map(company => (
-                    <option key={company} value={company}>{company}</option>
+                  <option value="">All Modules</option>
+                  {modules.map(module => (
+                    <option key={module} value={module}>{module}</option>
                   ))}
                 </select>
 
@@ -353,14 +473,13 @@ const LessonsExplore = () => {
                 </select>
 
                 <select
-                  value={selectedFilters.useCase}
-                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, useCase: e.target.value }))}
+                  value={selectedFilters.hasInteractive}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, hasInteractive: e.target.value }))}
                   className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
-                  <option value="">All Use Cases</option>
-                  {useCases.map(useCase => (
-                    <option key={useCase} value={useCase}>{useCase}</option>
-                  ))}
+                  <option value="">All Interactive</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
                 </select>
               </div>
               
@@ -368,7 +487,7 @@ const LessonsExplore = () => {
                 <button
                   onClick={() => {
                     setSearchQuery('');
-                    setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
+                    setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
                   }}
                   className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                 >
@@ -533,13 +652,13 @@ const LessonsExplore = () => {
                 </select>
 
                 <select
-                  value={selectedFilters.company}
-                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, company: e.target.value }))}
+                  value={selectedFilters.module}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, module: e.target.value }))}
                   className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
-                  <option value="" className="bg-gray-800">All Companies</option>
-                  {companies.map(company => (
-                    <option key={company} value={company} className="bg-gray-800">{company}</option>
+                  <option value="" className="bg-gray-800">All Modules</option>
+                  {modules.map(module => (
+                    <option key={module} value={module} className="bg-gray-800">{module}</option>
                   ))}
                 </select>
 
@@ -555,14 +674,13 @@ const LessonsExplore = () => {
                 </select>
 
                 <select
-                  value={selectedFilters.useCase}
-                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, useCase: e.target.value }))}
+                  value={selectedFilters.hasInteractive}
+                  onChange={(e) => setSelectedFilters(prev => ({ ...prev, hasInteractive: e.target.value }))}
                   className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
                 >
-                  <option value="" className="bg-gray-800">All Use Cases</option>
-                  {useCases.map(useCase => (
-                    <option key={useCase} value={useCase} className="bg-gray-800">{useCase}</option>
-                  ))}
+                  <option value="" className="bg-gray-800">All Interactive</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
                 </select>
               </div>
             )}
@@ -573,7 +691,7 @@ const LessonsExplore = () => {
                 onClick={() => {
                   triggerHapticFeedback('medium');
                   setSearchQuery('');
-                  setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
+                  setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
                   setShowSearch(false);
                 }}
                 className="w-full bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium mt-4 border border-red-500/30 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-300 text-lg hover:from-red-500/30 hover:to-pink-500/30"
@@ -600,7 +718,7 @@ const LessonsExplore = () => {
               <button
                 onClick={() => {
                   setSearchQuery('');
-                  setSelectedFilters({ difficulty: '', company: '', category: '', useCase: '' });
+                  setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
                 }}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-4 rounded-2xl transition-all duration-300 transform active:scale-95 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40"
               >
@@ -666,8 +784,8 @@ const LessonsExplore = () => {
               {/* Meta Tags */}
               <div className="flex flex-wrap gap-2 mb-6">
                 <span className={`px-3 py-1 rounded-full text-sm font-medium backdrop-blur-xl border border-white/20 shadow-lg ${
-                  currentLesson.difficulty === 'Beginner' ? 'bg-green-500/80 text-white shadow-green-500/20' :
-                  currentLesson.difficulty === 'Intermediate' ? 'bg-yellow-500/80 text-white shadow-yellow-500/20' :
+                  currentLesson.difficulty === 'beginner' ? 'bg-green-500/80 text-white shadow-green-500/20' :
+                  currentLesson.difficulty === 'intermediate' ? 'bg-yellow-500/80 text-white shadow-yellow-500/20' :
                   'bg-red-500/80 text-white shadow-red-500/20'
                 }`}>
                   {currentLesson.difficulty}
