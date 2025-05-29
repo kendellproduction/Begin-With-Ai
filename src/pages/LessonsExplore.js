@@ -408,114 +408,250 @@ const LessonsExplore = () => {
   // Render desktop V-shape layout
   if (!isMobile) {
     return (
-      <div className="min-h-screen bg-gray-900">
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
         <LoggedInNavbar />
         
-        <div className="container mx-auto px-4 py-8">
+        {/* Background Elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-20 left-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="relative z-10 container mx-auto px-4 py-8">
           {/* Desktop Header */}
-          <div className="mb-8">
+          <div className="mb-12">
             <button
               onClick={handleBack}
-              className="mb-4 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="
+                mb-6 px-6 py-3 
+                bg-white/5 backdrop-blur-sm border border-white/10
+                text-white rounded-2xl hover:bg-white/10 
+                transition-all duration-300 transform hover:scale-105
+                hover:shadow-lg hover:shadow-white/10
+                font-medium
+              "
             >
               ← Back to Lessons
             </button>
             
-            <h1 className="text-4xl font-bold text-white mb-6">Explore All Lessons</h1>
+            <div className="text-center mb-8">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4">
+                Explore All Lessons
+              </h1>
+              <p className="text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
+                Discover adaptive AI lessons tailored to your skill level and interests
+              </p>
+            </div>
             
-            {/* Desktop Search and Filters */}
-            <div className="bg-gray-800 rounded-xl p-6 mb-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <input
-                  type="text"
-                  placeholder="Search lessons, companies, models..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-gray-700 text-white placeholder-gray-400 px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                />
-                <div className="text-white text-sm flex items-center">
-                  Showing {filteredLessons.length} of {adaptiveLessons.length} lessons
+            {/* Enhanced Search and Filters */}
+            <div className="
+              max-w-6xl mx-auto
+              bg-white/5 backdrop-blur-xl border border-white/10
+              rounded-3xl p-8 shadow-2xl shadow-black/20
+            ">
+              {/* Search Bar */}
+              <div className="mb-6">
+                <div className="relative max-w-2xl mx-auto">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search lessons, concepts, topics..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="
+                      w-full pl-12 pr-4 py-4
+                      bg-white/5 backdrop-blur-sm border border-white/20
+                      text-white placeholder-slate-400
+                      rounded-2xl text-lg
+                      focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                      focus:border-indigo-400/50
+                      transition-all duration-300
+                    "
+                  />
                 </div>
               </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+              {/* Filter Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <select
                   value={selectedFilters.difficulty}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="
+                    bg-white/5 backdrop-blur-sm border border-white/20
+                    text-white px-4 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="">All Levels</option>
+                  <option value="" className="bg-slate-800 text-white">All Levels</option>
                   {difficulties.map(diff => (
-                    <option key={diff} value={diff}>{diff}</option>
+                    <option key={diff} value={diff} className="bg-slate-800 text-white capitalize">
+                      {diff}
+                    </option>
                   ))}
                 </select>
 
                 <select
                   value={selectedFilters.module}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, module: e.target.value }))}
-                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="
+                    bg-white/5 backdrop-blur-sm border border-white/20
+                    text-white px-4 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="">All Modules</option>
+                  <option value="" className="bg-slate-800 text-white">All Modules</option>
                   {modules.map(module => (
-                    <option key={module} value={module}>{module}</option>
+                    <option key={module} value={module} className="bg-slate-800 text-white">
+                      {module}
+                    </option>
                   ))}
                 </select>
 
                 <select
                   value={selectedFilters.category}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, category: e.target.value }))}
-                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="
+                    bg-white/5 backdrop-blur-sm border border-white/20
+                    text-white px-4 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="">All Categories</option>
+                  <option value="" className="bg-slate-800 text-white">All Categories</option>
                   {categories.map(category => (
-                    <option key={category} value={category}>{category}</option>
+                    <option key={category} value={category} className="bg-slate-800 text-white">
+                      {category}
+                    </option>
                   ))}
                 </select>
 
                 <select
                   value={selectedFilters.hasInteractive}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, hasInteractive: e.target.value }))}
-                  className="bg-gray-700 text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="
+                    bg-white/5 backdrop-blur-sm border border-white/20
+                    text-white px-4 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="">All Interactive</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
+                  <option value="" className="bg-slate-800 text-white">All Types</option>
+                  <option value="yes" className="bg-slate-800 text-white">Interactive</option>
+                  <option value="no" className="bg-slate-800 text-white">Theory</option>
                 </select>
               </div>
-              
-              {(searchQuery || Object.values(selectedFilters).some(filter => filter)) && (
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
-                  }}
-                  className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Clear All Filters
-                </button>
-              )}
+
+              {/* Results Summary & Clear Button */}
+              <div className="flex items-center justify-between">
+                <div className="text-slate-300 font-medium">
+                  <span className="text-indigo-300 font-bold">{filteredLessons.length}</span> of{' '}
+                  <span className="text-white">{adaptiveLessons.length}</span> lessons
+                </div>
+                
+                {(searchQuery || Object.values(selectedFilters).some(filter => filter)) && (
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
+                    }}
+                    className="
+                      px-6 py-2 
+                      bg-red-500/20 border border-red-400/30
+                      text-red-300 rounded-xl font-medium
+                      hover:bg-red-500/30 hover:text-red-200
+                      transition-all duration-300 transform hover:scale-105
+                      shadow-lg shadow-red-500/10 hover:shadow-red-500/20
+                    "
+                  >
+                    Clear Filters
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Desktop V-Shape Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredLessons.map((lesson) => (
-              <LessonCard
-                key={lesson.id}
-                lesson={lesson}
-                onClick={() => navigate(`/lessons/${lesson.id}`)}
-              />
-            ))}
+          {/* Enhanced Grid Layout */}
+          <div className="max-w-7xl mx-auto">
+            {filteredLessons.length > 0 ? (
+              <div className="
+                grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
+                gap-8 md:gap-10 lg:gap-12
+                auto-rows-max
+              ">
+                {filteredLessons.map((lesson, index) => (
+                  <div
+                    key={lesson.id}
+                    className="
+                      transform transition-all duration-500
+                      hover:z-10 relative
+                    "
+                    style={{
+                      animationDelay: `${index * 100}ms`,
+                      animation: 'fadeInUp 0.6s ease-out forwards'
+                    }}
+                  >
+                    <LessonCard
+                      lesson={lesson}
+                      onClick={() => navigate(`/lessons/${lesson.id}`)}
+                      className="h-full"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="max-w-md mx-auto">
+                  <div className="text-8xl mb-8 animate-bounce">🔍</div>
+                  <h3 className="text-3xl font-bold text-white mb-4">No lessons found</h3>
+                  <p className="text-slate-400 text-lg leading-relaxed mb-8">
+                    We couldn't find any lessons matching your criteria. Try adjusting your search or filters.
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
+                    }}
+                    className="
+                      px-8 py-4 
+                      bg-gradient-to-r from-indigo-500 to-purple-600
+                      hover:from-indigo-600 hover:to-purple-700
+                      text-white font-semibold rounded-2xl
+                      transform hover:scale-105 transition-all duration-300
+                      shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40
+                    "
+                  >
+                    Show All Lessons
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
-
-          {filteredLessons.length === 0 && (
-            <div className="text-center text-gray-400 py-12">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-xl font-semibold mb-2">No lessons found</h3>
-              <p>Try adjusting your search or filters</p>
-            </div>
-          )}
         </div>
+
+        {/* Custom CSS for animations */}
+        <style jsx>{`
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(30px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+        `}</style>
       </div>
     );
   }
@@ -555,12 +691,38 @@ const LessonsExplore = () => {
           }
         }
 
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
         .start-lesson-shadow {
           animation: start-lesson-glow 4s ease-in-out infinite;
         }
 
         .tutorial-shadow {
           animation: tutorial-glow 2s ease-in-out infinite;
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
         }
 
         .button-glow {
@@ -571,116 +733,239 @@ const LessonsExplore = () => {
         .button-glow:hover {
           box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3), 0 5px 15px rgba(139, 92, 246, 0.2);
         }
+
+        /* Custom scrollbar for mobile */
+        ::-webkit-scrollbar {
+          width: 0px;
+          background: transparent;
+        }
+
+        /* Smooth gradient borders */
+        .gradient-border {
+          position: relative;
+          background: linear-gradient(45deg, #667eea, #764ba2, #f093fb);
+          padding: 1px;
+          border-radius: 1rem;
+        }
+
+        .gradient-border::before {
+          content: '';
+          position: absolute;
+          inset: 1px;
+          background: inherit;
+          border-radius: inherit;
+        }
       `}</style>
 
       {/* Mobile Navigation Bar */}
-      <div className="absolute top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl" style={{
+      <div className="absolute top-0 left-0 right-0 z-50 bg-gradient-to-b from-black/95 via-black/90 to-black/80 backdrop-blur-xl border-b border-white/10" style={{
         paddingTop: 'max(env(safe-area-inset-top), 0px)'
       }}>
         <div className="flex items-center justify-between p-4">
           <button
             onClick={handleBack}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
+            className="
+              p-3 rounded-2xl 
+              bg-gradient-to-br from-white/10 to-white/5
+              backdrop-blur-xl border border-white/20
+              shadow-lg shadow-black/20
+              hover:from-white/20 hover:to-white/10
+              hover:shadow-xl hover:shadow-indigo-500/30
+              transition-all duration-300 transform active:scale-95
+            "
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div className="text-center">
-            <h1 className="text-lg font-semibold text-white">Explore</h1>
-            <p className="text-xs text-gray-400 max-w-40 truncate">{getFilterSummary()}</p>
+          
+          <div className="text-center flex-1 mx-4">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent">
+              Explore Lessons
+            </h1>
+            <p className="text-xs text-slate-400 mt-1 truncate max-w-48 mx-auto">
+              {getFilterSummary()}
+            </p>
           </div>
+          
           <button
-            onClick={() => setShowSearch(!showSearch)}
-            className="p-2 rounded-full bg-white/10 backdrop-blur-sm shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300"
+            onClick={() => {
+              triggerHapticFeedback('light');
+              setShowSearch(!showSearch);
+            }}
+            className={`
+              p-3 rounded-2xl 
+              bg-gradient-to-br from-indigo-500/20 to-purple-500/20
+              backdrop-blur-xl border border-indigo-400/30
+              shadow-lg shadow-indigo-500/20
+              hover:from-indigo-500/30 hover:to-purple-500/30
+              hover:shadow-xl hover:shadow-indigo-500/40
+              transition-all duration-300 transform active:scale-95
+              ${showSearch ? 'ring-2 ring-indigo-400/50' : ''}
+            `}
           >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </button>
         </div>
 
-        {/* Mobile Search Panel */}
+        {/* Enhanced Mobile Search Panel */}
         {showSearch && (
-          <div className="px-4 pb-4 bg-black/60 backdrop-blur-xl border-t border-white/10">
+          <div className="px-4 pb-6 bg-gradient-to-b from-black/80 to-black/95 backdrop-blur-xl border-t border-white/10">
+            {/* Search Input */}
             <div className="relative mb-4">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
               <input
                 type="text"
-                placeholder="Search lessons, companies, models..."
+                placeholder="Search lessons, concepts, topics..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/10 backdrop-blur-sm text-white placeholder-white/60 px-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-white/30 border border-white/10"
+                className="
+                  w-full pl-12 pr-4 py-4
+                  bg-gradient-to-r from-white/10 to-white/5
+                  backdrop-blur-xl border border-white/20
+                  text-white placeholder-slate-400
+                  rounded-2xl text-base
+                  focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                  focus:border-indigo-400/50
+                  shadow-lg shadow-black/20
+                  transition-all duration-300
+                "
               />
               
+              {/* Search Suggestions */}
               {searchSuggestions.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden shadow-lg shadow-indigo-500/10">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-black/90 backdrop-blur-xl rounded-2xl border border-white/20 overflow-hidden shadow-xl shadow-black/40 z-50">
                   {searchSuggestions.map((suggestion, index) => (
                     <button
                       key={index}
                       onClick={() => {
+                        triggerHapticFeedback('light');
                         setSearchQuery(suggestion);
                         setSearchSuggestions([]);
                         setShowSearch(false);
                       }}
-                      className="w-full text-left px-4 py-3 text-white hover:bg-white/10 transition-colors border-b border-white/10 last:border-b-0"
+                      className="
+                        w-full text-left px-4 py-3 text-white 
+                        hover:bg-gradient-to-r hover:from-indigo-500/20 hover:to-purple-500/20
+                        transition-all duration-200 border-b border-white/10 last:border-b-0
+                        backdrop-blur-sm
+                      "
                     >
-                      {suggestion}
+                      <span className="flex items-center space-x-2">
+                        <span className="text-slate-400">🔍</span>
+                        <span>{suggestion}</span>
+                      </span>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
+            {/* Filters Toggle Button */}
             <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="w-full bg-white/10 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium border border-white/10 hover:bg-white/20 transition-all duration-300 shadow-lg shadow-white/10 hover:shadow-white/20 text-lg"
+              onClick={() => {
+                triggerHapticFeedback('medium');
+                setShowFilters(!showFilters);
+              }}
+              className={`
+                w-full py-4 px-6 rounded-2xl font-semibold text-base
+                bg-gradient-to-r from-cyan-500/20 to-blue-500/20
+                backdrop-blur-xl border border-cyan-400/30
+                text-white shadow-lg shadow-cyan-500/20
+                hover:from-cyan-500/30 hover:to-blue-500/30
+                hover:shadow-xl hover:shadow-cyan-500/30
+                transition-all duration-300 transform active:scale-95
+                ${showFilters ? 'ring-2 ring-cyan-400/50' : ''}
+              `}
             >
-              {showFilters ? '🔼 Hide Filters' : '🔽 Show Filters'}
+              <span className="flex items-center justify-center space-x-2">
+                <span>{showFilters ? '🔼' : '🔽'}</span>
+                <span>{showFilters ? 'Hide Filters' : 'Show Filters'}</span>
+              </span>
             </button>
 
+            {/* Enhanced Filter Grid */}
             {showFilters && (
-              <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="grid grid-cols-2 gap-3 mt-4 animate-fadeIn">
                 <select
                   value={selectedFilters.difficulty}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, difficulty: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="
+                    bg-gradient-to-r from-white/10 to-white/5
+                    backdrop-blur-xl border border-white/20
+                    text-white px-3 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    shadow-lg shadow-black/20
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="" className="bg-gray-800">All Levels</option>
+                  <option value="" className="bg-slate-800">All Levels</option>
                   {difficulties.map(diff => (
-                    <option key={diff} value={diff} className="bg-gray-800">{diff}</option>
+                    <option key={diff} value={diff} className="bg-slate-800 capitalize">{diff}</option>
                   ))}
                 </select>
 
                 <select
                   value={selectedFilters.module}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, module: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="
+                    bg-gradient-to-r from-white/10 to-white/5
+                    backdrop-blur-xl border border-white/20
+                    text-white px-3 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    shadow-lg shadow-black/20
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="" className="bg-gray-800">All Modules</option>
+                  <option value="" className="bg-slate-800">All Modules</option>
                   {modules.map(module => (
-                    <option key={module} value={module} className="bg-gray-800">{module}</option>
+                    <option key={module} value={module} className="bg-slate-800">{module}</option>
                   ))}
                 </select>
 
                 <select
                   value={selectedFilters.category}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, category: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="
+                    bg-gradient-to-r from-white/10 to-white/5
+                    backdrop-blur-xl border border-white/20
+                    text-white px-3 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    shadow-lg shadow-black/20
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="" className="bg-gray-800">All Categories</option>
+                  <option value="" className="bg-slate-800">All Categories</option>
                   {categories.map(category => (
-                    <option key={category} value={category} className="bg-gray-800">{category}</option>
+                    <option key={category} value={category} className="bg-slate-800">{category}</option>
                   ))}
                 </select>
 
                 <select
                   value={selectedFilters.hasInteractive}
                   onChange={(e) => setSelectedFilters(prev => ({ ...prev, hasInteractive: e.target.value }))}
-                  className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl border border-white/20 focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="
+                    bg-gradient-to-r from-white/10 to-white/5
+                    backdrop-blur-xl border border-white/20
+                    text-white px-3 py-3 rounded-xl
+                    focus:outline-none focus:ring-2 focus:ring-indigo-500/50
+                    focus:border-indigo-400/50
+                    shadow-lg shadow-black/20
+                    transition-all duration-300 cursor-pointer
+                  "
                 >
-                  <option value="" className="bg-gray-800">All Interactive</option>
-                  <option value="yes">Yes</option>
-                  <option value="no">No</option>
+                  <option value="" className="bg-slate-800">All Types</option>
+                  <option value="yes" className="bg-slate-800">Interactive</option>
+                  <option value="no" className="bg-slate-800">Theory</option>
                 </select>
               </div>
             )}
@@ -694,9 +979,20 @@ const LessonsExplore = () => {
                   setSelectedFilters({ difficulty: '', module: '', category: '', hasInteractive: '' });
                   setShowSearch(false);
                 }}
-                className="w-full bg-gradient-to-r from-red-500/20 to-pink-500/20 backdrop-blur-sm text-white px-4 py-4 rounded-2xl font-medium mt-4 border border-red-500/30 shadow-lg shadow-red-500/20 hover:shadow-red-500/40 transition-all duration-300 text-lg hover:from-red-500/30 hover:to-pink-500/30"
+                className="
+                  w-full mt-4 py-4 px-6 rounded-2xl font-semibold text-base
+                  bg-gradient-to-r from-red-500/20 to-pink-500/20
+                  backdrop-blur-xl border border-red-400/30
+                  text-red-300 shadow-lg shadow-red-500/20
+                  hover:from-red-500/30 hover:to-pink-500/30
+                  hover:shadow-xl hover:shadow-red-500/30
+                  transition-all duration-300 transform active:scale-95
+                "
               >
-                🗑️ Clear All Filters
+                <span className="flex items-center justify-center space-x-2">
+                  <span>🗑️</span>
+                  <span>Clear All Filters</span>
+                </span>
               </button>
             )}
           </div>
