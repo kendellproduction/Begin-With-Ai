@@ -67,7 +67,7 @@ const LessonsOverview = () => {
       if (user?.uid) {
         try {
           const { doc, getDoc } = await import('firebase/firestore');
-          const { db } = await import('../services/firebase');
+          const { db } = await import('../firebase');
           
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
@@ -249,9 +249,26 @@ const LessonsOverview = () => {
   };
 
   const handleContinueLearning = () => {
-    if (userLearningPath) {
-      navigate('/lessons/continue');
+    if (userLearningPath && learningProgress) {
+      // Find the next lesson to continue
+      const nextLessonIndex = learningProgress.nextLessonIndex || 0;
+      
+      // If we have adaptive lessons loaded, find the next one
+      if (adaptiveLessons.length > nextLessonIndex) {
+        const nextLesson = adaptiveLessons[nextLessonIndex];
+        navigate(`/lessons/${nextLesson.id}`, {
+          state: {
+            pathId: 'prompt-engineering-mastery',
+            moduleId: nextLesson.moduleId,
+            fromLearningPath: true
+          }
+        });
+      } else {
+        // Fallback to lessons continue route
+        navigate('/lessons/continue');
+      }
     } else {
+      // No learning path, redirect to create one
       navigate('/learning-path/adaptive-quiz');
     }
   };
@@ -305,37 +322,32 @@ const LessonsOverview = () => {
         {/* Progress Section (if user has active path) */}
         {userLearningPath && learningProgress && (
           <div className="mb-8">
-            <LearningPathVisual 
-              learningProgress={learningProgress}
-              userLearningPath={userLearningPath}
-              compact={true}
-              showActions={false}
-              className="max-w-4xl mx-auto"
-            />
+            <div className="bg-gradient-to-br from-slate-800/30 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/30">
+              <LearningPathVisual 
+                learningProgress={learningProgress}
+                userLearningPath={userLearningPath}
+                compact={true}
+                showActions={false}
+                className="max-w-4xl mx-auto"
+              />
+              
+              {/* Continue Learning Button - Integrated */}
+              <div className="text-center mt-4">
+                <button
+                  onClick={handleContinueLearning}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-blue-500/30"
+                >
+                  🚀 Continue Learning Journey
+                </button>
+                <p className="mt-2 text-slate-400 text-xs">
+                  Pick up where you left off in your personalized path
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-            <div className="text-2xl font-bold text-indigo-400">{stats.totalLessons}</div>
-            <div className="text-sm text-slate-400">Total Lessons</div>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-            <div className="text-2xl font-bold text-green-400">{stats.completedLessons}</div>
-            <div className="text-sm text-slate-400">Completed</div>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-            <div className="text-2xl font-bold text-purple-400">{stats.modules}</div>
-            <div className="text-sm text-slate-400">Modules</div>
-          </div>
-          <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
-            <div className="text-2xl font-bold text-yellow-400">{stats.avgDuration}m</div>
-            <div className="text-sm text-slate-400">Avg Duration</div>
-          </div>
-        </div>
-
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - Simplified */}
         <div className="flex space-x-4 mb-8">
           <button
             onClick={() => setActiveSection('overview')}
@@ -345,7 +357,7 @@ const LessonsOverview = () => {
                 : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
             }`}
           >
-            📚 Learning Path Overview
+            ✨ Start Here
           </button>
           <button
             onClick={() => setActiveSection('browse')}
@@ -355,7 +367,7 @@ const LessonsOverview = () => {
                 : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
             }`}
           >
-            🔍 Browse All Lessons ({adaptiveLessons.length})
+            🔍 Browse All ({adaptiveLessons.length})
           </button>
         </div>
 
@@ -558,6 +570,29 @@ const LessonsOverview = () => {
                 </button>
               </div>
             )}
+
+            {/* Collection Stats - Only in browse mode */}
+            <div className="mt-12 pt-8 border-t border-white/10">
+              <h4 className="text-lg font-semibold text-white mb-4 text-center">📊 Collection Overview</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
+                  <div className="text-xl font-bold text-indigo-400">{stats.totalLessons}</div>
+                  <div className="text-xs text-slate-400">Total Lessons</div>
+                </div>
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
+                  <div className="text-xl font-bold text-green-400">{stats.completedLessons}</div>
+                  <div className="text-xs text-slate-400">Completed</div>
+                </div>
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
+                  <div className="text-xl font-bold text-purple-400">{stats.modules}</div>
+                  <div className="text-xs text-slate-400">Modules</div>
+                </div>
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
+                  <div className="text-xl font-bold text-yellow-400">{stats.avgDuration}m</div>
+                  <div className="text-xs text-slate-400">Avg Duration</div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

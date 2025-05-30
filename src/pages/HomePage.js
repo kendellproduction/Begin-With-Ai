@@ -134,7 +134,7 @@ const HomePage = () => {
       if (user?.uid) {
         try {
           const { doc, getDoc } = await import('firebase/firestore');
-          const { db } = await import('../services/firebase');
+          const { db } = await import('../firebase');
           
           const userDocRef = doc(db, 'users', user.uid);
           const userDoc = await getDoc(userDocRef);
@@ -326,8 +326,26 @@ const HomePage = () => {
   };
 
   const handleStartLearning = () => {
-    if (isQuizCompleted && userLearningPath) {
-      // Continue learning path or go to first lesson
+    if (isQuizCompleted && userLearningPath && learningProgress) {
+      // Find the next lesson to continue
+      const nextLessonIndex = learningProgress.nextLessonIndex || 0;
+      
+      // If we have adaptive lessons loaded, find the next one
+      if (adaptiveLessons.length > nextLessonIndex) {
+        const nextLesson = adaptiveLessons[nextLessonIndex];
+        navigate(`/lessons/${nextLesson.id}`, {
+          state: {
+            pathId: 'prompt-engineering-mastery',
+            moduleId: nextLesson.moduleId,
+            fromLearningPath: true
+          }
+        });
+      } else {
+        // Try to load the next lesson from the learning path
+        navigate('/lessons/continue');
+      }
+    } else if (isQuizCompleted && userLearningPath) {
+      // Has learning path but no progress loaded, go to lessons page
       navigate('/lessons');
     } else {
       // Start adaptive assessment
@@ -393,61 +411,78 @@ const HomePage = () => {
         )}
 
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Hero Section with Greeting and Progress */}
-          <section className="mb-8">
-            <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-indigo-500/30">
-              <div className="text-center mb-8">
-                <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
+          {/* Combined Hero and Learning Path Section */}
+          <section className="mb-6">
+            <div className="bg-gradient-to-br from-blue-500/40 via-indigo-600/40 to-purple-600/30 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/30 shadow-xl shadow-indigo-400/20">
+              {/* Greeting and Quote */}
+              <div className="text-center mb-4">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
                   {getUserGreeting()}
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-300 mb-8 leading-relaxed max-w-4xl mx-auto">
+                <p className="text-md md:text-lg text-blue-100 mb-4 leading-relaxed max-w-2xl mx-auto">
                   {currentQuote}
                 </p>
-                
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-3xl font-bold text-indigo-400">{userStats.streak || 0}</div>
-                    <div className="text-sm text-gray-400">Day Streak 🔥</div>
-                  </div>
-                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-3xl font-bold text-green-400">{userStats.lessonsCompleted || 0}</div>
-                    <div className="text-sm text-gray-400">Lessons Done ✅</div>
-                  </div>
-                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-3xl font-bold text-yellow-400">{userStats.xp || 0}</div>
-                    <div className="text-sm text-gray-400">Total XP ⭐</div>
-                  </div>
-                  <div className="bg-black/30 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="text-3xl font-bold text-purple-400">Lv.{userStats.level || 1}</div>
-                    <div className="text-sm text-gray-400">Current Level 🏆</div>
+              </div>
+
+              {/* Quick Stats - more compact */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="text-xl font-bold text-orange-300">{userStats.streak || 0}</div>
+                  <div className="text-xs text-blue-200">Day Streak 🔥</div>
+                </div>
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="text-xl font-bold text-green-300">{userStats.lessonsCompleted || 0}</div>
+                  <div className="text-xs text-blue-200">Lessons Done ✅</div>
+                </div>
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="text-xl font-bold text-yellow-300">{userStats.xp || 0}</div>
+                  <div className="text-xs text-blue-200">Total XP ⭐</div>
+                </div>
+                <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="text-xl font-bold text-purple-300">Lv.{userStats.level || 1}</div>
+                  <div className="text-xs text-blue-200">Current Level 🏆</div>
+                </div>
+              </div>
+
+              {/* Learning Path Visual and Continue Button */}
+              {isQuizCompleted && userLearningPath && (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <LearningPathVisual 
+                    learningProgress={learningProgress}
+                    userLearningPath={userLearningPath}
+                    compact={true}
+                    showActions={false}
+                  />
+                  <div className="text-center mt-3">
+                    <button
+                      onClick={handleStartLearning}
+                      className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md shadow-indigo-500/30"
+                    >
+                      🚀 {learningProgress?.nextLessonIndex > 0 ? 'Continue Learning Journey' : 'Start Learning Journey'}
+                    </button>
+                    <p className="mt-1 text-indigo-200 text-xs">
+                      Pick up where you left off in your personalized path.
+                    </p>
                   </div>
                 </div>
-
-                <button
-                  onClick={handleStartLearning}
-                  className="group relative px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-                >
-                  <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
-                  <span className="relative flex items-center gap-2">
-                    {isQuizCompleted ? '🚀 Continue Learning' : '🎯 Start Your AI Journey'}
-                  </span>
-                </button>
-              </div>
+              )}
+              
+              {/* Fallback Start Button if no learning path yet */}
+              {!userLearningPath && (
+                 <div className="text-center mt-4">
+                   <button
+                     onClick={handleStartLearning}
+                     className="group relative px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                   >
+                     <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
+                     <span className="relative flex items-center gap-2">
+                       🎯 Start Your AI Journey
+                     </span>
+                   </button>
+                 </div>
+              )}
             </div>
           </section>
-
-          {/* Professional Learning Path Design */}
-          {isQuizCompleted && userLearningPath ? (
-            <section className="mb-8">
-              <LearningPathVisual 
-                learningProgress={learningProgress}
-                userLearningPath={userLearningPath}
-                compact={false}
-                showActions={true}
-              />
-            </section>
-          ) : null}
 
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -457,19 +492,19 @@ const HomePage = () => {
               
               {/* Next Lesson Recommendation */}
               {nextLesson && (
-                <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/30">
+                <div className="bg-gradient-to-br from-cyan-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-cyan-400/50 shadow-lg">
                   <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                     🎯 Up Next
                   </h2>
-                  <div className="bg-black/30 rounded-2xl p-6">
+                  <div className="bg-white/20 rounded-2xl p-6 border border-white/30">
                     <div className="flex items-center justify-between mb-3">
-                      <span className="px-3 py-1 bg-blue-600/30 text-blue-300 rounded-full text-sm font-medium">
+                      <span className="px-3 py-1 bg-blue-400/30 text-blue-100 rounded-full text-sm font-medium">
                         {nextLesson.moduleName}
                       </span>
-                      <span className="text-sm text-gray-400">15 min</span>
+                      <span className="text-sm text-cyan-200">15 min</span>
                     </div>
                     <h3 className="text-xl font-semibold text-white mb-2">{nextLesson.title}</h3>
-                    <p className="text-gray-300 mb-4">{nextLesson.coreConcept}</p>
+                    <p className="text-cyan-100 mb-4">{nextLesson.coreConcept}</p>
                     <button
                       onClick={() => handleQuickLesson(nextLesson)}
                       className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
@@ -482,31 +517,71 @@ const HomePage = () => {
 
               {/* Quick Access Lessons */}
               {adaptiveLessons.length > 0 && (
-                <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+                <div className="bg-gradient-to-br from-violet-500/40 to-purple-600/40 backdrop-blur-xl rounded-3xl p-6 border border-violet-400/50 shadow-lg">
                   <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
                     ⚡ Quick Access Lessons
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {adaptiveLessons.map((lesson) => (
-                      <div
-                        key={lesson.id}
-                        onClick={() => handleQuickLesson(lesson)}
-                        className="bg-black/30 hover:bg-black/50 p-4 rounded-xl transition-all duration-300 cursor-pointer group"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="px-2 py-1 bg-purple-600/30 text-purple-300 rounded-full text-xs font-medium">
-                            {lesson.moduleTitle}
-                          </span>
-                          <span className="text-xs text-gray-400">15 min</span>
+                    {adaptiveLessons.map((lesson, index) => {
+                      // Different color schemes for each card
+                      const cardColors = [
+                        {
+                          bg: 'bg-gradient-to-br from-cyan-400/30 to-blue-500/30',
+                          border: 'border-cyan-400/40',
+                          tag: 'bg-cyan-400/30 text-cyan-100',
+                          time: 'text-cyan-200',
+                          title: 'group-hover:text-cyan-200',
+                          text: 'text-cyan-100'
+                        },
+                        {
+                          bg: 'bg-gradient-to-br from-emerald-400/30 to-green-500/30',
+                          border: 'border-emerald-400/40',
+                          tag: 'bg-emerald-400/30 text-emerald-100',
+                          time: 'text-emerald-200',
+                          title: 'group-hover:text-emerald-200',
+                          text: 'text-emerald-100'
+                        },
+                        {
+                          bg: 'bg-gradient-to-br from-pink-400/30 to-rose-500/30',
+                          border: 'border-pink-400/40',
+                          tag: 'bg-pink-400/30 text-pink-100',
+                          time: 'text-pink-200',
+                          title: 'group-hover:text-pink-200',
+                          text: 'text-pink-100'
+                        },
+                        {
+                          bg: 'bg-gradient-to-br from-orange-400/30 to-amber-500/30',
+                          border: 'border-orange-400/40',
+                          tag: 'bg-orange-400/30 text-orange-100',
+                          time: 'text-orange-200',
+                          title: 'group-hover:text-orange-200',
+                          text: 'text-orange-100'
+                        }
+                      ];
+                      
+                      const colorScheme = cardColors[index % cardColors.length];
+                      
+                      return (
+                        <div
+                          key={lesson.id}
+                          onClick={() => handleQuickLesson(lesson)}
+                          className={`${colorScheme.bg} hover:brightness-110 p-4 rounded-xl transition-all duration-300 cursor-pointer group border ${colorScheme.border}`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`px-2 py-1 ${colorScheme.tag} rounded-full text-xs font-medium`}>
+                              {lesson.moduleTitle}
+                            </span>
+                            <span className={`text-xs ${colorScheme.time}`}>15 min</span>
+                          </div>
+                          <h3 className={`text-lg font-semibold text-white ${colorScheme.title} transition-colors mb-2`}>
+                            {lesson.title}
+                          </h3>
+                          <p className={`text-sm ${colorScheme.text} line-clamp-2`}>
+                            {lesson.coreConcept}
+                          </p>
                         </div>
-                        <h3 className="text-lg font-semibold text-white group-hover:text-blue-400 transition-colors mb-2">
-                          {lesson.title}
-                        </h3>
-                        <p className="text-sm text-gray-400 line-clamp-2">
-                          {lesson.coreConcept}
-                        </p>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <div className="mt-6 text-center">
                     <button
@@ -520,23 +595,23 @@ const HomePage = () => {
               )}
 
               {/* Weekly Goal Progress */}
-              <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+              <div className="bg-gradient-to-br from-emerald-500/40 to-green-600/40 backdrop-blur-xl rounded-3xl p-6 border border-emerald-400/50 shadow-lg">
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                   🎯 Weekly Learning Goal
                 </h2>
                 <div className="mb-4">
-                  <div className="flex justify-between text-sm text-gray-400 mb-2">
+                  <div className="flex justify-between text-sm text-emerald-200 mb-2">
                     <span>Progress this week</span>
                     <span>{Math.round(calculateWeeklyProgress())}%</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-3">
+                  <div className="w-full bg-white/30 rounded-full h-3 border border-white/40">
                     <div 
-                      className="bg-gradient-to-r from-green-500 to-emerald-500 h-3 rounded-full transition-all duration-1000"
+                      className="bg-gradient-to-r from-green-400 to-emerald-400 h-3 rounded-full transition-all duration-1000"
                       style={{ width: `${calculateWeeklyProgress()}%` }}
                     ></div>
                   </div>
                 </div>
-                <p className="text-gray-300">
+                <p className="text-emerald-100">
                   {calculateWeeklyProgress() >= 100 
                     ? "🎉 Amazing! You've crushed this week's goal!" 
                     : `Just ${Math.max(0, 5 - (userStats.lessonsCompletedThisWeek || 0))} more lessons to hit your weekly goal!`
@@ -545,11 +620,11 @@ const HomePage = () => {
               </div>
 
               {/* AI Insight */}
-              <div className="bg-gradient-to-br from-cyan-600/20 to-blue-600/20 backdrop-blur-xl rounded-3xl p-6 border border-cyan-500/30">
+              <div className="bg-gradient-to-br from-sky-500/40 to-cyan-600/40 backdrop-blur-xl rounded-3xl p-6 border border-sky-400/50 shadow-lg">
                 <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                   💡 AI Insight of the Day
                 </h2>
-                <p className="text-xl text-cyan-200 leading-relaxed">
+                <p className="text-xl text-sky-100 leading-relaxed">
                   {currentFact}
                 </p>
               </div>
@@ -587,7 +662,7 @@ const HomePage = () => {
               )}
 
               {/* Quick Actions */}
-              <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
+              <div className="bg-gradient-to-br from-indigo-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-indigo-400/50 shadow-lg">
                 <h2 className="text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
                 <div className="space-y-3">
                   {!isQuizCompleted && (
@@ -601,18 +676,18 @@ const HomePage = () => {
                   <div
                     onClick={() => navigate('/lessons')}
                     className="
-                      explore-shadow group relative bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl 
-                      rounded-3xl p-8 border border-indigo-500/30 hover:border-indigo-400/50 
+                      group relative bg-gradient-to-br from-blue-400/30 to-indigo-500/30 backdrop-blur-xl 
+                      rounded-3xl p-8 border border-blue-400/40 hover:border-blue-300/60 
                       transition-all duration-300 cursor-pointer hover:scale-105 
-                      shadow-indigo-500/20 hover:shadow-indigo-500/40
+                      shadow-lg hover:shadow-xl
                     "
                   >
                     <div className="text-6xl mb-4">🔍</div>
                     <h3 className="text-2xl font-bold mb-3 text-white">Explore All Lessons</h3>
-                    <p className="text-slate-300 mb-6 leading-relaxed">
+                    <p className="text-blue-100 mb-6 leading-relaxed">
                       Browse through our adaptive lessons with our discovery interface. Each lesson adjusts to your skill level!
                     </p>
-                    <div className="flex items-center space-x-2 text-indigo-400 font-medium">
+                    <div className="flex items-center space-x-2 text-blue-200 font-medium">
                       <span>Start Exploring</span>
                       <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -629,12 +704,12 @@ const HomePage = () => {
               </div>
 
               {/* Motivational Quote */}
-              <div className="bg-gradient-to-r from-purple-600/20 to-pink-600/20 backdrop-blur-xl rounded-3xl p-6 border border-white/10 text-center">
+              <div className="bg-gradient-to-r from-pink-500/40 to-rose-600/40 backdrop-blur-xl rounded-3xl p-6 border border-pink-400/50 text-center shadow-lg">
                 <div className="text-4xl mb-3">🌟</div>
-                <p className="text-lg font-medium text-purple-200 italic">
+                <p className="text-lg font-medium text-pink-100 italic">
                   "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
                 </p>
-                <p className="text-sm text-purple-300 mt-2">- Your AI Coach</p>
+                <p className="text-sm text-pink-200 mt-2">- Your AI Coach</p>
               </div>
             </div>
           </div>
