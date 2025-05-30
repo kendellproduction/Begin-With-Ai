@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import LessonCard from '../components/LessonCard';
+import LearningPathVisual from '../components/LearningPathVisual';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 
 const LessonsOverview = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { user } = useAuth();
   const [userLearningPath, setUserLearningPath] = useState(null);
   const [learningProgress, setLearningProgress] = useState(null);
   const [adaptiveLessons, setAdaptiveLessons] = useState([]);
@@ -28,15 +31,110 @@ const LessonsOverview = () => {
       navigate(location.pathname, { replace: true });
     }
     
-    if (isLearningPathActive()) {
-      const pathData = getLearningPath();
-      const progress = getCurrentLessonProgress();
-      setUserLearningPath(pathData);
-      setLearningProgress(progress);
-    }
-
+    // Enhanced quiz completion detection - same as HomePage
+    initializeLearningData();
     loadAdaptiveLessons();
   }, [location.state, navigate, location.pathname]);
+
+  const initializeLearningData = async () => {
+    // Enhanced quiz completion detection - check both localStorage and Firebase
+    try {
+      let quizCompletedState = false;
+      let quizResultsData = null;
+      let learningPathData = null;
+      
+      // First check localStorage
+      const localQuizCompleted = localStorage.getItem('quizCompleted');
+      const localAiAssessmentResults = localStorage.getItem('aiAssessmentResults');
+      const localActiveLearningPath = localStorage.getItem('activeLearningPath');
+      
+      if (localQuizCompleted || localAiAssessmentResults || localActiveLearningPath) {
+        quizCompletedState = true;
+        
+        if (localQuizCompleted) {
+          const completionState = JSON.parse(localQuizCompleted);
+          quizResultsData = completionState.results;
+        } else if (localAiAssessmentResults) {
+          quizResultsData = JSON.parse(localAiAssessmentResults);
+        }
+        
+        if (localActiveLearningPath) {
+          learningPathData = JSON.parse(localActiveLearningPath);
+        }
+      }
+      
+      // If we have a user, also check/sync with Firebase
+      if (user?.uid) {
+        try {
+          const { doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('../services/firebase');
+          
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            // Check if quiz is completed in database
+            if (userData.quizCompleted || userData.aiAssessmentResults || userData.activeLearningPath) {
+              quizCompletedState = true;
+              
+              if (userData.aiAssessmentResults) {
+                quizResultsData = userData.aiAssessmentResults;
+              }
+              
+              if (userData.activeLearningPath) {
+                learningPathData = userData.activeLearningPath;
+              }
+              
+              // Sync to localStorage if not already there
+              if (!localQuizCompleted && userData.quizCompleted) {
+                localStorage.setItem('quizCompleted', JSON.stringify(userData.quizCompleted));
+              }
+              if (!localAiAssessmentResults && userData.aiAssessmentResults) {
+                localStorage.setItem('aiAssessmentResults', JSON.stringify(userData.aiAssessmentResults));
+              }
+              if (!localActiveLearningPath && userData.activeLearningPath) {
+                localStorage.setItem('activeLearningPath', JSON.stringify(userData.activeLearningPath));
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing with Firebase in lessons page:', error);
+        }
+      }
+      
+      // Set the learning path data if found
+      if (learningPathData) {
+        setUserLearningPath(learningPathData);
+        
+        // Create progress object
+        const progress = {
+          nextLessonIndex: learningPathData.nextLessonIndex || 0,
+          completedLessons: learningPathData.completedLessons?.length || 0, // Real data only
+          totalLessons: learningPathData.totalLessons || 10,
+          progressPercentage: Math.round(((learningPathData.completedLessons?.length || 0) / (learningPathData.totalLessons || 10)) * 100)
+        };
+        setLearningProgress(progress);
+        
+        console.log('Lessons page - Learning path detected:', { learningPathData, progress });
+      } else {
+        console.log('Lessons page - No learning path found');
+      }
+      
+      console.log('Lessons page - Quiz completion state:', { quizCompletedState, quizResultsData, learningPathData });
+    } catch (error) {
+      console.error('Error loading learning data:', error);
+      // Fallback to old method
+      if (isLearningPathActive()) {
+        const pathData = getLearningPath();
+        const progress = getCurrentLessonProgress();
+        setUserLearningPath(pathData);
+        setLearningProgress(progress);
+        console.log('Lessons page - Using fallback method:', { pathData, progress });
+      }
+    }
+  };
 
   const loadAdaptiveLessons = async () => {
     setIsLoading(true);
@@ -207,28 +305,13 @@ const LessonsOverview = () => {
         {/* Progress Section (if user has active path) */}
         {userLearningPath && learningProgress && (
           <div className="mb-8">
-            <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-2xl p-6 border border-green-500/30">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h2 className="text-xl font-bold text-green-400 mb-1">🎯 {userLearningPath.pathTitle}</h2>
-                  <p className="text-green-200">
-                    {learningProgress.completedLessons} of {learningProgress.totalLessons} lessons completed
-                  </p>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-green-400">
-                    {Math.round((learningProgress.completedLessons / learningProgress.totalLessons) * 100)}%
-                  </div>
-                  <div className="text-sm text-green-300">Complete</div>
-                </div>
-              </div>
-              <button
-                onClick={handleContinueLearning}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 transform hover:scale-105"
-              >
-                Continue Learning Journey 🚀
-              </button>
-            </div>
+            <LearningPathVisual 
+              learningProgress={learningProgress}
+              userLearningPath={userLearningPath}
+              compact={true}
+              showActions={false}
+              className="max-w-4xl mx-auto"
+            />
           </div>
         )}
 

@@ -530,185 +530,191 @@ const AdaptiveLearningPathQuiz = () => {
             )}
           </div>
 
-          {/* Personal Recommendation Section */}
-          <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-amber-500/30">
-            <h2 className="text-2xl font-bold text-amber-300 mb-6 flex items-center gap-2">
-              👨‍🏫 Here's What We Recommend For You
-            </h2>
-            <div className="space-y-6 text-amber-100">
-              <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
-                <h3 className="text-xl font-bold text-amber-200 mb-3">
-                  🎯 We recommend you start with: <span className="text-white">{results.recommendations.title}</span>
-                </h3>
-                <p className="text-lg leading-relaxed">
-                  {results.skillLevel === 'beginner' && (
-                    <>
-                      You're at the perfect starting point! Since you're new to AI tools, we want to make sure you build a rock-solid foundation. 
-                      You'll start with simple, practical exercises that build your confidence. No overwhelming technical jargon - just clear, 
-                      step-by-step guidance that gets you using AI effectively from day one.
-                    </>
-                  )}
-                  {results.skillLevel === 'intermediate' && (
-                    <>
-                      You already have some AI experience, which is fantastic! We can see you're ready to take your skills to the next level. 
-                      You'll learn advanced techniques that will make you stand out in your field. We'll focus on practical, hands-on projects 
-                      that you can immediately apply to your work or personal projects.
-                    </>
-                  )}
-                  {results.skillLevel === 'advanced' && (
-                    <>
-                      You're clearly comfortable with AI tools - impressive! We're going to challenge you with cutting-edge techniques and 
-                      complex projects. You'll master advanced workflows, learn to integrate multiple AI systems, and develop skills 
-                      that put you in the top 1% of AI users.
-                    </>
-                  )}
+          {/* Results Content */}
+          <div className="max-w-4xl mx-auto space-y-8">
+            
+            {/* Main Results Card */}
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-3xl p-8 border border-slate-700/50">
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-white mb-4">
+                  Perfect! Here's What We Recommend For You
+                </h2>
+                <p className="text-xl text-slate-300">
+                  Based on your responses, this learning path is perfectly tailored to your current skill level and goals.
                 </p>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
-                  <h3 className="font-bold text-amber-200 mb-4 text-lg">📚 What You'll Learn:</h3>
-                  <ul className="space-y-3 text-base">
-                    {results.skillLevel === 'beginner' && (
-                      <>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>How to write prompts that get amazing results every time</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>The fundamentals of different AI tools and when to use each one</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Practical applications you can use immediately in your daily life</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>How to avoid common mistakes that waste time and money</span>
-                        </li>
-                      </>
-                    )}
-                    {results.skillLevel === 'intermediate' && (
-                      <>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Advanced prompting techniques that professionals use</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>How to chain multiple AI tools together for powerful workflows</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Problem-solving frameworks using AI that save hours of work</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Industry-specific applications that give you a competitive edge</span>
-                        </li>
-                      </>
-                    )}
-                    {results.skillLevel === 'advanced' && (
-                      <>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Master-level prompt engineering techniques and strategies</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Building custom AI workflows and automations</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Advanced AI tool integrations and optimization techniques</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-green-400 mt-1">✓</span>
-                          <span>Professional-grade AI applications and best practices</span>
-                        </li>
-                      </>
-                    )}
-                  </ul>
-                </div>
-                
-                <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
-                  <h3 className="font-bold text-amber-200 mb-4 text-lg">🚀 What You'll Be Able To Do:</h3>
-                  <ul className="space-y-3 text-base">
-                    {results.skillLevel === 'beginner' && (
-                      <>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Generate professional content that impresses your colleagues</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Automate routine tasks that currently take hours</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Make better decisions with AI-powered research and analysis</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Feel confident using AI in any situation</span>
-                        </li>
-                      </>
-                    )}
-                    {results.skillLevel === 'intermediate' && (
-                      <>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Create complex workflows that solve real business problems</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Lead AI initiatives at your company or organization</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Build impressive projects that showcase your expertise</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Command higher salaries and better opportunities</span>
-                        </li>
-                      </>
-                    )}
-                    {results.skillLevel === 'advanced' && (
-                      <>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Master prompt engineering at a professional level</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Create sophisticated AI-powered solutions for complex problems</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Become the go-to AI expert in your field or organization</span>
-                        </li>
-                        <li className="flex items-start gap-3">
-                          <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Build and optimize advanced AI workflows that save significant time</span>
-                        </li>
-                      </>
-                    )}
-                  </ul>
+              {/* Personal Recommendation Section */}
+              <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-amber-500/30">
+                <h2 className="text-2xl font-bold text-amber-300 mb-6 flex items-center gap-2">
+                  👨‍🏫 Here's What We Recommend For You
+                </h2>
+                <div className="space-y-6 text-amber-100">
+                  <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
+                    <h3 className="text-xl font-bold text-amber-200 mb-3">
+                      🎯 We recommend you start with: <span className="text-white">{results.recommendations.title}</span>
+                    </h3>
+                    <p className="text-lg leading-relaxed">
+                      {results.skillLevel === 'beginner' && (
+                        <>
+                          You're at the perfect starting point! Since you're new to AI tools, we want to make sure you build a rock-solid foundation. 
+                          You'll start with simple, practical exercises that build your confidence. No overwhelming technical jargon - just clear, 
+                          step-by-step guidance that gets you using AI effectively from day one.
+                        </>
+                      )}
+                      {results.skillLevel === 'intermediate' && (
+                        <>
+                          You already have some AI experience, which is fantastic! We can see you're ready to take your skills to the next level. 
+                          You'll learn advanced techniques that will make you stand out in your field. We'll focus on practical, hands-on projects 
+                          that you can immediately apply to your work or personal projects.
+                        </>
+                      )}
+                      {results.skillLevel === 'advanced' && (
+                        <>
+                          You're clearly comfortable with AI tools - impressive! We're going to challenge you with cutting-edge techniques and 
+                          complex projects. You'll master advanced workflows, learn to integrate multiple AI systems, and develop skills 
+                          that put you in the top 1% of AI users.
+                        </>
+                      )}
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
+                      <h3 className="font-bold text-amber-200 mb-4 text-lg">📚 What You'll Learn:</h3>
+                      <ul className="space-y-3 text-base">
+                        {results.skillLevel === 'beginner' && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>How to write prompts that get amazing results every time</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>The fundamentals of different AI tools and when to use each one</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Practical applications you can use immediately in your daily life</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>How to avoid common mistakes that waste time and money</span>
+                            </li>
+                          </>
+                        )}
+                        {results.skillLevel === 'intermediate' && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Advanced prompting techniques that professionals use</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>How to chain multiple AI tools together for powerful workflows</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Problem-solving frameworks using AI that save hours of work</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Industry-specific applications that give you a competitive edge</span>
+                            </li>
+                          </>
+                        )}
+                        {results.skillLevel === 'advanced' && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Master-level prompt engineering techniques and strategies</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Building custom AI workflows and automations</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Advanced AI tool integrations and optimization techniques</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-green-400 mt-1">✓</span>
+                              <span>Professional-grade AI applications and best practices</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
+                      <h3 className="font-bold text-amber-200 mb-4 text-lg">🚀 What You'll Be Able To Do:</h3>
+                      <ul className="space-y-3 text-base">
+                        {results.skillLevel === 'beginner' && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Generate professional content that impresses your colleagues</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Automate routine tasks that currently take hours</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Make better decisions with AI-powered research and analysis</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Feel confident using AI in any situation</span>
+                            </li>
+                          </>
+                        )}
+                        {results.skillLevel === 'intermediate' && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Create complex workflows that solve real business problems</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Lead AI initiatives at your company or organization</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Build impressive projects that showcase your expertise</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Command higher salaries and better opportunities</span>
+                            </li>
+                          </>
+                        )}
+                        {results.skillLevel === 'advanced' && (
+                          <>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Master prompt engineering at a professional level</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Create sophisticated AI-powered solutions for complex problems</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Become the go-to AI expert in your field or organization</span>
+                            </li>
+                            <li className="flex items-start gap-3">
+                              <span className="text-blue-400 mt-1">⭐</span>
+                              <span>Build and optimize advanced AI workflows that save significant time</span>
+                            </li>
+                          </>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-
-          {/* Confidence Score Only */}
-          <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-green-500/30 text-center">
-            <h2 className="text-2xl font-bold text-green-400 mb-4">🎯 Our Confidence Level</h2>
-            <div className="text-5xl font-bold text-green-300 mb-3">{results.confidence}%</div>
-            <p className="text-green-200 text-lg leading-relaxed">
-              We're {results.confidence}% confident this path will give you exactly the skills you need. 
-              Your responses show you're ready for this level of challenge!
-            </p>
           </div>
 
           {/* How It Works */}

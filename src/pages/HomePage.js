@@ -5,6 +5,7 @@ import { useGamification } from '../contexts/GamificationContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
 import LearningPathMap from '../components/LearningPathMap';
+import LearningPathVisual from '../components/LearningPathVisual';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 
@@ -103,14 +104,119 @@ const HomePage = () => {
   const initializeDashboard = async () => {
     setIsLoading(true);
     
-    // Check if user has completed the quiz
-    const quizCompleted = localStorage.getItem('quizCompleted');
-    if (quizCompleted) {
-      const completionState = JSON.parse(quizCompleted);
-      if (completionState.completed && completionState.results) {
-        setIsQuizCompleted(true);
-        setQuizResults(completionState.results);
+    // Enhanced quiz completion detection - check both localStorage and Firebase
+    try {
+      let quizCompletedState = false;
+      let quizResultsData = null;
+      let learningPathData = null;
+      
+      // First check localStorage
+      const localQuizCompleted = localStorage.getItem('quizCompleted');
+      const localAiAssessmentResults = localStorage.getItem('aiAssessmentResults');
+      const localActiveLearningPath = localStorage.getItem('activeLearningPath');
+      
+      if (localQuizCompleted || localAiAssessmentResults || localActiveLearningPath) {
+        quizCompletedState = true;
+        
+        if (localQuizCompleted) {
+          const completionState = JSON.parse(localQuizCompleted);
+          quizResultsData = completionState.results;
+        } else if (localAiAssessmentResults) {
+          quizResultsData = JSON.parse(localAiAssessmentResults);
+        }
+        
+        if (localActiveLearningPath) {
+          learningPathData = JSON.parse(localActiveLearningPath);
+        }
       }
+      
+      // If we have a user, also check/sync with Firebase
+      if (user?.uid) {
+        try {
+          const { doc, getDoc } = await import('firebase/firestore');
+          const { db } = await import('../services/firebase');
+          
+          const userDocRef = doc(db, 'users', user.uid);
+          const userDoc = await getDoc(userDocRef);
+          
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            
+            // Check if quiz is completed in database
+            if (userData.quizCompleted || userData.aiAssessmentResults || userData.activeLearningPath) {
+              quizCompletedState = true;
+              
+              if (userData.aiAssessmentResults) {
+                quizResultsData = userData.aiAssessmentResults;
+              }
+              
+              if (userData.activeLearningPath) {
+                learningPathData = userData.activeLearningPath;
+              }
+              
+              // Sync to localStorage if not already there
+              if (!localQuizCompleted && userData.quizCompleted) {
+                localStorage.setItem('quizCompleted', JSON.stringify(userData.quizCompleted));
+              }
+              if (!localAiAssessmentResults && userData.aiAssessmentResults) {
+                localStorage.setItem('aiAssessmentResults', JSON.stringify(userData.aiAssessmentResults));
+              }
+              if (!localActiveLearningPath && userData.activeLearningPath) {
+                localStorage.setItem('activeLearningPath', JSON.stringify(userData.activeLearningPath));
+              }
+            }
+          }
+          
+          // If we have local data but not in database, sync to database
+          if (quizCompletedState && (!userDoc.exists() || !userDoc.data().quizCompleted)) {
+            const { setDoc, updateDoc } = await import('firebase/firestore');
+            
+            const updateData = {};
+            if (quizResultsData) {
+              updateData.aiAssessmentResults = quizResultsData;
+              updateData.quizCompleted = { completed: true, timestamp: new Date(), results: quizResultsData };
+            }
+            if (learningPathData) {
+              updateData.activeLearningPath = learningPathData;
+            }
+            
+            if (Object.keys(updateData).length > 0) {
+              if (userDoc.exists()) {
+                await updateDoc(userDocRef, updateData);
+              } else {
+                await setDoc(userDocRef, {
+                  ...updateData,
+                  createdAt: new Date(),
+                  lastLogin: new Date()
+                });
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error syncing quiz state with Firebase:', error);
+        }
+      }
+      
+      // Set the states
+      setIsQuizCompleted(quizCompletedState);
+      setQuizResults(quizResultsData);
+      
+      if (learningPathData) {
+        setUserLearningPath(learningPathData);
+        
+        // Create progress object
+        const progress = {
+          nextLessonIndex: learningPathData.nextLessonIndex || 0,
+          completedLessons: learningPathData.completedLessons?.length || 0, // Real data only
+          totalLessons: learningPathData.totalLessons || 10,
+          progressPercentage: Math.round(((learningPathData.completedLessons?.length || 0) / (learningPathData.totalLessons || 10)) * 100)
+        };
+        setLearningProgress(progress);
+      }
+      
+      console.log('Quiz completion state:', { quizCompletedState, quizResultsData, learningPathData });
+    } catch (error) {
+      console.error('Error initializing dashboard:', error);
     }
     
     // Set time-based content
@@ -131,9 +237,6 @@ const HomePage = () => {
     }
 
     try {
-      // Load user's learning path and progress
-      await loadUserLearningData();
-      
       // Load adaptive lessons for quick access
       await loadAdaptiveLessons();
     } catch (error) {
@@ -334,66 +437,15 @@ const HomePage = () => {
             </div>
           </section>
 
-          {/* Learning Path Progress - MOST PROMINENT SECTION */}
+          {/* Professional Learning Path Design */}
           {isQuizCompleted && userLearningPath ? (
             <section className="mb-8">
-              {/* Learning Path Header */}
-              <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 backdrop-blur-xl rounded-3xl p-8 mb-6 border-2 border-green-500/50 shadow-2xl shadow-green-500/20">
-                <div className="text-center mb-6">
-                  <h2 className="text-4xl font-bold text-green-400 mb-2 flex items-center justify-center gap-3">
-                    🎯 Your Learning Journey
-                  </h2>
-                  <h3 className="text-3xl font-semibold mb-4 text-white">{userLearningPath.pathTitle}</h3>
-                  <p className="text-xl text-green-200 mb-6">You're making incredible progress! Keep going!</p>
-                </div>
-                
-                {/* Progress Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <div className="bg-green-500/20 rounded-2xl p-6 text-center border border-green-500/30">
-                    <div className="text-3xl font-bold text-green-400">{learningProgress?.completedLessons || 0}</div>
-                    <div className="text-sm text-gray-300">Completed</div>
-                  </div>
-                  <div className="bg-blue-500/20 rounded-2xl p-6 text-center border border-blue-500/30">
-                    <div className="text-3xl font-bold text-blue-400">{(learningProgress?.totalLessons || 10) - (learningProgress?.completedLessons || 0)}</div>
-                    <div className="text-sm text-gray-300">Remaining</div>
-                  </div>
-                  <div className="bg-purple-500/20 rounded-2xl p-6 text-center border border-purple-500/30">
-                    <div className="text-3xl font-bold text-purple-400">{userStats.streak || 0}</div>
-                    <div className="text-sm text-gray-300">Day Streak</div>
-                  </div>
-                  <div className="bg-yellow-500/20 rounded-2xl p-6 text-center border border-yellow-500/30">
-                    <div className="text-3xl font-bold text-yellow-400">Lv.{userStats.level || 1}</div>
-                    <div className="text-sm text-gray-300">Level</div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mario World Style Learning Path Map */}
-              <LearningPathMap 
-                userLearningPath={userLearningPath}
+              <LearningPathVisual 
                 learningProgress={learningProgress}
-                className="mb-8"
+                userLearningPath={userLearningPath}
+                compact={false}
+                showActions={true}
               />
-            </section>
-          ) : !isQuizCompleted ? (
-            // No Learning Path - Encourage to Start
-            <section className="mb-8">
-              <div className="bg-gradient-to-br from-indigo-600/30 to-purple-600/30 backdrop-blur-xl rounded-3xl p-8 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/20">
-                <div className="text-center">
-                  <h2 className="text-4xl font-bold text-indigo-400 mb-4 flex items-center justify-center gap-3">
-                    🌟 Ready to Begin Your AI Journey?
-                  </h2>
-                  <p className="text-xl text-indigo-200 mb-8 max-w-2xl mx-auto">
-                    Take our quick assessment to get a personalized learning path tailored to your experience level and goals.
-                  </p>
-                  <button
-                    onClick={() => navigate('/learning-path/adaptive-quiz')}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 text-xl shadow-lg shadow-indigo-500/30"
-                  >
-                    Start AI Assessment 🎯
-                  </button>
-                </div>
-              </div>
             </section>
           ) : null}
 
