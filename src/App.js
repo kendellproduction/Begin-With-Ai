@@ -32,6 +32,7 @@ import AiNews from './pages/AiNews';
 import Quiz from './pages/Quiz';
 import QuizResults from './pages/QuizResults';
 import ForgotPassword from './pages/ForgotPassword';
+import Pricing from './pages/Pricing';
 
 function App() {
   // Simple inline component for testing
@@ -77,6 +78,10 @@ function App() {
 
               <Route path="/lessons" element={<ProtectedRoute />}>
                 <Route path="" element={<LessonsOverview />} />
+              </Route>
+
+              <Route path="/pricing" element={<ProtectedRoute />}>
+                <Route index element={<Pricing />} />
               </Route>
 
               <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>

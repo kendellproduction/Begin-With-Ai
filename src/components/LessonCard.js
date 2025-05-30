@@ -1,18 +1,39 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = false }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState(lesson.difficulty || 'intermediate');
   const [showDifficultyOptions, setShowDifficultyOptions] = useState(false);
+  const [showPaywallModal, setShowPaywallModal] = useState(false);
+
+  // Check if lesson requires premium access
+  const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
+  
+  // For now, we'll assume all users can access content but still show premium badge
+  // In a real app, you'd check user.isPremium or user.subscriptionStatus
+  const hasAccess = false; // user?.isPremium || !isPremiumLesson;
 
   const handleClick = () => {
+    if (isPremiumLesson && !hasAccess) {
+      setShowPaywallModal(true);
+      return;
+    }
+
     if (onClick) {
       onClick(selectedDifficulty);
     } else {
       navigate(`/lessons/${lesson.id}`);
     }
+  };
+
+  const handleUpgradeClick = () => {
+    setShowPaywallModal(false);
+    // Navigate to pricing/subscription page
+    navigate('/pricing');
   };
 
   const handleDifficultyChange = (difficulty) => {
@@ -255,18 +276,35 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
               </span>
             </div>
 
-            {/* Interactive Badge */}
-            {lesson.hasCodeSandbox && (
-              <div className="
-                flex items-center space-x-1 px-2.5 py-1 rounded-full
-                bg-cyan-500/30 border border-cyan-400/40
-                text-cyan-200 text-xs font-medium
-                backdrop-blur-sm shadow-lg shadow-cyan-500/20
-              ">
-                <span>⚡</span>
-                <span>Interactive</span>
-              </div>
-            )}
+            {/* Badges Container */}
+            <div className="flex flex-col items-end space-y-2">
+              {/* Premium Badge */}
+              {isPremiumLesson && (
+                <div className="
+                  flex items-center space-x-1 px-2.5 py-1 rounded-full
+                  bg-gradient-to-r from-yellow-500/30 to-amber-500/30 
+                  border border-yellow-400/40
+                  text-yellow-200 text-xs font-medium
+                  backdrop-blur-sm shadow-lg shadow-yellow-500/20
+                ">
+                  <span>👑</span>
+                  <span>Premium</span>
+                </div>
+              )}
+
+              {/* Interactive Badge */}
+              {lesson.hasCodeSandbox && (
+                <div className="
+                  flex items-center space-x-1 px-2.5 py-1 rounded-full
+                  bg-cyan-500/30 border border-cyan-400/40
+                  text-cyan-200 text-xs font-medium
+                  backdrop-blur-sm shadow-lg shadow-cyan-500/20
+                ">
+                  <span>⚡</span>
+                  <span>Interactive</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Module Tag */}
@@ -291,7 +329,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
             {lesson.title}
           </h3>
 
-          {/* Description */}
+          {/* Description */
           <p className="
             text-slate-300 text-sm leading-relaxed
             line-clamp-3 mb-4 flex-1
@@ -400,20 +438,64 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
         `} />
       </div>
 
-      {/* Custom CSS for floating animation */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% {
-            transform: translateY(0px) rotate(0deg);
-          }
-          33% {
-            transform: translateY(-10px) rotate(120deg);
-          }
-          66% {
-            transform: translateY(5px) rotate(240deg);
-          }
-        }
-      `}</style>
+      {/* Paywall Modal */}
+      {showPaywallModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-md w-full border border-white/20 shadow-2xl">
+            <div className="text-center">
+              {/* Premium Icon */}
+              <div className="text-6xl mb-4">👑</div>
+              
+              {/* Title */}
+              <h3 className="text-2xl font-bold text-white mb-4">
+                Premium Content
+              </h3>
+              
+              {/* Description */}
+              <p className="text-gray-300 mb-6 leading-relaxed">
+                This {selectedDifficulty.toLowerCase()} lesson is part of our premium content. 
+                Upgrade to access advanced AI lessons and unlock your full learning potential.
+              </p>
+              
+              {/* Features List */}
+              <div className="text-left mb-6 space-y-2">
+                <div className="flex items-center space-x-3 text-sm text-gray-300">
+                  <span className="text-green-400">✓</span>
+                  <span>Access to all intermediate & advanced lessons</span>
+                </div>
+                <div className="flex items-center space-x-3 text-sm text-gray-300">
+                  <span className="text-green-400">✓</span>
+                  <span>Interactive coding sandboxes</span>
+                </div>
+                <div className="flex items-center space-x-3 text-sm text-gray-300">
+                  <span className="text-green-400">✓</span>
+                  <span>AI-powered feedback and guidance</span>
+                </div>
+                <div className="flex items-center space-x-3 text-sm text-gray-300">
+                  <span className="text-green-400">✓</span>
+                  <span>Priority support</span>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleUpgradeClick}
+                  className="w-full py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  Upgrade to Premium
+                </button>
+                <button
+                  onClick={() => setShowPaywallModal(false)}
+                  className="w-full py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-300 border border-white/20"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
