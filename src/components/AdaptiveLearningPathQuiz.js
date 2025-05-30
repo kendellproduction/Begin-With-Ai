@@ -463,177 +463,283 @@ const AdaptiveLearningPathQuiz = () => {
                results.skillLevel === 'intermediate' ? '🚀' : '🎯'}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              {results.recommendations.title}
+              Your Perfect Learning Path
             </h1>
             <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              {results.recommendations.description}
+              Based on your responses, I've designed a personalized journey that will transform you into an AI expert.
             </p>
           </div>
 
-          {/* Why This Path Section - Making users feel understood */}
+          {/* Personal Recommendation Section */}
           <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-amber-500/30">
-            <h2 className="text-2xl font-bold text-amber-300 mb-4 flex items-center gap-2">
-              🧠 Why We Chose This Path For You
+            <h2 className="text-2xl font-bold text-amber-300 mb-6 flex items-center gap-2">
+              👨‍🏫 Here's What I Recommend For You
             </h2>
-            <div className="space-y-4 text-amber-100">
-              <p className="text-lg leading-relaxed">
-                Based on your responses, we understand that you're looking for a 
-                <span className="font-semibold text-amber-200"> {results.recommendations.difficulty.toLowerCase()}</span> with 
-                <span className="font-semibold text-amber-200"> {results.recommendations.approach.toLowerCase()}</span>.
-              </p>
-              
-              <div className="grid md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <h3 className="font-semibold text-amber-200 mb-2">What We Noticed:</h3>
-                  <ul className="space-y-2 text-sm">
+            <div className="space-y-6 text-amber-100">
+              <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
+                <h3 className="text-xl font-bold text-amber-200 mb-3">
+                  🎯 I recommend you start with: <span className="text-white">{results.recommendations.title}</span>
+                </h3>
+                <p className="text-lg leading-relaxed">
+                  {results.skillLevel === 'beginner' && (
+                    <>
+                      You're at the perfect starting point! Since you're new to AI tools, I want to make sure you build a rock-solid foundation. 
+                      You'll start with simple, practical exercises that build your confidence. No overwhelming technical jargon - just clear, 
+                      step-by-step guidance that gets you using AI effectively from day one.
+                    </>
+                  )}
+                  {results.skillLevel === 'intermediate' && (
+                    <>
+                      You already have some AI experience, which is fantastic! I can see you're ready to take your skills to the next level. 
+                      You'll learn advanced techniques that will make you stand out in your field. We'll focus on practical, hands-on projects 
+                      that you can immediately apply to your work or personal projects.
+                    </>
+                  )}
+                  {results.skillLevel === 'advanced' && (
+                    <>
+                      You're clearly comfortable with AI tools - impressive! I'm going to challenge you with cutting-edge techniques and 
+                      complex projects. You'll master advanced workflows, learn to integrate multiple AI systems, and develop skills 
+                      that put you in the top 1% of AI users.
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
+                  <h3 className="font-bold text-amber-200 mb-4 text-lg">📚 What You'll Learn:</h3>
+                  <ul className="space-y-3 text-base">
                     {results.skillLevel === 'beginner' && (
                       <>
-                        <li>• You're new to AI tools - that's perfect!</li>
-                        <li>• You want clear, step-by-step guidance</li>
-                        <li>• You learn best with foundational concepts first</li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>How to write prompts that get amazing results every time</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>The fundamentals of different AI tools and when to use each one</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Practical applications you can use immediately in your daily life</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>How to avoid common mistakes that waste time and money</span>
+                        </li>
                       </>
                     )}
                     {results.skillLevel === 'intermediate' && (
                       <>
-                        <li>• You have some AI experience to build on</li>
-                        <li>• You're ready for practical, hands-on learning</li>
-                        <li>• You want skills that make a real difference</li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Advanced prompting techniques that professionals use</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>How to chain multiple AI tools together for powerful workflows</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Problem-solving frameworks using AI that save hours of work</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Industry-specific applications that give you a competitive edge</span>
+                        </li>
                       </>
                     )}
                     {results.skillLevel === 'advanced' && (
                       <>
-                        <li>• You're comfortable with multiple AI tools</li>
-                        <li>• You want to push your expertise further</li>
-                        <li>• You're ready for challenging projects</li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Cutting-edge AI architectures and how to leverage them</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Building custom AI solutions and automations</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Advanced API integrations and workflow optimization</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-green-400 mt-1">✓</span>
+                          <span>Emerging technologies and how to stay ahead of the curve</span>
+                        </li>
                       </>
                     )}
                   </ul>
                 </div>
                 
-                <div>
-                  <h3 className="font-semibold text-amber-200 mb-2">So We'll Focus On:</h3>
-                  <ul className="space-y-2 text-sm">
-                    {results.recommendations.focusAreas.slice(0, 3).map((area, index) => (
-                      <li key={index}>• {area}</li>
-                    ))}
+                <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
+                  <h3 className="font-bold text-amber-200 mb-4 text-lg">🚀 What You'll Be Able To Do:</h3>
+                  <ul className="space-y-3 text-base">
+                    {results.skillLevel === 'beginner' && (
+                      <>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Generate professional content that impresses your colleagues</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Automate routine tasks that currently take hours</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Make better decisions with AI-powered research and analysis</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Feel confident using AI in any situation</span>
+                        </li>
+                      </>
+                    )}
+                    {results.skillLevel === 'intermediate' && (
+                      <>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Create complex workflows that solve real business problems</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Lead AI initiatives at your company or organization</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Build impressive projects that showcase your expertise</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Command higher salaries and better opportunities</span>
+                        </li>
+                      </>
+                    )}
+                    {results.skillLevel === 'advanced' && (
+                      <>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Design and implement enterprise-level AI solutions</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Consult for companies on AI strategy and implementation</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Stay at the forefront of AI innovation and trends</span>
+                        </li>
+                        <li className="flex items-start gap-3">
+                          <span className="text-blue-400 mt-1">⭐</span>
+                          <span>Become a recognized expert in your field</span>
+                        </li>
+                      </>
+                    )}
                   </ul>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Confidence Score */}
-          <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-green-500/30 text-center">
-            <h2 className="text-2xl font-bold text-green-400 mb-4">Assessment Confidence</h2>
-            <div className="text-5xl font-bold text-green-300 mb-2">{results.confidence}%</div>
-            <p className="text-green-200">
-              We're {results.confidence}% confident this is the perfect starting point for you!
-            </p>
-          </div>
+          {/* Confidence & Timeline */}
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-3xl p-6 border border-green-500/30 text-center">
+              <h2 className="text-xl font-bold text-green-400 mb-4">🎯 My Confidence Level</h2>
+              <div className="text-4xl font-bold text-green-300 mb-3">{results.confidence}%</div>
+              <p className="text-green-200 text-sm leading-relaxed">
+                I'm {results.confidence}% confident this path will give you exactly the skills you need. 
+                Your responses show you're ready for this level of challenge!
+              </p>
+            </div>
 
-          {/* Skill Breakdown */}
-          <div className="bg-white/5 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-white/10">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Your AI Skill Profile</h2>
-            
-            <div className="space-y-6">
-              {Object.entries(results.scores).map(([level, score]) => (
-                <div key={level} className="flex items-center">
-                  <div className="w-20 text-right mr-4">
-                    <span className="text-lg font-medium capitalize text-slate-300">{level}</span>
-                  </div>
-                  <div className="flex-1 mx-4">
-                    <div className="bg-slate-700 rounded-full h-4 overflow-hidden">
-                      <div 
-                        className={`h-4 rounded-full transition-all duration-1000 ${
-                          level === results.skillLevel 
-                            ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
-                            : 'bg-slate-500'
-                        }`}
-                        style={{ 
-                          width: `${score}%`,
-                          animationDelay: `${Object.keys(results.scores).indexOf(level) * 200}ms`
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="w-12 text-left">
-                    <span className="text-lg font-bold text-white">{score}%</span>
-                  </div>
-                </div>
-              ))}
+            <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-xl rounded-3xl p-6 border border-purple-500/30 text-center">
+              <h2 className="text-xl font-bold text-purple-400 mb-4">⏰ Your Timeline</h2>
+              <div className="text-4xl font-bold text-purple-300 mb-3">{results.recommendations.estimatedTime}</div>
+              <p className="text-purple-200 text-sm leading-relaxed">
+                Based on your available time, you'll complete this path in {results.recommendations.estimatedTime}. 
+                Every lesson builds on the previous one!
+              </p>
             </div>
           </div>
 
-          {/* Learning Plan */}
+          {/* How It Works */}
           <div className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-indigo-500/30">
-            <h2 className="text-2xl font-bold text-white mb-6">Your Personalized Learning Plan</h2>
+            <h2 className="text-2xl font-bold text-white mb-6 text-center">🗺️ How Your Learning Journey Works</h2>
             
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-lg font-semibold text-indigo-300 mb-4">Learning Approach</h3>
-                <p className="text-slate-300 leading-relaxed mb-6">
-                  {results.recommendations.approach}
-                </p>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Difficulty Level:</span>
-                    <span className="text-white font-medium">{results.recommendations.difficulty}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Estimated Duration:</span>
-                    <span className="text-white font-medium">{results.recommendations.estimatedTime}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-slate-400">Starting Path:</span>
-                    <span className="text-white font-medium">{results.recommendations.startingPath}</span>
-                  </div>
+            <div className="grid md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl">
+                  🎯
                 </div>
+                <h3 className="text-lg font-semibold text-green-300 mb-3">1. Start Your First Lesson</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Click "Start First Lesson" and I'll take you directly to your first lesson. 
+                  No guessing, no confusion - just clear next steps.
+                </p>
               </div>
 
-              <div>
-                <h3 className="text-lg font-semibold text-purple-300 mb-4">Your Focus Areas</h3>
-                <ul className="space-y-3">
-                  {results.recommendations.focusAreas.map((area, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="w-6 h-6 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mr-3 mt-0.5 flex-shrink-0 flex items-center justify-center text-xs font-bold">
-                        {index + 1}
-                      </span>
-                      <span className="text-slate-300">{area}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl">
+                  📚
+                </div>
+                <h3 className="text-lg font-semibold text-blue-300 mb-3">2. Follow The Path</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  Each lesson unlocks the next one. You'll see your progress on a visual map 
+                  that shows exactly where you are and what's coming next.
+                </p>
+              </div>
+
+              <div className="text-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center text-2xl">
+                  🏆
+                </div>
+                <h3 className="text-lg font-semibold text-purple-300 mb-3">3. Become An Expert</h3>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  By the end, you'll have real skills that make a difference in your work and life. 
+                  Plus, you'll have completed projects to show off your expertise.
+                </p>
               </div>
             </div>
           </div>
 
           {/* Call to Action Buttons */}
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-6">
+            <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl p-6 mb-6 border border-green-500/30">
+              <h3 className="text-2xl font-bold text-green-400 mb-3">🚀 Ready to Start Your Transformation?</h3>
+              <p className="text-green-200 text-lg mb-6 max-w-2xl mx-auto">
+                Your personalized learning path is ready! Click "Start First Lesson" and I'll guide you 
+                through every step of your journey to AI mastery.
+              </p>
+            </div>
+
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={handleStartFirstLesson}
-                className="group relative px-8 py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl text-white font-bold text-lg shadow-2xl hover:shadow-green-500/30 transform hover:scale-105 transition-all duration-300"
+                className="group relative px-10 py-5 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl text-white font-bold text-xl shadow-2xl hover:shadow-green-500/40 transform hover:scale-105 transition-all duration-300"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 rounded-2xl blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
                 <span className="relative flex items-center gap-3">
-                  🎯 Start First Lesson
+                  🎯 Start My First Lesson
                 </span>
               </button>
               
               <button
                 onClick={handleStartLearning}
-                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transform hover:scale-105 transition-all duration-300"
+                className="group relative px-10 py-5 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white font-bold text-xl shadow-2xl hover:shadow-blue-500/40 transform hover:scale-105 transition-all duration-300"
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-2xl blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
                 <span className="relative flex items-center gap-3">
-                  🗺️ View Learning Path
+                  🗺️ See My Learning Map
                 </span>
               </button>
             </div>
             
-            <p className="mt-6 text-slate-400 text-lg">
-              Ready to transform your AI skills? Your personalized journey awaits!
-            </p>
+            <div className="mt-8 p-6 bg-slate-800/30 rounded-2xl border border-slate-600/30">
+              <p className="text-slate-300 text-lg leading-relaxed">
+                💡 <strong>Pro Tip:</strong> I recommend starting with your first lesson now while you're motivated! 
+                It only takes 10-15 minutes, and you'll immediately see why this path is perfect for you.
+              </p>
+            </div>
           </div>
         </div>
       </div>
