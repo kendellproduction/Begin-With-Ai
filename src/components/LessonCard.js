@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const LessonCard = ({ lesson, onClick, className = "" }) => {
+const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = false }) => {
   const navigate = useNavigate();
   const [isHovered, setIsHovered] = useState(false);
+  const [selectedDifficulty, setSelectedDifficulty] = useState(lesson.difficulty || 'intermediate');
+  const [showDifficultyOptions, setShowDifficultyOptions] = useState(false);
 
   const handleClick = () => {
     if (onClick) {
-      onClick();
+      onClick(selectedDifficulty);
     } else {
       navigate(`/lessons/${lesson.id}`);
     }
+  };
+
+  const handleDifficultyChange = (difficulty) => {
+    setSelectedDifficulty(difficulty);
+    setShowDifficultyOptions(false);
   };
 
   const getDifficultyColor = (difficulty) => {
@@ -151,7 +158,7 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
     };
   };
 
-  const difficultyStyle = getDifficultyColor(lesson.difficulty);
+  const difficultyStyle = getDifficultyColor(selectedDifficulty);
   const hasImage = lesson.imageUrl && lesson.imageUrl !== '/path/to/default/image.jpg';
   const thematicBg = getThematicBackground(lesson);
 
@@ -244,7 +251,7 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
                 transition-all duration-300
                 ${isHovered ? 'scale-105 shadow-xl' : ''}
               `}>
-                {lesson.difficulty || 'Intermediate'}
+                {selectedDifficulty}
               </span>
             </div>
 
@@ -313,33 +320,75 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
           </div>
 
           {/* Action Button */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleClick();
-            }}
-            className={`
-              w-full py-3 rounded-xl font-semibold text-sm
-              bg-gradient-to-r ${thematicBg.accent}
-              hover:shadow-lg hover:shadow-${thematicBg.accent.split(' ')[1]}/30
-              text-white shadow-md
-              border border-white/20
-              backdrop-blur-sm
-              transition-all duration-300 ease-out
-              transform hover:scale-[1.02] active:scale-[0.98]
-              ${isHovered ? 'ring-1 ring-white/30' : ''}
-            `}
-          >
-            <span className="flex items-center justify-center space-x-2">
-              <span>Start Learning</span>
-              <span className={`
-                transition-transform duration-300
-                ${isHovered ? 'translate-x-1' : ''}
-              `}>
-                →
+          <div className="space-y-3">
+            {/* Difficulty Selector (if enabled) */}
+            {showDifficultySelector && (
+              <div className="relative">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDifficultyOptions(!showDifficultyOptions);
+                  }}
+                  className="w-full px-3 py-2 rounded-lg text-sm font-medium bg-white/10 hover:bg-white/20 text-white border border-white/20 transition-all duration-300 flex items-center justify-between"
+                >
+                  <span>Difficulty: {selectedDifficulty}</span>
+                  <span className={`transition-transform duration-300 ${showDifficultyOptions ? 'rotate-180' : ''}`}>
+                    ↓
+                  </span>
+                </button>
+                
+                {/* Difficulty Options Dropdown */}
+                {showDifficultyOptions && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800/95 backdrop-blur-xl rounded-lg border border-white/20 overflow-hidden z-50 shadow-xl">
+                    {['beginner', 'intermediate', 'advanced'].map((difficulty) => (
+                      <button
+                        key={difficulty}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDifficultyChange(difficulty);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-white transition-colors duration-200 capitalize ${
+                          selectedDifficulty === difficulty 
+                            ? 'bg-indigo-500/30 text-indigo-200' 
+                            : 'hover:bg-white/10'
+                        }`}
+                      >
+                        {difficulty}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClick();
+              }}
+              className={`
+                w-full py-3 rounded-xl font-semibold text-sm
+                bg-gradient-to-r ${thematicBg.accent}
+                hover:shadow-lg hover:shadow-${thematicBg.accent.split(' ')[1]}/30
+                text-white shadow-md
+                border border-white/20
+                backdrop-blur-sm
+                transition-all duration-300 ease-out
+                transform hover:scale-[1.02] active:scale-[0.98]
+                ${isHovered ? 'ring-1 ring-white/30' : ''}
+              `}
+            >
+              <span className="flex items-center justify-center space-x-2">
+                <span>{showDifficultySelector ? `Start as ${selectedDifficulty}` : 'Start Learning'}</span>
+                <span className={`
+                  transition-transform duration-300
+                  ${isHovered ? 'translate-x-1' : ''}
+                `}>
+                  →
+                </span>
               </span>
-            </span>
-          </button>
+            </button>
+          </div>
         </div>
 
         {/* Hover Glow Effect */}

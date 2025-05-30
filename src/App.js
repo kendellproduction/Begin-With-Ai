@@ -76,13 +76,7 @@ function App() {
               </Route>
 
               <Route path="/lessons" element={<ProtectedRoute />}>
-                {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside LessonsOverview or a new layout */}
-                <Route index element={<LessonsOverview />} />
-              </Route>
-
-              <Route path="/lessons/explore" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside LessonsExplore or a new layout */}
-                <Route index element={<LessonsExplore />} />
+                <Route path="" element={<LessonsOverview />} />
               </Route>
 
               <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>

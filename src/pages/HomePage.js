@@ -549,12 +549,27 @@ const HomePage = () => {
                   >
                     <span className="text-lg">🎯</span> Take AI Assessment
                   </button>
-                  <button
-                    onClick={() => navigate('/lessons/explore')}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-3 rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 text-left flex items-center gap-2"
+                  <div
+                    onClick={() => navigate('/lessons')}
+                    className="
+                      explore-shadow group relative bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl 
+                      rounded-3xl p-8 border border-indigo-500/30 hover:border-indigo-400/50 
+                      transition-all duration-300 cursor-pointer hover:scale-105 
+                      shadow-indigo-500/20 hover:shadow-indigo-500/40
+                    "
                   >
-                    <span className="text-lg">🔍</span> Explore All Lessons
-                  </button>
+                    <div className="text-6xl mb-4">🔍</div>
+                    <h3 className="text-2xl font-bold mb-3 text-white">Explore All Lessons</h3>
+                    <p className="text-slate-300 mb-6 leading-relaxed">
+                      Browse through our adaptive lessons with our discovery interface. Each lesson adjusts to your skill level!
+                    </p>
+                    <div className="flex items-center space-x-2 text-indigo-400 font-medium">
+                      <span>Start Exploring</span>
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
                   <button
                     onClick={() => navigate('/dashboard')}
                     className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2"
