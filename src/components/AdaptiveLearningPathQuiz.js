@@ -15,6 +15,57 @@ const AdaptiveLearningPathQuiz = () => {
   const [results, setResults] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState([]);
+  const [motivationalQuote, setMotivationalQuote] = useState('');
+
+  // Motivational AI quotes that rotate on each page load
+  const aiQuotes = [
+    {
+      quote: "The best way to predict the future is to create it.",
+      author: "Peter Drucker"
+    },
+    {
+      quote: "AI is not about replacing humans; it's about augmenting human intelligence.",
+      author: "Fei-Fei Li"
+    },
+    {
+      quote: "The question of whether a computer can think is no more interesting than the question of whether a submarine can swim.",
+      author: "Edsger W. Dijkstra"
+    },
+    {
+      quote: "Success in creating AI would be the biggest event in human history.",
+      author: "Stephen Hawking"
+    },
+    {
+      quote: "AI will probably most likely lead to the end of the world, but in the meantime, there'll be great companies.",
+      author: "Sam Altman"
+    },
+    {
+      quote: "The real question is not whether machines think but whether men do.",
+      author: "B.F. Skinner"
+    },
+    {
+      quote: "We're at the beginning of a golden age of AI. Recent progress has been dramatic and will accelerate.",
+      author: "Jeff Bezos"
+    },
+    {
+      quote: "The development of full artificial intelligence could spell the end of the human race... but also the beginning of something incredible.",
+      author: "Stephen Hawking"
+    },
+    {
+      quote: "AI doesn't have to be evil to destroy humanity – if AI has a goal and humanity just happens to come in the way, it will destroy humanity as a matter of course.",
+      author: "Elon Musk"
+    },
+    {
+      quote: "The future belongs to those who understand that AI is not about the technology, but about using it to solve real problems.",
+      author: "Andrew Ng"
+    }
+  ];
+
+  // Set a random quote on component mount
+  useEffect(() => {
+    const randomQuote = aiQuotes[Math.floor(Math.random() * aiQuotes.length)];
+    setMotivationalQuote(randomQuote);
+  }, []);
 
   // Fixed 8-question assessment - clean and predictable
   const questions = [
@@ -57,13 +108,12 @@ const AdaptiveLearningPathQuiz = () => {
     {
       id: 'time-commitment',
       category: '⏰ Time Commitment',
-      question: "How much time can you dedicate to learning AI per week?",
+      question: "How much time can you dedicate to learning AI per day?",
       type: 'single',
       options: [
-        { value: '1-2-hours', text: "1-2 hours (casual learner)", points: { beginner: 2, intermediate: 1, advanced: 0 } },
-        { value: '3-5-hours', text: "3-5 hours (steady progress)", points: { beginner: 1, intermediate: 3, advanced: 1 } },
-        { value: '6-10-hours', text: "6-10 hours (accelerated learning)", points: { beginner: 0, intermediate: 2, advanced: 2 } },
-        { value: '10-plus-hours', text: "10+ hours (intensive study)", points: { beginner: 0, intermediate: 1, advanced: 3 } }
+        { value: '10-15-minutes', text: "10-15 minutes (quick daily progress)", points: { beginner: 2, intermediate: 1, advanced: 0 } },
+        { value: '30-minutes', text: "30 minutes (steady learning)", points: { beginner: 1, intermediate: 3, advanced: 1 } },
+        { value: '1-hour-plus', text: "1 hour or more (accelerated growth)", points: { beginner: 0, intermediate: 2, advanced: 3 } }
       ]
     },
     {
@@ -239,8 +289,8 @@ const AdaptiveLearningPathQuiz = () => {
         ],
         startingPath: "AI Foundations",
         difficulty: "Gentle learning curve",
-        estimatedTime: timeCommitment === '1-2-hours' ? "4-6 weeks" : 
-                      timeCommitment === '3-5-hours' ? "2-3 weeks" : "1-2 weeks"
+        estimatedTime: timeCommitment === '10-15-minutes' ? "4-6 weeks" : 
+                      timeCommitment === '30-minutes' ? "2-3 weeks" : "1-2 weeks"
       },
       intermediate: {
         title: "🚀 AI Skills Accelerator", 
@@ -254,8 +304,8 @@ const AdaptiveLearningPathQuiz = () => {
         ],
         startingPath: "Prompt Engineering Mastery",
         difficulty: "Balanced challenge and support",
-        estimatedTime: timeCommitment === '1-2-hours' ? "6-8 weeks" : 
-                      timeCommitment === '3-5-hours' ? "3-4 weeks" : "2-3 weeks"
+        estimatedTime: timeCommitment === '10-15-minutes' ? "6-8 weeks" : 
+                      timeCommitment === '30-minutes' ? "3-4 weeks" : "2-3 weeks"
       },
       advanced: {
         title: "🎯 AI Mastery Program",
@@ -269,8 +319,8 @@ const AdaptiveLearningPathQuiz = () => {
         ],
         startingPath: "Advanced AI Engineering",
         difficulty: "High challenge, high reward",
-        estimatedTime: timeCommitment === '1-2-hours' ? "8-12 weeks" : 
-                      timeCommitment === '3-5-hours' ? "4-6 weeks" : "3-4 weeks"
+        estimatedTime: timeCommitment === '10-15-minutes' ? "8-12 weeks" : 
+                      timeCommitment === '30-minutes' ? "4-6 weeks" : "3-4 weeks"
       }
     };
 
@@ -466,38 +516,48 @@ const AdaptiveLearningPathQuiz = () => {
               Your Perfect Learning Path
             </h1>
             <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
-              Based on your responses, I've designed a personalized journey that will transform you into an AI expert.
+              Based on your responses, we've designed a personalized journey that will transform you into an AI expert.
             </p>
+
+            {/* Motivational Quote */}
+            {motivationalQuote && (
+              <div className="mt-8 p-6 bg-gradient-to-r from-purple-600/10 to-pink-600/10 rounded-2xl border border-purple-500/20">
+                <p className="text-lg font-medium text-purple-200 italic mb-2">
+                  "{motivationalQuote.quote}"
+                </p>
+                <p className="text-sm text-purple-300">— {motivationalQuote.author}</p>
+              </div>
+            )}
           </div>
 
           {/* Personal Recommendation Section */}
           <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-amber-500/30">
             <h2 className="text-2xl font-bold text-amber-300 mb-6 flex items-center gap-2">
-              👨‍🏫 Here's What I Recommend For You
+              👨‍🏫 Here's What We Recommend For You
             </h2>
             <div className="space-y-6 text-amber-100">
               <div className="bg-amber-500/10 rounded-2xl p-6 border border-amber-500/20">
                 <h3 className="text-xl font-bold text-amber-200 mb-3">
-                  🎯 I recommend you start with: <span className="text-white">{results.recommendations.title}</span>
+                  🎯 We recommend you start with: <span className="text-white">{results.recommendations.title}</span>
                 </h3>
                 <p className="text-lg leading-relaxed">
                   {results.skillLevel === 'beginner' && (
                     <>
-                      You're at the perfect starting point! Since you're new to AI tools, I want to make sure you build a rock-solid foundation. 
+                      You're at the perfect starting point! Since you're new to AI tools, we want to make sure you build a rock-solid foundation. 
                       You'll start with simple, practical exercises that build your confidence. No overwhelming technical jargon - just clear, 
                       step-by-step guidance that gets you using AI effectively from day one.
                     </>
                   )}
                   {results.skillLevel === 'intermediate' && (
                     <>
-                      You already have some AI experience, which is fantastic! I can see you're ready to take your skills to the next level. 
+                      You already have some AI experience, which is fantastic! We can see you're ready to take your skills to the next level. 
                       You'll learn advanced techniques that will make you stand out in your field. We'll focus on practical, hands-on projects 
                       that you can immediately apply to your work or personal projects.
                     </>
                   )}
                   {results.skillLevel === 'advanced' && (
                     <>
-                      You're clearly comfortable with AI tools - impressive! I'm going to challenge you with cutting-edge techniques and 
+                      You're clearly comfortable with AI tools - impressive! We're going to challenge you with cutting-edge techniques and 
                       complex projects. You'll master advanced workflows, learn to integrate multiple AI systems, and develop skills 
                       that put you in the top 1% of AI users.
                     </>
@@ -553,19 +613,19 @@ const AdaptiveLearningPathQuiz = () => {
                       <>
                         <li className="flex items-start gap-3">
                           <span className="text-green-400 mt-1">✓</span>
-                          <span>Cutting-edge AI architectures and how to leverage them</span>
+                          <span>Master-level prompt engineering techniques and strategies</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="text-green-400 mt-1">✓</span>
-                          <span>Building custom AI solutions and automations</span>
+                          <span>Building custom AI workflows and automations</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="text-green-400 mt-1">✓</span>
-                          <span>Advanced API integrations and workflow optimization</span>
+                          <span>Advanced AI tool integrations and optimization techniques</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="text-green-400 mt-1">✓</span>
-                          <span>Emerging technologies and how to stay ahead of the curve</span>
+                          <span>Professional-grade AI applications and best practices</span>
                         </li>
                       </>
                     )}
@@ -619,19 +679,19 @@ const AdaptiveLearningPathQuiz = () => {
                       <>
                         <li className="flex items-start gap-3">
                           <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Design and implement enterprise-level AI solutions</span>
+                          <span>Master prompt engineering at a professional level</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Consult for companies on AI strategy and implementation</span>
+                          <span>Create sophisticated AI-powered solutions for complex problems</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Stay at the forefront of AI innovation and trends</span>
+                          <span>Become the go-to AI expert in your field or organization</span>
                         </li>
                         <li className="flex items-start gap-3">
                           <span className="text-blue-400 mt-1">⭐</span>
-                          <span>Become a recognized expert in your field</span>
+                          <span>Build and optimize advanced AI workflows that save significant time</span>
                         </li>
                       </>
                     )}
@@ -641,25 +701,14 @@ const AdaptiveLearningPathQuiz = () => {
             </div>
           </div>
 
-          {/* Confidence & Timeline */}
-          <div className="grid md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-3xl p-6 border border-green-500/30 text-center">
-              <h2 className="text-xl font-bold text-green-400 mb-4">🎯 My Confidence Level</h2>
-              <div className="text-4xl font-bold text-green-300 mb-3">{results.confidence}%</div>
-              <p className="text-green-200 text-sm leading-relaxed">
-                I'm {results.confidence}% confident this path will give you exactly the skills you need. 
-                Your responses show you're ready for this level of challenge!
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-xl rounded-3xl p-6 border border-purple-500/30 text-center">
-              <h2 className="text-xl font-bold text-purple-400 mb-4">⏰ Your Timeline</h2>
-              <div className="text-4xl font-bold text-purple-300 mb-3">{results.recommendations.estimatedTime}</div>
-              <p className="text-purple-200 text-sm leading-relaxed">
-                Based on your available time, you'll complete this path in {results.recommendations.estimatedTime}. 
-                Every lesson builds on the previous one!
-              </p>
-            </div>
+          {/* Confidence Score Only */}
+          <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-green-500/30 text-center">
+            <h2 className="text-2xl font-bold text-green-400 mb-4">🎯 Our Confidence Level</h2>
+            <div className="text-5xl font-bold text-green-300 mb-3">{results.confidence}%</div>
+            <p className="text-green-200 text-lg leading-relaxed">
+              We're {results.confidence}% confident this path will give you exactly the skills you need. 
+              Your responses show you're ready for this level of challenge!
+            </p>
           </div>
 
           {/* How It Works */}
@@ -673,7 +722,7 @@ const AdaptiveLearningPathQuiz = () => {
                 </div>
                 <h3 className="text-lg font-semibold text-green-300 mb-3">1. Start Your First Lesson</h3>
                 <p className="text-slate-300 text-sm leading-relaxed">
-                  Click "Start First Lesson" and I'll take you directly to your first lesson. 
+                  Click "Start First Lesson" and we'll take you directly to your first lesson. 
                   No guessing, no confusion - just clear next steps.
                 </p>
               </div>
@@ -707,7 +756,7 @@ const AdaptiveLearningPathQuiz = () => {
             <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-2xl p-6 mb-6 border border-green-500/30">
               <h3 className="text-2xl font-bold text-green-400 mb-3">🚀 Ready to Start Your Transformation?</h3>
               <p className="text-green-200 text-lg mb-6 max-w-2xl mx-auto">
-                Your personalized learning path is ready! Click "Start First Lesson" and I'll guide you 
+                Your personalized learning path is ready! Click "Start First Lesson" and we'll guide you 
                 through every step of your journey to AI mastery.
               </p>
             </div>
@@ -736,7 +785,7 @@ const AdaptiveLearningPathQuiz = () => {
             
             <div className="mt-8 p-6 bg-slate-800/30 rounded-2xl border border-slate-600/30">
               <p className="text-slate-300 text-lg leading-relaxed">
-                💡 <strong>Pro Tip:</strong> I recommend starting with your first lesson now while you're motivated! 
+                💡 <strong>Pro Tip:</strong> We recommend starting with your first lesson now while you're motivated! 
                 It only takes 10-15 minutes, and you'll immediately see why this path is perfect for you.
               </p>
             </div>
