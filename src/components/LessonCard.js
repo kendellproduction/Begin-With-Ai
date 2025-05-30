@@ -46,78 +46,199 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
     }
   };
 
+  // Generate unique thematic background based on lesson content
+  const getThematicBackground = (lesson) => {
+    const title = lesson.title?.toLowerCase() || '';
+    const description = lesson.description?.toLowerCase() || '';
+    const concept = lesson.coreConcept?.toLowerCase() || '';
+    const content = `${title} ${description} ${concept}`;
+
+    // AI Revolution / Welcome themes
+    if (content.includes('revolution') || content.includes('welcome') || title.includes('ai revolution')) {
+      return {
+        gradient: 'from-blue-600/30 via-purple-600/20 to-cyan-500/30',
+        pattern: 'radial-gradient(circle at 20% 80%, rgba(120, 113, 255, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.3) 0%, transparent 50%)',
+        accent: 'from-blue-400 to-purple-500',
+        icon: '🚀',
+        particles: ['💫', '⭐', '✨']
+      };
+    }
+    
+    // AI Thinking / How AI Works themes
+    if (content.includes('think') || content.includes('data') || content.includes('decision') || title.includes('how ai')) {
+      return {
+        gradient: 'from-emerald-600/30 via-teal-600/20 to-cyan-500/30',
+        pattern: 'radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.3) 0%, transparent 50%), radial-gradient(circle at 70% 80%, rgba(6, 182, 212, 0.3) 0%, transparent 50%)',
+        accent: 'from-emerald-400 to-cyan-500',
+        icon: '🧠',
+        particles: ['⚡', '🔄', '📊']
+      };
+    }
+    
+    // Vocabulary / Learning themes
+    if (content.includes('vocabulary') || content.includes('bootcamp') || content.includes('learn') || title.includes('vocabulary')) {
+      return {
+        gradient: 'from-orange-600/30 via-amber-600/20 to-yellow-500/30',
+        pattern: 'radial-gradient(circle at 25% 25%, rgba(251, 146, 60, 0.3) 0%, transparent 50%), radial-gradient(circle at 75% 75%, rgba(245, 158, 11, 0.3) 0%, transparent 50%)',
+        accent: 'from-orange-400 to-yellow-500',
+        icon: '📚',
+        particles: ['📖', '💡', '🎓']
+      };
+    }
+    
+    // Prompting / Engineering themes
+    if (content.includes('prompt') || content.includes('engineering') || content.includes('essential') || title.includes('prompting')) {
+      return {
+        gradient: 'from-violet-600/30 via-purple-600/20 to-fuchsia-500/30',
+        pattern: 'radial-gradient(circle at 50% 20%, rgba(139, 92, 246, 0.3) 0%, transparent 50%), radial-gradient(circle at 20% 90%, rgba(217, 70, 239, 0.3) 0%, transparent 50%)',
+        accent: 'from-violet-400 to-fuchsia-500',
+        icon: '⚙️',
+        particles: ['🔧', '⚡', '💎']
+      };
+    }
+    
+    // Creative / Art themes
+    if (content.includes('creative') || content.includes('art') || content.includes('image') || content.includes('video')) {
+      return {
+        gradient: 'from-pink-600/30 via-rose-600/20 to-red-500/30',
+        pattern: 'radial-gradient(circle at 40% 60%, rgba(236, 72, 153, 0.3) 0%, transparent 50%), radial-gradient(circle at 80% 30%, rgba(239, 68, 68, 0.3) 0%, transparent 50%)',
+        accent: 'from-pink-400 to-red-500',
+        icon: '🎨',
+        particles: ['🌈', '✨', '🎭']
+      };
+    }
+    
+    // Business / Workflow themes
+    if (content.includes('business') || content.includes('workflow') || content.includes('automat') || content.includes('professional')) {
+      return {
+        gradient: 'from-slate-600/30 via-gray-600/20 to-zinc-500/30',
+        pattern: 'radial-gradient(circle at 60% 30%, rgba(71, 85, 105, 0.3) 0%, transparent 50%), radial-gradient(circle at 30% 70%, rgba(82, 82, 91, 0.3) 0%, transparent 50%)',
+        accent: 'from-slate-400 to-zinc-500',
+        icon: '💼',
+        particles: ['📈', '⚡', '🎯']
+      };
+    }
+    
+    // Voice / Audio themes
+    if (content.includes('voice') || content.includes('audio') || content.includes('sound') || content.includes('speech')) {
+      return {
+        gradient: 'from-indigo-600/30 via-blue-600/20 to-sky-500/30',
+        pattern: 'radial-gradient(circle at 45% 45%, rgba(99, 102, 241, 0.3) 0%, transparent 50%), radial-gradient(circle at 70% 25%, rgba(14, 165, 233, 0.3) 0%, transparent 50%)',
+        accent: 'from-indigo-400 to-sky-500',
+        icon: '🎤',
+        particles: ['🔊', '🎵', '🎧']
+      };
+    }
+    
+    // Analysis / Data themes
+    if (content.includes('analys') || content.includes('data') || content.includes('research') || content.includes('insight')) {
+      return {
+        gradient: 'from-teal-600/30 via-cyan-600/20 to-blue-500/30',
+        pattern: 'radial-gradient(circle at 35% 65%, rgba(13, 148, 136, 0.3) 0%, transparent 50%), radial-gradient(circle at 75% 35%, rgba(34, 211, 238, 0.3) 0%, transparent 50%)',
+        accent: 'from-teal-400 to-blue-500',
+        icon: '📊',
+        particles: ['📈', '🔍', '💹']
+      };
+    }
+    
+    // Default theme for other lessons
+    return {
+      gradient: 'from-indigo-600/25 via-purple-600/15 to-pink-600/25',
+      pattern: 'radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.2) 0%, transparent 50%), radial-gradient(circle at 25% 75%, rgba(139, 92, 246, 0.2) 0%, transparent 50%)',
+      accent: 'from-indigo-400 to-purple-500',
+      icon: '🤖',
+      particles: ['⚡', '💫', '🔮']
+    };
+  };
+
   const difficultyStyle = getDifficultyColor(lesson.difficulty);
   const hasImage = lesson.imageUrl && lesson.imageUrl !== '/path/to/default/image.jpg';
+  const thematicBg = getThematicBackground(lesson);
 
   return (
     <div className={`group relative ${className}`}>
       {/* Main Card Container */}
       <div
         className={`
-          relative h-[420px] md:h-[450px] lg:h-[480px] 
-          bg-gradient-to-br from-slate-800/95 via-slate-900/95 to-indigo-950/95
-          backdrop-blur-xl border border-white/10
-          rounded-3xl overflow-hidden cursor-pointer
+          relative h-[380px] md:h-[400px] lg:h-[420px]
+          bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90
+          backdrop-blur-xl border border-white/20
+          rounded-2xl overflow-hidden cursor-pointer
           transform transition-all duration-500 ease-out
-          hover:scale-[1.02] hover:-translate-y-2
-          hover:shadow-2xl hover:shadow-indigo-500/25
-          hover:border-white/20
-          ${isHovered ? 'ring-2 ring-indigo-400/50' : ''}
+          hover:scale-[1.03] hover:-translate-y-1
+          hover:shadow-2xl hover:shadow-${thematicBg.accent.split(' ')[1]}/20
+          hover:border-white/30
+          ${isHovered ? `ring-2 ring-${thematicBg.accent.split(' ')[1]}/50` : ''}
         `}
         onClick={handleClick}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Background Image */}
-        {hasImage && (
-          <div className="absolute inset-0">
-            <img
-              src={lesson.imageUrl}
-              alt={lesson.title}
-              className={`
-                w-full h-full object-cover
-                transition-transform duration-700 ease-out
-                ${isHovered ? 'scale-110' : 'scale-100'}
-              `}
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/70 to-slate-900/40" />
-          </div>
-        )}
-
-        {/* Animated background pattern for cards without images */}
-        {!hasImage && (
-          <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/20 via-purple-600/20 to-pink-600/20" />
-            <div className={`
-              absolute inset-0 opacity-30
-              bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))]
-              from-indigo-400/20 via-transparent to-transparent
-              transition-opacity duration-500
-              ${isHovered ? 'opacity-50' : 'opacity-30'}
-            `} />
-          </div>
-        )}
+        {/* Thematic Background */}
+        <div className="absolute inset-0">
+          {hasImage ? (
+            <div className="absolute inset-0">
+              <img
+                src={lesson.imageUrl}
+                alt={lesson.title}
+                className={`
+                  w-full h-full object-cover
+                  transition-transform duration-700 ease-out
+                  ${isHovered ? 'scale-110' : 'scale-100'}
+                `}
+                loading="lazy"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/60 to-slate-900/30" />
+            </div>
+          ) : (
+            <div className="absolute inset-0">
+              {/* Dynamic thematic gradient */}
+              <div className={`absolute inset-0 bg-gradient-to-br ${thematicBg.gradient}`} />
+              
+              {/* Dynamic pattern overlay */}
+              <div 
+                className="absolute inset-0 opacity-40"
+                style={{ background: thematicBg.pattern }}
+              />
+              
+              {/* Animated particles */}
+              <div className="absolute inset-0 overflow-hidden">
+                {thematicBg.particles.map((particle, index) => (
+                  <div
+                    key={index}
+                    className={`
+                      absolute text-2xl opacity-20
+                      transition-all duration-1000
+                      ${isHovered ? 'opacity-40 scale-110' : 'opacity-20'}
+                    `}
+                    style={{
+                      left: `${15 + (index * 25)}%`,
+                      top: `${10 + (index * 15)}%`,
+                      animationDelay: `${index * 0.5}s`,
+                      animation: 'float 3s ease-in-out infinite'
+                    }}
+                  >
+                    {particle}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Content Container */}
-        <div className="relative h-full flex flex-col p-6 md:p-7 lg:p-8 z-10">
+        <div className="relative h-full flex flex-col p-5 md:p-6 z-10">
           {/* Header Section */}
-          <div className="flex items-start justify-between mb-4">
-            {/* Module Tag */}
-            <div className="flex flex-col space-y-2">
-              {lesson.moduleTitle && (
-                <span className="
-                  inline-block px-3 py-1 rounded-full text-xs font-medium
-                  bg-white/10 backdrop-blur-sm border border-white/20
-                  text-white/80 hover:text-white transition-colors duration-300
-                ">
-                  {lesson.moduleTitle}
-                </span>
-              )}
+          <div className="flex items-start justify-between mb-3">
+            {/* Theme Icon */}
+            <div className="flex flex-col items-start space-y-2">
+              <div className="text-3xl md:text-4xl opacity-80">
+                {thematicBg.icon}
+              </div>
               
               {/* Difficulty Badge */}
               <span className={`
-                inline-block px-3 py-1.5 rounded-full text-xs font-semibold
+                inline-block px-3 py-1 rounded-full text-xs font-semibold
                 ${difficultyStyle.bg} ${difficultyStyle.border} ${difficultyStyle.text}
                 border backdrop-blur-sm shadow-lg ${difficultyStyle.shadow}
                 transition-all duration-300
@@ -131,8 +252,8 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
             {lesson.hasCodeSandbox && (
               <div className="
                 flex items-center space-x-1 px-2.5 py-1 rounded-full
-                bg-cyan-500/20 border border-cyan-400/30
-                text-cyan-300 text-xs font-medium
+                bg-cyan-500/30 border border-cyan-400/40
+                text-cyan-200 text-xs font-medium
                 backdrop-blur-sm shadow-lg shadow-cyan-500/20
               ">
                 <span>⚡</span>
@@ -141,20 +262,32 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
             )}
           </div>
 
+          {/* Module Tag */}
+          {lesson.moduleTitle && (
+            <span className="
+              inline-block px-3 py-1 rounded-full text-xs font-medium mb-3
+              bg-white/10 backdrop-blur-sm border border-white/20
+              text-white/70 hover:text-white transition-colors duration-300
+              self-start
+            ">
+              {lesson.moduleTitle}
+            </span>
+          )}
+
           {/* Title */}
           <h3 className={`
-            text-xl md:text-2xl font-bold text-white mb-3
+            text-lg md:text-xl font-bold text-white mb-3
             leading-tight line-clamp-2
             transition-all duration-300
-            ${isHovered ? 'text-indigo-200' : ''}
+            ${isHovered ? `bg-gradient-to-r ${thematicBg.accent} bg-clip-text text-transparent` : ''}
           `}>
             {lesson.title}
           </h3>
 
           {/* Description */}
           <p className="
-            text-slate-300 text-sm md:text-base leading-relaxed
-            line-clamp-3 mb-6 flex-1
+            text-slate-300 text-sm leading-relaxed
+            line-clamp-3 mb-4 flex-1
             transition-colors duration-300
             hover:text-slate-200
           ">
@@ -162,8 +295,8 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
           </p>
 
           {/* Meta Information */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-4 text-xs text-slate-400">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-3 text-xs text-slate-400">
               {lesson.duration && (
                 <div className="flex items-center space-x-1">
                   <span>⏱️</span>
@@ -177,24 +310,6 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
                 </div>
               )}
             </div>
-            
-            {/* Tags */}
-            {lesson.tags && lesson.tags.length > 0 && (
-              <div className="flex space-x-1">
-                {lesson.tags.slice(0, 2).map((tag, index) => (
-                  <span
-                    key={index}
-                    className="
-                      px-2 py-1 rounded-md text-xs
-                      bg-white/5 border border-white/10
-                      text-white/60 backdrop-blur-sm
-                    "
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Action Button */}
@@ -204,16 +319,15 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
               handleClick();
             }}
             className={`
-              w-full py-3.5 md:py-4 rounded-2xl font-semibold text-base
-              bg-gradient-to-r from-indigo-500 to-purple-600
-              hover:from-indigo-600 hover:to-purple-700
-              text-white shadow-lg shadow-indigo-500/25
-              border border-indigo-400/30
+              w-full py-3 rounded-xl font-semibold text-sm
+              bg-gradient-to-r ${thematicBg.accent}
+              hover:shadow-lg hover:shadow-${thematicBg.accent.split(' ')[1]}/30
+              text-white shadow-md
+              border border-white/20
               backdrop-blur-sm
               transition-all duration-300 ease-out
               transform hover:scale-[1.02] active:scale-[0.98]
-              hover:shadow-xl hover:shadow-indigo-500/40
-              ${isHovered ? 'ring-2 ring-indigo-400/50' : ''}
+              ${isHovered ? 'ring-1 ring-white/30' : ''}
             `}
           >
             <span className="flex items-center justify-center space-x-2">
@@ -228,43 +342,29 @@ const LessonCard = ({ lesson, onClick, className = "" }) => {
           </button>
         </div>
 
-        {/* Hover Effects */}
+        {/* Hover Glow Effect */}
         <div className={`
-          absolute inset-0 pointer-events-none
-          bg-gradient-to-br from-indigo-500/5 via-transparent to-purple-500/5
+          absolute inset-0 pointer-events-none rounded-2xl
+          bg-gradient-to-r ${thematicBg.accent} opacity-0
           transition-opacity duration-500
-          ${isHovered ? 'opacity-100' : 'opacity-0'}
+          ${isHovered ? 'opacity-10' : 'opacity-0'}
         `} />
-
-        {/* Animated border glow */}
-        <div className={`
-          absolute inset-0 rounded-3xl pointer-events-none
-          bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20
-          transition-opacity duration-500
-          ${isHovered ? 'opacity-100' : 'opacity-0'}
-        `} style={{
-          background: isHovered ? 
-            'linear-gradient(45deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2))' : 
-            'transparent',
-          padding: '1px',
-          WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
-          WebkitMaskComposite: 'exclude'
-        }} />
       </div>
 
-      {/* Floating Elements */}
-      <div className={`
-        absolute -top-2 -right-2 w-4 h-4 rounded-full
-        bg-gradient-to-br from-cyan-400 to-blue-500
-        transition-all duration-500
-        ${isHovered ? 'scale-125 shadow-lg shadow-cyan-400/50' : 'scale-100'}
-      `} />
-      <div className={`
-        absolute -bottom-2 -left-2 w-3 h-3 rounded-full
-        bg-gradient-to-br from-pink-400 to-purple-500
-        transition-all duration-700
-        ${isHovered ? 'scale-125 shadow-lg shadow-pink-400/50' : 'scale-100'}
-      `} />
+      {/* Custom CSS for floating animation */}
+      <style jsx>{`
+        @keyframes float {
+          0%, 100% {
+            transform: translateY(0px) rotate(0deg);
+          }
+          33% {
+            transform: translateY(-10px) rotate(120deg);
+          }
+          66% {
+            transform: translateY(5px) rotate(240deg);
+          }
+        }
+      `}</style>
     </div>
   );
 };

@@ -24,6 +24,7 @@ const LessonsExplore = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showEndMessage, setShowEndMessage] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'masonry'
 
   // Adaptive lessons state
   const [adaptiveLessons, setAdaptiveLessons] = useState([]);
@@ -408,7 +409,7 @@ const LessonsExplore = () => {
   // Render desktop V-shape layout
   if (!isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
         <LoggedInNavbar />
         
         {/* Background Elements */}
@@ -554,9 +555,42 @@ const LessonsExplore = () => {
 
               {/* Results Summary & Clear Button */}
               <div className="flex items-center justify-between">
-                <div className="text-slate-300 font-medium">
-                  <span className="text-indigo-300 font-bold">{filteredLessons.length}</span> of{' '}
-                  <span className="text-white">{adaptiveLessons.length}</span> lessons
+                <div className="flex items-center space-x-6">
+                  <div className="text-slate-300 font-medium">
+                    <span className="text-indigo-300 font-bold">{filteredLessons.length}</span> of{' '}
+                    <span className="text-white">{adaptiveLessons.length}</span> lessons
+                  </div>
+                  
+                  {/* View Mode Toggle */}
+                  <div className="flex items-center space-x-2">
+                    <span className="text-slate-400 text-sm">View:</span>
+                    <div className="bg-white/5 rounded-lg p-1 border border-white/10">
+                      <button
+                        onClick={() => setViewMode('grid')}
+                        className={`
+                          px-3 py-1.5 rounded text-xs font-medium transition-all duration-300
+                          ${viewMode === 'grid' 
+                            ? 'bg-indigo-500/50 text-white shadow-lg' 
+                            : 'text-slate-400 hover:text-white hover:bg-white/10'
+                          }
+                        `}
+                      >
+                        📊 Grid
+                      </button>
+                      <button
+                        onClick={() => setViewMode('masonry')}
+                        className={`
+                          px-3 py-1.5 rounded text-xs font-medium transition-all duration-300
+                          ${viewMode === 'masonry' 
+                            ? 'bg-indigo-500/50 text-white shadow-lg' 
+                            : 'text-slate-400 hover:text-white hover:bg-white/10'
+                          }
+                        `}
+                      >
+                        🧱 Masonry
+                      </button>
+                    </div>
+                  </div>
                 </div>
                 
                 {(searchQuery || Object.values(selectedFilters).some(filter => filter)) && (
@@ -581,30 +615,32 @@ const LessonsExplore = () => {
             </div>
           </div>
 
-          {/* Enhanced Grid Layout */}
-          <div className="max-w-7xl mx-auto">
+          {/* Enhanced Grid Layout - Wider cards, smaller gaps */}
+          <div className="max-w-[1600px] mx-auto">
             {filteredLessons.length > 0 ? (
-              <div className="
-                grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4
-                gap-8 md:gap-10 lg:gap-12
-                auto-rows-max
-              ">
+              <div className={`
+                ${viewMode === 'grid' 
+                  ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 md:gap-5 lg:gap-6 auto-rows-max'
+                  : 'columns-1 sm:columns-2 lg:columns-3 xl:columns-4 2xl:columns-5 gap-4 md:gap-5 lg:gap-6 space-y-4 md:space-y-5 lg:space-y-6'
+                }
+              `}>
                 {filteredLessons.map((lesson, index) => (
                   <div
                     key={lesson.id}
-                    className="
+                    className={`
                       transform transition-all duration-500
                       hover:z-10 relative
-                    "
+                      ${viewMode === 'masonry' ? 'break-inside-avoid mb-4 md:mb-5 lg:mb-6' : ''}
+                    `}
                     style={{
-                      animationDelay: `${index * 100}ms`,
+                      animationDelay: `${index * 50}ms`,
                       animation: 'fadeInUp 0.6s ease-out forwards'
                     }}
                   >
                     <LessonCard
                       lesson={lesson}
                       onClick={() => navigate(`/lessons/${lesson.id}`)}
-                      className="h-full"
+                      className="h-full w-full"
                     />
                   </div>
                 ))}
