@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
+import LearningPathMap from '../components/LearningPathMap';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 
@@ -24,6 +25,10 @@ const HomePage = () => {
   const [learningProgress, setLearningProgress] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Quiz completion state
+  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const [quizResults, setQuizResults] = useState(null);
 
   // Inspirational quotes based on time of day
   const quotes = {
@@ -98,6 +103,16 @@ const HomePage = () => {
   const initializeDashboard = async () => {
     setIsLoading(true);
     
+    // Check if user has completed the quiz
+    const quizCompleted = localStorage.getItem('quizCompleted');
+    if (quizCompleted) {
+      const completionState = JSON.parse(quizCompleted);
+      if (completionState.completed && completionState.results) {
+        setIsQuizCompleted(true);
+        setQuizResults(completionState.results);
+      }
+    }
+    
     // Set time-based content
     const hour = new Date().getHours();
     let timeCategory = 'morning';
@@ -129,7 +144,23 @@ const HomePage = () => {
   };
 
   const loadUserLearningData = async () => {
-    // Check if user has an active learning path
+    // Check for active learning path from quiz completion
+    const activePath = localStorage.getItem('activeLearningPath');
+    if (activePath) {
+      const pathData = JSON.parse(activePath);
+      setUserLearningPath(pathData);
+      
+      // Create progress object compatible with learning path map
+      const progress = {
+        nextLessonIndex: pathData.nextLessonIndex || 0,
+        completedLessons: pathData.completedLessons?.length || 0,
+        totalLessons: pathData.totalLessons || 10, // Default estimate
+        progressPercentage: Math.round(((pathData.completedLessons?.length || 0) / (pathData.totalLessons || 10)) * 100)
+      };
+      setLearningProgress(progress);
+    }
+    
+    // Legacy check for old learning path system
     if (isLearningPathActive()) {
       const pathData = getLearningPath();
       const progress = getCurrentLessonProgress();
@@ -192,9 +223,9 @@ const HomePage = () => {
   };
 
   const handleStartLearning = () => {
-    if (userLearningPath) {
-      // Continue current learning path
-      navigate('/lessons/continue');
+    if (isQuizCompleted && userLearningPath) {
+      // Continue learning path or go to first lesson
+      navigate('/lessons');
     } else {
       // Start adaptive assessment
       navigate('/learning-path/adaptive-quiz');
@@ -261,7 +292,7 @@ const HomePage = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Hero Section with Greeting and Progress */}
           <section className="mb-8">
-            <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-white/10">
+            <div className="bg-gradient-to-r from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 border border-indigo-500/30">
               <div className="text-center mb-8">
                 <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">
                   {getUserGreeting()}
@@ -296,7 +327,7 @@ const HomePage = () => {
                 >
                   <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
                   <span className="relative flex items-center gap-2">
-                    {userLearningPath ? '🚀 Continue Learning' : '🎯 Start Your AI Journey'}
+                    {isQuizCompleted ? '🚀 Continue Learning' : '🎯 Start Your AI Journey'}
                   </span>
                 </button>
               </div>
@@ -304,9 +335,10 @@ const HomePage = () => {
           </section>
 
           {/* Learning Path Progress - MOST PROMINENT SECTION */}
-          {userLearningPath && learningProgress ? (
+          {isQuizCompleted && userLearningPath ? (
             <section className="mb-8">
-              <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 backdrop-blur-xl rounded-3xl p-8 border-2 border-green-500/50 shadow-2xl shadow-green-500/20">
+              {/* Learning Path Header */}
+              <div className="bg-gradient-to-br from-green-600/30 to-emerald-600/30 backdrop-blur-xl rounded-3xl p-8 mb-6 border-2 border-green-500/50 shadow-2xl shadow-green-500/20">
                 <div className="text-center mb-6">
                   <h2 className="text-4xl font-bold text-green-400 mb-2 flex items-center justify-center gap-3">
                     🎯 Your Learning Journey
@@ -315,49 +347,14 @@ const HomePage = () => {
                   <p className="text-xl text-green-200 mb-6">You're making incredible progress! Keep going!</p>
                 </div>
                 
-                {/* Large Progress Circle */}
-                <div className="flex justify-center mb-8">
-                  <div className="relative w-48 h-48">
-                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        stroke="rgba(34, 197, 94, 0.2)"
-                        strokeWidth="8"
-                        fill="none"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="45"
-                        stroke="rgb(34, 197, 94)"
-                        strokeWidth="8"
-                        fill="none"
-                        strokeLinecap="round"
-                        strokeDasharray={`${(learningProgress.completedLessons / learningProgress.totalLessons) * 283} 283`}
-                        className="transition-all duration-1000"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="text-4xl font-bold text-green-400">
-                          {Math.round((learningProgress.completedLessons / learningProgress.totalLessons) * 100)}%
-                        </div>
-                        <div className="text-sm text-green-300">Complete</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
                 {/* Progress Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                   <div className="bg-green-500/20 rounded-2xl p-6 text-center border border-green-500/30">
-                    <div className="text-3xl font-bold text-green-400">{learningProgress.completedLessons}</div>
+                    <div className="text-3xl font-bold text-green-400">{learningProgress?.completedLessons || 0}</div>
                     <div className="text-sm text-gray-300">Completed</div>
                   </div>
                   <div className="bg-blue-500/20 rounded-2xl p-6 text-center border border-blue-500/30">
-                    <div className="text-3xl font-bold text-blue-400">{learningProgress.totalLessons - learningProgress.completedLessons}</div>
+                    <div className="text-3xl font-bold text-blue-400">{(learningProgress?.totalLessons || 10) - (learningProgress?.completedLessons || 0)}</div>
                     <div className="text-sm text-gray-300">Remaining</div>
                   </div>
                   <div className="bg-purple-500/20 rounded-2xl p-6 text-center border border-purple-500/30">
@@ -369,18 +366,16 @@ const HomePage = () => {
                     <div className="text-sm text-gray-300">Level</div>
                   </div>
                 </div>
-                
-                <div className="text-center">
-                  <button
-                    onClick={() => navigate('/lessons/continue')}
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-4 px-12 rounded-2xl transition-all duration-300 transform hover:scale-105 text-xl shadow-lg shadow-green-500/30"
-                  >
-                    Continue Learning Journey 🚀
-                  </button>
-                </div>
               </div>
+
+              {/* Mario World Style Learning Path Map */}
+              <LearningPathMap 
+                userLearningPath={userLearningPath}
+                learningProgress={learningProgress}
+                className="mb-8"
+              />
             </section>
-          ) : (
+          ) : !isQuizCompleted ? (
             // No Learning Path - Encourage to Start
             <section className="mb-8">
               <div className="bg-gradient-to-br from-indigo-600/30 to-purple-600/30 backdrop-blur-xl rounded-3xl p-8 border-2 border-indigo-500/50 shadow-2xl shadow-indigo-500/20">
@@ -400,7 +395,7 @@ const HomePage = () => {
                 </div>
               </div>
             </section>
-          )}
+          ) : null}
 
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -543,12 +538,14 @@ const HomePage = () => {
               <div className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl rounded-3xl p-6 border border-white/10">
                 <h2 className="text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
                 <div className="space-y-3">
-                  <button
-                    onClick={() => navigate('/learning-path/adaptive-quiz')}
-                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-left flex items-center gap-2"
-                  >
-                    <span className="text-lg">🎯</span> Take AI Assessment
-                  </button>
+                  {!isQuizCompleted && (
+                    <button
+                      onClick={() => navigate('/learning-path/adaptive-quiz')}
+                      className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-left flex items-center gap-2"
+                    >
+                      <span className="text-lg">🎯</span> Take AI Assessment
+                    </button>
+                  )}
                   <div
                     onClick={() => navigate('/lessons')}
                     className="

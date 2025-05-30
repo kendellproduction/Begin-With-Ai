@@ -298,31 +298,121 @@ const AdaptiveLearningPathQuiz = () => {
       }
     }
 
-    // Save to localStorage
+    // Save comprehensive quiz completion state
+    const quizCompletionState = {
+      completed: true,
+      results: quizResults,
+      completedAt: new Date().toISOString(),
+      userId: user?.uid || 'anonymous'
+    };
+    
     localStorage.setItem('aiAssessmentResults', JSON.stringify(quizResults));
-  };
-
-  const handleStartLearning = () => {
-    // Save learning path to localStorage
+    localStorage.setItem('quizCompleted', JSON.stringify(quizCompletionState));
+    
+    // Create and save learning path
     const learningPath = {
       pathId: 'prompt-engineering-mastery',
-      pathTitle: results.recommendations.title,
-      skillLevel: results.skillLevel,
+      pathTitle: quizResults.recommendations.title,
+      skillLevel: quizResults.skillLevel,
       startedAt: new Date().toISOString(),
-      isActive: true
+      isActive: false, // Will be activated when they start first lesson
+      nextLessonIndex: 0,
+      completedLessons: [],
+      quizResults: quizResults
     };
     
     localStorage.setItem('activeLearningPath', JSON.stringify(learningPath));
-    
-    // Navigate to lessons
+  };
+
+  const handleStartLearning = () => {
+    // Navigate to lessons page to begin their journey
     navigate('/lessons', { 
       state: { 
         fromQuiz: true,
         skillLevel: results.skillLevel,
-        recommendations: results.recommendations
+        recommendations: results.recommendations,
+        startFirstLesson: true
       } 
     });
   };
+
+  const handleStartFirstLesson = async () => {
+    // Activate the learning path
+    const learningPath = JSON.parse(localStorage.getItem('activeLearningPath'));
+    if (learningPath) {
+      learningPath.isActive = true;
+      localStorage.setItem('activeLearningPath', JSON.stringify(learningPath));
+      localStorage.setItem('learningPathActive', 'true');
+    }
+
+    // Get the first lesson from the adaptive service
+    try {
+      const adaptivePath = await import('../services/adaptiveLessonService').then(module => 
+        module.AdaptiveLessonService.getAdaptedLearningPath(
+          'prompt-engineering-mastery',
+          { skillLevel: results.skillLevel }
+        )
+      );
+      
+      if (adaptivePath && adaptivePath.modules && adaptivePath.modules[0]?.lessons[0]) {
+        const firstLesson = adaptivePath.modules[0].lessons[0];
+        navigate(`/lessons/${firstLesson.id}`, { 
+          state: { 
+            pathId: 'prompt-engineering-mastery',
+            moduleId: adaptivePath.modules[0].id,
+            difficulty: results.skillLevel,
+            fromQuiz: true
+          } 
+        });
+      } else {
+        // Fallback to lessons overview
+        navigate('/lessons');
+      }
+    } catch (error) {
+      console.error('Error getting first lesson:', error);
+      navigate('/lessons');
+    }
+  };
+
+  const handleRetakeQuiz = () => {
+    // Clear all quiz-related localStorage data
+    localStorage.removeItem('quizCompleted');
+    localStorage.removeItem('aiAssessmentResults');
+    localStorage.removeItem('activeLearningPath');
+    localStorage.removeItem('learningPathActive');
+    
+    // Reset component state
+    setResults(null);
+    setIsComplete(false);
+    setAnswers({});
+    setCurrentQuestionIndex(0);
+    setSelectedAnswers([]);
+  };
+
+  // Check if user has already completed the quiz
+  useEffect(() => {
+    const quizCompleted = localStorage.getItem('quizCompleted');
+    if (quizCompleted) {
+      const completionState = JSON.parse(quizCompleted);
+      if (completionState.completed && completionState.results) {
+        setResults(completionState.results);
+        setIsComplete(true);
+      }
+    }
+  }, []);
+
+  // Redirect if user tries to access quiz multiple times
+  useEffect(() => {
+    const quizCompleted = localStorage.getItem('quizCompleted');
+    if (quizCompleted && !isComplete) {
+      const completionState = JSON.parse(quizCompleted);
+      if (completionState.completed) {
+        // Show completed state instead of redirecting
+        setResults(completionState.results);
+        setIsComplete(true);
+      }
+    }
+  }, [isComplete]);
 
   if (isLoading) {
     return (
@@ -348,6 +438,24 @@ const AdaptiveLearningPathQuiz = () => {
         <LoggedInNavbar />
         
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Check if this is a return visit */}
+          {localStorage.getItem('quizCompleted') && (
+            <div className="bg-gradient-to-br from-blue-600/20 to-indigo-600/20 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-blue-500/30">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-bold text-blue-300 mb-1">Welcome Back! 👋</h3>
+                  <p className="text-blue-200">You've already completed your AI assessment. Here are your results:</p>
+                </div>
+                <button
+                  onClick={handleRetakeQuiz}
+                  className="px-4 py-2 bg-blue-600/20 border border-blue-400/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all duration-300 text-sm"
+                >
+                  Retake Quiz
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Results Header */}
           <div className="text-center mb-8">
             <div className="text-7xl mb-6 animate-bounce">
@@ -360,6 +468,58 @@ const AdaptiveLearningPathQuiz = () => {
             <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
               {results.recommendations.description}
             </p>
+          </div>
+
+          {/* Why This Path Section - Making users feel understood */}
+          <div className="bg-gradient-to-br from-amber-600/20 to-orange-600/20 backdrop-blur-xl rounded-3xl p-8 mb-8 border border-amber-500/30">
+            <h2 className="text-2xl font-bold text-amber-300 mb-4 flex items-center gap-2">
+              🧠 Why We Chose This Path For You
+            </h2>
+            <div className="space-y-4 text-amber-100">
+              <p className="text-lg leading-relaxed">
+                Based on your responses, we understand that you're looking for a 
+                <span className="font-semibold text-amber-200"> {results.recommendations.difficulty.toLowerCase()}</span> with 
+                <span className="font-semibold text-amber-200"> {results.recommendations.approach.toLowerCase()}</span>.
+              </p>
+              
+              <div className="grid md:grid-cols-2 gap-6 mt-6">
+                <div>
+                  <h3 className="font-semibold text-amber-200 mb-2">What We Noticed:</h3>
+                  <ul className="space-y-2 text-sm">
+                    {results.skillLevel === 'beginner' && (
+                      <>
+                        <li>• You're new to AI tools - that's perfect!</li>
+                        <li>• You want clear, step-by-step guidance</li>
+                        <li>• You learn best with foundational concepts first</li>
+                      </>
+                    )}
+                    {results.skillLevel === 'intermediate' && (
+                      <>
+                        <li>• You have some AI experience to build on</li>
+                        <li>• You're ready for practical, hands-on learning</li>
+                        <li>• You want skills that make a real difference</li>
+                      </>
+                    )}
+                    {results.skillLevel === 'advanced' && (
+                      <>
+                        <li>• You're comfortable with multiple AI tools</li>
+                        <li>• You want to push your expertise further</li>
+                        <li>• You're ready for challenging projects</li>
+                      </>
+                    )}
+                  </ul>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-amber-200 mb-2">So We'll Focus On:</h3>
+                  <ul className="space-y-2 text-sm">
+                    {results.recommendations.focusAreas.slice(0, 3).map((area, index) => (
+                      <li key={index}>• {area}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Confidence Score */}
@@ -447,20 +607,32 @@ const AdaptiveLearningPathQuiz = () => {
             </div>
           </div>
 
-          {/* Call to Action */}
-          <div className="text-center">
-            <button
-              onClick={handleStartLearning}
-              className="group relative px-12 py-6 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white font-bold text-xl shadow-2xl hover:shadow-blue-500/30 transform hover:scale-105 transition-all duration-300"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-2xl blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
-              <span className="relative flex items-center gap-3">
-                Start Your AI Journey
-                <span className="text-2xl">🚀</span>
-              </span>
-            </button>
+          {/* Call to Action Buttons */}
+          <div className="text-center space-y-4">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={handleStartFirstLesson}
+                className="group relative px-8 py-4 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 rounded-2xl text-white font-bold text-lg shadow-2xl hover:shadow-green-500/30 transform hover:scale-105 transition-all duration-300"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-green-400 via-emerald-400 to-teal-400 rounded-2xl blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
+                <span className="relative flex items-center gap-3">
+                  🎯 Start First Lesson
+                </span>
+              </button>
+              
+              <button
+                onClick={handleStartLearning}
+                className="group relative px-8 py-4 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-2xl text-white font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transform hover:scale-105 transition-all duration-300"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 rounded-2xl blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
+                <span className="relative flex items-center gap-3">
+                  🗺️ View Learning Path
+                </span>
+              </button>
+            </div>
+            
             <p className="mt-6 text-slate-400 text-lg">
-              Ready to transform your skills? Let's begin with your personalized path!
+              Ready to transform your AI skills? Your personalized journey awaits!
             </p>
           </div>
         </div>
