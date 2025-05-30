@@ -26,6 +26,26 @@ const LessonsOverview = () => {
   // View state
   const [activeSection, setActiveSection] = useState('overview'); // 'overview' or 'browse'
 
+  // State for Foundation Lessons carousel
+  const [foundationPage, setFoundationPage] = useState(0);
+  const [foundationItemsPerPage, setFoundationItemsPerPage] = useState(3);
+
+  useEffect(() => {
+    const calculateItemsPerPage = () => {
+      if (window.innerWidth < 640) { // Tailwind's 'sm' breakpoint
+        setFoundationItemsPerPage(1);
+      } else if (window.innerWidth < 1024) { // Tailwind's 'lg' breakpoint
+        setFoundationItemsPerPage(2);
+      } else {
+        setFoundationItemsPerPage(3);
+      }
+    };
+
+    calculateItemsPerPage(); // Initial calculation
+    window.addEventListener('resize', calculateItemsPerPage);
+    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
+
   useEffect(() => {
     if (location.state?.resetFilters) {
       navigate(location.pathname, { replace: true });
@@ -390,11 +410,35 @@ const LessonsOverview = () => {
               </div>
             )}
 
-            {/* Featured Lessons */}
-            <div>
-              <h3 className="text-2xl font-bold text-white mb-6">✨ Start Here - Foundation Lessons</h3>
+            {/* Featured Lessons - Now with Carousel Controls */}
+            <div className="pb-20">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold text-white">✨ Start Here - Foundation Lessons</h3>
+                {adaptiveLessons.length > foundationItemsPerPage && (
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => setFoundationPage(p => Math.max(0, p - 1))}
+                      disabled={foundationPage === 0}
+                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                      </svg>
+                    </button>
+                    <button 
+                      onClick={() => setFoundationPage(p => Math.min(p + 1, Math.ceil(adaptiveLessons.length / foundationItemsPerPage) - 1))}
+                      disabled={foundationPage >= Math.ceil(adaptiveLessons.length / foundationItemsPerPage) - 1}
+                      className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {adaptiveLessons.slice(0, 3).map((lesson, index) => (
+                {adaptiveLessons.slice(foundationPage * foundationItemsPerPage, (foundationPage + 1) * foundationItemsPerPage).map((lesson, index) => (
                   <LessonCard
                     key={lesson.id}
                     lesson={lesson}
@@ -405,7 +449,8 @@ const LessonsOverview = () => {
               </div>
             </div>
 
-            {/* Module Overview */}
+            {/* Module Overview - TO BE REMOVED */}
+            {/* 
             <div>
               <h3 className="text-2xl font-bold text-white mb-6">📋 Learning Modules</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -447,6 +492,7 @@ const LessonsOverview = () => {
                 })}
               </div>
             </div>
+            */}
           </div>
         ) : (
           /* Browse All Lessons Section */

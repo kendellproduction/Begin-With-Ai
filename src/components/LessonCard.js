@@ -13,9 +13,8 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   // Check if lesson requires premium access
   const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
   
-  // For now, we'll assume all users can access content but still show premium badge
-  // In a real app, you'd check user.isPremium or user.subscriptionStatus
-  const hasAccess = false; // user?.isPremium || !isPremiumLesson;
+  // TEMPORARILY SET TO TRUE FOR DEBUGGING BADGE & DROPDOWN
+  const hasAccess = true; // In a real app: user?.isPremium || !isPremiumLesson;
 
   const handleClick = () => {
     if (isPremiumLesson && !hasAccess) {
@@ -184,14 +183,14 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   const thematicBg = getThematicBackground(lesson);
 
   return (
-    <div className={`group relative ${className}`}>
-      {/* Main Card Container */}
+    <div className={`group relative ${className} rounded-2xl`}>
+      {/* Main Card Clickable Area: also has rounded corners, NO overflow-hidden */}
       <div
         className={`
-          relative h-[380px] md:h-[400px] lg:h-[420px]
+          h-[420px] md:h-[440px] lg:h-[460px]
           bg-gradient-to-br from-slate-800/90 via-slate-900/90 to-slate-950/90
           backdrop-blur-xl border border-white/20
-          rounded-2xl overflow-hidden cursor-pointer
+          rounded-2xl cursor-pointer 
           transform transition-all duration-500 ease-out
           hover:scale-[1.03] hover:-translate-y-1
           hover:shadow-2xl hover:shadow-${thematicBg.accent.split(' ')[1]}/20
@@ -202,8 +201,8 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Thematic Background */}
-        <div className="absolute inset-0">
+        {/* Thematic Background: MUST have rounded-2xl AND overflow-hidden to clip background to card shape */}
+        <div className="absolute inset-0 rounded-2xl overflow-hidden">
           {hasImage ? (
             <div className="absolute inset-0">
               <img
@@ -254,7 +253,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
           )}
         </div>
 
-        {/* Content Container */}
+        {/* Content Container - This is already relative, which is good for dropdown positioning */}
         <div className="relative h-full flex flex-col p-5 md:p-6 z-10">
           {/* Header Section */}
           <div className="flex items-start justify-between mb-3">
@@ -329,18 +328,18 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
             {lesson.title}
           </h3>
 
-          {/* Description */
+          {/* Description - Removed line-clamp for now, added more bottom margin */}
           <p className="
             text-slate-300 text-sm leading-relaxed
-            line-clamp-3 mb-4 flex-1
+            mb-6 flex-1 
             transition-colors duration-300
             hover:text-slate-200
           ">
             {lesson.description || lesson.coreConcept || 'Discover the fundamentals of AI and how it can transform your understanding of technology.'}
           </p>
 
-          {/* Meta Information */}
-          <div className="flex items-center justify-between mb-4">
+          {/* Meta Information - Added more top margin */}
+          <div className="flex items-center justify-between mt-2 mb-4">
             <div className="flex items-center space-x-3 text-xs text-slate-400">
               {lesson.duration && (
                 <div className="flex items-center space-x-1">
@@ -378,22 +377,26 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
                 {/* Difficulty Options Dropdown */}
                 {showDifficultyOptions && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800/95 backdrop-blur-xl rounded-lg border border-white/20 overflow-hidden z-50 shadow-xl">
-                    {['beginner', 'intermediate', 'advanced'].map((difficulty) => (
-                      <button
-                        key={difficulty}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDifficultyChange(difficulty);
-                        }}
-                        className={`w-full text-left px-3 py-2 text-white transition-colors duration-200 capitalize ${
-                          selectedDifficulty === difficulty 
-                            ? 'bg-indigo-500/30 text-indigo-200' 
-                            : 'hover:bg-white/10'
-                        }`}
-                      >
-                        {difficulty}
-                      </button>
-                    ))}
+                    {['Beginner', 'Intermediate', 'Advanced'].map((difficultyLevel) => {
+                      const isPremiumDifficulty = difficultyLevel === 'Intermediate' || difficultyLevel === 'Advanced';
+                      return (
+                        <button
+                          key={difficultyLevel}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDifficultyChange(difficultyLevel);
+                          }}
+                          className={`w-full text-left px-3 py-2 text-white transition-colors duration-200 capitalize flex items-center justify-between ${
+                            selectedDifficulty === difficultyLevel 
+                              ? 'bg-indigo-500/30 text-indigo-200' 
+                              : 'hover:bg-white/10'
+                          }`}
+                        >
+                          <span>{difficultyLevel}</span>
+                          {isPremiumDifficulty && <span className="text-xs text-yellow-400">👑</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
