@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const Navbar = ({ openAuthModal }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navbarHeight = 64;
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -16,12 +18,47 @@ const Navbar = ({ openAuthModal }) => {
 
   return (
     <nav 
-      className="shadow-xl border-b border-white/10 sticky top-0 z-50"
+      className="sticky top-0 z-50"
       style={{ backgroundColor: '#2061a6' }}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+        {[...Array(30)].map((_, i) => (
+          <motion.div
+            key={`nav-star-${i}`}
+            className="absolute bg-white rounded-full"
+            initial={{
+              x: Math.random() * window.innerWidth,
+              y: Math.random() * navbarHeight * 1.5 - (navbarHeight * 0.25),
+              opacity: Math.random() * 0.5 + 0.4,
+            }}
+            animate={{
+              x: [
+                Math.random() * window.innerWidth,
+                Math.random() * window.innerWidth,
+              ],
+              y: [
+                Math.random() * navbarHeight * 1.5 - (navbarHeight * 0.25),
+                Math.random() * navbarHeight * 1.5 - (navbarHeight * 0.25),
+              ],
+              scale: [Math.random() * 1.2 + 0.6, Math.random() * 1.2 + 0.6, Math.random() * 1.2 + 0.6],
+            }}
+            transition={{
+              duration: 20 + Math.random() * 25,
+              repeat: Infinity,
+              repeatType: "loop",
+              ease: "linear",
+              delay: Math.random() * 7
+            }}
+            style={{
+              width: Math.random() * 2 + 1,
+              height: Math.random() * 2 + 1,
+            }}
+          />
+        ))}
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
-          {/* Logo and brand name */}
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center group">
               <span className="text-2xl font-bold text-white group-hover:text-gray-200 transition-all duration-300">
@@ -30,7 +67,6 @@ const Navbar = ({ openAuthModal }) => {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/about" className="text-gray-100 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-300 hover:bg-white/10">
               About
@@ -70,7 +106,6 @@ const Navbar = ({ openAuthModal }) => {
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleMenu}
@@ -88,9 +123,8 @@ const Navbar = ({ openAuthModal }) => {
         </div>
       </div>
 
-      {/* Mobile menu */}
       <div 
-        className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden border-t border-white/10`}
+        className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}
         style={{ backgroundColor: '#2061a6' }}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">

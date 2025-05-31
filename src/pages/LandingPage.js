@@ -224,46 +224,63 @@ const LandingPage = () => {
         style={{ backgroundColor: '#2061a6' }}
       >
         {/* Animated Moving Stars */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(150)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * window.innerWidth,
-                y: Math.random() * window.innerHeight,
-              }}
-              animate={{
-                x: [
-                  Math.random() * window.innerWidth,
-                  Math.random() * window.innerWidth,
-                  Math.random() * window.innerWidth,
-                ],
-                y: [
-                  Math.random() * window.innerHeight,
-                  Math.random() * window.innerHeight,
-                  Math.random() * window.innerHeight,
-                ],
-              }}
-              transition={{
-                duration: 10 + Math.random() * 20,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 10,
-              }}
-            >
-              <div 
-                className={`bg-white/60 rounded-full ${
-                  i % 15 === 0 ? 'w-3 h-3 animate-pulse' : 
-                  i % 8 === 0 ? 'w-2 h-2' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
+        <div className="absolute inset-0 z-0 overflow-hidden">
+          {[...Array(170)].map((_, i) => {
+            const screenH = window.innerHeight;
+            const screenW = window.innerWidth; // Define screenW for consistency
+            // Generate stars in a spatial band 2x the screen dimensions (width and height), centered on the screen.
+            // This allows stars to originate from well outside the viewport and travel across it.
+            const initialY = Math.random() * screenH * 2.0 - screenH * 0.5;
+            const targetY = Math.random() * screenH * 2.0 - screenH * 0.5;
+            
+            const initialX = Math.random() * screenW * 2.0 - screenW * 0.5;
+            const targetX = Math.random() * screenW * 2.0 - screenW * 0.5;
+            const starDuration = 25 + Math.random() * 30; // Slightly longer average duration
+
+            return (
+              <motion.div
+                key={`hero-star-${i}`}
+                className="absolute"
+                initial={{
+                  x: initialX,
+                  y: initialY,
+                  opacity: 0, 
                 }}
-              ></div>
-            </motion.div>
-          ))}
+                animate={{
+                  x: targetX, 
+                  y: targetY, 
+                  opacity: [0, 0.7, 0.7, 0], 
+                }}
+                transition={{
+                  duration: starDuration,
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 3 + 1, // Adjusted repeatDelay
+                  ease: "linear",
+                  opacity: { 
+                    duration: starDuration,
+                    ease: "linear",
+                    times: [0, 0.1, 0.85, 1], 
+                    repeat: Infinity, 
+                    repeatDelay: Math.random() * 3 + 1 // Match main repeatDelay
+                  }
+                }}
+              >
+                {/* Inner div for appearance (sizes, pulse, color tint) - REMAINS THE SAME */}
+                <div 
+                  className={`bg-white/40 rounded-full ${ 
+                    i % 18 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
+                    i % 9 === 0 ? 'w-2 h-2' :   
+                    i % 5 === 0 ? 'w-1.5 h-1.5' : 
+                    'w-1 h-1' 
+                  }`}
+                  style={{
+                    filter: `hue-rotate(${Math.random() * 45}deg)`,
+                    animationDelay: `${Math.random() * 4}s`,
+                  }}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Floating Elements */}
