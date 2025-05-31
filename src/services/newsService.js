@@ -3,80 +3,32 @@ import { collection, addDoc, getDocs, query, orderBy, limit, where, Timestamp, d
 
 class NewsService {
   constructor() {
-    // BRIGHT NEON colors that really pop
+    // V3: Glassy backgrounds, vibrant borders, matching shadows, revised color palette
     const neonColors = [
-      {
-        gradient: 'from-red-400/70 to-orange-400/70',
-        border: 'border-red-300/90 hover:border-red-200'
-      },
-      {
-        gradient: 'from-blue-400/70 to-cyan-400/70',
-        border: 'border-blue-300/90 hover:border-blue-200'
-      },
-      {
-        gradient: 'from-green-400/70 to-emerald-400/70',
-        border: 'border-green-300/90 hover:border-green-200'
-      },
-      {
-        gradient: 'from-purple-400/70 to-pink-400/70',
-        border: 'border-purple-300/90 hover:border-purple-200'
-      },
-      {
-        gradient: 'from-yellow-400/70 to-amber-400/70',
-        border: 'border-yellow-300/90 hover:border-yellow-200'
-      },
-      {
-        gradient: 'from-indigo-400/70 to-violet-400/70',
-        border: 'border-indigo-300/90 hover:border-indigo-200'
-      },
-      {
-        gradient: 'from-teal-400/70 to-cyan-400/70',
-        border: 'border-teal-300/90 hover:border-teal-200'
-      },
-      {
-        gradient: 'from-rose-400/70 to-pink-400/70',
-        border: 'border-rose-300/90 hover:border-rose-200'
-      },
-      {
-        gradient: 'from-lime-400/70 to-green-400/70',
-        border: 'border-lime-300/90 hover:border-lime-200'
-      },
-      {
-        gradient: 'from-orange-400/70 to-red-400/70',
-        border: 'border-orange-300/90 hover:border-orange-200'
-      },
-      {
-        gradient: 'from-sky-400/70 to-blue-400/70',
-        border: 'border-sky-300/90 hover:border-sky-200'
-      },
-      {
-        gradient: 'from-emerald-400/70 to-teal-400/70',
-        border: 'border-emerald-300/90 hover:border-emerald-200'
-      },
-      {
-        gradient: 'from-fuchsia-400/70 to-purple-400/70',
-        border: 'border-fuchsia-300/90 hover:border-fuchsia-200'
-      },
-      {
-        gradient: 'from-amber-400/70 to-yellow-400/70',
-        border: 'border-amber-300/90 hover:border-amber-200'
-      },
-      {
-        gradient: 'from-violet-400/70 to-indigo-400/70',
-        border: 'border-violet-300/90 hover:border-violet-200'
-      },
-      {
-        gradient: 'from-cyan-400/70 to-teal-400/70',
-        border: 'border-cyan-300/90 hover:border-cyan-200'
-      },
-      {
-        gradient: 'from-pink-400/70 to-fuchsia-400/70',
-        border: 'border-pink-300/90 hover:border-pink-200'
-      },
-      {
-        gradient: 'from-red-300/80 to-pink-300/80',
-        border: 'border-red-200 hover:border-red-100'
-      }
+      // Reds & Oranges
+      { gradient: 'from-red-700/80 to-orange-600/80', border: 'border-red-500 hover:border-red-400', shadow: 'shadow-red-500/50' },
+      { gradient: 'from-orange-600/80 to-amber-600/80', border: 'border-orange-400 hover:border-orange-300', shadow: 'shadow-orange-400/50' },
+
+      // Yellows & Limes (darker gradients for text contrast)
+      { gradient: 'from-yellow-800/80 to-amber-700/80', border: 'border-yellow-500 hover:border-yellow-400', shadow: 'shadow-yellow-500/50' },
+      { gradient: 'from-lime-700/80 to-green-600/80', border: 'border-lime-500 hover:border-lime-400', shadow: 'shadow-lime-500/50' },
+
+      // Greens & Teals
+      { gradient: 'from-green-700/80 to-emerald-600/80', border: 'border-green-500 hover:border-green-400', shadow: 'shadow-green-500/50' },
+      { gradient: 'from-teal-600/80 to-cyan-600/80', border: 'border-teal-400 hover:border-teal-300', shadow: 'shadow-teal-400/50' }, // Kept cyan light here
+
+      // Pinks & Roses (distinct from deep purples)
+      { gradient: 'from-pink-600/80 to-rose-500/80', border: 'border-pink-400 hover:border-pink-300', shadow: 'shadow-pink-400/50' },
+      { gradient: 'from-fuchsia-600/80 to-pink-600/80', border: 'border-fuchsia-500 hover:border-fuchsia-400', shadow: 'shadow-fuchsia-500/50' },
+      
+      // Lighter/Alternative Purples & Blues (avoiding deep indigo/violet that blends with page bg)
+      { gradient: 'from-purple-500/80 to-violet-500/80', border: 'border-purple-400 hover:border-purple-300', shadow: 'shadow-purple-400/50' }, // Lighter purple
+      { gradient: 'from-sky-600/80 to-cyan-500/80', border: 'border-sky-400 hover:border-sky-300', shadow: 'shadow-sky-400/50' }, // Lighter blue/cyan focus
+
+      // Unique Mixes
+      { gradient: 'from-emerald-600/80 to-lime-700/80', border: 'border-emerald-400 hover:border-emerald-300', shadow: 'shadow-emerald-400/50' },
+      { gradient: 'from-rose-600/80 to-orange-600/80', border: 'border-rose-400 hover:border-rose-300', shadow: 'shadow-rose-400/50' },
+      { gradient: 'from-cyan-500/80 to-blue-500/80', border: 'border-cyan-400 hover:border-cyan-300', shadow: 'shadow-cyan-400/50' } // Lightest blue
     ];
 
     this.sources = [
@@ -288,10 +240,9 @@ class NewsService {
   async saveNewsToFirestore(articles) {
     try {
       const newsCollection = collection(db, 'aiNews');
-      const savedArticles = [];
+      const savedOrUpdatedArticles = [];
 
       for (const article of articles) {
-        // Check if article already exists
         const existingQuery = query(
           newsCollection,
           where('title', '==', article.title),
@@ -301,15 +252,21 @@ class NewsService {
         const querySnapshot = await getDocs(existingQuery);
         
         if (querySnapshot.empty) {
+          // Article is new, add it
           const docRef = await addDoc(newsCollection, article);
-          savedArticles.push({ ...article, firestoreId: docRef.id });
-          console.log(`Saved article: ${article.title}`);
+          savedOrUpdatedArticles.push({ ...article, firestoreId: docRef.id });
+          console.log(`Saved new article: ${article.title}`);
         } else {
-          console.log(`Article already exists: ${article.title}`);
+          // Article exists, update it
+          // Assuming only one match, as title and source should be unique enough
+          const existingDoc = querySnapshot.docs[0];
+          await updateDoc(existingDoc.ref, article); // article contains all fields, including new colors
+          savedOrUpdatedArticles.push({ ...article, firestoreId: existingDoc.id });
+          console.log(`Updated existing article: ${article.title}`);
         }
       }
 
-      return savedArticles;
+      return savedOrUpdatedArticles;
     } catch (error) {
       console.error('Error saving news to Firestore:', error);
       

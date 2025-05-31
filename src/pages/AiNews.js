@@ -1,9 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import NewsTestPanel from '../components/NewsTestPanel';
 import { motion } from 'framer-motion';
 import { getAINews, updateAINews, likeAINewsArticle, getAINewsLikeStatus } from '../services/newsService';
 import { useAuth } from '../contexts/AuthContext';
+import DOMPurify from 'dompurify'; // Import DOMPurify
+
+// Content Moderation: Forbidden Keywords
+const forbiddenKeywords = [
+  // Profanity (examples from previous list - USER SHOULD EXPAND SIGNIFICANTLY)
+  'asshole', 'bastard', 'bitch', 'cunt', 'dick', 'fuck', 'motherfucker', 'pussy', 'shit', 'slut', 'whore',
+
+  // Pornography & Explicit Nudity (USER TO CURATE AND EXPAND)
+  'hardcore', 'erotic_video', 'full_frontal_nude', 'sex_chat', 'camsex', 'adult_film', 'explicit_images',
+  // Add more terms like specific acts, site names, etc.
+
+  // Hate Speech & Discrimination (USER TO CURATE AND EXPAND)
+  // Focus on terms promoting violence, discrimination, or disparagement based on race, ethnicity, religion, gender, sexual orientation, etc.
+  'white_supremacy_ideology', 'neo_nazi_sympathizer', 'kill_all_group_x', 'hate_group_manifesto', 'race_war_now',
+  // Add specific slurs and derogatory terms for various groups - BE VERY CAREFUL AND ENSURE ACCURACY AND CONTEXT
+
+  // Graphic Violence (USER TO CURATE AND EXPAND)
+  'beheading_video', 'decapitation_footage', 'live_torture', 'extreme_gore', 'murder_video',
+  // Add terms related to real-world graphic violence
+
+  // Promotion of Illegal Acts & Self Harm (USER TO CURATE AND EXPAND)
+  'how_to_make_bomb', 'buy_illegal_drugs_online', 'promote_self_harm', 'suicide_pact_forum', 'anorexia_thinspo',
+
+  // Divisive/Harmful Political Conspiracies & Misinformation (USER TO CURATE AND EXPAND)
+  // Focus on widely debunked, harmful conspiracy theories or misinformation campaigns, not general political discussion.
+  'qanon_conspiracy_details', 'anti_vaccine_hoax_propaganda', 'election_fraud_lies', 'crisis_actor_exposed', 'pizzagate_evidence',
+  // User should carefully consider terms here to avoid censoring legitimate, albeit controversial, discussion if that is not the intent.
+
+  // Placeholder for user to add more categories and specific terms
+  'user_defined_forbidden_term1',
+];
 
 const AiNews = () => {
   const [aiNews, setAiNews] = useState([]);
@@ -18,7 +49,9 @@ const AiNews = () => {
   const [userLikedUseCases, setUserLikedUseCases] = useState(new Set());
   const [userUseCases, setUserUseCases] = useState([]);
   const [showNewPostForm, setShowNewPostForm] = useState(false);
+  const newPostFormRef = useRef(null); // Ref for the new post form
   const [newPost, setNewPost] = useState({
+    name: '',
     title: '',
     description: '',
     jobTitle: ''
@@ -33,8 +66,9 @@ const AiNews = () => {
       date: new Date("2024-03-15"),
       category: "Model Release",
       icon: "🚀",
-      gradient: "from-red-400/70 to-orange-400/70",
-      border: "border-red-300/90 hover:border-red-200",
+      gradient: "from-red-700/80 to-orange-600/80",
+      border: "border-red-500 hover:border-red-400",
+      shadow: "shadow-red-500/50",
       source: "OpenAI"
     },
     {
@@ -44,8 +78,9 @@ const AiNews = () => {
       date: new Date("2024-03-10"),
       category: "Platform",
       icon: "🌟",
-      gradient: "from-blue-400/70 to-cyan-400/70",
-      border: "border-blue-300/90 hover:border-blue-200",
+      gradient: "from-sky-600/80 to-cyan-500/80",
+      border: "border-sky-400 hover:border-sky-300",
+      shadow: "shadow-sky-400/50",
       source: "Google"
     },
     {
@@ -55,8 +90,9 @@ const AiNews = () => {
       date: new Date("2024-03-05"),
       category: "Research",
       icon: "🏥",
-      gradient: "from-green-400/70 to-emerald-400/70",
-      border: "border-green-300/90 hover:border-green-200",
+      gradient: "from-green-700/80 to-emerald-600/80",
+      border: "border-green-500 hover:border-green-400",
+      shadow: "shadow-green-500/50",
       source: "Research Labs"
     },
     {
@@ -66,8 +102,9 @@ const AiNews = () => {
       date: new Date("2024-03-12"),
       category: "Open Source",
       icon: "⚡",
-      gradient: "from-purple-400/70 to-pink-400/70",
-      border: "border-purple-300/90 hover:border-purple-200",
+      gradient: "from-purple-500/80 to-violet-500/80",
+      border: "border-purple-400 hover:border-purple-300",
+      shadow: "shadow-purple-400/50",
       source: "Tech Community"
     },
     {
@@ -77,8 +114,9 @@ const AiNews = () => {
       date: new Date("2024-03-08"),
       category: "Ethics",
       icon: "🛡️",
-      gradient: "from-yellow-400/70 to-amber-400/70",
-      border: "border-yellow-300/90 hover:border-yellow-200",
+      gradient: "from-yellow-800/80 to-amber-700/80",
+      border: "border-yellow-500 hover:border-yellow-400",
+      shadow: "shadow-yellow-500/50",
       source: "AI Ethics Board"
     },
     {
@@ -88,8 +126,9 @@ const AiNews = () => {
       date: new Date("2024-03-06"),
       category: "Quantum AI",
       icon: "🔬",
-      gradient: "from-indigo-400/70 to-violet-400/70",
-      border: "border-indigo-300/90 hover:border-indigo-200",
+      gradient: "from-teal-600/80 to-cyan-600/80",
+      border: "border-teal-400 hover:border-teal-300",
+      shadow: "shadow-teal-400/50",
       source: "Quantum Labs"
     }
   ];
@@ -166,21 +205,67 @@ const AiNews = () => {
     setUseCaseLikes(initialLikes);
   }, [userUseCases]);
 
-  // Load news on component mount
+  // Scroll to form when it opens
   useEffect(() => {
-    loadNews();
-  }, []);
+    if (showNewPostForm && newPostFormRef.current) {
+      newPostFormRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showNewPostForm]);
+
+  // Load news on component mount and implement fetch-on-load-if-stale
+  useEffect(() => {
+    const loadAndRefreshIfNeeded = async () => {
+      const now = new Date();
+      const lastFetchString = localStorage.getItem('lastNewsFetchTimestamp');
+      let shouldRefresh = true; // Default to refresh if no timestamp
+
+      if (lastFetchString) {
+        const lastFetchTime = new Date(parseInt(lastFetchString, 10));
+        const today6AM = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 6, 0, 0, 0);
+        if (lastFetchTime >= today6AM) {
+          shouldRefresh = false; // Already fetched after 6 AM today
+        }
+      }
+
+      if (shouldRefresh) {
+        console.log('Attempting to refresh news (stale or first load after 6 AM).');
+        setRefreshing(true); // Show refreshing indicator
+        try {
+          await updateAINews(); // Fetch from sources and save to Firestore
+          localStorage.setItem('lastNewsFetchTimestamp', Date.now().toString());
+          await loadNews(); // Then load from Firestore into state
+        } catch (error) {
+          console.error('Error during scheduled news refresh:', error);
+          // If refresh fails, still try to load existing news
+          await loadNews(); 
+        } finally {
+          setRefreshing(false);
+        }
+      } else {
+        console.log('News is fresh (fetched after 6 AM today). Loading existing.');
+        await loadNews(); // Load existing news
+      }
+    };
+
+    loadAndRefreshIfNeeded();
+  }, []); // Runs once on component mount
 
   const loadNews = async () => {
     try {
       setLoading(true);
-      const news = await getAINews(12); // Get latest 12 articles
+      const news = await getAINews(12); 
       
       if (news && news.length > 0) {
         setAiNews(news);
-        setLastUpdated(new Date());
+        setLastUpdated(new Date()); // Reflects when news was loaded into view
+        // If news was loaded dynamically (not fallback), assume a successful fetch occurred for staleness check next time.
+        // This might slightly differ from the actual RSS fetch time if loadNews is called separately after a failed updateAINews.
+        // For more precise control, updateAINews could return a success status.
+        // For now, successfully loading non-fallback news implies a reasonably fresh state or successful refresh.
+        if (news !== fallbackNews) { // Check if it is not fallback
+             localStorage.setItem('lastNewsFetchTimestamp', Date.now().toString());
+        }
       } else {
-        // Fallback to static news if no dynamic news available
         setAiNews(fallbackNews);
       }
     } catch (error) {
@@ -194,13 +279,9 @@ const AiNews = () => {
   const refreshNews = async () => {
     try {
       setRefreshing(true);
-      
-      // Update news from sources
       await updateAINews();
-      
-      // Reload news from Firestore
+      localStorage.setItem('lastNewsFetchTimestamp', Date.now().toString()); // Update timestamp on manual refresh too
       await loadNews();
-      
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error refreshing news:', error);
@@ -218,6 +299,36 @@ const AiNews = () => {
     if (diffMinutes < 60) return `Updated ${diffMinutes}m ago`;
     if (diffMinutes < 1440) return `Updated ${Math.floor(diffMinutes / 60)}h ago`;
     return `Updated ${Math.floor(diffMinutes / 1440)}d ago`;
+  };
+
+  // Format timestamp for user use cases
+  const formatUseCaseTimestamp = (date) => {
+    if (!date) return 'A while ago';
+    
+    // Handles initial 'Just now' string for immediately added posts before they might be re-rendered with Date obj
+    if (typeof date === 'string') { 
+        const staticTimes = ['Just now', 'A while ago'];
+        if (staticTimes.includes(date) || date.endsWith('ago')) return date;
+    }
+
+    const postDate = (date instanceof Date) ? date : new Date(date);
+    if (isNaN(postDate.getTime())) return 'A while ago'; // Check for invalid date
+
+    const now = new Date();
+    const diffSeconds = Math.floor((now.getTime() - postDate.getTime()) / 1000);
+    
+    if (diffSeconds < 5) return 'Just now'; // More responsive 'Just now'
+    if (diffSeconds < 60) return `${diffSeconds}s ago`;
+    
+    const diffMinutes = Math.floor(diffSeconds / 60);
+    if (diffMinutes < 60) return `${diffMinutes}m ago`;
+    
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays === 1) return `1 day ago`;
+    return `${diffDays}d ago`;
   };
 
   // Handle article like/unlike
@@ -313,15 +424,30 @@ const AiNews = () => {
       alert('Please sign in to post');
       return;
     }
+
+    // Sanitize inputs
+    const sanitizedName = DOMPurify.sanitize(newPost.name.trim());
+    const sanitizedTitle = DOMPurify.sanitize(newPost.title.trim());
+    const sanitizedDescription = DOMPurify.sanitize(newPost.description.trim());
+    const sanitizedJobTitle = DOMPurify.sanitize(newPost.jobTitle.trim());
     
-    if (!newPost.title.trim() || !newPost.description.trim()) {
-      alert('Please fill in title and description');
+    if (!sanitizedName || !sanitizedTitle || !sanitizedDescription) {
+      alert('Please fill in Your Name, Story Title, and Your Story.');
       return;
     }
 
+    // Basic content filtering
+    const contentToCheck = (sanitizedTitle + ' ' + sanitizedDescription).toLowerCase();
+    for (const keyword of forbiddenKeywords) {
+      if (contentToCheck.includes(keyword.toLowerCase())) {
+        alert('Your post contains inappropriate content. Please revise and try again.');
+        return;
+      }
+    }
+
     // Generate avatar from user's name or email
-    const userName = user.displayName || user.email.split('@')[0];
-    const avatarInitials = userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    const posterName = sanitizedName || user.displayName || user.email.split('@')[0];
+    const avatarInitials = posterName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
     
     // Random gradient for new post
     const gradients = [
@@ -345,21 +471,21 @@ const AiNews = () => {
     const randomIndex = Math.floor(Math.random() * gradients.length);
     
     const newUseCase = {
-      id: Date.now(),
-      username: userName,
-      title: newPost.title,
-      description: newPost.description,
+      id: Date.now(), // Using timestamp as ID for simplicity, ensure it's unique if many posts quickly
+      username: posterName, // Use the entered name
+      title: sanitizedTitle, // Use sanitized title
+      description: sanitizedDescription, // Use sanitized description
       avatar: avatarInitials,
-      role: newPost.jobTitle || 'Community Member',
+      role: sanitizedJobTitle || 'Community Member', // Use sanitized job title
       likes: 0,
       gradient: gradients[randomIndex],
       bgGradient: bgGradients[randomIndex],
-      timestamp: 'Just now',
+      timestamp: new Date(), // Store current Date object
       isUserPost: true
     };
     
     setUserUseCases(prev => [newUseCase, ...prev]);
-    setNewPost({ title: '', description: '', jobTitle: '' });
+    setNewPost({ name: '', title: '', description: '', jobTitle: '' }); // Reset name field too
     setShowNewPostForm(false);
   };
 
@@ -555,7 +681,7 @@ const AiNews = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`card-glow group bg-gradient-to-br ${news.gradient} backdrop-blur-sm rounded-3xl p-6 border ${news.border} transition-all duration-300 cursor-pointer hover:scale-105`}
+                    className={`card-glow group bg-gradient-to-br ${news.gradient || 'from-gray-700/80 to-gray-600/80'} backdrop-blur-sm rounded-3xl p-6 border ${news.border || 'border-gray-500'} ${news.shadow || 'shadow-lg'} transition-all duration-300 cursor-pointer hover:scale-105`}
                     onClick={() => news.url && window.open(news.url, '_blank')}
                   >
                     <div className="flex items-center justify-between mb-4">
@@ -668,6 +794,7 @@ const AiNews = () => {
             {/* New Post Form */}
             {showNewPostForm && (
               <motion.div
+                ref={newPostFormRef}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="card-glow bg-gradient-to-br from-indigo-600/10 to-purple-600/10 backdrop-blur-sm rounded-3xl p-8 border border-indigo-500/30 mb-8"
@@ -675,6 +802,20 @@ const AiNews = () => {
                 <h3 className="text-2xl font-semibold text-white mb-6">Share Your AI Success Story</h3>
                 
                 <form onSubmit={handleSubmitPost} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Your Name <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={newPost.name}
+                      onChange={(e) => setNewPost(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g., Alex Smith"
+                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      maxLength={50}
+                    />
+                  </div>
+                  
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
                       Story Title <span className="text-red-400">*</span>
@@ -729,7 +870,7 @@ const AiNews = () => {
                     
                     <button
                       type="submit"
-                      disabled={!newPost.title.trim() || !newPost.description.trim()}
+                      disabled={!newPost.name.trim() || !newPost.title.trim() || !newPost.description.trim()}
                       className="px-8 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105"
                     >
                       Post Story
@@ -763,7 +904,9 @@ const AiNews = () => {
                             : `${useCase.role} at ${useCase.company}`
                           }
                         </p>
-                        <p className="text-gray-500 text-xs mt-1">{useCase.timestamp}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {useCase.isUserPost ? formatUseCaseTimestamp(useCase.timestamp) : useCase.timestamp}
+                        </p>
                       </div>
                     </div>
                     
@@ -822,15 +965,18 @@ const AiNews = () => {
               <p className="text-gray-300 mb-8 text-lg leading-relaxed">
                 Have you implemented AI in your work or projects? Share your experience with the community!
               </p>
-              <button className="news-shadow bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 hover:scale-105 text-lg">
+              <button 
+                onClick={() => setShowNewPostForm(true)}
+                className="news-shadow bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 hover:scale-105 text-lg"
+              >
                 Share Your Story
               </button>
             </div>
           </section>
         </main>
 
-        {/* Development Testing Panel */}
-        <NewsTestPanel onNewsUpdated={loadNews} />
+        {/* Development Testing Panel - REMOVED */}
+        {/* <NewsTestPanel onNewsUpdated={loadNews} /> */}
       </div>
     </div>
   );
