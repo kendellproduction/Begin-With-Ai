@@ -396,24 +396,35 @@ const LessonsOverview = () => {
           {/* Progress Section (if user has active path) */}
           {userLearningPath && learningProgress && (
             <div className="mb-8">
-              <div className="bg-gradient-to-br from-slate-800/30 to-slate-900/50 backdrop-blur-xl rounded-2xl p-6 border border-slate-700/30">
+              <div className="bg-gradient-to-br from-yellow-500/20 via-amber-400/15 to-orange-500/20 backdrop-blur-xl rounded-2xl p-6 border border-yellow-400/40 shadow-2xl shadow-yellow-500/20 relative overflow-hidden">
+                {/* Neon glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-amber-300/10 to-yellow-400/10 blur-xl"></div>
+                
+                {/* Motivational Quote */}
+                <div className="relative z-10 text-center mb-6">
+                  <p className="text-yellow-200 text-lg font-medium italic">
+                    "The journey of a thousand miles begins with one step."
+                  </p>
+                  <p className="text-yellow-300/80 text-sm mt-1">- Lao Tzu</p>
+                </div>
+                
                 <LearningPathVisual 
                   learningProgress={learningProgress}
                   userLearningPath={userLearningPath}
                   compact={true}
                   showActions={false}
-                  className="max-w-4xl mx-auto"
+                  className="max-w-4xl mx-auto relative z-10"
                 />
                 
                 {/* Continue Learning Button - Integrated */}
-                <div className="text-center mt-4">
+                <div className="text-center mt-4 relative z-10">
                   <button
                     onClick={handleContinueLearning}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-blue-500/30"
+                    className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-bold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-yellow-500/40 hover:shadow-xl hover:shadow-yellow-400/50"
                   >
                     🚀 Continue Learning Journey
                   </button>
-                  <p className="mt-2 text-slate-400 text-xs">
+                  <p className="mt-2 text-yellow-200/80 text-xs">
                     Pick up where you left off in your personalized path
                   </p>
                 </div>

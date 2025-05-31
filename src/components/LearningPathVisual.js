@@ -14,11 +14,7 @@ const LearningPathVisual = ({
     return null;
   }
 
-  // Use real user data - no fake fallbacks
-  const completedLessons = learningProgress?.completedLessons || 0;
-  const totalLessons = lessons.length; // Use actual lessons array length instead of passed value
-  const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
-
+  // Define lessons array first
   const lessons = [
     { id: 1, title: "AI Basics", icon: "🚀", difficulty: "beginner" },
     { id: 2, title: "Understanding AI", icon: "🧠", difficulty: "beginner" },
@@ -31,6 +27,11 @@ const LearningPathVisual = ({
     { id: 9, title: "Advanced Tools", icon: "🔧", difficulty: "expert" },
     { id: 10, title: "Mastery", icon: "👑", difficulty: "expert" },
   ];
+
+  // Use real user data - no fake fallbacks
+  const completedLessons = learningProgress?.completedLessons || 0;
+  const totalLessons = lessons.length; // Use actual lessons array length instead of passed value
+  const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
   // Handle lesson click - navigate to difficulty selection
   const handleLessonClick = (lesson, index) => {
@@ -57,25 +58,29 @@ const LearningPathVisual = ({
   };
 
   const containerClass = compact 
-    ? "bg-gradient-to-br from-indigo-900/60 via-purple-900/50 to-blue-900/60 backdrop-blur-xl rounded-3xl p-6 border border-indigo-400/30 shadow-2xl shadow-indigo-500/20"
-    : "bg-gradient-to-br from-indigo-900/70 via-purple-900/60 to-blue-900/70 backdrop-blur-xl rounded-3xl p-8 border border-indigo-400/40 shadow-2xl shadow-indigo-500/30";
+    ? "bg-gradient-to-br from-slate-900/95 via-indigo-900/90 to-purple-900/95 backdrop-blur-xl rounded-xl p-4 border border-cyan-400/40 shadow-2xl shadow-cyan-500/25 hover:shadow-3xl hover:shadow-purple-500/30 transition-all duration-500"
+    : "bg-gradient-to-br from-slate-900/95 via-indigo-900/90 to-purple-900/95 backdrop-blur-xl rounded-3xl p-8 border border-cyan-400/50 shadow-2xl shadow-cyan-500/30 hover:shadow-3xl hover:shadow-purple-500/40 transition-all duration-500";
 
-  const headerClass = compact ? "mb-8" : "mb-10";
-  const titleClass = compact ? "text-2xl font-bold text-white mb-3" : "text-3xl font-bold text-white mb-4";
-  const subtitleClass = compact ? "text-indigo-200 text-base" : "text-indigo-200 text-lg";
-  const trackMargin = compact ? "mb-8" : "mb-12";
-  const nodeSize = compact ? "w-12 h-12" : "w-16 h-16";
-  const iconSize = compact ? "text-lg" : "text-2xl";
+  const headerClass = compact ? "mb-5" : "mb-10";
+  const titleClass = compact ? "text-xl font-bold text-white mb-2" : "text-3xl font-bold text-white mb-4";
+  const subtitleClass = compact ? "text-indigo-200 text-sm" : "text-indigo-200 text-lg";
+  const trackMargin = compact ? "mb-5" : "mb-12";
+  const nodeSize = compact ? "w-10 h-10" : "w-16 h-16";
+  const iconSize = compact ? "text-sm" : "text-2xl";
   const labelSize = compact ? "text-sm" : "text-sm";
 
   return (
-    <div className={`relative ${containerClass} ${className} overflow-hidden`}>
-      {/* Animated background particles with continuous movement */}
+    <div className={`relative ${containerClass} ${className} overflow-hidden group`}>
+      {/* Animated border glow effect */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500/20 via-purple-500/20 to-pink-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+      
+      {/* Enhanced animated background particles */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(25)].map((_, i) => (
+        {/* Small floating particles */}
+        {[...Array(compact ? 15 : 25)].map((_, i) => (
           <div
             key={i}
-            className="absolute w-1 h-1 bg-white/30 rounded-full"
+            className="absolute w-1 h-1 bg-gradient-to-br from-cyan-300/40 to-blue-300/40 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -84,11 +89,26 @@ const LearningPathVisual = ({
             }}
           />
         ))}
-        {/* Add some larger moving stars */}
-        {[...Array(8)].map((_, i) => (
+        
+        {/* Medium sparkle particles */}
+        {[...Array(compact ? 8 : 12)].map((_, i) => (
+          <div
+            key={`sparkle-${i}`}
+            className="absolute w-1.5 h-1.5 bg-gradient-to-br from-purple-300/50 to-pink-300/50 rounded-full animate-pulse"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 2}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}
+          />
+        ))}
+        
+        {/* Larger drifting stars */}
+        {[...Array(compact ? 5 : 8)].map((_, i) => (
           <div
             key={`star-${i}`}
-            className="absolute w-2 h-2 bg-gradient-to-br from-cyan-400/40 to-purple-400/40 rounded-full"
+            className="absolute w-2 h-2 bg-gradient-to-br from-cyan-400/60 to-purple-400/60 rounded-full shadow-lg shadow-cyan-400/30"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -97,20 +117,30 @@ const LearningPathVisual = ({
             }}
           />
         ))}
+        
+        {/* Subtle grid pattern overlay */}
+        <div className="absolute inset-0 opacity-5" style={{
+          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.3) 1px, transparent 0)`,
+          backgroundSize: '20px 20px'
+        }}></div>
       </div>
 
-      {/* Add CSS animations */}
+      {/* Enhanced CSS animations */}
       <style jsx>{`
         @keyframes float {
-          0% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
-          50% { transform: translateY(-10px) translateX(5px); opacity: 0.8; }
-          100% { transform: translateY(-20px) translateX(-5px); opacity: 0.1; }
+          0% { transform: translateY(0px) translateX(0px) scale(0.8); opacity: 0.4; }
+          50% { transform: translateY(-15px) translateX(8px) scale(1.2); opacity: 0.9; }
+          100% { transform: translateY(-30px) translateX(-8px) scale(0.6); opacity: 0.2; }
         }
         @keyframes drift {
-          0% { transform: translateX(-100px) translateY(0px) rotate(0deg); opacity: 0; }
-          10% { opacity: 1; }
-          90% { opacity: 1; }
-          100% { transform: translateX(calc(100vw + 100px)) translateY(-50px) rotate(360deg); opacity: 0; }
+          0% { transform: translateX(-100px) translateY(0px) rotate(0deg) scale(0.5); opacity: 0; }
+          10% { opacity: 1; scale: 1; }
+          90% { opacity: 1; scale: 1; }
+          100% { transform: translateX(calc(100vw + 100px)) translateY(-60px) rotate(360deg) scale(0.3); opacity: 0; }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3), 0 0 40px rgba(139, 92, 246, 0.2); }
+          50% { box-shadow: 0 0 30px rgba(34, 211, 238, 0.5), 0 0 60px rgba(139, 92, 246, 0.4); }
         }
       `}</style>
 
