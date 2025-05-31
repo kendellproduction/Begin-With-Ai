@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import { useAuth } from '../contexts/AuthContext';
 import { upsertUserProfile } from '../services/firestoreService';
@@ -12,6 +12,7 @@ const Profile = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const fileInputRef = useRef(null);
+  const navigate = useNavigate();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -195,6 +196,33 @@ const Profile = () => {
                 >
                   Change Photo
                 </button>
+              </div>
+            </div>
+
+            {/* Subscription Tier Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-400 mb-1">
+                Subscription Tier
+              </label>
+              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+                <div className="flex items-center">
+                  <span className={`text-lg font-semibold capitalize ${currentUser?.subscriptionTier === 'premium' ? 'text-yellow-400' : 'text-gray-300'}`}>
+                    {currentUser?.subscriptionTier || 'Free'}
+                  </span>
+                  {currentUser?.subscriptionTier === 'premium' && (
+                    <span className="ml-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">
+                      👑 Premium
+                    </span>
+                  )}
+                </div>
+                {currentUser?.subscriptionTier !== 'premium' && (
+                  <button 
+                    onClick={() => navigate('/pricing')}
+                    className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400 text-white font-semibold px-6 py-2 rounded-lg transition-all duration-300 transform hover:scale-105"
+                  >
+                    Upgrade to Premium
+                  </button>
+                )}
               </div>
             </div>
 

@@ -34,7 +34,7 @@ const Pricing = () => {
     {
       id: 'premium',
       name: 'Premium',
-      price: '$19',
+      price: '$10',
       period: 'month',
       description: 'Unlock your full AI learning potential',
       features: [
@@ -81,23 +81,29 @@ const Pricing = () => {
           </div>
 
           {/* Pricing Cards */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 lg:gap-10 max-w-5xl mx-auto">
             {plans.map((plan) => (
               <div
                 key={plan.id}
                 className={`
-                  relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 
-                  backdrop-blur-xl rounded-3xl p-8 border transition-all duration-300
+                  relative flex flex-col
+                  bg-gradient-to-br 
                   ${plan.popular 
-                    ? 'border-yellow-400/50 ring-2 ring-yellow-400/20 scale-105' 
-                    : 'border-white/20 hover:border-white/30'
+                    ? 'from-slate-700/80 via-yellow-900/30 to-slate-800/80'
+                    : 'from-slate-800/90 to-slate-900/90'
+                  }
+                  backdrop-blur-xl rounded-3xl p-8 border transition-all duration-300
+                  min-h-[700px]
+                  ${plan.popular 
+                    ? 'border-yellow-400/70 ring-2 ring-yellow-500/30 shadow-2xl shadow-yellow-500/10'
+                    : 'border-white/20 hover:border-white/30 hover:shadow-xl'
                   }
                 `}
               >
                 {/* Popular Badge */}
                 {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-gradient-to-r from-yellow-500 to-amber-500 text-white px-6 py-2 rounded-full text-sm font-semibold">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                    <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-slate-900 px-6 py-2.5 rounded-full text-sm font-bold shadow-lg">
                       Most Popular
                     </span>
                   </div>
@@ -105,55 +111,67 @@ const Pricing = () => {
 
                 {/* Plan Header */}
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
+                  <h3 className={`text-3xl font-bold mb-2 ${plan.popular ? 'text-yellow-400' : 'text-white'}`}>{plan.name}</h3>
                   <div className="mb-4">
-                    <span className="text-4xl font-bold text-white">{plan.price}</span>
+                    <span className={`text-5xl font-bold ${plan.popular ? 'text-white' : 'text-white'}`}>{plan.price}</span>
                     {plan.period !== 'forever' && (
-                      <span className="text-gray-400">/{plan.period}</span>
+                      <span className="text-gray-400 text-lg">/{plan.period}</span>
                     )}
                   </div>
-                  <p className="text-gray-300">{plan.description}</p>
+                  <p className="text-gray-300 text-md">{plan.description}</p>
                 </div>
 
-                {/* Features */}
-                <div className="mb-8">
-                  <h4 className="text-lg font-semibold text-white mb-4">What's included:</h4>
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, index) => (
-                      <li key={index} className="flex items-center space-x-3">
-                        <span className="text-green-400 text-xl">✓</span>
-                        <span className="text-gray-300">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Limitations (for free plan) */}
-                {plan.limitations.length > 0 && (
-                  <div className="mb-8">
-                    <h4 className="text-lg font-semibold text-gray-400 mb-4">Limitations:</h4>
+                {/* Features & Limitations Wrapper - This will grow */}
+                <div className="flex-grow mb-8">
+                  <div className="mb-6">
+                    <h4 className={`text-lg font-semibold mb-4 ${plan.popular ? 'text-yellow-300' : 'text-white'}`}>What's included:</h4>
                     <ul className="space-y-3">
-                      {plan.limitations.map((limitation, index) => (
-                        <li key={index} className="flex items-center space-x-3">
-                          <span className="text-red-400 text-xl">✗</span>
-                          <span className="text-gray-400">{limitation}</span>
+                      {plan.features.map((feature, index) => (
+                        <li key={index} className="flex items-start space-x-3">
+                          <span className={`text-green-400 text-xl mt-1 ${plan.popular ? 'text-green-300' : 'text-green-400'}`}>✓</span>
+                          <span className="text-gray-300">{feature}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
-                )}
 
-                {/* Action Button */}
+                  {/* Limitations (for free plan, or could be an empty div for premium for structure) */}
+                  {plan.limitations.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-gray-400 mb-4">Limitations:</h4>
+                      <ul className="space-y-3">
+                        {plan.limitations.map((limitation, index) => (
+                          <li key={index} className="flex items-start space-x-3">
+                            <span className="text-red-400 text-xl mt-1">✗</span>
+                            <span className="text-gray-400">{limitation}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {/* Placeholder for limitations on premium to maintain height, if needed, or adjust min-height of parent */}
+                  {plan.id === 'premium' && plan.limitations.length === 0 && (
+                    <div className="mb-6 min-h-[100px]">
+                      
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Button - Stays at the bottom due to flex-col and flex-grow above */}
                 <button
                   onClick={() => handlePlanSelect(plan.id)}
-                  disabled={plan.id === 'free'}
+                  disabled={plan.id === 'free' && user?.subscriptionTier !== 'premium'}
                   className={`
-                    w-full py-4 rounded-xl font-semibold text-white transition-all duration-300
-                    transform hover:scale-105 active:scale-95
-                    ${plan.buttonStyle}
+                    w-full py-4 rounded-xl font-semibold text-white transition-all duration-300 text-lg
+                    transform hover:scale-[1.03] active:scale-[0.98] shadow-md hover:shadow-lg
+                    ${(plan.id === 'free' && user?.subscriptionTier !== 'premium') 
+                        ? 'bg-slate-600 cursor-default opacity-80' 
+                        : plan.buttonStyle + ' text-slate-900 font-bold'
+                    }
+                    ${plan.popular ? 'hover:shadow-yellow-500/30' : 'hover:shadow-indigo-500/30'}
                   `}
                 >
-                  {plan.buttonText}
+                  {plan.id === 'free' && user?.subscriptionTier !== 'premium' ? 'Current Plan' : plan.buttonText}
                 </button>
               </div>
             ))}

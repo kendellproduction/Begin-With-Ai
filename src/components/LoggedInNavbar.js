@@ -52,6 +52,14 @@ const LoggedInNavbar = () => {
             <Link to="/ai-news" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               AI News
             </Link>
+            {currentUser?.subscriptionTier !== 'premium' && (
+              <Link 
+                to="/pricing"
+                className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-semibold transition-colors shadow-md hover:shadow-lg"
+              >
+                Upgrade 🚀
+              </Link>
+            )}
           </div>
 
           {/* Desktop Right Section */}
@@ -130,6 +138,15 @@ const LoggedInNavbar = () => {
           <Link to="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
           <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
           <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
+          {currentUser?.subscriptionTier !== 'premium' && (
+            <Link 
+              to="/pricing"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white block px-3 py-2 rounded-md text-base font-bold transition-colors shadow-md mt-2 text-center"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Upgrade to Premium 🚀
+            </Link>
+          )}
         </div>
         <div className="border-t border-slate-700 pt-4 pb-3">
           <div className="flex items-center px-5">

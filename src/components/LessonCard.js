@@ -6,26 +6,46 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
-  const [selectedDifficulty, setSelectedDifficulty] = useState(lesson.difficulty || 'intermediate');
+  
+  // If showDifficultySelector is true, default to 'Beginner'. 
+  // Otherwise, use the lesson's inherent difficulty (or 'Beginner' as a fallback).
+  const initialDifficulty = showDifficultySelector ? 'Beginner' : (lesson.difficulty || 'Beginner');
+  const [selectedDifficulty, setSelectedDifficulty] = useState(initialDifficulty);
+  
   const [showDifficultyOptions, setShowDifficultyOptions] = useState(false);
   const [showPaywallModal, setShowPaywallModal] = useState(false);
 
   // Check if lesson requires premium access
   const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
   
-  // TEMPORARILY SET TO TRUE FOR DEBUGGING BADGE & DROPDOWN
-  const hasAccess = true; // In a real app: user?.isPremium || !isPremiumLesson;
+  // Activate paywall: Check user's subscription tier from AuthContext
+  // const hasAccess = user?.subscriptionTier === 'premium' || !isPremiumLesson; // Old logic
 
   const handleClick = () => {
-    if (isPremiumLesson && !hasAccess) {
-      setShowPaywallModal(true);
-      return;
+    // What difficulty is the user attempting to start?
+    const attemptingPremiumDifficulty = selectedDifficulty === 'Intermediate' || selectedDifficulty === 'Advanced';
+    // Does the user have a premium subscription?
+    const userIsActuallyPremium = user?.subscriptionTier === 'premium';
+
+    // If the user is trying to access premium-tier difficulty (Inter/Adv) 
+    // AND they are NOT actually premium:
+    if (attemptingPremiumDifficulty && !userIsActuallyPremium) {
+      setShowPaywallModal(true); // Show the modal
+      return; // And stop further action
     }
 
+    // If we've reached this point, it means either:
+    // 1. The user selected 'Beginner' (attemptingPremiumDifficulty is false). Access is allowed.
+    // OR
+    // 2. The user IS premium (userIsActuallyPremium is true). Access is allowed for any selected difficulty.
+    
+    // Proceed to call the onClick handler (likely navigates to the lesson)
     if (onClick) {
-      onClick(selectedDifficulty);
+      onClick(selectedDifficulty); // Pass the difficulty level the user selected/attempted
     } else {
-      navigate(`/lessons/${lesson.id}`);
+      // Fallback navigation if no onClick prop is given (e.g. card used standalone)
+      // Ensure difficulty is passed in navigation state
+      navigate(`/lessons/${lesson.id}`, { state: { difficulty: selectedDifficulty } });
     }
   };
 
