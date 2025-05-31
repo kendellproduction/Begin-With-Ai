@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
+import { motion } from 'framer-motion';
 
 const LoggedInNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -27,9 +28,70 @@ const LoggedInNavbar = () => {
     setIsProfileOpen(!isProfileOpen);
   };
 
+  const numStars = 50;
+
   return (
-    <nav className="bg-slate-800/60 backdrop-blur-md shadow-lg sticky top-0 z-50"> {/* Applied site standard nav style */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav 
+      className="sticky top-0 z-50" 
+      style={{ backgroundColor: '#2061a6' }}
+    >
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[...Array(numStars)].map((_, i) => {
+          const size = Math.random() * 2.5 + 0.8;
+          const opacity = Math.random() * 0.4 + 0.2;
+          const duration = Math.random() * 20 + 15;
+          const delay = Math.random() * 10;
+
+          const initialY = Math.random() * 80 - 10;
+          const targetY = Math.random() * 80 - 10;
+          
+          const initialX = Math.random() * window.innerWidth;
+          const targetX = Math.random() * window.innerWidth;
+
+          return (
+            <motion.div
+              key={`navbar-star-${i}`}
+              className="absolute rounded-full bg-white/70"
+              style={{
+                width: size,
+                height: size,
+                left: initialX,
+                top: initialY,
+              }}
+              initial={{ opacity: 0, scale: Math.random() * 0.5 + 0.5 }}
+              animate={{
+                x: targetX - initialX,
+                y: targetY - initialY,
+                opacity: [0, opacity, opacity, 0],
+                scale: [0.5, Math.random() * 0.8 + 0.6, 0.5],
+              }}
+              transition={{
+                duration: duration,
+                delay: delay,
+                repeat: Infinity,
+                repeatType: 'loop',
+                ease: 'linear',
+                opacity: {
+                  times: [0, 0.2, 0.8, 1],
+                  duration: duration,
+                  repeat: Infinity,
+                  repeatType: 'loop',
+                  ease: 'linear',
+                },
+                scale: {
+                    times: [0, 0.5, 1],
+                    duration: duration,
+                    repeat: Infinity,
+                    repeatType: 'loop',
+                    ease: 'easeInOut'
+                }
+              }}
+            />
+          );
+        })}
+      </div>
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">
@@ -39,7 +101,7 @@ const LoggedInNavbar = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6"> {/* Reduced space-x slightly */}
+          <div className="hidden md:flex items-center space-x-6">
             <Link to="/home" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Home
             </Link>
@@ -73,7 +135,7 @@ const LoggedInNavbar = () => {
             <div className="relative">
               <button
                 onClick={toggleProfile}
-                className="flex items-center focus:outline-none p-1 rounded-full hover:bg-slate-700/50 transition-colors" /* Added hover bg */
+                className="flex items-center focus:outline-none p-1 rounded-full hover:bg-slate-700/50 transition-colors"
               >
                 <div className="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center text-white text-sm font-semibold">
                   {currentUser?.email?.[0].toUpperCase() || 'U'}
@@ -82,13 +144,13 @@ const LoggedInNavbar = () => {
 
               {/* Profile Dropdown */}
               {isProfileOpen && (
-                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-slate-800 ring-1 ring-black ring-opacity-5 z-50"> {/* Increased z-index further, standard shadow */}
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-slate-800 ring-1 ring-black ring-opacity-5 z-50">
                   <div className="py-1" role="menu" aria-orientation="vertical">
                     <Link
                       to="/profile"
                       className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                       role="menuitem"
-                      onClick={() => setIsProfileOpen(false)} // Close on click
+                      onClick={() => setIsProfileOpen(false)}
                     >
                       Profile
                     </Link>
@@ -96,12 +158,12 @@ const LoggedInNavbar = () => {
                       to="/settings"
                       className="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                       role="menuitem"
-                      onClick={() => setIsProfileOpen(false)} // Close on click
+                      onClick={() => setIsProfileOpen(false)}
                     >
                       Settings
                     </Link>
                     <button
-                      onClick={() => { handleLogout(); setIsProfileOpen(false); }} // Close on click
+                      onClick={() => { handleLogout(); setIsProfileOpen(false); }}
                       className="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                       role="menuitem"
                     >
@@ -132,12 +194,12 @@ const LoggedInNavbar = () => {
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden bg-slate-800/90 backdrop-blur-lg`}> {/* Added standard bg/blur */}
+      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden relative`} style={{ backgroundColor: '#2061a6' }}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
-          <Link to="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
-          <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
-          <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
+          <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
+          <Link to="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
+          <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
+          <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
           {currentUser?.subscriptionTier !== 'premium' && (
             <Link 
               to="/pricing"
