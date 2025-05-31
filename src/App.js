@@ -25,6 +25,7 @@ import Profile from './pages/Profile';
 import LessonsOverview from './pages/LessonsOverview';
 import LessonsExplore from './pages/LessonsExplore';
 import LessonDetail from './pages/LessonDetail';
+import LessonStart from './pages/LessonStart';
 import LessonViewer from './components/LessonViewer';
 import LearningPathQuiz from './pages/LearningPathQuiz';
 import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
@@ -83,6 +84,11 @@ function App() {
 
               <Route path="/pricing" element={<ProtectedRoute />}>
                 <Route index element={<Pricing />} />
+              </Route>
+
+              {/* Lesson start page with difficulty selection */}
+              <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>
+                <Route index element={<LessonStart />} />
               </Route>
 
               <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
