@@ -25,6 +25,7 @@ import Profile from './pages/Profile';
 import LessonsOverview from './pages/LessonsOverview';
 import LessonsExplore from './pages/LessonsExplore';
 import LessonDetail from './pages/LessonDetail';
+import LessonViewer from './components/LessonViewer';
 import LearningPathQuiz from './pages/LearningPathQuiz';
 import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
 import LearningPathResults from './pages/LearningPathResults';
@@ -87,6 +88,11 @@ function App() {
               <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
                 {/* <Navigation /> would need to be inside LessonDetail or a new layout */}
                 <Route index element={<LessonDetail />} />
+              </Route>
+
+              {/* New slide-based lesson viewer - full screen, no layout */}
+              <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
+                <Route index element={<LessonViewer />} />
               </Route>
 
               <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
