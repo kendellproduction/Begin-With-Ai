@@ -123,6 +123,25 @@ service cloud.firestore {
                      request.resource.data.recommendations is map;
     }
     
+    // AI News articles - public read access, authenticated users can write and like
+    match /aiNews/{newsId} {
+      allow read: if true; // Public read access for all users
+      allow write: if request.auth != null; // Authenticated users can write news
+      allow create: if request.auth != null && 
+                     request.resource.data.title is string &&
+                     request.resource.data.source is string &&
+                     request.resource.data.date is timestamp;
+      // Allow updates to likes and likedBy fields for authenticated users
+      allow update: if request.auth != null && 
+                     (onlyUpdatingLikes() || request.auth != null);
+    }
+    
+    // Helper function to check if only like-related fields are being updated
+    function onlyUpdatingLikes() {
+      let allowedFields = ['likes', 'likedBy'];
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields);
+    }
+    
     // Default deny - ensures security by default
     match /{document=**} {
       allow read, write: if false;
