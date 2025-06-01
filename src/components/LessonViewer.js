@@ -73,38 +73,187 @@ const LessonViewer = () => {
   const loadLessonData = async () => {
     setIsLoading(true);
     
-    // Get lesson content based on difficulty level
-    const getLessonContent = (difficultyLevel) => {
-      const baseContent = createIntermediateContent(); // Use existing intermediate content as base
+    try {
+      // Import the adaptive lesson service to load actual lesson content
+      const { AdaptiveLessonService } = await import('../services/adaptiveLessonService');
       
-      if (difficultyLevel === 'beginner') {
-        return {
-          ...baseContent,
-          title: "How AI Makes Decisions",
-          description: "Simple introduction to how computers think and make choices",
-          estimatedTime: 20,
-          xpReward: 75,
-          slides: baseContent.slides.slice(0, 12).map(slide => simplifyForBeginners(slide))
-        };
-      } else if (difficultyLevel === 'advanced') {
-        return {
-          ...baseContent,
-          title: "AI Decision-Making: Computational Mechanisms & Neural Architectures",
-          description: "Deep dive into AI decision-making processes, neural architectures, and computational mechanisms",
-          estimatedTime: 45,
-          xpReward: 200,
-          slides: [...baseContent.slides, ...createAdvancedSlides()].map(slide => enhanceForAdvanced(slide))
-        };
+      // For now, let's map lesson IDs to their path/module structure
+      // This would ideally come from a lesson registry or API
+      const lessonMetadata = getLessonMetadata(lessonId);
+      
+      if (lessonMetadata) {
+        // Load actual lesson content from Firebase
+        const adaptedLesson = await AdaptiveLessonService.getAdaptedLesson(
+          lessonMetadata.pathId,
+          lessonMetadata.moduleId,
+          lessonId,
+          difficulty
+        );
+        
+        // Convert lesson data to slides format
+        const lessonSlides = convertLessonToSlides(adaptedLesson);
+        
+        setLesson({
+          id: lessonId,
+          title: adaptedLesson.title,
+          description: adaptedLesson.coreConcept,
+          estimatedTime: adaptedLesson.adaptedContent?.estimatedTime || 20,
+          xpReward: adaptedLesson.adaptedContent?.xpReward || 100,
+          slides: lessonSlides
+        });
+        setSlides(lessonSlides);
+      } else {
+        // Fallback to mock lesson if lesson not found in database
+        console.warn(`Lesson ${lessonId} not found, using fallback content`);
+        const mockLesson = getLessonContent(difficulty);
+        setLesson(mockLesson);
+        setSlides(mockLesson.slides);
       }
       
-      return baseContent; // Return intermediate content as-is
+    } catch (error) {
+      console.error('Error loading lesson:', error);
+      // Fallback to mock lesson on error
+      const mockLesson = getLessonContent(difficulty);
+      setLesson(mockLesson);
+      setSlides(mockLesson.slides);
+    }
+    
+    setIsLoading(false);
+  };
+
+  // Map lesson IDs to their path/module structure
+  const getLessonMetadata = (lessonId) => {
+    const lessonMap = {
+      'welcome-ai-revolution': { pathId: 'prompt-engineering-mastery', moduleId: 'ai-foundations' },
+      'how-ai-thinks': { pathId: 'prompt-engineering-mastery', moduleId: 'ai-foundations' },
+      'ai-vocabulary-bootcamp': { pathId: 'prompt-engineering-mastery', moduleId: 'ai-foundations' },
+      'prompting-essentials': { pathId: 'prompt-engineering-mastery', moduleId: 'prompting-skills' },
+      'prompt-engineering-action': { pathId: 'prompt-engineering-mastery', moduleId: 'prompting-skills' },
+      'creative-ai-mastery': { pathId: 'prompt-engineering-mastery', moduleId: 'creative-applications' },
+      'ai-workflow-fundamentals': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
+      'ai-daily-applications': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
+      'local-ai-mastery': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
+      'ai-problem-solving-capstone': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
+      'vibe-code-video-game': { pathId: 'vibe-coding', moduleId: 'interactive-coding' }
     };
     
-    const mockLesson = getLessonContent(difficulty);
+    return lessonMap[lessonId];
+  };
+
+  // Convert lesson data to slides format
+  const convertLessonToSlides = (lesson) => {
+    const slides = [];
     
-    setLesson(mockLesson);
-    setSlides(mockLesson.slides);
-    setIsLoading(false);
+    // Add intro slide
+    slides.push({
+      id: `${lesson.id}-intro`,
+      type: 'intro',
+      content: {
+        title: lesson.title,
+        description: lesson.coreConcept,
+        estimatedTime: lesson.adaptedContent?.estimatedTime || 20,
+        xpReward: lesson.adaptedContent?.xpReward || 100
+      }
+    });
+
+    // Add concept slides from lesson content
+    if (lesson.adaptedContent?.content) {
+      const content = lesson.adaptedContent.content;
+      
+      // Main concept slide
+      slides.push({
+        id: `${lesson.id}-concept`,
+        type: 'concept',
+        content: {
+          title: lesson.title,
+          explanation: content.introduction || lesson.coreConcept,
+          icon: "🤖",
+          keyPoints: content.keyPoints || []
+        }
+      });
+
+      // Add examples if available
+      if (content.examples && content.examples.length > 0) {
+        content.examples.forEach((example, index) => {
+          slides.push({
+            id: `${lesson.id}-example-${index}`,
+            type: 'example',
+            content: {
+              title: `Example ${index + 1}`,
+              example: example,
+              explanation: `This shows how ${lesson.title.toLowerCase()} works in practice.`
+            }
+          });
+        });
+      }
+
+      // Add quiz if available from assessment
+      if (lesson.adaptedContent?.assessment?.questions && lesson.adaptedContent.assessment.questions.length > 0) {
+        lesson.adaptedContent.assessment.questions.forEach((question, index) => {
+          slides.push({
+            id: `${lesson.id}-quiz-${index}`,
+            type: 'quiz',
+            content: question
+          });
+        });
+      }
+    }
+
+    // Add sandbox slide if available
+    if (lesson.sandbox?.required) {
+      slides.push({
+        id: `${lesson.id}-sandbox`,
+        type: 'sandbox',
+        content: {
+          title: "Try It Yourself",
+          instructions: lesson.adaptedContent?.sandbox?.instructions || "Practice what you've learned!",
+          exercises: lesson.adaptedContent?.sandbox?.exercises || []
+        }
+      });
+    }
+
+    // Ensure we have at least some slides
+    if (slides.length === 0) {
+      slides.push({
+        id: `${lesson.id}-fallback`,
+        type: 'concept',
+        content: {
+          title: lesson.title,
+          explanation: lesson.coreConcept,
+          icon: "🤖",
+          keyPoints: ["This lesson covers important AI concepts"]
+        }
+      });
+    }
+
+    return slides;
+  };
+
+  // Get lesson content based on difficulty level (fallback function)
+  const getLessonContent = (difficultyLevel) => {
+    const baseContent = createIntermediateContent(); // Use existing intermediate content as base
+    
+    if (difficultyLevel === 'beginner') {
+      return {
+        ...baseContent,
+        title: "How AI Makes Decisions",
+        description: "Simple introduction to how computers think and make choices",
+        estimatedTime: 20,
+        xpReward: 75,
+        slides: baseContent.slides.slice(0, 12).map(slide => simplifyForBeginners(slide))
+      };
+    } else if (difficultyLevel === 'advanced') {
+      return {
+        ...baseContent,
+        title: "AI Decision-Making: Computational Mechanisms & Neural Architectures",
+        description: "Deep dive into AI decision-making processes, neural architectures, and computational mechanisms",
+        estimatedTime: 45,
+        xpReward: 200,
+        slides: [...baseContent.slides, ...createAdvancedSlides()].map(slide => enhanceForAdvanced(slide))
+      };
+    }
+    
+    return baseContent; // Return intermediate content as-is
   };
 
   // Simplify content for beginners (kids/seniors)
