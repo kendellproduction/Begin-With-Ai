@@ -26,6 +26,27 @@ export const promptEngineeringMasteryPath = {
   order: 1
 };
 
+export const vibeCodePath = {
+  id: 'vibe-coding',
+  title: 'Vibe Coding',
+  description: 'Learn creative coding by describing what you want and letting AI build it for you',
+  category: 'Creative Skills',
+  difficulty: 'Beginner to Intermediate', 
+  estimatedHours: 3,
+  totalLessons: 4,
+  icon: '🎮',
+  color: 'from-purple-500 to-pink-600',
+  isRecommended: true,
+  isFlagship: false,
+  prerequisites: ['prompt-engineering-mastery'],
+  nextPaths: ['ai-for-content-creation'],
+  targetAudience: ['creative-beginners', 'game-enthusiasts', 'educators'],
+  published: true,
+  isPremium: true, // Premium learning path
+  version: 1,
+  order: 3
+};
+
 export const adaptiveModules = {
   'prompt-engineering-mastery': [
     {
@@ -51,6 +72,14 @@ export const adaptiveModules = {
       title: 'Real-World Applications',
       description: 'Apply AI to daily life and work',
       order: 4
+    }
+  ],
+  'vibe-coding': [
+    {
+      id: 'interactive-coding',
+      title: 'Interactive Coding',
+      description: 'Learn to create interactive content through AI-assisted coding',
+      order: 1
     }
   ]
 };
@@ -1589,6 +1618,202 @@ export const adaptiveLessons = {
       
       xpRewards: { beginner: 50, intermediate: 75, advanced: 100 },
       estimatedTime: { beginner: 45, intermediate: 90, advanced: 120 }
+    }
+  ],
+
+  // Vibe Coding lessons
+  'interactive-coding': [
+    {
+      id: 'vibe-code-video-game',
+      title: 'Vibe Coding a Video Game',
+      lessonType: 'interactive_coding_with_ai',
+      order: 1,
+      
+      coreConcept: "Create playable browser games using natural language prompts and AI. Learn the art of 'vibe coding' where you describe your game idea and let GPT-4o turn it into working HTML and JavaScript code.",
+      
+      content: {
+        beginner: {
+          introduction: "In this lesson, you'll explore 'vibe coding'—a creative approach to coding where you describe a game idea and let GPT-4o turn it into a working game using HTML and JavaScript. This technique is great for learning how code becomes interactive content, prototyping game ideas, or creating engaging learning games quickly.",
+          
+          mainContent: {
+            concept: "Vibe coding lets you focus on creativity and game design while AI handles the technical implementation. You describe what you want, and AI creates the code.",
+            
+            realWorldApplication: "This technique is perfect for rapid prototyping, educational games, creative projects, and learning how interactive content works.",
+            
+            keySkills: [
+              "Descriptive prompt writing for game mechanics",
+              "Understanding basic game structure (player, controls, objectives)",
+              "Iterative development through prompt refinement",
+              "Safe code execution using iframe sandboxing"
+            ],
+            
+            gameElements: [
+              { element: "Player Character", description: "The main character you control", example: "A spaceship that moves with arrow keys" },
+              { element: "Game Mechanics", description: "Rules and interactions", example: "Collecting coins increases your score" },
+              { element: "Visual Elements", description: "What players see", example: "Colorful shapes, emoji graphics, backgrounds" },
+              { element: "Win/Lose Conditions", description: "How the game ends", example: "Game over when you hit an obstacle" }
+            ]
+          },
+          
+          examples: [
+            "A game where the player catches apples falling from the sky using arrow keys",
+            "A simple platformer where you jump over obstacles with spacebar",
+            "A maze game where you collect gems while avoiding enemies"
+          ],
+          
+          exercises: [
+            {
+              title: "Exercise 1: Describe Your Game Idea",
+              instructions: "Write a simple description of a game you'd like to create. Think about what the player does, how they control it, and what makes it fun.",
+              example: "A game where the player catches apples falling from the sky using arrow keys. When you catch an apple, you get points. If you miss 3 apples, the game ends.",
+              expectedOutcome: "A well-formed prompt for GPT-4o to interpret and turn into code",
+              hints: [
+                "Keep it simple for your first game",
+                "Think about movement (arrow keys, mouse, clicking)",
+                "Include a goal or scoring system",
+                "Mention visual style (colors, shapes, emoji)"
+              ]
+            },
+            {
+              title: "Exercise 2: Generate the Game",
+              instructions: "Submit your prompt to GPT-4o. The AI will return a complete HTML document containing your game code.",
+              example: "Copy your game description and ask GPT-4o to create a complete HTML game",
+              expectedOutcome: "An interactive browser game displayed in an iframe on the page",
+              hints: [
+                "Be specific about what you want",
+                "Ask for a complete HTML file with embedded CSS and JavaScript",
+                "Mention that it should work in a browser"
+              ]
+            },
+            {
+              title: "Exercise 3: Iterate and Improve",
+              instructions: "Try adjusting your prompt to add more difficulty, visual style, or new mechanics. See how small changes in your description create different games.",
+              example: "Make the apples fall faster, add different colored apples worth different points, or change the character to a basket",
+              expectedOutcome: "A new version of your game with updated features or style",
+              hints: [
+                "Try one change at a time",
+                "Ask for specific improvements",
+                "Experiment with visual themes (space, underwater, fantasy)",
+                "Add sound effects or animations"
+              ]
+            }
+          ]
+        }
+      },
+      
+      sandbox: {
+        required: true,
+        type: 'ai_game_generator',
+        
+        beginner: {
+          instructions: "Use the AI Game Generator to create your own browser games. Type your game idea in natural language and watch it come to life!",
+          
+          interface: {
+            promptInput: {
+              placeholder: "Describe your game idea... (e.g., 'A game where you catch falling stars with a basket')",
+              maxLength: 250,
+              validation: {
+                required: true,
+                minLength: 10,
+                sanitization: true,
+                allowedCharacters: "^[a-zA-Z0-9\\s\\.,!?'\"()\\-\\/]+$",
+                blockedPatterns: [
+                  "script", "javascript", "eval", "function", "onclick", "onload",
+                  "<[^>]*>",
+                  "javascript:", "data:", "vbscript:"
+                ]
+              },
+              examples: [
+                "A simple platformer where you jump over obstacles",
+                "A game where you shoot bubbles at falling objects", 
+                "A maze game where you collect gems while avoiding enemies",
+                "A rhythm game where you hit spacebar in time with notes"
+              ]
+            },
+            
+            gamePreview: {
+              type: 'iframe',
+              sandbox: 'allow-scripts allow-pointer-lock',
+              security: {
+                noNetworkAccess: true,
+                limitedDOM: true,
+                csp: "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline';"
+              }
+            }
+          },
+          
+          promptTemplates: [
+            {
+              name: "Catching Game",
+              template: "Create a game where the player controls a [character] that catches [falling objects] using [arrow keys/mouse]. The player gets [points] for each catch and loses when they miss [number] objects."
+            },
+            {
+              name: "Avoiding Game", 
+              template: "Make a game where a [character] moves around the screen avoiding [obstacles]. The player controls it with [arrow keys/WASD] and the goal is to survive as long as possible."
+            },
+            {
+              name: "Collecting Game",
+              template: "Design a game where the player moves a [character] around to collect [items] while avoiding [enemies/obstacles]. Use [control method] for movement."
+            }
+          ],
+          
+          aiIntegration: {
+            model: 'gpt-4o',
+            systemPrompt: "You are a game development AI. Create complete, playable HTML games based on user descriptions. Include all HTML, CSS, and JavaScript in a single file. Make games simple but engaging, using canvas or DOM elements. Include basic graphics using CSS or simple shapes. Add clear instructions and scoring. IMPORTANT: Only generate safe, educational game content. Do not include any external links, network requests, or potentially harmful code.",
+            
+            inputSanitization: {
+              maxLength: 250,
+              stripHTML: true,
+              escapeSpecialChars: true,
+              blockedTerms: ['script', 'eval', 'function', 'onclick', 'onload', 'javascript:', 'data:', 'vbscript:']
+            }
+          }
+        }
+      },
+      
+      assessment: {
+        beginner: [
+          {
+            question: "What is 'vibe coding' in the context of game development?",
+            options: [
+              "Writing code while listening to music",
+              "Describing what you want and letting AI create the code",
+              "Coding very quickly without planning"
+            ],
+            correct: "Describing what you want and letting AI create the code",
+            explanation: "Vibe coding means focusing on the creative vision while AI handles the technical implementation."
+          },
+          {
+            question: "Why do we use an iframe to display the generated games?",
+            options: [
+              "To make the games load faster",
+              "To keep the games safe and contained",
+              "To make the games look better"
+            ],
+            correct: "To keep the games safe and contained", 
+            explanation: "Iframes with sandbox attributes prevent the game code from accessing or affecting the main page."
+          },
+          {
+            question: "What makes a good game prompt for AI?",
+            options: [
+              "Very technical programming terms",
+              "A clear description of player actions and goals",
+              "Only mentioning the visual design"
+            ],
+            correct: "A clear description of player actions and goals",
+            explanation: "AI works best when you describe what the player does, how they control the game, and what the objective is."
+          }
+        ]
+      },
+      
+      xpRewards: { beginner: 50, intermediate: 60, advanced: 75 },
+      estimatedTime: { beginner: 20, intermediate: 25, advanced: 30 },
+      
+      // Premium lesson metadata
+      isPremium: true,
+      category: 'Creative Coding',
+      tags: ['game-development', 'ai-coding', 'javascript', 'html', 'creative'],
+      difficulty: 'beginner'
     }
   ]
 };

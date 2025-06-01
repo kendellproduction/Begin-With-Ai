@@ -523,7 +523,7 @@ const LessonViewer = () => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-900 to-indigo-900 flex items-center justify-center">
+      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-xl text-white">Loading lesson...</p>
@@ -535,7 +535,7 @@ const LessonViewer = () => {
   if (isComplete) {
     return (
       <div 
-        className="fixed inset-0 bg-gradient-to-br from-green-900 to-blue-900 flex items-center justify-center text-center"
+        className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black flex items-center justify-center text-center"
         onClick={() => !showCompletionButtons && setShowCompletionButtons(true)}
       >
         <motion.div
@@ -610,7 +610,7 @@ const LessonViewer = () => {
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 bg-gradient-to-br from-slate-900 to-indigo-900 z-50 overflow-hidden"
+      className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black z-50 overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >

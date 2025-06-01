@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import LessonCard from '../components/LessonCard';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
@@ -333,7 +334,7 @@ const LessonsExplore = () => {
   // Show loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white">
         <LoggedInNavbar />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
@@ -349,7 +350,7 @@ const LessonsExplore = () => {
   // Show error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white">
         <LoggedInNavbar />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center max-w-md mx-auto px-4">
@@ -385,7 +386,7 @@ const LessonsExplore = () => {
   // Show empty state if no lessons after loading
   if (!isLoading && adaptiveLessons.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white">
         <LoggedInNavbar />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center max-w-md mx-auto px-4">
@@ -409,14 +410,55 @@ const LessonsExplore = () => {
   // Render desktop V-shape layout
   if (!isMobile) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white overflow-hidden">
         <LoggedInNavbar />
         
-        {/* Background Elements */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-indigo-500/10 rounded-full blur-3xl" />
-          <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl" />
+        {/* Star Animation Container for Lessons */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {[...Array(140)].map((_, i) => {
+            const screenH = window.innerHeight;
+            const screenW = window.innerWidth;
+            const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
+            const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
+            const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
+            const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+            const starDuration = 30 + Math.random() * 25;
+            const starSize = Math.random() * 3 + 1;
+
+            return (
+              <motion.div
+                key={`lessons-star-${i}`}
+                className="absolute rounded-full bg-white/50"
+                style={{
+                  width: starSize,
+                  height: starSize,
+                }}
+                initial={{
+                  x: initialX,
+                  y: initialY,
+                  opacity: 0,
+                }}
+                animate={{
+                  x: targetX,
+                  y: targetY,
+                  opacity: [0, 0.6, 0.6, 0],
+                }}
+                transition={{
+                  duration: starDuration,
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 5 + 2,
+                  ease: "linear",
+                  opacity: {
+                    duration: starDuration,
+                    ease: "linear",
+                    times: [0, 0.1, 0.85, 1],
+                    repeat: Infinity,
+                    repeatDelay: Math.random() * 5 + 2,
+                  }
+                }}
+              />
+            );
+          })}
         </div>
         
         <div className="relative z-10 container mx-auto px-4 py-8">
@@ -437,7 +479,7 @@ const LessonsExplore = () => {
             </button>
             
             <div className="text-center mb-8">
-              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4 leading-tight py-2">
                 Explore All Lessons
               </h1>
               <p className="text-xl text-slate-300 max-w-2xl mx-auto leading-relaxed">
@@ -694,7 +736,54 @@ const LessonsExplore = () => {
 
   // Mobile layout continues here (existing mobile code)
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white flex flex-col overflow-hidden">
+      {/* Star Animation Container for Mobile Lessons */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {[...Array(100)].map((_, i) => {
+          const screenH = window.innerHeight;
+          const screenW = window.innerWidth;
+          const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
+          const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
+          const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const starDuration = 30 + Math.random() * 25;
+          const starSize = Math.random() * 2.5 + 0.8;
+
+          return (
+            <motion.div
+              key={`mobile-lessons-star-${i}`}
+              className="absolute rounded-full bg-white/40"
+              style={{
+                width: starSize,
+                height: starSize,
+              }}
+              initial={{
+                x: initialX,
+                y: initialY,
+                opacity: 0,
+              }}
+              animate={{
+                x: targetX,
+                y: targetY,
+                opacity: [0, 0.5, 0.5, 0],
+              }}
+              transition={{
+                duration: starDuration,
+                repeat: Infinity,
+                repeatDelay: Math.random() * 5 + 2,
+                ease: "linear",
+                opacity: {
+                  duration: starDuration,
+                  ease: "linear",
+                  times: [0, 0.1, 0.85, 1],
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 5 + 2,
+                }
+              }}
+            />
+          );
+        })}
+      </div>
       {/* Custom CSS for animated shadows */}
       <style jsx>{`
         @keyframes start-lesson-glow {

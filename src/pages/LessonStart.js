@@ -93,10 +93,58 @@ const LessonStart = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-indigo-900 text-white">
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-      <main className="container mx-auto px-4 py-8">
+      {/* Star Animation Container for LessonStart */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {[...Array(100)].map((_, i) => {
+          const screenH = window.innerHeight;
+          const screenW = window.innerWidth;
+          const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
+          const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
+          const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const starDuration = 30 + Math.random() * 25;
+          const starSize = Math.random() * 3 + 1;
+
+          return (
+            <motion.div
+              key={`lesson-start-star-${i}`}
+              className="absolute rounded-full bg-white/50"
+              style={{
+                width: starSize,
+                height: starSize,
+              }}
+              initial={{
+                x: initialX,
+                y: initialY,
+                opacity: 0,
+              }}
+              animate={{
+                x: targetX,
+                y: targetY,
+                opacity: [0, 0.6, 0.6, 0],
+              }}
+              transition={{
+                duration: starDuration,
+                repeat: Infinity,
+                repeatDelay: Math.random() * 5 + 2,
+                ease: "linear",
+                opacity: {
+                  duration: starDuration,
+                  ease: "linear",
+                  times: [0, 0.1, 0.85, 1],
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 5 + 2,
+                }
+              }}
+            />
+          );
+        })}
+      </div>
+
+      <main className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <motion.div
@@ -106,7 +154,7 @@ const LessonStart = () => {
             className="text-center mb-12"
           >
             <div className="text-8xl mb-6">{lessonInfo.lessonIcon}</div>
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight py-2">
               {lessonInfo.lessonTitle}
             </h1>
             <p className="text-xl text-indigo-200 mb-6">

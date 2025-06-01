@@ -348,18 +348,21 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
             {lesson.title}
           </h3>
 
-          {/* Description - Removed line-clamp for now, added more bottom margin */}
+          {/* Description - Fixed height to prevent buttons from floating */}
           <p className="
             text-slate-300 text-sm leading-relaxed
-            mb-6 flex-1 
+            mb-4 h-20 overflow-hidden
             transition-colors duration-300
             hover:text-slate-200
           ">
             {lesson.description || lesson.coreConcept || 'Discover the fundamentals of AI and how it can transform your understanding of technology.'}
           </p>
 
-          {/* Meta Information - Added more top margin */}
-          <div className="flex items-center justify-between mt-2 mb-4">
+          {/* Spacer to push meta and button to bottom */}
+          <div className="flex-1"></div>
+
+          {/* Meta Information */}
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-3 text-xs text-slate-400">
               {lesson.duration && (
                 <div className="flex items-center space-x-1">

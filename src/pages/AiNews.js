@@ -489,6 +489,38 @@ const AiNews = () => {
     setShowNewPostForm(false);
   };
 
+  // Function to generate color-matched external glow shadows
+  const getColorMatchedShadow = (gradient) => {
+    // Map gradients to their corresponding shadow colors
+    const shadowMap = {
+      'from-red-700/80 to-orange-600/80': '0 0 30px rgba(239, 68, 68, 0.4), 0 0 60px rgba(251, 146, 60, 0.3), 0 0 100px rgba(239, 68, 68, 0.2), 0 0 140px rgba(251, 146, 60, 0.15)',
+      'from-orange-600/80 to-amber-600/80': '0 0 30px rgba(251, 146, 60, 0.4), 0 0 60px rgba(245, 158, 11, 0.3), 0 0 100px rgba(251, 146, 60, 0.2), 0 0 140px rgba(245, 158, 11, 0.15)',
+      'from-yellow-800/80 to-amber-700/80': '0 0 30px rgba(234, 179, 8, 0.4), 0 0 60px rgba(245, 158, 11, 0.3), 0 0 100px rgba(234, 179, 8, 0.2), 0 0 140px rgba(245, 158, 11, 0.15)',
+      'from-lime-700/80 to-green-600/80': '0 0 30px rgba(132, 204, 22, 0.4), 0 0 60px rgba(34, 197, 94, 0.3), 0 0 100px rgba(132, 204, 22, 0.2), 0 0 140px rgba(34, 197, 94, 0.15)',
+      'from-green-700/80 to-emerald-600/80': '0 0 30px rgba(34, 197, 94, 0.4), 0 0 60px rgba(16, 185, 129, 0.3), 0 0 100px rgba(34, 197, 94, 0.2), 0 0 140px rgba(16, 185, 129, 0.15)',
+      'from-teal-600/80 to-cyan-600/80': '0 0 30px rgba(20, 184, 166, 0.4), 0 0 60px rgba(8, 145, 178, 0.3), 0 0 100px rgba(20, 184, 166, 0.2), 0 0 140px rgba(8, 145, 178, 0.15)',
+      'from-pink-600/80 to-rose-500/80': '0 0 30px rgba(219, 39, 119, 0.4), 0 0 60px rgba(244, 63, 94, 0.3), 0 0 100px rgba(219, 39, 119, 0.2), 0 0 140px rgba(244, 63, 94, 0.15)',
+      'from-fuchsia-600/80 to-pink-600/80': '0 0 30px rgba(192, 38, 211, 0.4), 0 0 60px rgba(219, 39, 119, 0.3), 0 0 100px rgba(192, 38, 211, 0.2), 0 0 140px rgba(219, 39, 119, 0.15)',
+      'from-purple-500/80 to-violet-500/80': '0 0 30px rgba(168, 85, 247, 0.4), 0 0 60px rgba(139, 92, 246, 0.3), 0 0 100px rgba(168, 85, 247, 0.2), 0 0 140px rgba(139, 92, 246, 0.15)',
+      'from-sky-600/80 to-cyan-500/80': '0 0 30px rgba(2, 132, 199, 0.4), 0 0 60px rgba(6, 182, 212, 0.3), 0 0 100px rgba(2, 132, 199, 0.2), 0 0 140px rgba(6, 182, 212, 0.15)',
+      'from-emerald-600/80 to-lime-700/80': '0 0 30px rgba(16, 185, 129, 0.4), 0 0 60px rgba(132, 204, 22, 0.3), 0 0 100px rgba(16, 185, 129, 0.2), 0 0 140px rgba(132, 204, 22, 0.15)',
+      'from-rose-600/80 to-orange-600/80': '0 0 30px rgba(225, 29, 72, 0.4), 0 0 60px rgba(251, 146, 60, 0.3), 0 0 100px rgba(225, 29, 72, 0.2), 0 0 140px rgba(251, 146, 60, 0.15)',
+      'from-cyan-500/80 to-blue-500/80': '0 0 30px rgba(6, 182, 212, 0.4), 0 0 60px rgba(59, 130, 246, 0.3), 0 0 100px rgba(6, 182, 212, 0.2), 0 0 140px rgba(59, 130, 246, 0.15)',
+      // Fallback gradients from fallback news
+      'from-gray-700/80 to-gray-600/80': '0 0 30px rgba(107, 114, 128, 0.4), 0 0 60px rgba(75, 85, 99, 0.3), 0 0 100px rgba(107, 114, 128, 0.2), 0 0 140px rgba(75, 85, 99, 0.15)',
+      // Use case avatar gradients (without opacity)
+      'from-blue-500 to-purple-600': '0 0 25px rgba(59, 130, 246, 0.3), 0 0 50px rgba(147, 51, 234, 0.2), 0 0 75px rgba(59, 130, 246, 0.15)',
+      'from-green-500 to-emerald-600': '0 0 25px rgba(34, 197, 94, 0.3), 0 0 50px rgba(16, 185, 129, 0.2), 0 0 75px rgba(34, 197, 94, 0.15)',
+      'from-orange-500 to-red-600': '0 0 25px rgba(249, 115, 22, 0.3), 0 0 50px rgba(220, 38, 38, 0.2), 0 0 75px rgba(249, 115, 22, 0.15)',
+      'from-purple-500 to-indigo-600': '0 0 25px rgba(168, 85, 247, 0.3), 0 0 50px rgba(79, 70, 229, 0.2), 0 0 75px rgba(168, 85, 247, 0.15)',
+      'from-teal-500 to-cyan-600': '0 0 25px rgba(20, 184, 166, 0.3), 0 0 50px rgba(8, 145, 178, 0.2), 0 0 75px rgba(20, 184, 166, 0.15)',
+      'from-pink-500 to-rose-600': '0 0 25px rgba(236, 72, 153, 0.3), 0 0 50px rgba(225, 29, 72, 0.2), 0 0 75px rgba(236, 72, 153, 0.15)'
+    };
+    
+    // Return the matched shadow or a default purple shadow as fallback
+    return shadowMap[gradient] || '0 0 30px rgba(99, 102, 241, 0.4), 0 0 60px rgba(139, 92, 246, 0.3), 0 0 100px rgba(236, 72, 153, 0.2), 0 0 140px rgba(99, 102, 241, 0.15)';
+  };
+
   return (
     <div 
       className="relative min-h-screen text-white overflow-hidden"
@@ -596,7 +628,7 @@ const AiNews = () => {
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Hero Header */}
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent leading-tight py-2">
               AI News & Community
             </h1>
             <p className="text-xl text-gray-300 mb-8">
@@ -630,17 +662,17 @@ const AiNews = () => {
             
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <div className="card-glow bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-sm rounded-3xl p-6 border border-blue-500/30">
+              <div className="bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-sm rounded-3xl p-6 border border-blue-400/30" style={{boxShadow: '0 0 25px rgba(59, 130, 246, 0.3), 0 0 50px rgba(34, 211, 238, 0.2), 0 0 75px rgba(59, 130, 246, 0.15)'}}>
                 <div className="text-3xl mb-2">📰</div>
                 <div className="text-2xl font-bold text-blue-400">{aiNews.length}</div>
                 <div className="text-sm text-gray-300">Latest Articles</div>
               </div>
-              <div className="card-glow bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30">
+              <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-3xl p-6 border border-purple-400/30" style={{boxShadow: '0 0 25px rgba(139, 92, 246, 0.3), 0 0 50px rgba(99, 102, 241, 0.2), 0 0 75px rgba(139, 92, 246, 0.15)'}}>
                 <div className="text-3xl mb-2">👥</div>
                 <div className="text-2xl font-bold text-purple-400">{useCases.length}</div>
                 <div className="text-sm text-gray-300">Community Stories</div>
               </div>
-              <div className="card-glow bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-sm rounded-3xl p-6 border border-green-500/30">
+              <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-sm rounded-3xl p-6 border border-green-400/30" style={{boxShadow: '0 0 25px rgba(34, 197, 94, 0.3), 0 0 50px rgba(16, 185, 129, 0.2), 0 0 75px rgba(34, 197, 94, 0.15)'}}>
                 <div className="text-3xl mb-2">💡</div>
                 <div className="text-2xl font-bold text-green-400">{useCases.reduce((sum, uc) => sum + uc.likes, 0)}</div>
                 <div className="text-sm text-gray-300">Community Likes</div>
@@ -681,7 +713,8 @@ const AiNews = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`card-glow group bg-gradient-to-br ${news.gradient || 'from-gray-700/80 to-gray-600/80'} backdrop-blur-sm rounded-3xl p-6 border ${news.border || 'border-gray-500'} ${news.shadow || 'shadow-lg'} transition-all duration-300 cursor-pointer hover:scale-105`}
+                    className={`group bg-gradient-to-br ${news.gradient || 'from-gray-700/80 to-gray-600/80'} backdrop-blur-sm rounded-3xl p-6 border border-white/20 transition-all duration-300 cursor-pointer hover:scale-105`}
+                    style={{boxShadow: getColorMatchedShadow(news.gradient || 'from-gray-700/80 to-gray-600/80')}}
                     onClick={() => news.url && window.open(news.url, '_blank')}
                   >
                     <div className="flex items-center justify-between mb-4">
@@ -797,7 +830,8 @@ const AiNews = () => {
                 ref={newPostFormRef}
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="card-glow bg-gradient-to-br from-indigo-600/10 to-purple-600/10 backdrop-blur-sm rounded-3xl p-8 border border-indigo-500/30 mb-8"
+                className="bg-gradient-to-br from-indigo-600/10 to-purple-600/10 backdrop-blur-sm rounded-3xl p-8 border border-indigo-400/30 mb-8"
+                style={{boxShadow: '0 0 25px rgba(99, 102, 241, 0.3), 0 0 50px rgba(139, 92, 246, 0.2), 0 0 75px rgba(99, 102, 241, 0.15)'}}
               >
                 <h3 className="text-2xl font-semibold text-white mb-6">Share Your AI Success Story</h3>
                 
@@ -887,7 +921,8 @@ const AiNews = () => {
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: useCase.id * 0.1 }}
-                  className={`card-glow group bg-gradient-to-br ${useCase.bgGradient} backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-[1.02]`}
+                  className={`group bg-gradient-to-br ${useCase.bgGradient} backdrop-blur-sm rounded-3xl p-8 border border-white/15 transition-all duration-300 cursor-pointer hover:scale-[1.02]`}
+                  style={{boxShadow: getColorMatchedShadow(useCase.gradient || 'from-blue-500 to-purple-600')}}
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center space-x-4">

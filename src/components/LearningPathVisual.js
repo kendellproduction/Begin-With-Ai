@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LearningPathVisual = ({ 
@@ -6,9 +6,11 @@ const LearningPathVisual = ({
   userLearningPath, 
   compact = false, 
   showActions = true,
-  className = "" 
+  className = "",
+  onLessonClick = null // Optional callback for lesson clicks
 }) => {
   const navigate = useNavigate();
+  const [hoveredLesson, setHoveredLesson] = useState(null);
 
   if (!learningProgress || !userLearningPath) {
     return null;
@@ -33,7 +35,7 @@ const LearningPathVisual = ({
   const totalLessons = lessons.length; // Use actual lessons array length instead of passed value
   const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
-  // Handle lesson click - navigate to difficulty selection
+  // Handle lesson click - use callback or navigate to difficulty selection
   const handleLessonClick = (lesson, index) => {
     const isCompleted = index < completedLessons;
     const isCurrent = index === completedLessons;
@@ -44,22 +46,35 @@ const LearningPathVisual = ({
       return; // Can't access locked lessons
     }
     
-    // Navigate to lesson start page with difficulty selection
-    navigate(`/lessons/start/${lesson.id}`, {
-      state: {
-        lessonTitle: lesson.title,
-        lessonIcon: lesson.icon,
+    if (onLessonClick) {
+      // Use the provided callback
+      onLessonClick({
+        ...lesson,
+        title: lesson.title,
+        icon: lesson.icon,
         isCompleted,
         isCurrent,
         isNext,
         fromLearningPath: true
-      }
-    });
+      });
+    } else {
+      // Navigate to lesson start page with difficulty selection (fallback)
+      navigate(`/lessons/start/${lesson.id}`, {
+        state: {
+          lessonTitle: lesson.title,
+          lessonIcon: lesson.icon,
+          isCompleted,
+          isCurrent,
+          isNext,
+          fromLearningPath: true
+        }
+      });
+    }
   };
 
   const containerClass = compact 
-    ? "bg-gradient-to-br from-slate-900/95 via-indigo-900/90 to-purple-900/95 backdrop-blur-xl rounded-xl p-4 border border-cyan-400/40 shadow-2xl shadow-cyan-500/25 hover:shadow-3xl hover:shadow-purple-500/30 transition-all duration-500"
-    : "bg-gradient-to-br from-slate-900/95 via-indigo-900/90 to-purple-900/95 backdrop-blur-xl rounded-3xl p-8 border border-cyan-400/50 shadow-2xl shadow-cyan-500/30 hover:shadow-3xl hover:shadow-purple-500/40 transition-all duration-500";
+    ? "bg-gradient-to-br from-gray-900/95 via-slate-900/90 to-black/95 backdrop-blur-xl rounded-xl p-4 border border-gray-600/40 shadow-2xl shadow-gray-500/25 hover:shadow-3xl hover:shadow-gray-400/30 transition-all duration-500"
+    : "bg-gradient-to-br from-gray-900/95 via-slate-900/90 to-black/95 backdrop-blur-xl rounded-3xl p-8 border border-gray-600/50 shadow-2xl shadow-gray-500/30 hover:shadow-3xl hover:shadow-gray-400/40 transition-all duration-500";
 
   const headerClass = compact ? "mb-5" : "mb-10";
   const titleClass = compact ? "text-xl font-bold text-white mb-2" : "text-3xl font-bold text-white mb-4";
@@ -251,16 +266,28 @@ const LearningPathVisual = ({
             }
             
             return (
-              <div key={lesson.id} className="flex flex-col items-center group relative">
-                {/* Enhanced Node Circle */}
+              <div key={lesson.id} className="flex flex-col items-center relative">
+                {/* Enhanced Node Circle - with controlled hover area */}
                 <div 
                   className={`
                     relative ${nodeSize} rounded-full flex items-center justify-center 
-                    transition-all duration-300 transform hover:scale-110 cursor-pointer
+                    transition-all duration-300 transform cursor-pointer
                     ${nodeClasses} ${shadowClasses} ${borderClasses}
-                    ${!isLocked ? 'hover:rotate-6' : 'cursor-not-allowed'}
+                    ${!isLocked ? '' : 'cursor-not-allowed'}
                   `}
                   onClick={() => handleLessonClick(lesson, index)}
+                  onMouseEnter={(e) => {
+                    e.stopPropagation();
+                    setHoveredLesson(lesson.id);
+                    if (!isLocked) {
+                      e.currentTarget.style.transform = 'scale(1.1) rotate(6deg)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.stopPropagation();
+                    setHoveredLesson(null);
+                    e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                  }}
                 >
                   {/* Enhanced Glow Effect */}
                   {(isCompleted || isCurrent || isNext) && (
@@ -268,67 +295,30 @@ const LearningPathVisual = ({
                       isCompleted ? 'bg-emerald-400/40' : 
                       isCurrent ? 'bg-cyan-400/50' : 
                       'bg-orange-400/40'
-                    } animate-pulse`}></div>
+                    } animate-pulse pointer-events-none`}></div>
                   )}
                   
                   {/* Sparkle Effect for Current */}
                   {isCurrent && (
                     <>
-                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-300 rounded-full animate-ping"></div>
-                      <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-pink-300 rounded-full animate-ping" style={{animationDelay: '0.5s'}}></div>
+                      <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-300 rounded-full animate-ping pointer-events-none"></div>
+                      <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-pink-300 rounded-full animate-ping pointer-events-none" style={{animationDelay: '0.5s'}}></div>
                     </>
                   )}
                   
                   {/* Icon */}
-                  <span className={`relative z-10 ${iconSize} ${iconColor} transition-transform duration-300 group-hover:scale-110`}>
+                  <span className={`relative z-10 ${iconSize} ${iconColor} transition-transform duration-300 pointer-events-none`}>
                     {isCompleted ? '✅' : lesson.icon}
                   </span>
                 </div>
                 
-                {/* Enhanced Labels */}
-                {!compact && (
-                  <div className="mt-3 text-center">
-                    <div className={`${labelSize} font-semibold transition-colors duration-300 ${
-                      isCompleted ? 'text-emerald-300' :
-                      isCurrent ? 'text-cyan-300' :
-                      isNext ? 'text-orange-300' :
-                      isLocked ? 'text-slate-500' : 'text-slate-400'
-                    }`}>
-                      {lesson.title}
-                    </div>
-                    {!isLocked && (
-                      <div className="text-xs text-indigo-300 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                        Click to start
-                      </div>
-                    )}
-                  </div>
-                )}
-                
-                {/* Enhanced Tooltips */}
-                {compact && (
-                  <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-30">
+                {/* Tooltip - positioned outside the icon container - only show for this specific lesson */}
+                {hoveredLesson === lesson.id && (
+                  <div className="absolute -top-16 left-1/2 transform -translate-x-1/2 transition-all duration-300 pointer-events-none z-50">
                     <div className="bg-slate-800/95 backdrop-blur-sm text-white px-3 py-2 rounded-lg text-sm font-medium shadow-xl border border-indigo-400/30 whitespace-nowrap">
                       {lesson.title}
                       {!isLocked && <div className="text-xs text-indigo-300 mt-1">Click to start</div>}
                       <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-2 border-r-2 border-t-2 border-transparent border-t-slate-800"></div>
-                    </div>
-                  </div>
-                )}
-                
-                {/* Status indicators */}
-                {!compact && (
-                  <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none">
-                    <div className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      isCompleted ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/40' :
-                      isCurrent ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/40' :
-                      isNext ? 'bg-orange-500/20 text-orange-300 border border-orange-400/40' :
-                      isLocked ? 'bg-slate-500/20 text-slate-400 border border-slate-500/40' :
-                      'bg-slate-500/20 text-slate-300 border border-slate-400/40'
-                    }`}>
-                      {isCompleted ? 'Completed' : 
-                       isCurrent ? 'Current' : 
-                       isNext ? 'Available' : 
-                       isLocked ? 'Locked' : 'Ready'}
                     </div>
                   </div>
                 )}

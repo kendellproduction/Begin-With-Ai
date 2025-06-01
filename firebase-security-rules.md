@@ -7,6 +7,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/userProfiles/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.role == 'admin';
+    }
+    
     // User-specific data - users can only access their own
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
@@ -37,9 +44,11 @@ service cloud.firestore {
                      request.resource.data.lessonId is string;
     }
     
-    // User profiles
+    // User profiles - special admin access
     match /userProfiles/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow admins to read other profiles for seeding verification
+      allow read: if isAdmin();
     }
     
     // Sandbox rate limiting - users can only access their own
@@ -60,22 +69,28 @@ service cloud.firestore {
                    resource.data.userId == request.auth.uid;
     }
     
-    // Learning paths - allow seeding for authenticated users, read for all
+    // Learning paths - allow admin seeding and user reading
     match /learningPaths/{pathId} {
       allow read: if request.auth != null;
-      // Allow write for seeding operations (authenticated users can seed content)
+      // Allow admins to write for seeding operations
+      allow write: if isAdmin();
+      // Temporary: Allow any authenticated user to write for initial seeding (REMOVE IN PRODUCTION)
       allow write: if request.auth != null;
       
       // Modules within learning paths
       match /modules/{moduleId} {
         allow read: if request.auth != null;
-        // Allow write for seeding operations
+        // Allow admins to write for seeding operations
+        allow write: if isAdmin();
+        // Temporary: Allow any authenticated user to write for initial seeding (REMOVE IN PRODUCTION)
         allow write: if request.auth != null;
         
         // Lessons within modules
         match /lessons/{lessonId} {
           allow read: if request.auth != null;
-          // Allow write for seeding operations
+          // Allow admins to write for seeding operations
+          allow write: if isAdmin();
+          // Temporary: Allow any authenticated user to write for initial seeding (REMOVE IN PRODUCTION)
           allow write: if request.auth != null;
         }
       }
@@ -87,10 +102,10 @@ service cloud.firestore {
       allow write: if false;
     }
     
-    // Quiz content - read-only
+    // Quiz content - read-only for users, writable by admins
     match /quizzes/{quizId} {
       allow read: if request.auth != null;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     
     // Quiz results - users can access their own
@@ -104,7 +119,7 @@ service cloud.firestore {
     // Gamification data
     match /badges/{badgeId} {
       allow read: if request.auth != null;
-      allow write: if false;
+      allow write: if isAdmin();
     }
     
     match /userBadges/{userId} {
@@ -150,23 +165,49 @@ service cloud.firestore {
 }
 ```
 
+## DEPLOYMENT INSTRUCTIONS
+
+### Step 1: Deploy the Updated Rules
+
+1. **Copy the rules above**
+2. **Go to Firebase Console** → Your Project → Firestore Database → Rules
+3. **Replace the existing rules** with the updated rules above
+4. **Click "Publish"** to deploy the rules
+
+### Step 2: Verify Admin Role
+
+Make sure your user profile has the admin role:
+
+```javascript
+// Run this in the browser console to check your role:
+const user = firebase.auth().currentUser;
+if (user) {
+  firebase.firestore().doc(`userProfiles/${user.uid}`).get()
+    .then(doc => console.log('User role:', doc.data()?.role));
+}
+```
+
+### Step 3: Seed the Database
+
+After deploying the rules, try the seeding again using the blue button in your app.
+
 ## IMPORTANT: Production Security Rules
 
-**After seeding is complete**, update the learning paths rules to be read-only for production:
+**After seeding is complete**, update the learning paths rules to be read-only for production by removing the temporary write permissions:
 
 ```rules
 // Learning paths - read-only for production (update after seeding)
 match /learningPaths/{pathId} {
   allow read: if request.auth != null;
-  allow write: if false; // Change back to false after seeding
+  allow write: if isAdmin(); // Keep only admin access
   
   match /modules/{moduleId} {
     allow read: if request.auth != null;
-    allow write: if false; // Change back to false after seeding
+    allow write: if isAdmin(); // Keep only admin access
     
     match /lessons/{lessonId} {
       allow read: if request.auth != null;
-      allow write: if false; // Change back to false after seeding
+      allow write: if isAdmin(); // Keep only admin access
     }
   }
 }
@@ -174,28 +215,33 @@ match /learningPaths/{pathId} {
 
 ## Security Features Implemented
 
-### 1. User Data Isolation
+### 1. Admin Role Checking
+- **Admin Function**: `isAdmin()` checks user profile role
+- **Admin Permissions**: Admins can seed content and manage quiz/badge data
+- **Temporary Permissions**: Any authenticated user can write during initial seeding (remove in production)
+
+### 2. User Data Isolation
 - Each user can only access their own data through `request.auth.uid == userId` checks
 - Prevents users from seeing other users' progress, submissions, or personal information
 
-### 2. Sandbox Security
+### 3. Sandbox Security
 - **Rate Limiting**: Each user has their own rate limit document they can modify
 - **Usage Logging**: Users can create logs but only read their own
 - **Session Isolation**: Each sandbox session is tracked separately
 - **No Content Storage**: The rules ensure prompts and responses aren't stored permanently
 
-### 3. Content Security
-- **Read-Only Lessons**: Learning paths, modules, and lessons are read-only for users
-- **Admin-Only Writes**: Content can only be modified via admin console or backend functions
+### 4. Content Security
+- **Read-Only Lessons**: Learning paths, modules, and lessons are read-only for regular users
+- **Admin-Only Writes**: Content can only be modified by admins after initial seeding
 - **Validated Submissions**: Code submissions require proper user ID and lesson ID
 
-### 4. Data Validation
+### 5. Data Validation
 - **Type Checking**: Rules validate data types (numbers, strings, lists, maps)
 - **Required Fields**: Ensures critical fields are present when creating documents
 - **Structure Validation**: Enforces proper document structure
 
-### 5. Gamification Protection
-- **Badge Security**: Users can earn badges but not create fake ones
+### 6. Gamification Protection
+- **Badge Security**: Users can earn badges but not create fake ones (admins can manage)
 - **Progress Integrity**: XP and level calculations are validated
 - **Streak Protection**: Users can only modify their own streak data
 

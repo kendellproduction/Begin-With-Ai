@@ -6,6 +6,7 @@ import LoggedInNavbar from '../components/LoggedInNavbar';
 import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
 import LearningPathMap from '../components/LearningPathMap';
 import LearningPathVisual from '../components/LearningPathVisual';
+import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { motion } from 'framer-motion';
@@ -23,6 +24,7 @@ const HomePage = () => {
 
   // Adaptive learning state
   const [adaptiveLessons, setAdaptiveLessons] = useState([]);
+  const [availablePaths, setAvailablePaths] = useState([]);
   const [userLearningPath, setUserLearningPath] = useState(null);
   const [learningProgress, setLearningProgress] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
@@ -35,7 +37,6 @@ const HomePage = () => {
   // State for difficulty selection modal for quick access lessons
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
   const [lessonForDifficultySelection, setLessonForDifficultySelection] = useState(null);
-  const [selectedQuickAccessDifficulty, setSelectedQuickAccessDifficulty] = useState('Beginner');
   const [showPaywallModal, setShowPaywallModal] = useState(false);
 
   // Inspirational quotes based on time of day
@@ -299,25 +300,52 @@ const HomePage = () => {
       const assessmentResults = localStorage.getItem('aiAssessmentResults');
       const skillLevel = assessmentResults ? JSON.parse(assessmentResults).skillLevel : 'intermediate';
 
-      const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(
-        'prompt-engineering-mastery',
-        { skillLevel }
-      );
-      
-      if (adaptivePath && adaptivePath.modules) {
-        // Get first few lessons for quick access
-        const recentLessons = adaptivePath.modules.flatMap(module => 
-          module.lessons.slice(0, 2).map(lesson => ({
-            ...lesson,
-            moduleTitle: module.title,
-            pathTitle: adaptivePath.title,
-            moduleId: module.id,
-            isPremium: true // Add isPremium property to all adaptive lessons
-          }))
-        ).slice(0, 4);
-        
-        setAdaptiveLessons(recentLessons);
+      // Load multiple learning paths
+      const paths = ['prompt-engineering-mastery', 'vibe-coding'];
+      const allLessons = [];
+      const pathsData = [];
+
+      for (const pathId of paths) {
+        try {
+          const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(pathId, { skillLevel });
+          
+          if (adaptivePath && adaptivePath.modules) {
+            // Store path data
+            pathsData.push({
+              id: adaptivePath.id,
+              title: adaptivePath.title,
+              description: adaptivePath.description,
+              icon: adaptivePath.icon || '📚',
+              color: adaptivePath.color || 'from-blue-500 to-purple-600',
+              isPremium: adaptivePath.isPremium || false,
+              estimatedHours: adaptivePath.estimatedHours,
+              totalLessons: adaptivePath.totalLessons,
+              category: adaptivePath.category,
+              difficulty: adaptivePath.difficulty
+            });
+
+            // Get lessons from this path
+            const pathLessons = adaptivePath.modules.flatMap(module => 
+              module.lessons.slice(0, 2).map(lesson => ({
+                ...lesson,
+                moduleTitle: module.title,
+                pathTitle: adaptivePath.title,
+                pathId: adaptivePath.id,
+                moduleId: module.id,
+                isPremium: adaptivePath.isPremium || lesson.isPremium || false,
+                pathColor: adaptivePath.color || 'from-blue-500 to-purple-600',
+                pathIcon: adaptivePath.icon || '📚'
+              }))
+            );
+            allLessons.push(...pathLessons);
+          }
+        } catch (error) {
+          console.warn(`Failed to load path ${pathId}:`, error);
+        }
       }
+      
+      setAvailablePaths(pathsData);
+      setAdaptiveLessons(allLessons.slice(0, 6)); // Show up to 6 lessons total
     } catch (error) {
       console.error('Failed to load adaptive lessons:', error);
     }
@@ -368,6 +396,37 @@ const HomePage = () => {
     }
   };
 
+  const handleLearningPathClick = (path) => {
+    console.log('[Learning Path Click] Starting first lesson for path:', path.title);
+    
+    // Find the first lesson in this path
+    const pathLessons = adaptiveLessons.filter(lesson => lesson.pathId === path.id);
+    
+    if (pathLessons.length > 0) {
+      const firstLesson = pathLessons[0];
+      console.log('[Learning Path Click] Found first lesson:', firstLesson.title);
+      
+      // Navigate directly to the first lesson
+      navigate(`/lessons/${firstLesson.id}`, {
+        state: {
+          pathId: path.id,
+          moduleId: firstLesson.moduleId,
+          fromLearningPath: true,
+          pathData: path
+        }
+      });
+    } else {
+      console.log('[Learning Path Click] No lessons found, falling back to lessons page');
+      // Fallback to lessons page if no lessons found
+      navigate('/lessons', { 
+        state: { 
+          selectedPath: path.id,
+          pathData: path 
+        } 
+      });
+    }
+  };
+
   const handleUpgradeToPremium = async () => {
     try {
       setShowPaywallModal(false);
@@ -393,21 +452,20 @@ const HomePage = () => {
 
   const handleQuickLessonClick = (lesson) => {
     setLessonForDifficultySelection(lesson);
-    setSelectedQuickAccessDifficulty('Beginner'); // Default to Beginner
     setShowDifficultyModal(true);
   };
 
-  const handleConfirmQuickAccessDifficulty = () => {
+  const handleConfirmQuickAccessDifficulty = (selectedDifficulty) => {
     if (!lessonForDifficultySelection) return;
 
     console.log('[Paywall Check] Lesson:', lessonForDifficultySelection.title);
     console.log('[Paywall Check] lessonForDifficultySelection.isPremium:', lessonForDifficultySelection.isPremium);
-    console.log('[Paywall Check] selectedQuickAccessDifficulty:', selectedQuickAccessDifficulty);
+    console.log('[Paywall Check] selectedDifficulty:', selectedDifficulty);
     console.log('[Paywall Check] currentUser?.subscriptionTier:', currentUser?.subscriptionTier);
 
     const isPremiumLessonPart = 
       !!lessonForDifficultySelection.isPremium && // Ensure isPremium is treated as boolean
-      (selectedQuickAccessDifficulty === 'Intermediate' || selectedQuickAccessDifficulty === 'Advanced');
+      (selectedDifficulty === 'Intermediate' || selectedDifficulty === 'Advanced');
     
     console.log('[Paywall Check] isPremiumLessonPart:', isPremiumLessonPart);
     
@@ -417,16 +475,14 @@ const HomePage = () => {
     if (hasAccess) {
       navigate(`/lessons/${lessonForDifficultySelection.id}`, {
         state: {
-          pathId: 'prompt-engineering-mastery', // This was hardcoded in original handleQuickLesson
+          pathId: 'prompt-engineering-mastery',
           moduleId: lessonForDifficultySelection.moduleId,
-          selectedDifficulty: selectedQuickAccessDifficulty
+          selectedDifficulty: selectedDifficulty
         }
       });
       setShowDifficultyModal(false);
       setLessonForDifficultySelection(null);
     } else {
-      // Show upgrade prompt / navigate to pricing
-      // For now, just an alert. In a real app, this would be a modal or redirect.
       setShowPaywallModal(true);
       setShowDifficultyModal(false);
       setLessonForDifficultySelection(null);
@@ -521,10 +577,11 @@ const HomePage = () => {
           <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Welcome Section */}
             <section className="mb-6">
-              <div className="bg-gradient-to-br from-blue-500/40 via-indigo-600/40 to-purple-600/30 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/30 shadow-xl shadow-indigo-400/20">
+              <div className="bg-blue-500/30 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/40 relative transition-all duration-500" style={{boxShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), 0 0 45px rgba(59, 130, 246, 0.15)'}}>
+                
                 {/* Greeting and Quote */}
                 <div className="text-center mb-4">
-                  <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight py-2">
                     {getUserGreeting()}
                   </h1>
                   <p className="text-md md:text-lg text-blue-100 mb-4 leading-relaxed max-w-2xl mx-auto">
@@ -560,11 +617,12 @@ const HomePage = () => {
                       userLearningPath={userLearningPath}
                       compact={true}
                       showActions={false}
+                      onLessonClick={handleQuickLessonClick}
                     />
                     <div className="text-center mt-3">
                       <button
                         onClick={handleStartLearning}
-                        className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-md shadow-indigo-500/30"
+                        className="px-5 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-sm shadow-indigo-500/20"
                       >
                         🚀 {learningProgress?.nextLessonIndex > 0 ? 'Continue Learning Journey' : 'Start Learning Journey'}
                       </button>
@@ -580,7 +638,7 @@ const HomePage = () => {
                    <div className="text-center mt-4">
                      <button
                        onClick={handleStartLearning}
-                       className="group relative px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-base shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                       className="group relative px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full text-white font-bold text-base shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
                      >
                        <span className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
                        <span className="relative flex items-center gap-2">
@@ -600,7 +658,7 @@ const HomePage = () => {
                 
                 {/* Next Lesson Recommendation */}
                 {nextLesson && (
-                  <div className="bg-gradient-to-br from-cyan-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-cyan-400/50 shadow-lg">
+                  <div className="bg-gradient-to-br from-cyan-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-cyan-400/50 shadow-md">
                     <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                       🎯 Up Next
                     </h2>
@@ -623,87 +681,120 @@ const HomePage = () => {
                   </div>
                 )}
 
-                {/* Quick Access Lessons */}
-                {adaptiveLessons.length > 0 && (
-                  <div className="bg-gradient-to-br from-violet-500/40 to-purple-600/40 backdrop-blur-xl rounded-3xl p-6 border border-violet-400/50 shadow-lg">
-                    <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
-                      ⚡ Quick Access Lessons
-                    </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {adaptiveLessons.map((lesson, index) => {
-                        // Different color schemes for each card
-                        const cardColors = [
-                          {
-                            bg: 'bg-gradient-to-br from-cyan-400/30 to-blue-500/30',
-                            border: 'border-cyan-400/40',
-                            tag: 'bg-cyan-400/30 text-cyan-100',
-                            time: 'text-cyan-200',
-                            title: 'group-hover:text-cyan-200',
-                            text: 'text-cyan-100'
-                          },
-                          {
-                            bg: 'bg-gradient-to-br from-emerald-400/30 to-green-500/30',
-                            border: 'border-emerald-400/40',
-                            tag: 'bg-emerald-400/30 text-emerald-100',
-                            time: 'text-emerald-200',
-                            title: 'group-hover:text-emerald-200',
-                            text: 'text-emerald-100'
-                          },
-                          {
-                            bg: 'bg-gradient-to-br from-pink-400/30 to-rose-500/30',
-                            border: 'border-pink-400/40',
-                            tag: 'bg-pink-400/30 text-pink-100',
-                            time: 'text-pink-200',
-                            title: 'group-hover:text-pink-200',
-                            text: 'text-pink-100'
-                          },
-                          {
-                            bg: 'bg-gradient-to-br from-orange-400/30 to-amber-500/30',
-                            border: 'border-orange-400/40',
-                            tag: 'bg-orange-400/30 text-orange-100',
-                            time: 'text-orange-200',
-                            title: 'group-hover:text-orange-200',
-                            text: 'text-orange-100'
-                          }
-                        ];
-                        
-                        const colorScheme = cardColors[index % cardColors.length];
-                        
-                        return (
-                          <div
-                            key={lesson.id}
-                            onClick={() => handleQuickLessonClick(lesson)}
-                            className={`${colorScheme.bg} hover:brightness-110 p-4 rounded-xl transition-all duration-300 cursor-pointer group border ${colorScheme.border}`}
-                          >
-                            <div className="flex items-center justify-between mb-2">
-                              <span className={`px-2 py-1 ${colorScheme.tag} rounded-full text-xs font-medium`}>
-                                {lesson.moduleTitle}
-                              </span>
-                              <span className={`text-xs ${colorScheme.time}`}>15 min</span>
+                {/* Available Learning Paths Section */}
+                {availablePaths.length > 0 && (
+                  <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-md mb-8">
+                    <h2 className="text-2xl font-bold text-white mb-6 text-center">🗺️ Explore Learning Paths</h2>
+                    <div className="grid md:grid-cols-2 gap-6">
+                      {availablePaths.map((path) => (
+                        <div
+                          key={path.id}
+                          className={`relative group cursor-pointer ${
+                            path.id === 'vibe-coding' 
+                              ? 'bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900' 
+                              : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
+                          } backdrop-blur-sm p-8 rounded-2xl border ${
+                            path.id === 'vibe-coding'
+                              ? 'border-purple-500/30 hover:border-purple-400/50'
+                              : 'border-cyan-500/30 hover:border-cyan-400/50'
+                          } transition-all duration-300 transform hover:scale-105 ${
+                            path.id === 'vibe-coding'
+                              ? 'shadow-[0_0_10px_rgba(168,85,247,0.3),0_0_20px_rgba(168,85,247,0.15)] hover:shadow-[0_0_15px_rgba(168,85,247,0.4),0_0_30px_rgba(168,85,247,0.2)]'
+                              : 'shadow-[0_0_10px_rgba(6,182,212,0.3),0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_15px_rgba(6,182,212,0.4),0_0_30px_rgba(6,182,212,0.2)]'
+                          } h-80 flex flex-col`}
+                          onClick={() => handleLearningPathClick(path)}
+                        >
+                          {/* Premium Badge */}
+                          {path.isPremium && (
+                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md">
+                              ✨ PREMIUM
                             </div>
-                            <h3 className={`text-lg font-semibold text-white ${colorScheme.title} transition-colors mb-2`}>
-                              {lesson.title}
-                            </h3>
-                            <p className={`text-sm ${colorScheme.text} line-clamp-2`}>
-                              {lesson.coreConcept}
-                            </p>
+                          )}
+                          
+                          {/* Header Section - Fixed Height */}
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className={`text-4xl filter flex-shrink-0 ${
+                              path.id === 'vibe-coding' 
+                                ? 'drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]'
+                                : 'drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]'
+                            }`}>
+                              {path.icon}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-xl font-bold text-white mb-2 drop-shadow-lg leading-tight">{path.title}</h3>
+                              <p className="text-gray-300 text-sm leading-relaxed h-12 overflow-hidden">{path.description}</p>
+                            </div>
                           </div>
-                        );
-                      })}
+                          
+                          {/* Tags Section - Fixed Position */}
+                          <div className="flex flex-wrap gap-2 mb-6">
+                            <span className={`px-2 py-0.5 ${
+                              path.id === 'vibe-coding'
+                                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30'
+                                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
+                            } text-xs rounded-full backdrop-blur-sm font-medium`}>
+                              {path.category}
+                            </span>
+                            <span className={`px-2 py-0.5 ${
+                              path.id === 'vibe-coding'
+                                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30'
+                                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
+                            } text-xs rounded-full backdrop-blur-sm font-medium`}>
+                              {path.difficulty}
+                            </span>
+                            <span className={`px-2 py-0.5 ${
+                              path.id === 'vibe-coding'
+                                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30'
+                                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
+                            } text-xs rounded-full backdrop-blur-sm font-medium`}>
+                              {path.estimatedHours}h • {path.totalLessons} lessons
+                            </span>
+                          </div>
+                          
+                          {/* Spacer to push bottom content down */}
+                          <div className="flex-grow"></div>
+                          
+                          {/* Bottom Section - Always at bottom */}
+                          <div className="space-y-3">
+                            {/* Access Status */}
+                            <div className="text-center">
+                              {path.isPremium ? (
+                                <div className="text-amber-300 text-sm font-medium drop-shadow-sm">
+                                  🔒 Premium Required
+                                </div>
+                              ) : (
+                                <div className="text-emerald-300 text-sm font-medium drop-shadow-sm">
+                                  ✅ Free Access
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Big Button - Always at bottom */}
+                            <button className={`w-full py-4 px-6 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:translate-y-[-1px] ${
+                              path.id === 'vibe-coding' 
+                                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-500/25 hover:shadow-purple-500/40' 
+                                : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-500/25 hover:shadow-cyan-500/40'
+                            }`}>
+                              Start Learning Journey →
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                    <div className="mt-6 text-center">
+                    
+                    <div className="text-center mt-6">
                       <button
                         onClick={() => navigate('/lessons')}
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium py-2 px-6 rounded-xl transition-all duration-300"
+                        className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-300 border border-white/20"
                       >
-                        View All Lessons →
+                        View All Lessons & Paths →
                       </button>
                     </div>
                   </div>
                 )}
 
                 {/* Weekly Goal Progress */}
-                <div className="bg-gradient-to-br from-emerald-500/40 to-green-600/40 backdrop-blur-xl rounded-3xl p-6 border border-emerald-400/50 shadow-lg">
+                <div className="bg-gradient-to-br from-emerald-500/40 to-green-600/40 backdrop-blur-xl rounded-3xl p-6 border border-emerald-400/50 shadow-md">
                   <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                     🎯 Weekly Learning Goal
                   </h2>
@@ -728,7 +819,7 @@ const HomePage = () => {
                 </div>
 
                 {/* AI Insight */}
-                <div className="bg-gradient-to-br from-sky-500/40 to-cyan-600/40 backdrop-blur-xl rounded-3xl p-6 border border-sky-400/50 shadow-lg">
+                <div className="bg-gradient-to-br from-sky-500/40 to-cyan-600/40 backdrop-blur-xl rounded-3xl p-6 border border-sky-400/50 shadow-md">
                   <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
                     💡 AI Insight of the Day
                   </h2>
@@ -770,7 +861,7 @@ const HomePage = () => {
                 )}
 
                 {/* Quick Actions */}
-                <div className="bg-gradient-to-br from-indigo-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-indigo-400/50 shadow-lg">
+                <div className="bg-gradient-to-br from-indigo-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-indigo-400/50 shadow-md">
                   <h2 className="text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
                   <div className="space-y-3">
                     {!isQuizCompleted && (
@@ -787,7 +878,7 @@ const HomePage = () => {
                         group relative bg-gradient-to-br from-blue-400/30 to-indigo-500/30 backdrop-blur-xl 
                         rounded-3xl p-8 border border-blue-400/40 hover:border-blue-300/60 
                         transition-all duration-300 cursor-pointer hover:scale-105 
-                        shadow-lg hover:shadow-xl
+                        shadow-md hover:shadow-lg
                       "
                     >
                       <div className="text-6xl mb-4">🔍</div>
@@ -812,7 +903,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Motivational Quote */}
-                <div className="bg-gradient-to-r from-pink-500/40 to-rose-600/40 backdrop-blur-xl rounded-3xl p-6 border border-pink-400/50 text-center shadow-lg">
+                <div className="bg-gradient-to-r from-pink-500/40 to-rose-600/40 backdrop-blur-xl rounded-3xl p-6 border border-pink-400/50 text-center shadow-md">
                   <div className="text-4xl mb-3">🌟</div>
                   <p className="text-lg font-medium text-pink-100 italic">
                     "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
@@ -821,82 +912,23 @@ const HomePage = () => {
                 </div>
               </div>
             </div>
+
+
           </main>
         </SwipeNavigationWrapper>
       </div>
 
       {/* Difficulty Selection Modal for Quick Access Lessons */}
-      {showDifficultyModal && lessonForDifficultySelection && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-[100] p-4">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }} 
-            animate={{ opacity: 1, scale: 1, y: 0 }} 
-            transition={{ duration: 0.3, ease: 'easeOut'}}
-            className="bg-gradient-to-br from-blue-600/80 via-indigo-700/80 to-purple-700/80 backdrop-blur-xl rounded-2xl p-8 shadow-2xl w-full max-w-lg border border-blue-400/50 text-white"
-          >
-            <div className="text-center mb-1">
-              <h3 className="text-2xl font-bold text-white mb-2">Select Difficulty</h3>
-              <p className="text-lg text-cyan-300 mb-6 truncate font-medium">{lessonForDifficultySelection.title}</p>
-            </div>
-            
-            <div className="space-y-3 mb-8">
-              {['Beginner', 'Intermediate', 'Advanced'].map(difficulty => (
-                <button 
-                  key={difficulty}
-                  onClick={() => setSelectedQuickAccessDifficulty(difficulty)}
-                  className={`w-full text-left px-6 py-4 rounded-xl transition-all duration-200 font-semibold text-lg group relative overflow-hidden border-2
-                              ${selectedQuickAccessDifficulty === difficulty 
-                                ? 'bg-cyan-500 border-cyan-400 text-white shadow-lg shadow-cyan-500/30 scale-105'
-                                : 'bg-slate-700/50 border-slate-600 hover:bg-slate-600/70 hover:border-slate-500 text-slate-200'}`}
-                >
-                  <span className="relative z-10">{difficulty}</span>
-                  {/* Premium/Free Tag - Revised Logic */}
-                  <span className={`relative z-10 ml-2 px-2.5 py-1 text-xs rounded-full font-bold 
-                    ${!lessonForDifficultySelection.isPremium || difficulty === 'Beginner' 
-                      ? 'bg-green-400/20 text-green-300' 
-                      : 'bg-yellow-400/20 text-yellow-300'}
-                  `}>
-                    {!lessonForDifficultySelection.isPremium || difficulty === 'Beginner' 
-                      ? 'Free' 
-                      : '👑 Premium'
-                    }
-                  </span>
-                  {selectedQuickAccessDifficulty === difficulty && (
-                    <motion.div 
-                      layoutId="selectedDifficultyBg"
-                      className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-blue-500 z-0"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-4">
-              <motion.button 
-                onClick={handleConfirmQuickAccessDifficulty}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl text-lg"
-              >
-                Start Lesson 🚀
-              </motion.button>
-              <motion.button 
-                onClick={() => {
-                  setShowDifficultyModal(false);
-                  setLessonForDifficultySelection(null);
-                }}
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex-1 bg-slate-600 hover:bg-slate-500 text-slate-200 font-semibold py-3 px-6 rounded-xl transition-colors duration-200 shadow-md hover:shadow-lg text-lg"
-              >
-                Cancel
-              </motion.button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <DifficultySelectionModal
+        isOpen={showDifficultyModal}
+        onClose={() => {
+          setShowDifficultyModal(false);
+          setLessonForDifficultySelection(null);
+        }}
+        onConfirm={handleConfirmQuickAccessDifficulty}
+        lesson={lessonForDifficultySelection}
+        defaultDifficulty="Beginner"
+      />
 
       {/* Paywall Modal */}
       {showPaywallModal && (
@@ -905,7 +937,7 @@ const HomePage = () => {
             initial={{ opacity: 0, scale: 0.9, y: 20 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
             transition={{ duration: 0.3, ease: 'easeOut'}}
-            className="bg-gradient-to-br from-slate-800/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-xl rounded-3xl p-8 shadow-2xl w-full max-w-md border border-blue-400/30 text-white relative overflow-hidden"
+            className="bg-gradient-to-br from-slate-800/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-xl rounded-3xl p-8 shadow-xl w-full max-w-md border border-blue-400/30 text-white relative overflow-hidden"
           >
             {/* Background decoration */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl"></div>
@@ -966,7 +998,7 @@ const HomePage = () => {
                   onClick={handleUpgradeToPremium}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl text-lg relative overflow-hidden group"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg text-lg relative overflow-hidden group"
                 >
                   <span className="relative z-10">💳 Upgrade Now</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-400 opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>

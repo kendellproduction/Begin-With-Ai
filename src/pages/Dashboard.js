@@ -193,7 +193,7 @@ const Dashboard = () => {
           {/* Hero Welcome Section */}
           <div className="text-center mb-12">
             <div className="mb-6">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent leading-tight py-2">
                 Welcome back!
               </h1>
               <p className="text-xl text-gray-300 mb-6">

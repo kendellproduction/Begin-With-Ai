@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import LessonCard from '../components/LessonCard';
 import LearningPathVisual from '../components/LearningPathVisual';
+import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { motion } from 'framer-motion';
@@ -16,6 +17,27 @@ const LessonsOverview = () => {
   const [learningProgress, setLearningProgress] = useState(null);
   const [adaptiveLessons, setAdaptiveLessons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Dynamic motivational quotes
+  const motivationalQuotes = [
+    { quote: "The journey of a thousand miles begins with one step.", author: "Lao Tzu" },
+    { quote: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+    { quote: "Innovation distinguishes between a leader and a follower.", author: "Steve Jobs" },
+    { quote: "The future belongs to those who learn more skills and combine them in creative ways.", author: "Robert Greene" },
+    { quote: "Learning never exhausts the mind.", author: "Leonardo da Vinci" },
+    { quote: "The capacity to learn is a gift; the ability to learn is a skill; the willingness to learn is a choice.", author: "Brian Herbert" },
+    { quote: "Intelligence is not a privilege, it's a gift. And you use it for the good of mankind.", author: "Dr. Octopus" },
+    { quote: "The beautiful thing about learning is that nobody can take it away from you.", author: "B.B. King" },
+    { quote: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
+    { quote: "The more that you read, the more things you will know. The more that you learn, the more places you'll go.", author: "Dr. Seuss" },
+    { quote: "Knowledge is power. Information is liberating.", author: "Kofi Annan" },
+    { quote: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+    { quote: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+    { quote: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+    { quote: "Your limitation—it's only your imagination.", author: "Unknown" }
+  ];
+  
+  const [currentQuote, setCurrentQuote] = useState(motivationalQuotes[0]);
   
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -31,6 +53,10 @@ const LessonsOverview = () => {
   const [foundationPage, setFoundationPage] = useState(0);
   const [foundationItemsPerPage, setFoundationItemsPerPage] = useState(3);
 
+  // State for difficulty selection modal
+  const [showDifficultyModal, setShowDifficultyModal] = useState(false);
+  const [selectedLesson, setSelectedLesson] = useState(null);
+
   useEffect(() => {
     const calculateItemsPerPage = () => {
       if (window.innerWidth < 640) { // Tailwind's 'sm' breakpoint
@@ -45,6 +71,12 @@ const LessonsOverview = () => {
     calculateItemsPerPage(); // Initial calculation
     window.addEventListener('resize', calculateItemsPerPage);
     return () => window.removeEventListener('resize', calculateItemsPerPage);
+  }, []);
+
+  // Set random quote on component mount
+  useEffect(() => {
+    const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
+    setCurrentQuote(motivationalQuotes[randomIndex]);
   }, []);
 
   useEffect(() => {
@@ -158,39 +190,52 @@ const LessonsOverview = () => {
   };
 
   const loadAdaptiveLessons = async () => {
-    setIsLoading(true);
     try {
-      const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(
-        'prompt-engineering-mastery',
-        { skillLevel: 'intermediate' }
-      );
+      setIsLoading(true);
       
-      if (adaptivePath && adaptivePath.modules) {
-        // Sort lessons in logical learning order
-        const orderedLessons = adaptivePath.modules.flatMap((module, moduleIndex) => 
-          module.lessons.map((lesson, lessonIndex) => ({
-            ...lesson,
-            moduleTitle: module.title,
-            moduleId: module.id,
-            pathTitle: adaptivePath.title,
-            difficulty: lesson.adaptedContent?.difficulty || 'intermediate',
-            duration: lesson.adaptedContent?.estimatedTime || 15,
-            company: 'BeginningWithAI',
-            category: 'AI Learning',
-            description: lesson.adaptedContent?.content?.introduction || lesson.coreConcept,
-            tags: ['AI', 'Prompt Engineering', 'Interactive'],
-            hasCodeSandbox: lesson.sandbox?.required || false,
-            // Add ordering for logical progression
-            orderIndex: moduleIndex * 100 + lessonIndex,
-            prerequisite: lessonIndex > 0 ? module.lessons[lessonIndex - 1]?.id : null
-          }))
-        ).sort((a, b) => a.orderIndex - b.orderIndex);
-        
-        setAdaptiveLessons(orderedLessons);
+      // Get user's skill level from assessment
+      const assessmentResults = localStorage.getItem('aiAssessmentResults');
+      const skillLevel = assessmentResults ? JSON.parse(assessmentResults).skillLevel : 'intermediate';
+
+      // Load multiple learning paths
+      const paths = ['prompt-engineering-mastery', 'vibe-coding'];
+      const allLessons = [];
+
+      for (const pathId of paths) {
+        try {
+          const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(pathId, { skillLevel });
+          
+          if (adaptivePath && adaptivePath.modules) {
+            // Get all lessons from this path
+            const pathLessons = adaptivePath.modules.flatMap((module, moduleIndex) => 
+              module.lessons.map((lesson, lessonIndex) => ({
+                ...lesson,
+                moduleTitle: module.title,
+                pathTitle: adaptivePath.title,
+                pathId: adaptivePath.id,
+                moduleId: module.id,
+                pathIcon: adaptivePath.icon || '📚',
+                isPremium: adaptivePath.isPremium || lesson.isPremium || false,
+                globalIndex: moduleIndex * 100 + lessonIndex,
+                moduleIndex,
+                lessonIndex
+              }))
+            );
+            allLessons.push(...pathLessons);
+          }
+        } catch (error) {
+          console.warn(`Failed to load path ${pathId}:`, error);
+        }
       }
+      
+      setAdaptiveLessons(allLessons);
+      
+      // Update available modules based on all loaded lessons
+      const modules = [...new Set(allLessons.map(lesson => lesson.moduleTitle))];
+      setAvailableModules(modules);
+      
     } catch (error) {
-      console.error('Failed to load adaptive lessons:', error);
-      setAdaptiveLessons([]);
+      console.error('Error loading adaptive lessons:', error);
     } finally {
       setIsLoading(false);
     }
@@ -256,13 +301,35 @@ const LessonsOverview = () => {
   };
 
   const handleLessonClick = (lesson, selectedDifficulty = null) => {
-    navigate(`/lessons/${lesson.id}`, { 
+    if (selectedDifficulty) {
+      // Direct navigation with specific difficulty
+      navigate(`/lessons/${lesson.id}`, { 
+        state: { 
+          pathId: 'prompt-engineering-mastery',
+          moduleId: lesson.moduleId,
+          difficulty: selectedDifficulty
+        } 
+      });
+    } else {
+      // Show difficulty selection modal
+      setSelectedLesson(lesson);
+      setShowDifficultyModal(true);
+    }
+  };
+
+  const handleDifficultyConfirm = (difficulty) => {
+    if (!selectedLesson) return;
+    
+    navigate(`/lessons/${selectedLesson.id}`, { 
       state: { 
         pathId: 'prompt-engineering-mastery',
-        moduleId: lesson.moduleId,
-        difficulty: selectedDifficulty || lesson.difficulty
+        moduleId: selectedLesson.moduleId,
+        difficulty: difficulty
       } 
     });
+    
+    setShowDifficultyModal(false);
+    setSelectedLesson(null);
   };
 
   const handleCreateLearningPath = () => {
@@ -313,7 +380,7 @@ const LessonsOverview = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white">
         <LoggedInNavbar />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
@@ -326,10 +393,7 @@ const LessonsOverview = () => {
   }
 
   return (
-    <div 
-      className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#2061a6' }}
-    >
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
       {/* Star Animation Container for LessonsOverview */}
@@ -385,7 +449,7 @@ const LessonsOverview = () => {
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Header Section */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4 leading-tight py-2">
               Your AI Learning Journey
             </h1>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto">
@@ -396,16 +460,14 @@ const LessonsOverview = () => {
           {/* Progress Section (if user has active path) */}
           {userLearningPath && learningProgress && (
             <div className="mb-8">
-              <div className="bg-gradient-to-br from-yellow-500/20 via-amber-400/15 to-orange-500/20 backdrop-blur-xl rounded-2xl p-6 border border-yellow-400/40 shadow-2xl shadow-yellow-500/20 relative overflow-hidden">
-                {/* Neon glow effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-yellow-400/10 via-amber-300/10 to-yellow-400/10 blur-xl"></div>
+              <div className="bg-gradient-to-br from-yellow-500/25 via-amber-400/20 to-orange-500/25 backdrop-blur-xl rounded-2xl p-4 border border-yellow-300/60 relative transition-all duration-500 breathing-shadow">
                 
                 {/* Motivational Quote */}
-                <div className="relative z-10 text-center mb-6">
-                  <p className="text-yellow-200 text-lg font-medium italic">
-                    "The journey of a thousand miles begins with one step."
+                <div className="relative z-10 text-center mb-4">
+                  <p className="text-yellow-100 text-lg font-medium italic drop-shadow-lg">
+                    "{currentQuote.quote}"
                   </p>
-                  <p className="text-yellow-300/80 text-sm mt-1">- Lao Tzu</p>
+                  <p className="text-yellow-200/90 text-sm mt-1 drop-shadow-md">- {currentQuote.author}</p>
                 </div>
                 
                 <LearningPathVisual 
@@ -414,17 +476,21 @@ const LessonsOverview = () => {
                   compact={true}
                   showActions={false}
                   className="max-w-4xl mx-auto relative z-10"
+                  onLessonClick={(lesson) => {
+                    setSelectedLesson(lesson);
+                    setShowDifficultyModal(true);
+                  }}
                 />
                 
                 {/* Continue Learning Button - Integrated */}
-                <div className="text-center mt-4 relative z-10">
+                <div className="text-center mt-3 relative z-10">
                   <button
                     onClick={handleContinueLearning}
-                    className="px-6 py-3 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-900 font-bold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-yellow-500/40 hover:shadow-xl hover:shadow-yellow-400/50"
+                    className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-900 font-bold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-yellow-400/60 hover:shadow-xl hover:shadow-yellow-300/80 border-2 border-yellow-200/40"
                   >
                     🚀 Continue Learning Journey
                   </button>
-                  <p className="mt-2 text-yellow-200/80 text-xs">
+                  <p className="mt-2 text-yellow-100/90 text-xs drop-shadow-sm">
                     Pick up where you left off in your personalized path
                   </p>
                 </div>
@@ -435,14 +501,22 @@ const LessonsOverview = () => {
           {/* Navigation Tabs - Simplified */}
           <div className="flex space-x-4 mb-8">
             <button
-              onClick={() => setActiveSection('overview')}
+              onClick={() => {
+                // If user has a learning path, take them to next lesson
+                if (userLearningPath && learningProgress) {
+                  handleContinueLearning();
+                } else {
+                  // Otherwise just show the overview section
+                  setActiveSection('overview');
+                }
+              }}
               className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
                 activeSection === 'overview'
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
                   : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-              }`}
+              } ${userLearningPath ? 'hover:bg-gradient-to-r hover:from-cyan-500 hover:to-purple-600' : ''}`}
             >
-              ✨ Start Here
+              {userLearningPath ? '🚀 Continue Learning' : '✨ Start Here'}
             </button>
             <button
               onClick={() => setActiveSection('browse')}
@@ -506,9 +580,26 @@ const LessonsOverview = () => {
                   {adaptiveLessons.slice(foundationPage * foundationItemsPerPage, (foundationPage + 1) * foundationItemsPerPage).map((lesson, index) => (
                     <LessonCard
                       key={lesson.id}
-                      lesson={lesson}
-                      onClick={(difficulty) => handleLessonClick(lesson, difficulty)}
-                      showDifficultySelector={true}
+                      lesson={{
+                        ...lesson,
+                        id: lesson.id,
+                        title: lesson.title,
+                        description: lesson.coreConcept || lesson.content?.beginner?.introduction || 'Interactive AI lesson',
+                        difficulty: lesson.difficulty || 'Intermediate',
+                        duration: lesson.estimatedTime?.beginner || 15,
+                        company: 'BeginningWithAI',
+                        category: lesson.pathTitle || 'AI Learning',
+                        pathIcon: lesson.pathIcon,
+                        isPremium: lesson.isPremium,
+                        tags: [
+                          ...(lesson.tags || []),
+                          lesson.pathTitle,
+                          lesson.moduleTitle
+                        ].filter(Boolean).slice(0, 4), // Limit to 4 tags
+                        hasCodeSandbox: lesson.sandbox?.required || false
+                      }}
+                      onClick={() => handleLessonClick(lesson)}
+                      showDifficultyModal={true}
                     />
                   ))}
                 </div>
@@ -659,9 +750,26 @@ const LessonsOverview = () => {
                       }}
                     >
                       <LessonCard
-                        lesson={lesson}
-                        onClick={(difficulty) => handleLessonClick(lesson, difficulty)}
-                        showDifficultySelector={true}
+                        lesson={{
+                          ...lesson,
+                          id: lesson.id,
+                          title: lesson.title,
+                          description: lesson.coreConcept || lesson.content?.beginner?.introduction || 'Interactive AI lesson',
+                          difficulty: lesson.difficulty || 'Intermediate',
+                          duration: lesson.estimatedTime?.beginner || 15,
+                          company: 'BeginningWithAI',
+                          category: lesson.pathTitle || 'AI Learning',
+                          pathIcon: lesson.pathIcon,
+                          isPremium: lesson.isPremium,
+                          tags: [
+                            ...(lesson.tags || []),
+                            lesson.pathTitle,
+                            lesson.moduleTitle
+                          ].filter(Boolean).slice(0, 4), // Limit to 4 tags
+                          hasCodeSandbox: lesson.sandbox?.required || false
+                        }}
+                        onClick={() => handleLessonClick(lesson)}
+                        showDifficultyModal={true}
                       />
                     </div>
                   ))}
@@ -709,6 +817,18 @@ const LessonsOverview = () => {
         </div>
       </div>
 
+      {/* Difficulty Selection Modal */}
+      <DifficultySelectionModal
+        isOpen={showDifficultyModal}
+        onClose={() => {
+          setShowDifficultyModal(false);
+          setSelectedLesson(null);
+        }}
+        onConfirm={handleDifficultyConfirm}
+        lesson={selectedLesson}
+        defaultDifficulty="Intermediate"
+      />
+
       {/* Custom CSS for animations */}
       <style jsx>{`
         @keyframes fadeInUp {
@@ -720,6 +840,22 @@ const LessonsOverview = () => {
             opacity: 1;
             transform: translateY(0);
           }
+        }
+
+        @keyframes breathingShadow {
+          0% {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4), 0 0 30px rgba(245, 158, 11, 0.2), 0 0 45px rgba(217, 119, 6, 0.15);
+          }
+          50% {
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.6), 0 0 50px rgba(245, 158, 11, 0.35), 0 0 75px rgba(217, 119, 6, 0.25);
+          }
+          100% {
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.4), 0 0 30px rgba(245, 158, 11, 0.2), 0 0 45px rgba(217, 119, 6, 0.15);
+          }
+        }
+
+        .breathing-shadow {
+          animation: breathingShadow 6s ease-in-out infinite;
         }
       `}</style>
     </div>

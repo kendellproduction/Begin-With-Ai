@@ -9,7 +9,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { 
-  promptEngineeringMasteryPath, 
+  promptEngineeringMasteryPath,
+  vibeCodePath,
   adaptiveModules, 
   adaptiveLessons 
 } from '../utils/adaptiveLessonData';
@@ -26,42 +27,50 @@ export class AdaptiveLessonService {
     const batch = writeBatch(db);
     
     try {
-      // 1. Create the learning path
-      const pathRef = doc(db, 'learningPaths', promptEngineeringMasteryPath.id);
-      batch.set(pathRef, {
-        ...promptEngineeringMasteryPath,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-      });
-
-      // 2. Create modules for the path
-      const pathModules = adaptiveModules[promptEngineeringMasteryPath.id] || [];
+      // Define all learning paths to seed
+      const learningPaths = [promptEngineeringMasteryPath, vibeCodePath];
       
-      for (const module of pathModules) {
-        const moduleRef = doc(db, 'learningPaths', promptEngineeringMasteryPath.id, 'modules', module.id);
-        batch.set(moduleRef, {
-          ...module,
-          pathId: promptEngineeringMasteryPath.id,
-          createdAt: serverTimestamp()
+      for (const path of learningPaths) {
+        // 1. Create the learning path
+        const pathRef = doc(db, 'learningPaths', path.id);
+        batch.set(pathRef, {
+          ...path,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
-      }
 
-      // 3. Create adaptive lessons for each module
-      for (const [moduleId, lessons] of Object.entries(adaptiveLessons)) {
-        for (const lesson of lessons) {
-          const lessonRef = doc(db, 'learningPaths', promptEngineeringMasteryPath.id, 'modules', moduleId, 'lessons', lesson.id);
-          batch.set(lessonRef, {
-            ...lesson,
-            pathId: promptEngineeringMasteryPath.id,
-            moduleId,
+        // 2. Create modules for the path
+        const pathModules = adaptiveModules[path.id] || [];
+        
+        for (const module of pathModules) {
+          const moduleRef = doc(db, 'learningPaths', path.id, 'modules', module.id);
+          batch.set(moduleRef, {
+            ...module,
+            pathId: path.id,
             createdAt: serverTimestamp()
           });
+        }
+
+        // 3. Create adaptive lessons for each module in this path
+        for (const module of pathModules) {
+          const moduleId = module.id;
+          const lessons = adaptiveLessons[moduleId] || [];
+          
+          for (const lesson of lessons) {
+            const lessonRef = doc(db, 'learningPaths', path.id, 'modules', moduleId, 'lessons', lesson.id);
+            batch.set(lessonRef, {
+              ...lesson,
+              pathId: path.id,
+              moduleId,
+              createdAt: serverTimestamp()
+            });
+          }
         }
       }
 
       await batch.commit();
-      console.log('Adaptive lessons seeded successfully!');
-      return { success: true, message: 'Adaptive lesson data seeded successfully' };
+      console.log('All adaptive lessons seeded successfully!');
+      return { success: true, message: 'All adaptive lesson data seeded successfully, including Vibe Coding path' };
       
     } catch (error) {
       console.error('Error seeding adaptive lessons:', error);

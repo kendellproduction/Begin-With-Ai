@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import { motion } from 'framer-motion';
@@ -10,6 +10,10 @@ const LoggedInNavbar = () => {
   const { currentUser, logout } = useAuth();
   const { userStats } = useGamification();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if current page should use dark space theme
+  const isDarkSpacePage = location.pathname.startsWith('/lessons');
 
   const handleLogout = async () => {
     try {
@@ -32,8 +36,12 @@ const LoggedInNavbar = () => {
 
   return (
     <nav 
-      className="sticky top-0 z-50" 
-      style={{ backgroundColor: '#2061a6' }}
+      className={`sticky top-0 z-50 ${
+        isDarkSpacePage 
+          ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
+          : ''
+      }`}
+      style={!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(numStars)].map((_, i) => {
@@ -194,7 +202,14 @@ const LoggedInNavbar = () => {
       </div>
 
       {/* Mobile menu */}
-      <div className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden relative`} style={{ backgroundColor: '#2061a6' }}>
+      <div 
+        className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden relative ${
+          isDarkSpacePage 
+            ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
+            : ''
+        }`}
+        style={!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}}
+      >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
           <Link to="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
