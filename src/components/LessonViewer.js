@@ -3,6 +3,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
+import logger from '../utils/logger';
 
 // Import slide components
 import IntroSlide from './slides/IntroSlide';
@@ -71,47 +72,28 @@ const LessonViewer = () => {
   }, [location, difficulty]);
 
   const loadLessonData = async () => {
+    logger.info('Loading lesson data for:', lessonId);
     setIsLoading(true);
     
     try {
-      // Import the adaptive lesson service to load actual lesson content
-      const { AdaptiveLessonService } = await import('../services/adaptiveLessonService');
+      // Check if lesson exists in adaptiveLessonData
+      const adaptiveLesson = getAdaptiveLessonById(lessonId);
       
-      // For now, let's map lesson IDs to their path/module structure
-      // This would ideally come from a lesson registry or API
-      const lessonMetadata = getLessonMetadata(lessonId);
-      
-      if (lessonMetadata) {
-        // Load actual lesson content from Firebase
-        const adaptedLesson = await AdaptiveLessonService.getAdaptedLesson(
-          lessonMetadata.pathId,
-          lessonMetadata.moduleId,
-          lessonId,
-          difficulty
-        );
-        
-        // Convert lesson data to slides format
-        const lessonSlides = convertLessonToSlides(adaptedLesson);
-        
-        setLesson({
-          id: lessonId,
-          title: adaptedLesson.title,
-          description: adaptedLesson.coreConcept,
-          estimatedTime: adaptedLesson.adaptedContent?.estimatedTime || 20,
-          xpReward: adaptedLesson.adaptedContent?.xpReward || 100,
-          slides: lessonSlides
-        });
-        setSlides(lessonSlides);
+      if (adaptiveLesson) {
+        // Use adaptive lesson data structure
+        setLesson(adaptiveLesson);
+        setSlides(adaptiveLesson.slides || []);
+        logger.info('Adaptive lesson loaded successfully');
       } else {
-        // Fallback to mock lesson if lesson not found in database
-        console.warn(`Lesson ${lessonId} not found, using fallback content`);
+        // Fallback to generic content if lesson not found locally
+        logger.warn(`Lesson ${lessonId} not found in local data, using fallback content`);
         const mockLesson = getLessonContent(difficulty);
         setLesson(mockLesson);
         setSlides(mockLesson.slides);
       }
       
     } catch (error) {
-      console.error('Error loading lesson:', error);
+      logger.error('Error loading lesson:', error);
       // Fallback to mock lesson on error
       const mockLesson = getLessonContent(difficulty);
       setLesson(mockLesson);
@@ -119,6 +101,7 @@ const LessonViewer = () => {
     }
     
     setIsLoading(false);
+    logger.info('Loading completed');
   };
 
   // Map lesson IDs to their path/module structure
@@ -554,9 +537,16 @@ const LessonViewer = () => {
       }
     }));
     
-    // Auto-advance after a brief delay
-    setTimeout(goToNextSlide, 1000);
-  }, [goToNextSlide]);
+    // Only auto-advance for certain slide types (not sandbox slides)
+    const currentSlide = slides[currentSlideIndex];
+    const shouldAutoAdvance = currentSlide && 
+      !['sandbox', 'interactive_sandbox', 'fill-blank', 'multiple-choice'].includes(currentSlide.type);
+    
+    if (shouldAutoAdvance) {
+      // Auto-advance after a brief delay for content slides
+      setTimeout(goToNextSlide, 1000);
+    }
+  }, [goToNextSlide, slides, currentSlideIndex]);
 
   // Handle lesson completion
   const handleLessonComplete = () => {
@@ -618,6 +608,11 @@ const LessonViewer = () => {
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e) => {
+      // Don't handle keyboard navigation when user is typing in input elements
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
       switch (e.key) {
         case 'ArrowRight':
         case 'ArrowDown':
@@ -672,8 +667,58 @@ const LessonViewer = () => {
 
   if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black flex items-center justify-center">
-        <div className="text-center">
+      <div 
+        className="fixed inset-0 flex items-center justify-center text-white overflow-hidden"
+        style={{ backgroundColor: '#2061a6' }}
+      >
+        {/* Star Animation Container for Loading */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {[...Array(100)].map((_, i) => {
+            const screenH = window.innerHeight;
+            const screenW = window.innerWidth;
+            const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
+            const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
+            const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
+            const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+            const starDuration = 30 + Math.random() * 25;
+            const starSize = Math.random() * 3 + 1;
+
+            return (
+              <motion.div
+                key={`loading-star-${i}`}
+                className="absolute rounded-full bg-white/50"
+                style={{
+                  width: starSize,
+                  height: starSize,
+                }}
+                initial={{
+                  x: initialX,
+                  y: initialY,
+                  opacity: 0,
+                }}
+                animate={{
+                  x: targetX,
+                  y: targetY,
+                  opacity: [0, 0.6, 0.6, 0],
+                }}
+                transition={{
+                  duration: starDuration,
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 5 + 2,
+                  ease: "linear",
+                  opacity: {
+                    duration: starDuration,
+                    ease: "linear",
+                    times: [0, 0.1, 0.85, 1],
+                    repeat: Infinity,
+                    repeatDelay: Math.random() * 5 + 2,
+                  }
+                }}
+              />
+            );
+          })}
+        </div>
+        <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-xl text-white">Loading lesson...</p>
         </div>
@@ -684,9 +729,56 @@ const LessonViewer = () => {
   if (isComplete) {
     return (
       <div 
-        className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black flex items-center justify-center text-center"
+        className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black flex items-center justify-center text-center"
         onClick={() => !showCompletionButtons && setShowCompletionButtons(true)}
       >
+        {/* Star Animation Container for Completion */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {[...Array(100)].map((_, i) => {
+            const screenH = window.innerHeight;
+            const screenW = window.innerWidth;
+            const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
+            const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
+            const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
+            const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+            const starDuration = 25 + Math.random() * 20;
+            const starSize = Math.random() * 3 + 1;
+
+            return (
+              <motion.div
+                key={`completion-star-${i}`}
+                className="absolute rounded-full bg-white/50"
+                style={{
+                  width: starSize,
+                  height: starSize,
+                }}
+                initial={{
+                  x: initialX,
+                  y: initialY,
+                  opacity: 0,
+                }}
+                animate={{
+                  x: targetX,
+                  y: targetY,
+                  opacity: [0, 0.7, 0.7, 0],
+                }}
+                transition={{
+                  duration: starDuration,
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 4 + 1,
+                  ease: "linear",
+                  opacity: {
+                    duration: starDuration,
+                    ease: "linear",
+                    times: [0, 0.1, 0.85, 1],
+                    repeat: Infinity,
+                    repeatDelay: Math.random() * 4 + 1,
+                  }
+                }}
+              />
+            );
+          })}
+        </div>
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -759,10 +851,57 @@ const LessonViewer = () => {
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 bg-gradient-to-br from-gray-900 via-slate-900 to-black z-50 overflow-hidden"
+      className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black z-50 overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
     >
+      {/* Star Animation Container for LessonViewer */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        {[...Array(120)].map((_, i) => {
+          const screenH = window.innerHeight;
+          const screenW = window.innerWidth;
+          const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
+          const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
+          const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const starDuration = 30 + Math.random() * 25;
+          const starSize = Math.random() * 3 + 1;
+
+          return (
+            <motion.div
+              key={`lesson-viewer-star-${i}`}
+              className="absolute rounded-full bg-white/50"
+              style={{
+                width: starSize,
+                height: starSize,
+              }}
+              initial={{
+                x: initialX,
+                y: initialY,
+                opacity: 0,
+              }}
+              animate={{
+                x: targetX,
+                y: targetY,
+                opacity: [0, 0.6, 0.6, 0],
+              }}
+              transition={{
+                duration: starDuration,
+                repeat: Infinity,
+                repeatDelay: Math.random() * 5 + 2,
+                ease: "linear",
+                opacity: {
+                  duration: starDuration,
+                  ease: "linear",
+                  times: [0, 0.1, 0.85, 1],
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 5 + 2,
+                }
+              }}
+            />
+          );
+        })}
+      </div>
       {/* Progress Bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gray-800 z-10">
         <motion.div 

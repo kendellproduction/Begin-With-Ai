@@ -120,9 +120,11 @@ export const adaptiveLessons = {
           },
           
           examples: [
-            "Ask ChatGPT to help write a letter to your friend",
-            "Use DALL-E to draw a purple elephant wearing a hat",
-            "Have AI help make a fun story about robots"
+            "Ask ChatGPT to help write a letter to your friend or plan your weekend activities",
+            "Use DALL-E to draw a purple elephant wearing a hat or create art for your room",
+            "Have AI help make a fun story about robots or explain your favorite hobby",
+            "Get help with homework or learn something new you've always wanted to know",
+            "Plan a birthday party or family game night with AI suggestions"
           ],
           
           commonMisunderstandings: [
@@ -157,8 +159,10 @@ export const adaptiveLessons = {
           
           examples: [
             "Marketing teams use Midjourney for social media content creation",
-            "Customer service implements Claude for intelligent automated responses",
-            "Video creators use RunwayML for quick explainer video production"
+            "Parents use ChatGPT to plan educational activities and explain complex topics to kids",
+            "Hobbyists use DALL-E to create custom artwork for their projects and interests",
+            "Students use Claude for research help and essay writing assistance",
+            "Video creators use RunwayML for quick explainer video production and personal storytelling"
           ],
           
           commonMisunderstandings: [
@@ -169,38 +173,94 @@ export const adaptiveLessons = {
         },
         
         advanced: {
-          introduction: "Modern AI represents a paradigm shift from deterministic programming to probabilistic pattern recognition, enabling unprecedented automation and creativity across enterprise applications.",
+          introduction: "Master the complete AI landscape from foundational concepts to cutting-edge implementations. This comprehensive overview covers everything from basic AI principles to enterprise-grade deployment strategies.",
           
-          mainContent: {
-            aiDefinition: "Contemporary AI leverages transformer architectures and large-scale training to achieve emergent capabilities through statistical learning from vast corpora.",
-            
-            aiVsChatbots: "While conversational interfaces represent one manifestation of AI capabilities, the underlying technology enables multimodal reasoning, complex task orchestration, and autonomous decision-making.",
-            
-            categories: [
-              { type: "Transformer-based Language Models", description: "Advanced text processing with attention mechanisms for complex reasoning", icon: "📝", examples: ["GPT-4", "Claude-3", "Gemini Pro"] },
-              { type: "Diffusion Models & GANs", description: "High-fidelity image synthesis with controllable generation parameters", icon: "🎨", examples: ["Stable Diffusion", "Midjourney v6", "DALL-E 3"] },
-              { type: "Neural Voice Synthesis", description: "Realistic speech synthesis with emotional modulation and speaker adaptation", icon: "🎤", examples: ["WaveNet", "ElevenLabs", "Bark"] },
-              { type: "Temporal Consistency Models", description: "Coherent video generation with motion control and narrative structure", icon: "🎬", examples: ["RunwayML Gen-2", "Kling AI", "Pika 1.0"] },
-              { type: "Multi-modal Reasoning Systems", description: "Autonomous task execution with tool integration and decision-making", icon: "🤖", examples: ["AutoGPT", "LangChain", "CrewAI"] }
-            ],
-            
-            companies: [
-              { name: "OpenAI", focus: "General intelligence research", capabilities: "GPT series, multimodal capabilities, reasoning" },
-              { name: "Google/DeepMind", focus: "Scientific discovery", capabilities: "Advanced reasoning, planning, specialized models" },
-              { name: "Anthropic", focus: "AI Safety", capabilities: "Constitutional AI, alignment research, helpful behavior" }
+          foundationalConcepts: {
+            aiDefinition: "AI encompasses any system that can perform tasks requiring human-like intelligence, from simple pattern recognition to complex reasoning and creativity.",
+            basicCategories: [
+              { type: "Text AI", description: "Language understanding and generation", examples: ["ChatGPT for writing", "Translation services", "Content analysis"] },
+              { type: "Image AI", description: "Visual content creation and analysis", examples: ["DALL-E for art", "Medical imaging", "Quality control"] },
+              { type: "Voice AI", description: "Speech synthesis and recognition", examples: ["Siri for assistance", "Podcast narration", "Accessibility tools"] },
+              { type: "Video AI", description: "Moving image generation and editing", examples: ["Marketing content", "Educational videos", "Entertainment"] }
             ]
           },
           
-          examples: [
-            "Enterprise implementations of Claude for complex document analysis",
-            "Production pipelines using Stable Diffusion with custom fine-tuning",
-            "Autonomous agent frameworks like AutoGPT for multi-step reasoning"
+          technicalArchitectures: {
+            transformers: "Neural networks using attention mechanisms that revolutionized language processing and now power most modern AI",
+            diffusionModels: "Generate high-quality images by learning to reverse noise processes",
+            reinforcementLearning: "AI learns through trial and error with reward signals, crucial for alignment and safety"
+          },
+          
+          enterpriseImplementations: [
+            {
+              category: "Transformer-based Language Models",
+              description: "Advanced text processing with attention mechanisms for complex reasoning",
+              icon: "📝",
+              examples: ["GPT-4", "Claude-3", "Gemini Pro"],
+              businessApplications: ["Document analysis", "Code generation", "Strategic planning"],
+              technicalSpecs: ["Billions of parameters", "Context windows up to 2M tokens", "Multimodal capabilities"]
+            },
+            {
+              category: "Diffusion Models & GANs", 
+              description: "High-fidelity image synthesis with controllable generation parameters",
+              icon: "🎨",
+              examples: ["Stable Diffusion", "Midjourney v6", "DALL-E 3"],
+              businessApplications: ["Marketing assets", "Product design", "Personalization at scale"],
+              technicalSpecs: ["1024x1024+ resolution", "Style control", "API integration"]
+            },
+            {
+              category: "Neural Voice Synthesis",
+              description: "Realistic speech synthesis with emotional modulation and speaker adaptation", 
+              icon: "🎤",
+              examples: ["WaveNet", "ElevenLabs", "Bark"],
+              businessApplications: ["Customer service", "Content localization", "Accessibility"],
+              technicalSpecs: ["Real-time generation", "Voice cloning", "Multi-language support"]
+            },
+            {
+              category: "Temporal Consistency Models",
+              description: "Coherent video generation with motion control and narrative structure",
+              icon: "🎬", 
+              examples: ["RunwayML Gen-2", "Kling AI", "Pika 1.0"],
+              businessApplications: ["Advertising", "Training content", "Social media"],
+              technicalSpecs: ["4K resolution", "Camera control", "Text-to-video"]
+            },
+            {
+              category: "Multi-modal Reasoning Systems",
+              description: "Autonomous task execution with tool integration and decision-making",
+              icon: "🤖",
+              examples: ["AutoGPT", "LangChain", "CrewAI"],
+              businessApplications: ["Process automation", "Research assistance", "Complex workflows"],
+              technicalSpecs: ["Tool integration", "Chain-of-thought", "Error correction"]
+            }
           ],
           
-          commonMisunderstandings: [
-            "Larger models are always better → Model selection depends on use case, latency, and cost constraints",
-            "AI will replace all jobs → AI augments human capabilities and creates new opportunities",
-            "Open source models are inferior → Many open models rival proprietary ones for specific tasks"
+          strategicConsiderations: [
+            {
+              factor: "Cost vs Performance",
+              consideration: "Model selection depends on use case, latency, and cost constraints - larger isn't always better"
+            },
+            {
+              factor: "Human Augmentation", 
+              consideration: "AI augments human capabilities and creates new opportunities rather than simply replacing jobs"
+            },
+            {
+              factor: "Open Source vs Proprietary",
+              consideration: "Many open models rival proprietary ones for specific tasks, offering cost and control benefits"
+            },
+            {
+              factor: "Implementation Strategy",
+              consideration: "Start with specific use cases, measure ROI, then scale systematically across the organization"
+            }
+          ],
+          
+          realWorldCaseStudies: [
+            "Enterprise Claude implementation reducing legal document review time by 80%",
+            "Students using AI tutors to improve grades and understanding in difficult subjects",
+            "Families using AI for meal planning, saving 5+ hours per week on food decisions",
+            "Hobbyists creating custom D&D campaigns and stories with AI collaboration",
+            "Production pipelines using Stable Diffusion with custom fine-tuning for brand consistency",
+            "Retirees learning new skills and languages with personalized AI instruction",
+            "Autonomous agent frameworks like AutoGPT handling multi-step research and analysis workflows"
           ]
         }
       },
@@ -290,8 +350,8 @@ export const adaptiveLessons = {
         ]
       },
       
-      xpRewards: { beginner: 15, intermediate: 20, advanced: 25 },
-      estimatedTime: { beginner: 8, intermediate: 12, advanced: 15 }
+      xpRewards: { beginner: 15, intermediate: 20, advanced: 30 },
+      estimatedTime: { beginner: 8, intermediate: 12, advanced: 18 }
     },
 
     // LESSON 2: How AI "Thinks"
@@ -315,7 +375,9 @@ export const adaptiveLessons = {
             examples: [
               "You say 'The sky is...' and AI guesses 'blue' because it saw that pattern many times",
               "Ask for a story about cats, and AI combines cat patterns with story patterns",
-              "AI fills in missing words like a smart autocomplete"
+              "AI fills in missing words like a smart autocomplete when you're writing emails or homework",
+              "Ask 'How do I make cookies?' and AI uses recipe patterns it learned to help you bake",
+              "Request a bedtime story and AI combines story patterns to create something new for your kids"
             ]
           },
           
@@ -342,31 +404,65 @@ export const adaptiveLessons = {
           },
           
           practicalImplications: [
-            "AI responses are probabilistic, not deterministic",
-            "Models don't learn from individual conversations (unless fine-tuned)",
-            "Prompting techniques can guide but not guarantee specific outputs"
+            "AI responses are probabilistic, not deterministic - same question might get different creative answers",
+            "Models don't learn from individual conversations (unless fine-tuned) - they won't remember you personally",
+            "Prompting techniques can guide but not guarantee specific outputs - useful for creative projects and problem-solving",
+            "Understanding AI limitations helps you fact-check important information for school or personal decisions",
+            "AI works best as a creative partner and thinking assistant for hobbies, learning, and daily tasks"
           ]
         },
         
         advanced: {
-          introduction: "Modern language models use transformer architectures with attention mechanisms to model complex dependencies in sequential data.",
+          introduction: "Comprehensive understanding of AI decision-making from basic pattern recognition to sophisticated transformer architectures and enterprise implementation strategies.",
           
-          mainContent: {
-            training: "Training involves next-token prediction on massive corpora using gradient descent optimization, with techniques like reinforcement learning from human feedback (RLHF) for alignment.",
-            tokens: "Tokenization strategies (BPE, SentencePiece) affect model performance. Attention mechanisms allow models to weight relevant context dynamically.",
-            inference: "Generation uses techniques like beam search, nucleus sampling, and temperature scaling to balance coherence and diversity in outputs.",
-            
-            architecturalDetails: [
-              "Multi-head attention enables parallel processing of different representation subspaces",
-              "Layer normalization and residual connections enable stable training of deep networks",
-              "Positional encodings provide sequence information in the absence of recurrence"
-            ]
+          foundationalMechanisms: {
+            basicConcept: "AI learns patterns from examples rather than understanding concepts, similar to an advanced autocomplete system",
+            trainingProcess: "AI reads millions of books and websites to learn how words typically follow each other in human communication",
+            predictionMechanism: "When asked a question, AI uses learned patterns to predict the most likely sequence of words that would follow"
           },
           
-          limitations: [
-            "Hallucination emerges from the probabilistic nature of generation",
-            "Knowledge cutoffs and training data biases affect model behavior",
-            "Computational costs scale with sequence length and model size"
+          technicalArchitectures: {
+            transformers: "Modern AI uses transformer architectures with attention mechanisms to model complex dependencies in sequential data",
+            training: "Training involves next-token prediction on massive corpora using gradient descent optimization, with techniques like reinforcement learning from human feedback (RLHF) for alignment",
+            tokenization: "Text is broken into tokens (word pieces) - tokenization strategies (BPE, SentencePiece) significantly affect model performance",
+            attention: "Attention mechanisms allow models to weight relevant context dynamically, enabling understanding of long-range dependencies"
+          },
+          
+          generationMechanisms: {
+            inference: "Generation uses techniques like beam search, nucleus sampling, and temperature scaling to balance coherence and diversity in outputs",
+            parameters: "Models have billions to trillions of parameters (learned weights) that encode patterns from training data",
+            contextWindow: "Limited memory capacity determines how much conversation history the model can consider",
+            temperature: "Controls randomness - low temperature (0.1) gives focused responses, high temperature (0.9) gives creative responses"
+          },
+          
+          architecturalDetails: [
+            "Multi-head attention enables parallel processing of different representation subspaces",
+            "Layer normalization and residual connections enable stable training of deep networks", 
+            "Positional encodings provide sequence information in the absence of recurrence",
+            "Transformer blocks stack to create increasingly sophisticated representations",
+            "Feed-forward networks within each block process information in parallel"
+          ],
+          
+          practicalImplications: [
+            "AI responses are probabilistic, not deterministic - same prompt can yield different outputs",
+            "Models don't learn from individual conversations unless specifically fine-tuned",
+            "Prompting techniques can guide but not guarantee specific outputs",
+            "Understanding token limits helps optimize conversation flow and cost"
+          ],
+          
+          limitationsAndChallenges: [
+            "Hallucination emerges from the probabilistic nature of generation - AI can confidently state false information",
+            "Knowledge cutoffs mean models lack information about recent events",
+            "Training data biases affect model behavior and outputs",
+            "Computational costs scale with sequence length and model size",
+            "Models can exhibit inconsistent reasoning across similar problems"
+          ],
+          
+          businessConsiderations: [
+            "Cost optimization through model selection and prompt engineering",
+            "Quality assurance processes to catch and correct hallucinations",
+            "Integration strategies for existing workflows and systems",
+            "Performance monitoring and continuous improvement frameworks"
           ]
         }
       },
@@ -409,102 +505,467 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 15, intermediate: 20, advanced: 25 },
-      estimatedTime: { beginner: 10, intermediate: 15, advanced: 18 }
+      xpRewards: { beginner: 15, intermediate: 20, advanced: 30 },
+      estimatedTime: { beginner: 10, intermediate: 15, advanced: 20 }
     },
 
     // LESSON 3: AI Vocabulary Bootcamp
     {
       id: 'ai-vocabulary-bootcamp',
-      title: 'AI Vocabulary Bootcamp',
+      title: 'AI Vocabulary Bootcamp: Master 25 Essential Terms',
       lessonType: 'interactive_vocabulary',
       order: 3,
       
-      coreConcept: "Learning AI's vocabulary gives you power. It allows you to ask better questions, explore more advanced tools, and understand what's happening behind the scenes.",
+      coreConcept: "Learning AI's vocabulary gives you power. These 25 essential terms will help you understand AI discussions, ask better questions, explore advanced tools, and communicate effectively about artificial intelligence.",
       
       content: {
         beginner: {
-          introduction: "Learning AI words is like learning the rules of a game - it helps you play better! Let's learn the most important AI words.",
+          introduction: "Learning AI words is like learning the rules of a game - it helps you play better! Let's learn the most important AI words that everyone should know. Don't worry about memorizing everything - focus on understanding the big ideas!",
           
           vocabulary: [
-            { term: "LLM", definition: "Large Language Model - A smart AI that works with words", example: "ChatGPT is an LLM" },
-            { term: "Prompt", definition: "What you type to the AI - your question or instruction", example: "Write a story about dogs" },
-            { term: "Token", definition: "Small pieces of words that AI understands", example: "The word 'wonderful' might be 2 tokens" },
-            { term: "Hallucination", definition: "When AI makes up wrong information that sounds real", example: "AI saying there are 27 days in February" },
-            { term: "Temperature", definition: "How creative vs focused the AI should be", example: "High = more creative, Low = more focused" }
+            { 
+              term: "AI (Artificial Intelligence)", 
+              definition: "Smart computer programs that can think and learn like humans", 
+              whatItMeans: "Computers doing tasks that usually need human intelligence",
+              example: "ChatGPT answering questions, Siri understanding your voice, or Netflix suggesting movies you might like",
+              category: "Core Concepts"
+            },
+            { 
+              term: "LLM (Large Language Model)", 
+              definition: "A super smart AI that works with words and language", 
+              whatItMeans: "An AI trained on millions of books and websites to understand and create text",
+              example: "ChatGPT, Claude, and Gemini are all LLMs that can write stories, answer questions, and help with homework",
+              category: "Core Concepts"
+            },
+            { 
+              term: "Prompt", 
+              definition: "What you type to tell the AI what you want", 
+              whatItMeans: "Your instructions, questions, or requests to the AI",
+              example: "'Write a funny story about a cat' or 'Help me with my math homework' are prompts",
+              category: "How to Use AI"
+            },
+            { 
+              term: "Token", 
+              definition: "Small pieces that AI breaks words into to understand them", 
+              whatItMeans: "AI doesn't see whole words - it sees little chunks like 'wonder' and 'ful'",
+              example: "The word 'wonderful' might be split into 'wonder' + 'ful' = 2 tokens",
+              category: "How AI Works"
+            },
+            { 
+              term: "Hallucination", 
+              definition: "When AI makes up information that sounds real but isn't true", 
+              whatItMeans: "AI sometimes creates fake facts confidently, like a person making up stories",
+              example: "AI saying 'February has 31 days' or inventing a fake book title that sounds real",
+              category: "AI Problems"
+            },
+            { 
+              term: "Temperature", 
+              definition: "A setting that controls how creative or focused the AI is", 
+              whatItMeans: "Like a creativity dial - high = more random and creative, low = more focused and predictable",
+              example: "High temperature: creative poetry. Low temperature: accurate math answers",
+              category: "AI Settings"
+            },
+            { 
+              term: "Training Data", 
+              definition: "All the books, websites, and text the AI learned from", 
+              whatItMeans: "Like the textbooks AI studied before it could help you",
+              example: "AI learned from millions of Wikipedia articles, books, and websites to understand how language works",
+              category: "How AI Learns"
+            },
+            { 
+              term: "Algorithm", 
+              definition: "Step-by-step instructions that tell the computer what to do", 
+              whatItMeans: "Like a recipe that the computer follows to solve problems",
+              example: "An algorithm might say: 1) Read the question, 2) Find patterns, 3) Generate an answer",
+              category: "Computer Science"
+            },
+            { 
+              term: "Machine Learning", 
+              definition: "Teaching computers to learn patterns and make decisions from examples", 
+              whatItMeans: "Instead of programming every answer, we show computers lots of examples and let them figure out patterns",
+              example: "Showing a computer 1000 pictures of cats so it learns to recognize cats in new pictures",
+              category: "Core Concepts"
+            },
+            { 
+              term: "Chatbot", 
+              definition: "A computer program designed to have conversations with people", 
+              whatItMeans: "An AI assistant you can talk to through typing or speaking",
+              example: "ChatGPT, Siri, Alexa, and customer service chat windows are all chatbots",
+              category: "AI Applications"
+            },
+            { 
+              term: "API", 
+              definition: "A way for different computer programs to talk to each other", 
+              whatItMeans: "Like a translator that helps your app use AI services",
+              example: "When you use ChatGPT in another app, that app uses OpenAI's API to connect",
+              category: "Technical Terms"
+            },
+            { 
+              term: "Neural Network", 
+              definition: "Computer system designed to work like a simplified version of the human brain", 
+              whatItMeans: "Lots of connected computer 'neurons' that work together to solve problems",
+              example: "Just like your brain has billions of connected neurons, AI has artificial ones that process information",
+              category: "How AI Works"
+            }
           ]
         },
         
         intermediate: {
-          introduction: "Mastering AI terminology helps you communicate effectively with AI tools and understand their capabilities and limitations.",
+          introduction: "Now let's dive deeper into AI terminology. These terms will help you understand how AI works, discuss AI capabilities professionally, and make informed decisions about AI tools for work and projects.",
           
           vocabulary: [
-            { term: "LLM (Large Language Model)", definition: "AI systems trained on text to understand and generate human language", applications: ["Content creation", "Analysis", "Translation"] },
-            { term: "Context Window", definition: "Amount of text the AI can remember in a conversation", implications: ["Longer contexts = better understanding", "Limited by model architecture"] },
-            { term: "Fine-tuning", definition: "Training a model on specific data to specialize it", examples: ["Legal documents", "Medical texts", "Company-specific content"] },
-            { term: "Multimodal", definition: "AI that works with text, images, audio, and video", tools: ["GPT-4V", "Claude 3", "Gemini Pro"] },
-            { term: "Inference", definition: "The process of AI generating responses to prompts", considerations: ["Speed", "Cost", "Quality"] }
+            { 
+              term: "Context Window", 
+              definition: "The amount of text (conversation history) that an AI can remember and work with at one time", 
+              whatItMeans: "AI has a memory limit - it can only 'see' a certain amount of your conversation at once",
+              example: "GPT-3.5 can remember about 4,000 words of conversation, while GPT-4 can remember 8,000-32,000 words",
+              implications: ["Longer contexts = better understanding", "Limited by model architecture", "Affects conversation quality"],
+              category: "AI Capabilities"
+            },
+            { 
+              term: "Fine-tuning", 
+              definition: "Additional training of an AI model on specific data to specialize it for particular tasks", 
+              whatItMeans: "Taking a general AI and teaching it to be really good at specific jobs",
+              example: "Fine-tuning ChatGPT on legal documents to create a legal assistant AI",
+              applications: ["Medical diagnosis", "Legal analysis", "Customer service", "Industry-specific tasks"],
+              category: "AI Development"
+            },
+            { 
+              term: "Multimodal", 
+              definition: "AI that can understand and work with different types of data: text, images, audio, and video", 
+              whatItMeans: "Instead of just text, the AI can see pictures, hear audio, and understand videos",
+              example: "GPT-4V can analyze images and answer questions about what it sees",
+              capabilities: ["Image analysis", "Video understanding", "Audio processing", "Cross-modal reasoning"],
+              category: "AI Capabilities"
+            },
+            { 
+              term: "Inference", 
+              definition: "The process where a trained AI model generates responses or makes predictions", 
+              whatItMeans: "The actual moment when AI thinks and gives you an answer",
+              example: "When you ask ChatGPT a question, the inference process generates the response you see",
+              considerations: ["Response speed", "Computational cost", "Output quality"],
+              category: "Technical Process"
+            },
+            { 
+              term: "Embeddings", 
+              definition: "Mathematical representations of words, sentences, or concepts that AI uses to understand meaning", 
+              whatItMeans: "AI converts words into numbers so it can do math with language and find similar concepts",
+              example: "Words like 'happy', 'joyful', and 'cheerful' have similar embeddings because they mean similar things",
+              applications: ["Semantic search", "Recommendation systems", "Language translation"],
+              category: "How AI Works"
+            },
+            { 
+              term: "Zero-shot Learning", 
+              definition: "AI's ability to perform tasks it wasn't specifically trained for, using general knowledge", 
+              whatItMeans: "AI can figure out new tasks without seeing examples first",
+              example: "Asking ChatGPT to write a haiku about computers, even though it wasn't specifically trained to write haikus",
+              significance: "Shows AI's general intelligence and flexibility",
+              category: "AI Capabilities"
+            },
+            { 
+              term: "Few-shot Learning", 
+              definition: "Teaching AI a new task by showing it just a few examples in your prompt", 
+              whatItMeans: "Giving AI 2-3 examples so it understands the pattern you want",
+              example: "Showing AI: 'dog → puppy, cat → kitten, horse → ?' and it learns to say 'foal'",
+              applications: ["Custom formatting", "Specific writing styles", "Data transformation"],
+              category: "Prompting Techniques"
+            },
+            { 
+              term: "Bias", 
+              definition: "Unfair preferences or prejudices that AI might learn from training data", 
+              whatItMeans: "AI can accidentally learn human prejudices from the internet and books it studied",
+              example: "AI might associate certain professions with specific genders if that's what it saw in training data",
+              importance: "Understanding bias helps us use AI more fairly and responsibly",
+              category: "AI Ethics"
+            },
+            { 
+              term: "Overfitting", 
+              definition: "When AI memorizes training examples too specifically and can't generalize to new situations", 
+              whatItMeans: "Like a student who memorizes answers but doesn't understand the concepts",
+              example: "An AI trained only on photos of golden retrievers might not recognize other dog breeds",
+              prevention: ["Diverse training data", "Proper validation", "Regularization techniques"],
+              category: "AI Problems"
+            },
+            { 
+              term: "Generative AI", 
+              definition: "AI that creates new content like text, images, music, or code", 
+              whatItMeans: "AI that makes new things instead of just analyzing existing things",
+              example: "ChatGPT generates text, DALL-E generates images, GitHub Copilot generates code",
+              contrast: "Different from AI that just classifies or analyzes existing content",
+              category: "AI Types"
+            }
           ]
         },
         
         advanced: {
-          introduction: "Technical AI vocabulary enables precise communication about model capabilities, limitations, and implementation strategies.",
+          introduction: "Master these advanced AI terms to engage in technical discussions, understand AI research, implement AI solutions, and make strategic decisions about AI adoption in professional contexts.",
           
           vocabulary: [
-            { term: "Transformer Architecture", definition: "Neural network design using attention mechanisms for sequence processing", significance: "Foundation of modern LLMs" },
-            { term: "RLHF", definition: "Reinforcement Learning from Human Feedback - training method for alignment", purpose: "Improves model helpfulness and safety" },
-            { term: "RAG", definition: "Retrieval-Augmented Generation - combining LLMs with external knowledge", benefits: ["Up-to-date information", "Reduced hallucination"] },
-            { term: "Quantization", definition: "Reducing model precision to decrease memory and compute requirements", tradeoffs: ["Smaller size vs accuracy"] },
-            { term: "Emergent Abilities", definition: "Capabilities that appear at larger model scales", examples: ["Chain-of-thought reasoning", "Few-shot learning"] }
+            { 
+              term: "Transformer Architecture", 
+              definition: "The neural network design using attention mechanisms that revolutionized natural language processing", 
+              whatItMeans: "The breakthrough technology that allows AI to understand context and relationships in text",
+              significance: "Foundation of modern LLMs like GPT, BERT, and most current AI systems",
+              keyFeatures: ["Self-attention mechanism", "Parallel processing", "Scalability"],
+              impact: "Enabled the current AI revolution in language understanding",
+              category: "AI Architecture"
+            },
+            { 
+              term: "Attention Mechanism", 
+              definition: "AI's ability to focus on relevant parts of input when processing information", 
+              whatItMeans: "Like human attention - AI learns which parts of text are most important for understanding",
+              example: "In 'The cat sat on the mat', attention helps AI know 'cat' and 'sat' are more important than 'the'",
+              types: ["Self-attention", "Cross-attention", "Multi-head attention"],
+              category: "AI Mechanisms"
+            },
+            { 
+              term: "RLHF (Reinforcement Learning from Human Feedback)", 
+              definition: "Training method where humans rate AI responses to teach it preferred behaviors", 
+              whatItMeans: "Like training a pet with treats - humans tell AI which responses are good or bad",
+              purpose: "Makes AI more helpful, harmless, and honest",
+              process: ["Initial training", "Human feedback collection", "Reward model training", "Policy optimization"],
+              category: "AI Training"
+            },
+            { 
+              term: "RAG (Retrieval-Augmented Generation)", 
+              definition: "Combining LLMs with real-time access to external knowledge bases", 
+              whatItMeans: "Giving AI access to current information beyond its training data",
+              benefits: ["Up-to-date information", "Reduced hallucination", "Fact verification"],
+              useCase: "Customer service bots accessing current product catalogs",
+              category: "AI Enhancement"
+            },
+            { 
+              term: "Quantization", 
+              definition: "Reducing the precision of model weights to decrease memory usage and increase speed", 
+              whatItMeans: "Making AI models smaller and faster by using less detailed numbers",
+              tradeoffs: ["Smaller file size vs. slight accuracy loss", "Faster inference vs. reduced capability"],
+              applications: ["Mobile AI", "Edge computing", "Cost reduction"],
+              category: "AI Optimization"
+            },
+            { 
+              term: "Emergent Abilities", 
+              definition: "Capabilities that appear in large AI models that weren't present in smaller versions", 
+              whatItMeans: "New skills that 'emerge' when AI models get big enough, like magic thresholds",
+              examples: ["Chain-of-thought reasoning", "In-context learning", "Complex problem decomposition"],
+              significance: "Suggests AI capabilities may grow unpredictably with scale",
+              category: "AI Phenomena"
+            },
+            { 
+              term: "Constitutional AI", 
+              definition: "Training AI to follow a set of principles or 'constitution' for ethical behavior", 
+              whatItMeans: "Teaching AI a moral framework to guide its decisions",
+              principles: ["Be helpful and harmless", "Respect human autonomy", "Be truthful"],
+              developer: "Primarily developed by Anthropic for Claude",
+              category: "AI Safety"
+            },
+            { 
+              term: "Parameter", 
+              definition: "Individual weights in a neural network that get adjusted during training", 
+              whatItMeans: "The 'knobs' that get tuned to make AI work - more parameters often mean more capability",
+              scale: "Modern LLMs have billions to trillions of parameters",
+              example: "GPT-3 has 175 billion parameters, GPT-4 has estimated 1.7 trillion",
+              category: "AI Architecture"
+            },
+            { 
+              term: "Alignment", 
+              definition: "Ensuring AI systems pursue intended goals and behave according to human values", 
+              whatItMeans: "Making sure AI wants what we want and acts in ways we approve of",
+              challenges: ["Value specification", "Goal preservation", "Robustness"],
+              importance: "Critical for safe and beneficial AI development",
+              category: "AI Safety"
+            }
           ]
         }
       },
       
       sandbox: {
         required: true,
-        type: 'vocabulary_practice',
+        type: 'comprehensive_vocabulary_practice',
         
         beginner: {
-          instructions: "Match the AI word with its meaning. Don't worry if you don't know them all yet!",
+          instructions: "Let's practice these AI terms with fun activities! Complete these exercises to show you understand the basics. Don't worry about getting everything perfect - learning takes time!",
           exercises: [
             { 
               type: "matching",
+              title: "Match the Term to Its Meaning",
               items: [
                 { term: "Prompt", definition: "What you type to AI" },
                 { term: "Token", definition: "Small word pieces" },
-                { term: "LLM", definition: "Smart word AI" }
+                { term: "LLM", definition: "Smart word AI" },
+                { term: "Hallucination", definition: "When AI makes up fake facts" },
+                { term: "Temperature", definition: "Creativity setting for AI" },
+                { term: "Training Data", definition: "Text AI learned from" }
+              ]
+            },
+            {
+              type: "fill_in_blank",
+              title: "Complete the Sentences",
+              sentences: [
+                "When I type 'Write a story about dogs' to ChatGPT, that text is called a _____.",
+                "AI breaks words into small pieces called _____.",
+                "If AI says 'February has 35 days', that's called a _____.",
+                "ChatGPT is an example of an _____ (three letters)."
+              ],
+              answers: ["prompt", "tokens", "hallucination", "LLM"],
+              hints: ["Your instruction to AI", "Word chunks", "Fake information", "Large Language Model"]
+            },
+            {
+              type: "category_sort",
+              title: "Sort These Terms into Categories",
+              terms: ["Prompt", "Neural Network", "Chatbot", "Token", "Machine Learning", "API"],
+              categories: {
+                "How to Use AI": ["Prompt"],
+                "How AI Works": ["Neural Network", "Token", "Machine Learning"],
+                "AI Applications": ["Chatbot"],
+                "Technical Terms": ["API"]
+              }
+            },
+            {
+              type: "true_false",
+              title: "True or False?",
+              statements: [
+                { statement: "AI always tells the truth", answer: false, explanation: "AI can have hallucinations and make mistakes" },
+                { statement: "Higher temperature makes AI more creative", answer: true, explanation: "High temperature = more creative, low = more focused" },
+                { statement: "Tokens are whole words", answer: false, explanation: "Tokens are often parts of words" },
+                { statement: "LLMs learned from reading lots of text", answer: true, explanation: "They trained on billions of web pages and books" }
               ]
             }
           ]
         },
         
         intermediate: {
-          instructions: "Use these terms correctly in context. Choose the best term for each scenario.",
+          instructions: "Apply your AI knowledge to real scenarios. Choose the best terms and explain your reasoning for professional contexts.",
           exercises: [
             {
-              scenario: "You want the AI to remember your entire conversation",
-              options: ["Context Window", "Temperature", "Hallucination"],
-              correct: "Context Window",
-              explanation: "Context window determines how much conversation the AI remembers"
+              type: "scenario_choice",
+              title: "Choose the Best Term for Each Situation",
+              scenarios: [
+                {
+                  scenario: "You want the AI to remember your entire conversation",
+                  options: ["Context Window", "Temperature", "Hallucination", "Fine-tuning"],
+                  correct: "Context Window",
+                  explanation: "Context window determines how much conversation history the AI can remember and use"
+                },
+                {
+                  scenario: "You need AI to be an expert on your company's specific products",
+                  options: ["Zero-shot Learning", "Fine-tuning", "Temperature", "Embeddings"],
+                  correct: "Fine-tuning",
+                  explanation: "Fine-tuning trains the AI on your specific company data to become specialized"
+                },
+                {
+                  scenario: "You want to build an AI that can analyze both text and images",
+                  options: ["Multimodal", "Generative AI", "Context Window", "Bias"],
+                  correct: "Multimodal",
+                  explanation: "Multimodal AI can work with different types of data including text and images"
+                }
+              ]
+            },
+            {
+              type: "definition_builder",
+              title: "Build Definitions Using Key Concepts",
+              terms: [
+                {
+                  term: "Few-shot Learning",
+                  keyWords: ["examples", "pattern", "prompt", "learning"],
+                  correctDefinition: "Teaching AI a new task by showing it a few examples in your prompt",
+                  userPrompt: "Use the key words to build a definition"
+                },
+                {
+                  term: "Embeddings",
+                  keyWords: ["mathematical", "words", "numbers", "meaning"],
+                  correctDefinition: "Mathematical representations that convert words into numbers to capture meaning",
+                  userPrompt: "Combine these words into a clear definition"
+                }
+              ]
+            },
+            {
+              type: "application_analysis",
+              title: "Analyze Real-World Applications",
+              applications: [
+                {
+                  description: "Netflix recommends movies you might like",
+                  relevantTerms: ["Machine Learning", "Embeddings", "Algorithm"],
+                  question: "Which terms are most relevant to how this works?",
+                  explanation: "Netflix uses machine learning algorithms and embeddings to find patterns in viewing habits"
+                },
+                {
+                  description: "Google Translate converts text between languages",
+                  relevantTerms: ["Transformer Architecture", "Embeddings", "Training Data"],
+                  question: "What AI concepts enable real-time translation?",
+                  explanation: "Transformers and embeddings help understand language structure across different languages"
+                }
+              ]
             }
           ]
         },
         
         advanced: {
-          instructions: "Apply technical concepts to real-world scenarios. Demonstrate understanding of implementation considerations.",
+          instructions: "Demonstrate mastery of technical AI concepts. Analyze complex scenarios and make strategic recommendations based on your understanding.",
           exercises: [
             {
-              scenario: "Implementing a customer service chatbot that needs current product information",
-              concepts: ["RAG", "Fine-tuning", "Context Window"],
-              bestApproach: "RAG",
-              reasoning: "RAG allows real-time access to updated product information without retraining"
+              type: "technical_scenario",
+              title: "Technical Implementation Analysis",
+              scenarios: [
+                {
+                  challenge: "Your company needs a chatbot that provides accurate, up-to-date product information and never gives outdated details",
+                  considerations: ["RAG vs Fine-tuning", "Hallucination prevention", "Context Window management"],
+                  bestApproach: "RAG with external knowledge base",
+                  reasoning: "RAG allows real-time access to current product data, reducing hallucination risk and avoiding the need to retrain models",
+                  alternatives: {
+                    "Fine-tuning": "Would require retraining every time products change",
+                    "Simple prompting": "Higher risk of hallucination without external data verification"
+                  }
+                },
+                {
+                  challenge: "Building an AI system that needs to run efficiently on mobile devices with limited memory",
+                  considerations: ["Quantization", "Parameter count", "Inference speed"],
+                  bestApproach: "Quantized model with parameter reduction",
+                  reasoning: "Quantization reduces memory usage while maintaining acceptable performance for mobile deployment",
+                  tradeoffs: ["Slight accuracy reduction for significant efficiency gains"]
+                }
+              ]
+            },
+            {
+              type: "concept_integration",
+              title: "Integrate Multiple AI Concepts",
+              prompts: [
+                {
+                  task: "Design an AI writing assistant for legal professionals",
+                  requiredConcepts: ["Fine-tuning", "Constitutional AI", "Bias", "RLHF"],
+                  evaluation: "Explain how each concept contributes to the solution",
+                  exemplarResponse: "Fine-tuning on legal documents provides domain expertise, Constitutional AI ensures ethical guidelines, bias mitigation prevents unfair legal advice, and RLHF aligns outputs with professional standards"
+                },
+                {
+                  task: "Explain why Large Language Models show emergent abilities",
+                  requiredConcepts: ["Parameters", "Transformer Architecture", "Training Data", "Emergent Abilities"],
+                  evaluation: "Connect the technical concepts to explain the phenomenon",
+                  exemplarResponse: "As transformer models scale to billions of parameters and train on massive datasets, complex reasoning capabilities emerge that weren't explicitly programmed"
+                }
+              ]
+            },
+            {
+              type: "strategic_decision",
+              title: "Make Strategic AI Adoption Decisions",
+              businessCases: [
+                {
+                  scenario: "Fortune 500 company considering AI implementation",
+                  factors: ["Cost", "Alignment", "Bias", "Safety"],
+                  decision: "Recommend implementation approach considering technical and ethical factors",
+                  considerations: [
+                    "How to ensure AI alignment with company values",
+                    "Strategies for bias detection and mitigation",
+                    "Constitutional AI principles for ethical deployment",
+                    "RLHF for continuous improvement"
+                  ]
+                }
+              ]
             }
           ]
         }
       },
       
-      xpRewards: { beginner: 20, intermediate: 25, advanced: 30 },
-      estimatedTime: { beginner: 12, intermediate: 18, advanced: 22 }
+      xpRewards: { beginner: 30, intermediate: 40, advanced: 50 },
+      estimatedTime: { beginner: 15, intermediate: 18, advanced: 20 }
     }
   ],
 
@@ -533,6 +994,16 @@ export const adaptiveLessons = {
               weak: "Tell me about dogs",
               strong: "I'm doing a school report. Tell me 3 cool facts about golden retrievers for 4th graders.",
               why: "The strong prompt says who you are, what you need, and how you want it"
+            },
+            {
+              weak: "Help me cook dinner",
+              strong: "I'm a beginner cook with chicken, rice, and vegetables. Give me a simple 30-minute recipe with step-by-step instructions.",
+              why: "Tells AI your skill level, ingredients available, time constraint, and format needed"
+            },
+            {
+              weak: "Plan my weekend",
+              strong: "Help me plan a fun Saturday for my family with 2 kids (ages 6 and 10). We like outdoor activities and have a $50 budget.",
+              why: "Provides context about family size, ages, preferences, and budget constraints"
             }
           ]
         },
@@ -552,29 +1023,102 @@ export const adaptiveLessons = {
               weak: "Help me with my presentation",
               strong: "You are a presentation coach. Help me create an outline for a 10-minute presentation about renewable energy for my college environmental science class. Provide 5 main sections with 2-3 talking points each.",
               improvements: ["Clear role", "Specific task", "Relevant context", "Defined format"]
+            },
+            {
+              weak: "I need workout advice",
+              strong: "You are a fitness trainer. Create a beginner-friendly home workout plan for someone with 30 minutes, 3 times per week, no equipment needed. Include warm-up, exercises, and cool-down with modification options.",
+              improvements: ["Expert role", "Specific constraints", "Clear requirements", "Accommodation needs"]
+            },
+            {
+              weak: "Help me learn Spanish",
+              strong: "You are a language tutor. Design a 2-week Spanish learning plan for a complete beginner who wants to have basic conversations during a Mexico vacation. Include daily 15-minute lessons with practical phrases.",
+              improvements: ["Teaching role", "Specific timeline", "Clear goal", "Practical application"]
             }
           ]
         },
         
         advanced: {
-          introduction: "Advanced prompting leverages specific techniques to guide model reasoning and optimize output quality for complex tasks.",
+          introduction: "Master comprehensive prompting strategies from basic clarity to sophisticated enterprise-grade techniques for consistent, high-quality AI outputs.",
+          
+          foundationalPrinciples: {
+            clarity: "Be specific about what you want - replace 'help me write' with 'help me write a thank you note to my teacher'",
+            context: "Provide relevant background - tell AI who you are and what situation you're in",
+            format: "Specify desired output structure - bullet points, paragraphs, tables, etc.",
+            examples: "Show AI what good output looks like through concrete examples"
+          },
+          
+          professionalFramework: {
+            role: "Set the AI's perspective and expertise level for appropriate responses",
+            task: "Clearly define the specific deliverable or action you need",
+            context: "Provide all relevant background information and constraints",
+            format: "Specify structure, length, tone, and presentation requirements",
+            audience: "Define who will consume the output and their expertise level"
+          },
           
           advancedTechniques: [
             { 
-              technique: "Chain-of-Thought", 
-              description: "Explicit step-by-step reasoning",
-              example: "Let's think step by step: 1) Analyze the problem, 2) Consider alternatives, 3) Recommend solution"
+              technique: "Chain-of-Thought Reasoning", 
+              description: "Guide AI through explicit step-by-step thinking processes",
+              structure: "Let's think step by step: 1) Analyze the problem, 2) Consider alternatives, 3) Evaluate options, 4) Recommend solution",
+              applications: ["Complex problem solving", "Strategic analysis", "Technical troubleshooting"],
+              benefits: ["More accurate results", "Transparent reasoning", "Reduced errors"]
             },
             {
-              technique: "Few-Shot Learning",
-              description: "Provide examples to establish pattern",
-              example: "Input: 'excited' → Output: 'thrilled'. Input: 'sad' → Output: 'devastated'. Input: 'happy' → Output: ?"
+              technique: "Few-Shot Learning Patterns",
+              description: "Establish format and style through 2-3 concrete examples",
+              structure: "Input: 'excited' → Output: 'thrilled'. Input: 'sad' → Output: 'devastated'. Input: 'happy' → Output: ?",
+              applications: ["Data transformation", "Style consistency", "Format standardization"],
+              benefits: ["Consistent outputs", "Reduced ambiguity", "Scalable processes"]
             },
             {
-              technique: "Role and Persona",
-              description: "Detailed character with expertise and perspective",
-              example: "You are Dr. Sarah Chen, a behavioral economist with 15 years of experience in consumer psychology..."
+              technique: "Role-Based Expertise",
+              description: "Assign detailed personas with specific knowledge and perspective",
+              structure: "You are Dr. Sarah Chen, a behavioral economist with 15 years of experience in consumer psychology, specializing in decision-making frameworks...",
+              applications: ["Expert analysis", "Specialized advice", "Professional communication"],
+              benefits: ["Domain-specific insights", "Appropriate terminology", "Credible responses"]
+            },
+            {
+              technique: "Iterative Refinement",
+              description: "Build on previous responses to progressively improve quality",
+              structure: "Initial prompt → Review output → Specific feedback → Refined result",
+              applications: ["Content improvement", "Quality assurance", "Progressive development"],
+              benefits: ["Higher final quality", "Efficient improvement", "Learning from mistakes"]
+            },
+            {
+              technique: "Multi-Perspective Analysis",
+              description: "Consider issues from multiple stakeholder viewpoints",
+              structure: "Analyze this from the perspectives of: [customer], [business], [technical team], [regulators]",
+              applications: ["Strategic planning", "Risk assessment", "Comprehensive analysis"],
+              benefits: ["Reduced blind spots", "Balanced solutions", "Stakeholder buy-in"]
             }
+          ],
+          
+          enterprisePatterns: [
+            {
+              pattern: "Template-Driven Consistency",
+              description: "Create reusable prompt templates for common business processes",
+              implementation: "Standardized templates with variables for different contexts",
+              benefits: ["Consistent quality", "Reduced training time", "Scalable operations"]
+            },
+            {
+              pattern: "Quality Assurance Integration", 
+              description: "Build verification and validation into prompt workflows",
+              implementation: "Multi-step prompts with built-in checking and correction",
+              benefits: ["Reduced errors", "Automated quality control", "Reliable outputs"]
+            },
+            {
+              pattern: "Context Management",
+              description: "Optimize information flow across long conversations",
+              implementation: "Strategic use of context windows and information prioritization",
+              benefits: ["Efficient processing", "Cost optimization", "Maintained coherence"]
+            }
+          ],
+          
+          measurementAndOptimization: [
+            "Output quality metrics and evaluation frameworks",
+            "Cost optimization through prompt efficiency",
+            "Response time improvement strategies",
+            "Consistency measurement across different AI models"
           ]
         }
       },
@@ -626,8 +1170,8 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 25, intermediate: 30, advanced: 35 },
-      estimatedTime: { beginner: 15, intermediate: 20, advanced: 25 }
+      xpRewards: { beginner: 25, intermediate: 30, advanced: 40 },
+      estimatedTime: { beginner: 12, intermediate: 15, advanced: 20 }
     },
 
     // LESSON 5: Prompt Engineering in Action
@@ -647,17 +1191,20 @@ export const adaptiveLessons = {
             {
               name: "Show Examples",
               description: "Give AI 2-3 examples of what you want, then let it follow the pattern",
-              example: "Turn sad into happy: gloomy → bright, frowning → smiling, crying → laughing. Now do: worried → ?"
+              example: "Turn sad into happy: gloomy → bright, frowning → smiling, crying → laughing. Now do: worried → ?",
+              personalUse: "Great for creating games with kids, learning new words, or making creative lists"
             },
             {
               name: "Ask for Steps",
               description: "Tell AI to think step-by-step",
-              example: "What's 15 x 12? Think step-by-step and show your work."
+              example: "What's 15 x 12? Think step-by-step and show your work.",
+              personalUse: "Perfect for homework help, cooking instructions, or learning new skills"
             },
             {
               name: "Try Again Better",
               description: "If the first answer isn't great, ask AI to improve it",
-              example: "That's good, but can you make it simpler for a 6-year-old?"
+              example: "That's good, but can you make it simpler for a 6-year-old?",
+              personalUse: "Useful for getting explanations at the right level for yourself or your family"
             }
           ]
         },
@@ -688,27 +1235,96 @@ export const adaptiveLessons = {
         },
         
         advanced: {
-          introduction: "Implement sophisticated prompt engineering patterns for complex reasoning and specialized applications.",
+          introduction: "Master the complete spectrum of prompt engineering from basic examples to sophisticated enterprise-grade patterns for complex reasoning and specialized applications.",
           
-          techniques: [
+          foundationalTechniques: {
+            examples: "Show AI 2-3 examples of desired output format to establish patterns",
+            stepByStep: "Break complex tasks into sequential steps with clear reasoning",
+            iterativeImprovement: "Build on previous responses with specific feedback for refinement"
+          },
+          
+          professionalMethodologies: [
             {
-              name: "Multi-Turn Reasoning",
-              description: "Decompose complex problems into manageable steps",
-              pattern: "First, analyze X. Then, consider Y. Finally, synthesize recommendations.",
-              applications: ["Strategic planning", "Technical analysis", "Research synthesis"]
+              method: "Few-Shot Pattern Establishment",
+              description: "Create consistent outputs through example-driven learning",
+              structure: "Example 1: [input] → [output]\nExample 2: [input] → [output]\nNow: [your input] → ?",
+              applications: ["Data formatting", "Style consistency", "Quality standardization"],
+              benefits: ["Predictable results", "Reduced training", "Scalable processes"]
             },
             {
-              name: "Perspective Taking",
-              description: "Leverage multiple viewpoints for comprehensive analysis",
-              structure: "Consider this from the perspectives of: [stakeholder 1], [stakeholder 2], [stakeholder 3]",
-              benefits: ["Reduced bias", "Comprehensive coverage", "Creative solutions"]
+              method: "Chain-of-Thought Reasoning",
+              description: "Guide AI through explicit reasoning pathways",
+              triggers: ["Let's think step by step", "Break this down systematically", "Consider each factor in order"],
+              structure: "Problem → Analysis → Options → Evaluation → Recommendation",
+              benefits: ["More accurate results", "Transparent reasoning", "Better problem-solving"]
             },
             {
-              name: "Meta-Prompting",
-              description: "Have AI improve its own prompts",
-              technique: "Before answering, critique and improve this prompt: [original prompt]",
-              use_cases: ["Prompt optimization", "Quality assurance", "Self-correction"]
+              method: "Iterative Quality Enhancement",
+              description: "Systematically improve outputs through guided refinement",
+              process: ["Initial prompt", "Review output quality", "Provide specific feedback", "Generate improved version"],
+              techniques: ["Make it more concise", "Add specific examples", "Adjust tone for audience"],
+              applications: ["Content optimization", "Professional communication", "Technical documentation"]
             }
+          ],
+          
+          sophisticatedPatterns: [
+            {
+              name: "Multi-Turn Reasoning Workflows",
+              description: "Decompose complex problems into manageable analytical steps",
+              pattern: "First, analyze the current situation. Then, identify key challenges. Next, consider potential solutions. Finally, synthesize recommendations with implementation steps.",
+              applications: ["Strategic planning", "Technical analysis", "Research synthesis", "Business consulting"],
+              complexity: "Handles multi-faceted problems requiring comprehensive analysis"
+            },
+            {
+              name: "Multi-Perspective Analysis",
+              description: "Leverage multiple viewpoints for comprehensive understanding",
+              structure: "Consider this from the perspectives of: [customer], [business], [technical team], [regulators], [competitors]",
+              benefits: ["Reduced bias", "Comprehensive coverage", "Creative solutions", "Stakeholder alignment"],
+              applications: ["Product strategy", "Risk assessment", "Change management"]
+            },
+            {
+              name: "Meta-Prompting Optimization",
+              description: "Use AI to improve its own prompts for better results",
+              technique: "Before answering, critique and improve this prompt: [original prompt]. Then use your improved version to provide the response.",
+              use_cases: ["Prompt optimization", "Quality assurance", "Self-correction", "Performance tuning"],
+              benefits: ["Continuous improvement", "Automated optimization", "Error reduction"]
+            },
+            {
+              name: "Conditional Logic Flows",
+              description: "Create dynamic prompts that adapt based on context and requirements",
+              structure: "If [condition A], then [approach A]. If [condition B], then [approach B]. Determine which applies and proceed accordingly.",
+              applications: ["Decision trees", "Adaptive responses", "Contextual recommendations"],
+              complexity: "Handles variable scenarios with different optimal approaches"
+            }
+          ],
+          
+          enterpriseImplementation: [
+            {
+              strategy: "Template Standardization",
+              description: "Create organization-wide prompt templates for consistent results",
+              implementation: "Develop template library with variables for common business processes",
+              benefits: ["Consistent quality", "Reduced training", "Scalable operations", "Brand alignment"]
+            },
+            {
+              strategy: "Quality Assurance Integration",
+              description: "Build verification and validation into all prompt workflows", 
+              implementation: "Multi-step prompts with built-in checking, correction, and approval processes",
+              benefits: ["Reduced errors", "Automated quality control", "Compliance assurance"]
+            },
+            {
+              strategy: "Performance Optimization",
+              description: "Continuously improve prompt effectiveness through measurement and refinement",
+              metrics: ["Output quality scores", "Time to completion", "User satisfaction", "Error rates"],
+              implementation: "A/B testing of prompt variations with systematic improvement cycles"
+            }
+          ],
+          
+          advancedConsiderations: [
+            "Token efficiency optimization for cost management",
+            "Context window management for long-form interactions",
+            "Model-specific adaptation for different AI systems",
+            "Integration with existing business workflows and systems",
+            "Training and adoption strategies for teams and organizations"
           ]
         }
       },
@@ -751,8 +1367,8 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 30, intermediate: 35, advanced: 40 },
-      estimatedTime: { beginner: 18, intermediate: 25, advanced: 30 }
+      xpRewards: { beginner: 30, intermediate: 35, advanced: 45 },
+      estimatedTime: { beginner: 15, intermediate: 18, advanced: 20 }
     }
   ],
 
@@ -771,9 +1387,9 @@ export const adaptiveLessons = {
           introduction: "Imagine telling someone to draw a picture just by describing it! That's what creative AI can do. Let's learn how to make amazing art, videos, and voices with AI.",
           
           tools: [
-            { type: "Image AI", tools: "DALL-E, Midjourney", description: "Creates pictures from your words", example: "A cute robot eating ice cream" },
-            { type: "Video AI", tools: "RunwayML, Kling AI", description: "Makes short videos", example: "A paper airplane flying through clouds" },
-            { type: "Voice AI", tools: "ElevenLabs", description: "Creates realistic voices", example: "A friendly storyteller reading a bedtime story" }
+            { type: "Image AI", tools: "DALL-E, Midjourney", description: "Creates pictures from your words", example: "A cute robot eating ice cream", personalUse: "Make custom art for your room, gifts, or social media" },
+            { type: "Video AI", tools: "RunwayML, Kling AI", description: "Makes short videos", example: "A paper airplane flying through clouds", personalUse: "Create fun family videos, hobby content, or learning materials" },
+            { type: "Voice AI", tools: "ElevenLabs", description: "Creates realistic voices", example: "A friendly storyteller reading a bedtime story", personalUse: "Make audiobooks for kids, podcast intros, or voiceovers for personal videos" }
           ],
           
           promptingTips: [
@@ -790,19 +1406,19 @@ export const adaptiveLessons = {
             {
               category: "Image Generation",
               tools: ["Midjourney", "DALL-E 3", "Stable Diffusion"],
-              applications: ["Marketing materials", "Social media content", "Concept art", "Product mockups"],
+              applications: ["Marketing materials", "Social media content", "Custom artwork for home", "Gifts and personal projects", "Concept art", "Product mockups"],
               promptStructure: "Subject + Setting + Style + Technical specs"
             },
             {
               category: "Video Generation", 
               tools: ["RunwayML", "Pika Labs", "Kling AI"],
-              applications: ["Social media clips", "Explainer videos", "Product demos", "Animated content"],
+              applications: ["Family memories", "Hobby documentation", "Social media clips", "Learning videos", "Explainer videos", "Product demos", "Animated content"],
               promptStructure: "Scene description + Camera movement + Duration + Style"
             },
             {
               category: "Voice Synthesis",
               tools: ["ElevenLabs", "Murf", "Play.ht"],
-              applications: ["Voiceovers", "Podcasts", "Audio books", "Accessibility"],
+              applications: ["Personal storytelling", "Bedtime stories for kids", "Language learning", "Voiceovers", "Podcasts", "Audio books", "Accessibility"],
               promptStructure: "Text + Voice characteristics + Emotion + Speed"
             }
           ],
@@ -816,31 +1432,116 @@ export const adaptiveLessons = {
         },
         
         advanced: {
-          introduction: "Advanced creative AI workflows enable sophisticated content production pipelines with consistent quality and style control.",
+          introduction: "Master comprehensive creative AI production from basic tool usage through sophisticated enterprise workflows with consistent quality and brand alignment.",
           
-          advancedWorkflows: [
+          foundationalCreativeSkills: {
+            imagePrompting: "Learn to describe visuals clearly: subject, setting, style, mood, and technical specifications",
+            videoConceptualization: "Plan moving content with scene descriptions, camera movement, duration, and style direction",
+            voiceCharacterization: "Define voice characteristics: emotion, pace, accent, and personality for different use cases"
+          },
+          
+          professionalToolMastery: [
             {
-              workflow: "Brand Asset Creation",
-              steps: ["Style guide definition", "Consistent prompt templates", "Asset generation", "Quality control"],
-              tools: ["Midjourney with custom styles", "Brand-specific prompts", "Batch processing"]
+              category: "Advanced Image Generation",
+              tools: ["Midjourney", "DALL-E 3", "Stable Diffusion"],
+              techniques: [
+                "Style consistency through custom prompts and parameters",
+                "Brand guideline integration and color palette control",
+                "Batch generation with systematic variations",
+                "Quality optimization through iterative refinement"
+              ],
+              businessApplications: ["Marketing campaigns", "Product visualization", "Social media content", "Brand asset creation"],
+              technicalSpecs: ["1024x1024+ resolution", "Multiple aspect ratios", "Style transfer", "Inpainting and outpainting"]
             },
             {
-              workflow: "Video Production Pipeline",
-              steps: ["Script generation", "Visual planning", "Scene generation", "Voice synthesis", "Post-production"],
-              integration: ["ChatGPT → Midjourney → RunwayML → ElevenLabs → Editing tools"]
+              category: "Professional Video Production", 
+              tools: ["RunwayML", "Pika Labs", "Kling AI", "Stable Video"],
+              workflows: [
+                "Storyboard creation and visual planning",
+                "Scene-by-scene generation with continuity",
+                "Motion control and camera movement specification",
+                "Post-production integration and enhancement"
+              ],
+              businessApplications: ["Advertising content", "Training materials", "Social media campaigns", "Product demonstrations"],
+              technicalSpecs: ["4K resolution capability", "Variable frame rates", "Motion consistency", "Text-to-video generation"]
             },
             {
-              workflow: "Interactive Content",
-              steps: ["Multi-modal planning", "Asset creation", "Voice integration", "Interactive elements"],
-              considerations: ["User experience", "Technical constraints", "Scalability"]
+              category: "Enterprise Voice Synthesis",
+              tools: ["ElevenLabs", "Murf", "Play.ht", "Azure Speech"],
+              capabilities: [
+                "Custom voice cloning for brand consistency",
+                "Multi-language localization at scale",
+                "Emotional range and tone control",
+                "Real-time generation and API integration"
+              ],
+              businessApplications: ["Podcast production", "Training narration", "Customer service", "Accessibility solutions"],
+              technicalSpecs: ["High-fidelity audio", "Real-time streaming", "Voice cloning", "SSML control"]
             }
           ],
           
-          technicalConsiderations: [
-            "Resolution and format requirements",
-            "Licensing and commercial use",
-            "API integration and automation",
-            "Cost optimization strategies"
+          enterpriseWorkflows: [
+            {
+              workflow: "Integrated Brand Asset Pipeline",
+              scope: "End-to-end brand content creation with consistency",
+              steps: [
+                "Brand guideline analysis and prompt template creation",
+                "Style guide implementation across all AI tools",
+                "Automated asset generation with quality checkpoints",
+                "Brand compliance verification and approval workflow"
+              ],
+              tools: ["Style guides → Midjourney → Brand validation → Asset library"],
+              benefits: ["Consistent brand identity", "Scalable content production", "Reduced design costs"]
+            },
+            {
+              workflow: "Multi-Modal Content Production",
+              scope: "Coordinated creation across text, image, video, and audio",
+              steps: [
+                "Content strategy and narrative development",
+                "Script generation and visual storyboarding", 
+                "Coordinated asset creation across modalities",
+                "Integration and post-production optimization"
+              ],
+              integration: ["ChatGPT → Midjourney → RunwayML → ElevenLabs → Editing suite"],
+              applications: ["Marketing campaigns", "Educational content", "Product launches"]
+            },
+            {
+              workflow: "Automated Content Localization",
+              scope: "Multi-language, multi-cultural content adaptation",
+              steps: [
+                "Source content analysis and adaptation planning",
+                "Cultural sensitivity review and modification",
+                "Automated translation and visual adaptation",
+                "Quality assurance and cultural validation"
+              ],
+              considerations: ["Cultural sensitivity", "Legal compliance", "Brand consistency"],
+              scalability: "Support for 50+ languages and cultural contexts"
+            }
+          ],
+          
+          qualityAndConsistency: [
+            {
+              aspect: "Style Management",
+              techniques: ["Custom style guides", "Parameter optimization", "Reference image libraries"],
+              implementation: "Systematic prompt engineering with brand-specific modifiers"
+            },
+            {
+              aspect: "Quality Assurance",
+              processes: ["Automated quality scoring", "Human review workflows", "Iterative improvement"],
+              metrics: ["Visual consistency scores", "Brand alignment metrics", "User satisfaction ratings"]
+            },
+            {
+              aspect: "Scalability Planning",
+              considerations: ["API rate limits", "Cost optimization", "Workflow automation"],
+              strategies: ["Batch processing", "Priority queuing", "Resource allocation optimization"]
+            }
+          ],
+          
+          strategicImplementation: [
+            "ROI measurement and optimization strategies",
+            "Team training and adoption frameworks", 
+            "Integration with existing creative workflows",
+            "Legal and licensing compliance for commercial use",
+            "Performance monitoring and continuous improvement systems"
           ]
         }
       },
@@ -883,8 +1584,8 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 25, intermediate: 35, advanced: 45 },
-      estimatedTime: { beginner: 20, intermediate: 30, advanced: 40 }
+      xpRewards: { beginner: 25, intermediate: 35, advanced: 50 },
+      estimatedTime: { beginner: 15, intermediate: 18, advanced: 20 }
     },
 
     // LESSON 7: Workflow Ideas Without Agents
@@ -1030,8 +1731,8 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 30, intermediate: 40, advanced: 50 },
-      estimatedTime: { beginner: 22, intermediate: 35, advanced: 45 }
+      xpRewards: { beginner: 30, intermediate: 40, advanced: 55 },
+      estimatedTime: { beginner: 18, intermediate: 20, advanced: 20 }
     }
   ],
 
@@ -1051,22 +1752,38 @@ export const adaptiveLessons = {
           
           schoolHelp: [
             "Explain hard topics in simple words",
-            "Help check your homework",
-            "Make flashcards for studying",
-            "Help write reports and essays"
+            "Help check your homework and understand mistakes",
+            "Make flashcards for studying any subject",
+            "Help write reports and essays with better structure",
+            "Create practice quizzes to test yourself",
+            "Get help with math problems step-by-step"
           ],
           
           homeHelp: [
-            "Plan what to cook for dinner",
-            "Help organize your room",
-            "Plan fun activities",
-            "Help with chores and schedules"
+            "Plan what to cook for dinner based on what's in your fridge",
+            "Help organize your room with fun storage ideas",
+            "Plan fun activities for weekends and holidays",
+            "Help with chores and family schedules",
+            "Create gift ideas for friends and family",
+            "Plan family game nights and movie selections"
+          ],
+          
+          personalGrowth: [
+            "Learn new hobbies with step-by-step guidance",
+            "Practice conversations in other languages",
+            "Get fitness and health advice tailored to you",
+            "Plan travel itineraries for family trips",
+            "Create creative writing and art projects",
+            "Develop new skills through personalized lessons"
           ],
           
           simplePrompts: [
             "Explain [topic] like I'm 10 years old",
             "Help me make a list of things to do for [activity]",
-            "What are 3 fun ways to learn about [subject]?"
+            "What are 3 fun ways to learn about [subject]?",
+            "Plan a perfect day for someone who loves [hobby/interest]",
+            "What should I cook tonight with [ingredients I have]?",
+            "Help me understand why [something confusing] works the way it does"
           ]
         },
         
@@ -1105,18 +1822,23 @@ export const adaptiveLessons = {
               ]
             },
             {
-              area: "Personal Organization",
+              area: "Personal Life Enhancement",
               applications: [
-                "Meal planning and grocery lists",
-                "Travel itinerary creation",
-                "Budget planning and expense tracking",
-                "Health and fitness goal setting",
-                "Home organization systems"
+                "Meal planning and grocery lists for families",
+                "Travel itinerary creation for vacations and trips",
+                "Budget planning and expense tracking for personal finance",
+                "Health and fitness goal setting and workout plans",
+                "Home organization systems and decluttering",
+                "Hobby development and skill learning pathways",
+                "Creative project planning and execution",
+                "Gift planning and event organization"
               ],
               promptTemplates: [
-                "Create a weekly meal plan for [dietary preferences] and [budget]",
-                "Plan a [duration] trip to [destination] with [interests]",
-                "Design a budget for [income] with [financial goals]"
+                "Create a weekly meal plan for [family size] with [dietary preferences] and [budget]",
+                "Plan a [duration] family trip to [destination] with activities for [ages/interests]",
+                "Design a personal budget for [income] with goals like [saving for vacation/house/etc.]",
+                "Create a beginner's guide to [hobby] with weekly progression steps",
+                "Help me organize my [room/garage/closet] with creative storage solutions for [specific items]"
               ]
             }
           ]
@@ -1157,18 +1879,26 @@ export const adaptiveLessons = {
               ]
             },
             {
-              system: "Life Optimization Framework",
+              system: "Personal Life Optimization Framework",
               components: [
-                "Goal setting and prioritization",
-                "Resource allocation optimization",
-                "Progress monitoring and adjustment",
-                "Success pattern identification"
+                "Goal setting and prioritization for personal growth",
+                "Resource allocation optimization for family time and hobbies",
+                "Progress monitoring and adjustment for health, learning, and projects",
+                "Success pattern identification for habits and personal development"
               ],
               implementation: [
-                "AI-assisted life design and planning",
-                "Automated progress tracking and analysis",
-                "Predictive modeling for decision making",
-                "Continuous optimization recommendations"
+                "AI-assisted life design and planning for work-life balance",
+                "Automated progress tracking for fitness, learning goals, and creative projects",
+                "Predictive modeling for personal decision making and family planning",
+                "Continuous optimization recommendations for daily routines and happiness"
+              ],
+              personalApplications: [
+                "Family scheduling and activity optimization",
+                "Personal learning journey design and tracking",
+                "Health and wellness goal achievement systems",
+                "Creative project and hobby development pathways",
+                "Financial planning and saving goal acceleration",
+                "Relationship and social life enhancement strategies"
               ]
             }
           ],
@@ -1224,8 +1954,8 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 35, intermediate: 45, advanced: 55 },
-      estimatedTime: { beginner: 25, intermediate: 40, advanced: 50 }
+      xpRewards: { beginner: 35, intermediate: 45, advanced: 60 },
+      estimatedTime: { beginner: 18, intermediate: 20, advanced: 20 }
     },
 
     // LESSON 9: Hosting AI Locally & Open Source Models
@@ -1242,10 +1972,12 @@ export const adaptiveLessons = {
           introduction: "Did you know AI can work on your own computer? Let's learn about having your very own AI that works even without the internet!",
           
           whyLocal: [
-            "Your conversations stay private on your computer",
-            "It works even without internet",
-            "You don't have to pay monthly fees",
-            "You can use it as much as you want"
+            "Your conversations stay private on your computer - great for personal journals or private thoughts",
+            "It works even without internet - perfect for camping trips or travel",
+            "You don't have to pay monthly fees - save money for family activities instead",
+            "You can use it as much as you want - no limits on creative projects or learning time",
+            "Kids can use it safely without internet concerns",
+            "Perfect for homework help when internet is slow or unavailable"
           ],
           
           simpleOptions: [
@@ -1265,10 +1997,10 @@ export const adaptiveLessons = {
           introduction: "Local AI gives you control, privacy, and cost savings. Understanding the options and requirements helps you choose the right approach for your needs.",
           
           benefits: [
-            { benefit: "Privacy", description: "Your data never leaves your device", importance: "Critical for sensitive work" },
-            { benefit: "Cost Control", description: "No monthly subscriptions or per-use charges", importance: "Predictable budgeting" },
-            { benefit: "Customization", description: "Fine-tune models for specific use cases", importance: "Specialized applications" },
-            { benefit: "Offline Access", description: "Works without internet connection", importance: "Reliability and accessibility" }
+            { benefit: "Privacy", description: "Your data never leaves your device", importance: "Critical for personal journals, family planning, and sensitive conversations" },
+            { benefit: "Cost Control", description: "No monthly subscriptions or per-use charges", importance: "More money for family activities and hobbies" },
+            { benefit: "Customization", description: "Fine-tune models for specific use cases", importance: "Perfect for family learning styles and personal interests" },
+            { benefit: "Offline Access", description: "Works without internet connection", importance: "Great for travel, remote areas, and when kids need homework help" }
           ],
           
           popularTools: [
@@ -1406,8 +2138,8 @@ export const adaptiveLessons = {
         }
       },
       
-      xpRewards: { beginner: 30, intermediate: 45, advanced: 60 },
-      estimatedTime: { beginner: 20, intermediate: 35, advanced: 50 }
+      xpRewards: { beginner: 30, intermediate: 45, advanced: 65 },
+      estimatedTime: { beginner: 15, intermediate: 18, advanced: 20 }
     },
 
     // LESSON 10: AI Problem-Solving Lab
@@ -1445,7 +2177,21 @@ export const adaptiveLessons = {
               challenges: [
                 "Explore a topic you're curious about and create a presentation",
                 "Learn about a country you want to visit and plan a virtual trip",
-                "Research a career you're interested in and create an action plan"
+                "Research a career you're interested in and create an action plan",
+                "Design a learning plan for a new hobby you want to try",
+                "Create a family activity guide for your local area",
+                "Plan and organize a themed party or celebration"
+              ]
+            },
+            {
+              category: "Personal Growth Projects",
+              challenges: [
+                "Create a personal fitness and wellness plan with AI coaching",
+                "Design a monthly budget and savings plan for a big goal",
+                "Plan and document a skill-learning journey (cooking, music, art)",
+                "Organize and optimize your living space with AI suggestions",
+                "Create personalized language learning materials for family trips",
+                "Design a reading challenge with book recommendations and tracking"
               ]
             }
           ],
@@ -1617,7 +2363,7 @@ export const adaptiveLessons = {
       },
       
       xpRewards: { beginner: 50, intermediate: 75, advanced: 100 },
-      estimatedTime: { beginner: 45, intermediate: 90, advanced: 120 }
+      estimatedTime: { beginner: 20, intermediate: 20, advanced: 20 }
     }
   ],
 
@@ -1807,7 +2553,7 @@ export const adaptiveLessons = {
       },
       
       xpRewards: { beginner: 50, intermediate: 60, advanced: 75 },
-      estimatedTime: { beginner: 20, intermediate: 25, advanced: 30 },
+      estimatedTime: { beginner: 15, intermediate: 18, advanced: 20 },
       
       // Premium lesson metadata
       isPremium: true,

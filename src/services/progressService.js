@@ -14,6 +14,8 @@ import {
   getLearningPath,
   isLearningPathActive
 } from '../utils/learningPathUtils';
+import { auth } from '../firebase';
+import logger from '../utils/logger';
 
 /**
  * Comprehensive lesson completion that handles both local and Firestore updates
@@ -47,7 +49,7 @@ export const completeLesson = async (userId, lessonId, completionData = {}) => {
 
     return result;
   } catch (error) {
-    console.error('Error in completeLesson:', error);
+    logger.error('Error in completeLesson:', error);
     throw error;
   }
 };
@@ -85,7 +87,7 @@ export const getUserProgress = async (userId = null) => {
 
     return progress;
   } catch (error) {
-    console.error('Error getting user progress:', error);
+    logger.error('Error getting user progress:', error);
     throw error;
   }
 };
@@ -112,7 +114,7 @@ export const syncProgressToFirestore = async (userId) => {
       updatedStats
     };
   } catch (error) {
-    console.error('Error syncing progress to Firestore:', error);
+    logger.error('Error syncing progress to Firestore:', error);
     throw error;
   }
 };
@@ -149,7 +151,7 @@ export const awardExperiencePoints = async (userId, xpAmount, reason = 'general'
       awardedAt: new Date()
     };
   } catch (error) {
-    console.error('Error awarding experience points:', error);
+    logger.error('Error awarding experience points:', error);
     throw error;
   }
 };
@@ -193,7 +195,7 @@ export const getLessonProgress = async (userId, lessonId) => {
 
     return progress;
   } catch (error) {
-    console.error('Error getting lesson progress:', error);
+    logger.error('Error getting lesson progress:', error);
     throw error;
   }
 };
@@ -242,7 +244,7 @@ export const getPathProgress = async (userId, pathId) => {
 
     return progress;
   } catch (error) {
-    console.error('Error getting path progress:', error);
+    logger.error('Error getting path progress:', error);
     throw error;
   }
 };
@@ -270,7 +272,7 @@ export const initializeUserProgress = async (userId) => {
       initializedAt: new Date()
     };
   } catch (error) {
-    console.error('Error initializing user progress:', error);
+    logger.error('Error initializing user progress:', error);
     throw error;
   }
 };
@@ -293,7 +295,7 @@ export const resetUserProgress = async (userId) => {
     
     // Note: For Firestore reset, you'd need to implement deletion functions
     // This is a placeholder for now
-    console.log(`Progress reset requested for user ${userId}`);
+    logger.info(`Progress reset requested for user ${userId}`);
     
     return {
       reset: true,
@@ -301,7 +303,7 @@ export const resetUserProgress = async (userId) => {
       message: 'Local progress cleared. Firestore reset requires additional implementation.'
     };
   } catch (error) {
-    console.error('Error resetting user progress:', error);
+    logger.error('Error resetting user progress:', error);
     throw error;
   }
 };

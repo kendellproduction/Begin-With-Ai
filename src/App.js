@@ -8,6 +8,7 @@ import Navigation from './components/Navigation';
 import SwipeNavigationWrapper from './components/SwipeNavigationWrapper';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import OfflineStatus from './components/OfflineStatus';
+import ErrorBoundary from './components/ErrorBoundary';
 
 // Import gamification components
 import GamificationNotifications from './components/GamificationNotifications';
@@ -49,100 +50,102 @@ function App() {
     <Router>
       <AuthProvider>
         <GamificationProvider>
-          <Layout>
-            <OfflineStatus />
-            <Routes>
-              {/* Public routes */}
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
+          <ErrorBoundary>
+            <Layout>
+              <OfflineStatus />
+              <Routes>
+                {/* Public routes */}
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                
+                {/* Protected /home path */}
+                <Route path="/home" element={<ProtectedRoute />}>
+                  <Route index element={<HomePage />} />
+                </Route>
+
+                {/* Other protected routes - REFACTORED */}
+                <Route path="/dashboard" element={<ProtectedRoute requireEmailVerification={false} />}>
+                  <Route index element={<Dashboard />} />
+                </Route>
+
+                <Route path="/profile" element={<ProtectedRoute />}>
+                  {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile or a new layout */}
+                  <Route index element={<Profile />} />
+                </Route>
+
+                <Route path="/settings" element={<ProtectedRoute />}>
+                  {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile (or a new SettingsPage) or a new layout */}
+                  <Route index element={<Profile />} /> {/* Assuming settings uses Profile page for now */}
+                </Route>
+
+                <Route path="/lessons" element={<ProtectedRoute />}>
+                  <Route path="" element={<LessonsOverview />} />
+                </Route>
+
+                <Route path="/pricing" element={<ProtectedRoute />}>
+                  <Route index element={<Pricing />} />
+                </Route>
+
+                {/* Lesson start page with difficulty selection */}
+                <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>
+                  <Route index element={<LessonStart />} />
+                </Route>
+
+                <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
+                  {/* <Navigation /> would need to be inside LessonDetail or a new layout */}
+                  <Route index element={<LessonDetail />} />
+                </Route>
+
+                {/* New slide-based lesson viewer - full screen, no layout */}
+                <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
+                  <Route index element={<LessonViewer />} />
+                </Route>
+
+                <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
+                  {/* <Navigation /> would need to be inside LearningPathQuiz or a new layout */}
+                  <Route index element={<LearningPathQuiz />} />
+                </Route>
+
+                <Route path="/learning-path/adaptive-quiz" element={<ProtectedRoute />}>
+                  {/* New adaptive quiz for better skill assessment */}
+                  <Route index element={<AdaptiveLearningPathQuiz />} />
+                </Route>
+
+                <Route path="/learning-path/results" element={<ProtectedRoute />}>
+                  {/* <Navigation /> would need to be inside LearningPathResults or a new layout */}
+                  <Route index element={<LearningPathResults />} />
+                </Route>
+
+                <Route path="/ai-news" element={<ProtectedRoute />}>
+                  {/* <Navigation /> would need to be inside AiNews or a new layout */}
+                  <Route index element={<AiNews />} />
+                </Route>
+
+                <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
+                  {/* <Navigation /> would need to be inside Quiz or a new layout */}
+                  <Route index element={<Quiz />} />
+                </Route>
+
+                <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
+                  {/* <Navigation /> would need to be inside QuizResults or a new layout */}
+                  <Route index element={<QuizResults />} />
+                </Route>
+
+              </Routes>
               
-              {/* Protected /home path */}
-              <Route path="/home" element={<ProtectedRoute />}>
-                <Route index element={<HomePage />} />
-              </Route>
-
-              {/* Other protected routes - REFACTORED */}
-              <Route path="/dashboard" element={<ProtectedRoute requireEmailVerification={false} />}>
-                <Route index element={<Dashboard />} />
-              </Route>
-
-              <Route path="/profile" element={<ProtectedRoute />}>
-                {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile or a new layout */}
-                <Route index element={<Profile />} />
-              </Route>
-
-              <Route path="/settings" element={<ProtectedRoute />}>
-                {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile (or a new SettingsPage) or a new layout */}
-                <Route index element={<Profile />} /> {/* Assuming settings uses Profile page for now */}
-              </Route>
-
-              <Route path="/lessons" element={<ProtectedRoute />}>
-                <Route path="" element={<LessonsOverview />} />
-              </Route>
-
-              <Route path="/pricing" element={<ProtectedRoute />}>
-                <Route index element={<Pricing />} />
-              </Route>
-
-              {/* Lesson start page with difficulty selection */}
-              <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>
-                <Route index element={<LessonStart />} />
-              </Route>
-
-              <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside LessonDetail or a new layout */}
-                <Route index element={<LessonDetail />} />
-              </Route>
-
-              {/* New slide-based lesson viewer - full screen, no layout */}
-              <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
-                <Route index element={<LessonViewer />} />
-              </Route>
-
-              <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside LearningPathQuiz or a new layout */}
-                <Route index element={<LearningPathQuiz />} />
-              </Route>
-
-              <Route path="/learning-path/adaptive-quiz" element={<ProtectedRoute />}>
-                {/* New adaptive quiz for better skill assessment */}
-                <Route index element={<AdaptiveLearningPathQuiz />} />
-              </Route>
-
-              <Route path="/learning-path/results" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside LearningPathResults or a new layout */}
-                <Route index element={<LearningPathResults />} />
-              </Route>
-
-              <Route path="/ai-news" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside AiNews or a new layout */}
-                <Route index element={<AiNews />} />
-              </Route>
-
-              <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside Quiz or a new layout */}
-                <Route index element={<Quiz />} />
-              </Route>
-
-              <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
-                {/* <Navigation /> would need to be inside QuizResults or a new layout */}
-                <Route index element={<QuizResults />} />
-              </Route>
-
-            </Routes>
-            
-            {/* Gamification Components - Available throughout the app */}
-            <GamificationNotifications />
-            <LevelUpModal />
-            <BadgeModal />
-            
-            {/* Development Tools */}
-            <AdaptiveDatabaseSeeder />
-            
-            <PWAInstallPrompt />
-          </Layout>
+              {/* Gamification Components - Available throughout the app */}
+              <GamificationNotifications />
+              <LevelUpModal />
+              <BadgeModal />
+              
+              {/* Development Tools */}
+              <AdaptiveDatabaseSeeder />
+              
+              <PWAInstallPrompt />
+            </Layout>
+          </ErrorBoundary>
         </GamificationProvider>
       </AuthProvider>
     </Router>

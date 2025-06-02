@@ -8,6 +8,7 @@ import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { motion } from 'framer-motion';
+import logger from '../utils/logger';
 
 const LessonsOverview = () => {
   const navigate = useNavigate();
@@ -153,7 +154,7 @@ const LessonsOverview = () => {
             }
           }
         } catch (error) {
-          console.error('Error syncing with Firebase in lessons page:', error);
+          logger.error('Error syncing with Firebase in lessons page:', error);
         }
       }
       
@@ -170,21 +171,21 @@ const LessonsOverview = () => {
         };
         setLearningProgress(progress);
         
-        console.log('Lessons page - Learning path detected:', { learningPathData, progress });
+        logger.log('Lessons page - Learning path detected:', { learningPathData, progress });
       } else {
-        console.log('Lessons page - No learning path found');
+        logger.log('Lessons page - No learning path found');
       }
       
-      console.log('Lessons page - Quiz completion state:', { quizCompletedState, quizResultsData, learningPathData });
+      logger.log('Lessons page - Quiz completion state:', { quizCompletedState, quizResultsData, learningPathData });
     } catch (error) {
-      console.error('Error loading learning data:', error);
+      logger.error('Error loading learning data:', error);
       // Fallback to old method
       if (isLearningPathActive()) {
         const pathData = getLearningPath();
         const progress = getCurrentLessonProgress();
         setUserLearningPath(pathData);
         setLearningProgress(progress);
-        console.log('Lessons page - Using fallback method:', { pathData, progress });
+        logger.log('Lessons page - Using fallback method:', { pathData, progress });
       }
     }
   };
@@ -224,7 +225,7 @@ const LessonsOverview = () => {
             allLessons.push(...pathLessons);
           }
         } catch (error) {
-          console.warn(`Failed to load path ${pathId}:`, error);
+          logger.warn(`Failed to load path ${pathId}:`, error);
         }
       }
       
@@ -235,7 +236,7 @@ const LessonsOverview = () => {
       setAvailableModules(modules);
       
     } catch (error) {
-      console.error('Error loading adaptive lessons:', error);
+      logger.error('Error loading adaptive lessons:', error);
     } finally {
       setIsLoading(false);
     }
@@ -604,51 +605,6 @@ const LessonsOverview = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Module Overview - TO BE REMOVED */}
-              {/* 
-              <div>
-                <h3 className="text-2xl font-bold text-white mb-6">📋 Learning Modules</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {availableModules.map((moduleName, index) => {
-                    const moduleLessons = adaptiveLessons.filter(lesson => lesson.moduleTitle === moduleName);
-                    const completedInModule = moduleLessons.filter(lesson => 
-                      learningProgress?.completedLessons && learningProgress.completedLessons > lesson.orderIndex
-                    ).length;
-                    
-                    return (
-                      <div key={moduleName} className="bg-white/5 backdrop-blur-sm rounded-xl p-6 border border-white/10">
-                        <div className="flex items-center justify-between mb-4">
-                          <h4 className="text-lg font-bold text-white">{moduleName}</h4>
-                          <span className="text-sm text-slate-400">{moduleLessons.length} lessons</span>
-                        </div>
-                        <div className="mb-4">
-                          <div className="flex justify-between text-sm text-slate-400 mb-1">
-                            <span>Progress</span>
-                            <span>{completedInModule}/{moduleLessons.length}</span>
-                          </div>
-                          <div className="w-full bg-slate-700 rounded-full h-2">
-                            <div 
-                              className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full transition-all duration-300"
-                              style={{ width: `${(completedInModule / moduleLessons.length) * 100}%` }}
-                            />
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSelectedModule(moduleName);
-                            setActiveSection('browse');
-                          }}
-                          className="w-full bg-white/10 hover:bg-white/20 text-white py-2 px-4 rounded-lg transition-all duration-300"
-                        >
-                          Explore Module →
-                        </button>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              */}
             </div>
           ) : (
             /* Browse All Lessons Section */

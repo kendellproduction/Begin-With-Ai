@@ -1,6 +1,7 @@
 import { doc, setDoc, serverTimestamp, getDoc, collection, getDocs, deleteDoc, query, orderBy, where } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth'; // Import updateProfile from Firebase Auth
 import { db, auth } from '../firebase'; // Adjust path as necessary, ensure auth is exported from firebase.js
+import logger from '../utils/logger';
 
 /**
  * Creates or updates a user's profile in Firestore and Firebase Auth.
@@ -11,7 +12,7 @@ import { db, auth } from '../firebase'; // Adjust path as necessary, ensure auth
  */
 export const upsertUserProfile = async (userAuth, additionalData = {}) => {
   if (!userAuth || !userAuth.uid) {
-    console.error('User authentication object or UID is missing.');
+    logger.error('User authentication object or UID is missing.');
     throw new Error('User authentication object or UID is missing.');
   }
 
@@ -31,9 +32,9 @@ export const upsertUserProfile = async (userAuth, additionalData = {}) => {
   if (currentAuthUser && Object.keys(authUpdateData).length > 0) {
     try {
       await updateProfile(currentAuthUser, authUpdateData);
-      console.log('Firebase Auth profile updated successfully.');
+      logger.info('Firebase Auth profile updated successfully.');
     } catch (error) {
-      console.error('Error updating Firebase Auth profile:', error);
+      logger.error('Error updating Firebase Auth profile:', error);
       // Decide if you want to throw or just log. For now, logging.
     }
   }
@@ -91,9 +92,9 @@ export const upsertUserProfile = async (userAuth, additionalData = {}) => {
 
   try {
     await setDoc(userRef, finalFirestoreData, { merge: true });
-    console.log(`User profile for ${userAuth.uid} upserted to Firestore successfully.`);
+    logger.info(`User profile for ${userAuth.uid} upserted to Firestore successfully.`);
   } catch (error) {
-    console.error('Error upserting user profile to Firestore:', error);
+    logger.error('Error upserting user profile to Firestore:', error);
     throw error;
   }
 };
@@ -105,21 +106,21 @@ export const upsertUserProfile = async (userAuth, additionalData = {}) => {
  */
 export const getUserProfile = async (uid) => {
   if (!uid) {
-    console.error('UID is required to fetch user profile.');
+    logger.error('UID is required to fetch user profile.');
     return null;
   }
   const userRef = doc(db, 'users', uid);
   try {
     const docSnap = await getDoc(userRef);
     if (docSnap.exists()) {
-      console.log(`User profile data for ${uid} fetched successfully.`);
+      logger.info(`User profile data for ${uid} fetched successfully.`);
       return docSnap.data();
     } else {
-      console.warn(`No profile document found for user ${uid}. This might be a new user before first upsert completes or an error.`);
+      logger.warn(`No profile document found for user ${uid}. This might be a new user before first upsert completes or an error.`);
       return null; // Or throw an error, or return a default profile structure
     }
   } catch (error) {
-    console.error('Error fetching user profile:', error);
+    logger.error('Error fetching user profile:', error);
     throw error; // Re-throw for further handling
   }
 };
@@ -139,10 +140,10 @@ export const getLearningPaths = async () => {
     querySnapshot.forEach((doc) => {
       paths.push({ id: doc.id, ...doc.data() });
     });
-    console.log('Learning paths fetched successfully:', paths);
+    logger.info('Learning paths fetched successfully:', paths);
     return paths;
   } catch (error) {
-    console.error('Error fetching learning paths:', error);
+    logger.error('Error fetching learning paths:', error);
     throw error;
   }
 };
@@ -154,19 +155,19 @@ export const getLearningPaths = async () => {
  */
 export const deleteUserFirestoreData = async (uid) => {
   if (!uid) {
-    console.error('UID is required to delete user Firestore data.');
+    logger.error('UID is required to delete user Firestore data.');
     throw new Error('UID is required to delete user Firestore data.');
   }
   const userRef = doc(db, 'users', uid);
   try {
     await deleteDoc(userRef);
-    console.log(`Firestore data for user ${uid} deleted successfully.`);
+    logger.info(`Firestore data for user ${uid} deleted successfully.`);
     // If you have other collections keyed by UID (e.g., user_lessons, user_activity),
     // you would need to delete those documents here as well. This might involve
     // querying for those documents and deleting them in a batch or individually.
     // For now, this only deletes the main user document.
   } catch (error) {
-    console.error(`Error deleting Firestore data for user ${uid}:`, error);
+    logger.error(`Error deleting Firestore data for user ${uid}:`, error);
     throw error; // Re-throw for further handling
   }
 };
@@ -178,7 +179,7 @@ export const deleteUserFirestoreData = async (uid) => {
  */
 export const getLearningPathById = async (pathId) => {
   if (!pathId) {
-    console.error('pathId is required to fetch a learning path.');
+    logger.error('pathId is required to fetch a learning path.');
     return null;
   }
   const pathRef = doc(db, 'learningPaths', pathId);
@@ -187,10 +188,10 @@ export const getLearningPathById = async (pathId) => {
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     }
-    console.warn(`Learning path with ID ${pathId} not found.`);
+    logger.warn(`Learning path with ID ${pathId} not found.`);
     return null;
   } catch (error) {
-    console.error(`Error fetching learning path ${pathId}:`, error);
+    logger.error(`Error fetching learning path ${pathId}:`, error);
     throw error;
   }
 };
@@ -202,7 +203,7 @@ export const getLearningPathById = async (pathId) => {
  */
 export const getModulesForPath = async (pathId) => {
   if (!pathId) {
-    console.error('pathId is required to fetch modules.');
+    logger.error('pathId is required to fetch modules.');
     return [];
   }
   const modulesCollectionRef = collection(db, 'learningPaths', pathId, 'modules');
@@ -215,7 +216,7 @@ export const getModulesForPath = async (pathId) => {
     });
     return modules;
   } catch (error) {
-    console.error(`Error fetching modules for path ${pathId}:`, error);
+    logger.error(`Error fetching modules for path ${pathId}:`, error);
     throw error;
   }
 };
@@ -228,7 +229,7 @@ export const getModulesForPath = async (pathId) => {
  */
 export const getLessonsForModule = async (pathId, moduleId) => {
   if (!pathId || !moduleId) {
-    console.error('pathId and moduleId are required to fetch lessons.');
+    logger.error('pathId and moduleId are required to fetch lessons.');
     return [];
   }
   const lessonsCollectionRef = collection(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons');
@@ -241,7 +242,7 @@ export const getLessonsForModule = async (pathId, moduleId) => {
     });
     return lessons;
   } catch (error) {
-    console.error(`Error fetching lessons for module ${moduleId} in path ${pathId}:`, error);
+    logger.error(`Error fetching lessons for module ${moduleId} in path ${pathId}:`, error);
     throw error;
   }
 };
@@ -255,7 +256,7 @@ export const getLessonsForModule = async (pathId, moduleId) => {
  */
 export const getLessonById = async (pathId, moduleId, lessonId) => {
   if (!pathId || !moduleId || !lessonId) {
-    console.error('pathId, moduleId, and lessonId are required to fetch a lesson.');
+    logger.error('pathId, moduleId, and lessonId are required to fetch a lesson.');
     return null;
   }
   const lessonRef = doc(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons', lessonId);
@@ -264,10 +265,10 @@ export const getLessonById = async (pathId, moduleId, lessonId) => {
     if (docSnap.exists()) {
       return { id: docSnap.id, ...docSnap.data() };
     }
-    console.warn(`Lesson with ID ${lessonId} in module ${moduleId}, path ${pathId} not found.`);
+    logger.warn(`Lesson with ID ${lessonId} in module ${moduleId}, path ${pathId} not found.`);
     return null;
   } catch (error) {
-    console.error(`Error fetching lesson ${lessonId}:`, error);
+    logger.error(`Error fetching lesson ${lessonId}:`, error);
     throw error;
   }
 };
@@ -286,7 +287,7 @@ export const getLessonById = async (pathId, moduleId, lessonId) => {
  */
 export const updateUserProgress = async (userId, lessonId, lessonModuleId, learningPathId, progressData) => {
   if (!userId || !lessonId) {
-    console.error('userId and lessonId are required to update progress.');
+    logger.error('userId and lessonId are required to update progress.');
     throw new Error('userId and lessonId are required to update progress.');
   }
 
@@ -312,9 +313,9 @@ export const updateUserProgress = async (userId, lessonId, lessonModuleId, learn
 
   try {
     await setDoc(progressRef, progressDoc, { merge: true });
-    console.log(`Progress updated for user ${userId}, lesson ${lessonId}`);
+    logger.info(`Progress updated for user ${userId}, lesson ${lessonId}`);
   } catch (error) {
-    console.error('Error updating user progress:', error);
+    logger.error('Error updating user progress:', error);
     throw error;
   }
 };
@@ -327,7 +328,7 @@ export const updateUserProgress = async (userId, lessonId, lessonModuleId, learn
  */
 export const getUserProgressForLesson = async (userId, lessonId) => {
   if (!userId || !lessonId) {
-    console.error('userId and lessonId are required to fetch progress.');
+    logger.error('userId and lessonId are required to fetch progress.');
     return null;
   }
 
@@ -340,7 +341,7 @@ export const getUserProgressForLesson = async (userId, lessonId) => {
     }
     return null;
   } catch (error) {
-    console.error(`Error fetching progress for lesson ${lessonId}:`, error);
+    logger.error(`Error fetching progress for lesson ${lessonId}:`, error);
     throw error;
   }
 };
@@ -353,7 +354,7 @@ export const getUserProgressForLesson = async (userId, lessonId) => {
  */
 export const getUserProgressForPath = async (userId, learningPathId) => {
   if (!userId || !learningPathId) {
-    console.error('userId and learningPathId are required to fetch path progress.');
+    logger.error('userId and learningPathId are required to fetch path progress.');
     return [];
   }
 
@@ -372,7 +373,7 @@ export const getUserProgressForPath = async (userId, learningPathId) => {
     });
     return progressList;
   } catch (error) {
-    console.error(`Error fetching path progress for ${learningPathId}:`, error);
+    logger.error(`Error fetching path progress for ${learningPathId}:`, error);
     throw error;
   }
 };
@@ -386,7 +387,7 @@ export const getUserProgressForPath = async (userId, learningPathId) => {
  */
 export const awardXP = async (userId, xpAmount, reason = 'lesson_completion') => {
   if (!userId || !xpAmount) {
-    console.error('userId and xpAmount are required to award XP.');
+    logger.error('userId and xpAmount are required to award XP.');
     throw new Error('userId and xpAmount are required to award XP.');
   }
 
@@ -418,7 +419,7 @@ export const awardXP = async (userId, xpAmount, reason = 'lesson_completion') =>
       }
     }, { merge: true });
 
-    console.log(`Awarded ${xpAmount} XP to user ${userId}. New total: ${newXP}`);
+    logger.info(`Awarded ${xpAmount} XP to user ${userId}. New total: ${newXP}`);
 
     return {
       newXP,
@@ -427,7 +428,7 @@ export const awardXP = async (userId, xpAmount, reason = 'lesson_completion') =>
       xpAwarded: xpAmount
     };
   } catch (error) {
-    console.error('Error awarding XP:', error);
+    logger.error('Error awarding XP:', error);
     throw error;
   }
 };
@@ -439,7 +440,7 @@ export const awardXP = async (userId, xpAmount, reason = 'lesson_completion') =>
  */
 export const updateUserStreak = async (userId) => {
   if (!userId) {
-    console.error('userId is required to update streak.');
+    logger.error('userId is required to update streak.');
     throw new Error('userId is required to update streak.');
   }
 
@@ -481,14 +482,14 @@ export const updateUserStreak = async (userId) => {
 
     await setDoc(userRef, { streaks: updatedStreaks }, { merge: true });
     
-    console.log(`Updated streak for user ${userId}: ${newCurrentStreak} days`);
+    logger.info(`Updated streak for user ${userId}: ${newCurrentStreak} days`);
     
     return {
       ...updatedStreaks,
       streakIncreased: newCurrentStreak > streaks.currentStreak
     };
   } catch (error) {
-    console.error('Error updating user streak:', error);
+    logger.error('Error updating user streak:', error);
     throw error;
   }
 };
@@ -500,7 +501,7 @@ export const updateUserStreak = async (userId) => {
  */
 export const checkAndAwardBadges = async (userId) => {
   if (!userId) {
-    console.error('userId is required to check badges.');
+    logger.error('userId is required to check badges.');
     return [];
   }
 
@@ -584,12 +585,12 @@ export const checkAndAwardBadges = async (userId) => {
     // Update user badges if any new ones were earned
     if (newBadges.length > 0) {
       await setDoc(doc(db, 'users', userId), { badges: currentBadges }, { merge: true });
-      console.log(`Awarded ${newBadges.length} new badges to user ${userId}`);
+      logger.info(`Awarded ${newBadges.length} new badges to user ${userId}`);
     }
 
     return newBadges;
   } catch (error) {
-    console.error('Error checking and awarding badges:', error);
+    logger.error('Error checking and awarding badges:', error);
     throw error;
   }
 };
@@ -605,7 +606,7 @@ export const checkAndAwardBadges = async (userId) => {
  */
 export const completeLesson = async (userId, lessonId, lessonModuleId, learningPathId, completionData = {}) => {
   if (!userId || !lessonId) {
-    console.error('userId and lessonId are required to complete lesson.');
+    logger.error('userId and lessonId are required to complete lesson.');
     throw new Error('userId and lessonId are required to complete lesson.');
   }
 
@@ -636,7 +637,7 @@ export const completeLesson = async (userId, lessonId, lessonModuleId, learningP
       lastActivityAt: serverTimestamp()
     }, { merge: true });
 
-    console.log(`Lesson ${lessonId} completed for user ${userId}`);
+    logger.info(`Lesson ${lessonId} completed for user ${userId}`);
 
     return {
       lessonCompleted: true,
@@ -646,7 +647,7 @@ export const completeLesson = async (userId, lessonId, lessonModuleId, learningP
       completedAt: new Date()
     };
   } catch (error) {
-    console.error('Error completing lesson:', error);
+    logger.error('Error completing lesson:', error);
     throw error;
   }
 };
@@ -658,7 +659,7 @@ export const completeLesson = async (userId, lessonId, lessonModuleId, learningP
  */
 export const getUserStats = async (userId) => {
   if (!userId) {
-    console.error('userId is required to get user stats.');
+    logger.error('userId is required to get user stats.');
     return null;
   }
 
@@ -703,7 +704,7 @@ export const getUserStats = async (userId) => {
       createdAt: userData.createdAt
     };
   } catch (error) {
-    console.error('Error getting user stats:', error);
+    logger.error('Error getting user stats:', error);
     throw error;
   }
 };
@@ -715,7 +716,7 @@ export const getUserStats = async (userId) => {
  */
 export const syncLocalProgressToFirestore = async (userId) => {
   if (!userId) {
-    console.error('userId is required to sync progress.');
+    logger.error('userId is required to sync progress.');
     return;
   }
 
@@ -723,7 +724,7 @@ export const syncLocalProgressToFirestore = async (userId) => {
     // Get learning path from localStorage
     const localPath = localStorage.getItem('userLearningPath');
     if (!localPath) {
-      console.log('No local learning path found to sync.');
+      logger.info('No local learning path found to sync.');
       return;
     }
 
@@ -753,9 +754,9 @@ export const syncLocalProgressToFirestore = async (userId) => {
       }
     }
 
-    console.log(`Synced ${completedLessons.length} lessons from localStorage to Firestore`);
+    logger.info(`Synced ${completedLessons.length} lessons from localStorage to Firestore`);
   } catch (error) {
-    console.error('Error syncing local progress to Firestore:', error);
+    logger.error('Error syncing local progress to Firestore:', error);
     throw error;
   }
 }; 

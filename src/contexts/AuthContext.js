@@ -9,7 +9,7 @@ import {
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword as firebaseUpdatePassword,
-  sendPasswordResetEmail,
+  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
   deleteUser as firebaseDeleteUser
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
@@ -30,26 +30,48 @@ export const AuthProvider = ({ children }) => {
         if (authUser) {
           try {
             // First, ensure the profile is created or updated in Firestore
-            await upsertUserProfile(authUser);
-            console.log('User profile upserted after auth state change.');
+            // Wrapped in a try-catch to handle potential quota errors
+            try {
+              await upsertUserProfile(authUser);
+              console.log('User profile upserted after auth state change.');
+            } catch (upsertError) {
+              if (upsertError.code === 'resource-exhausted') {
+                console.warn('Firestore quota exceeded during profile upsert. User data might be stale.');
+                // Proceed with authUser, but Firestore profile will likely fail to load or be incomplete.
+              } else {
+                // Rethrow other errors
+                throw upsertError;
+              }
+            }
 
             // Then, fetch the complete profile from Firestore
-            const firestoreProfile = await getUserProfile(authUser.uid);
-            console.log('Fetched Firestore profile:', firestoreProfile);
+            // Wrapped in a try-catch to handle potential quota errors
+            let firestoreProfile = null;
+            try {
+              firestoreProfile = await getUserProfile(authUser.uid);
+              console.log('Fetched Firestore profile:', firestoreProfile);
+            } catch (fetchError) {
+              if (fetchError.code === 'resource-exhausted') {
+                console.warn('Firestore quota exceeded during profile fetch. Using basic auth data.');
+                // Fallback to authUser data only.
+              } else {
+                // Rethrow other errors
+                throw fetchError;
+              }
+            }
 
             if (firestoreProfile) {
               // Combine authUser properties (like emailVerified, providerData) with Firestore profile
               setUser({ ...authUser, ...firestoreProfile }); 
             } else {
-              // This case should ideally not happen if upsertUserProfile worked,
-              // but as a fallback, set user to the authUser.
-              // Log a warning, as this means Firestore data is missing.
-              console.warn(`Firestore profile not found for ${authUser.uid} after upsert. Setting user to authUser only.`);
+              // This case might happen if Firestore is down, quota exceeded, or profile genuinely doesn't exist
+              console.warn(`Firestore profile not found or couldn't be fetched for ${authUser.uid}. Setting user to authUser only.`);
               setUser(authUser); 
             }
           } catch (profileError) {
-            console.error('Error during profile processing after auth state change:', profileError);
-            // If profile operations fail, set user to basic authUser and potentially set an error state
+            console.error('Error during profile processing after auth state change (outside specific quota checks):', profileError);
+            // If profile operations fail (other than quota exceeded during specific steps), 
+            // set user to basic authUser and potentially set an error state
             setUser(authUser); 
             // setError(profileError.message); // Or a more specific error
           }
@@ -137,29 +159,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const updateUserPassword = async (newPassword) => {
-    console.log('Attempting to update password...');
+  const updatePassword = async (newPassword) => {
     if (!auth.currentUser) {
-      throw new Error('No user is currently signed in to update password.');
+      throw new Error('No user is currently signed in.');
     }
+
     try {
       await firebaseUpdatePassword(auth.currentUser, newPassword);
-      console.log('Password updated successfully in Firebase Auth.');
-      // Optionally, you might want to update a 'passwordLastChangedAt' field in Firestore here
+      return { success: true, message: 'Password updated successfully' };
     } catch (error) {
       console.error('Error updating password:', error);
-      throw error; // Propagate error
+      throw error;
     }
   };
 
-  const sendPasswordReset = async (email) => {
-    console.log(`Attempting to send password reset email to ${email}...`);
+  const sendPasswordResetEmail = async (email) => {
     try {
-      await sendPasswordResetEmail(auth, email);
-      console.log('Password reset email sent successfully.');
+      await firebaseSendPasswordResetEmail(auth, email);
+      return { success: true, message: 'Password reset email sent' };
     } catch (error) {
       console.error('Error sending password reset email:', error);
-      throw error; // Propagate error to be handled by the caller
+      throw error;
     }
   };
 
@@ -210,8 +230,8 @@ export const AuthProvider = ({ children }) => {
     signUpWithEmail,
     logout,
     reauthenticateWithPassword,
-    updateUserPassword,
-    sendPasswordReset,
+    updatePassword,
+    sendPasswordResetEmail,
     deleteUserAccount
   };
 

@@ -1,5 +1,6 @@
 import { db } from '../firebase';
 import { collection, addDoc, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc } from 'firebase/firestore';
+import logger from '../utils/logger';
 
 class NewsService {
   constructor() {
@@ -101,7 +102,7 @@ class NewsService {
       }
       return [];
     } catch (error) {
-      console.error(`Error fetching RSS from ${url}:`, error);
+      logger.error(`Error fetching RSS from ${url}:`, error);
       return [];
     }
   }
@@ -142,7 +143,7 @@ class NewsService {
     
     // Filter out political content
     if (this.isPoliticalContent(article.title || '', articleContent)) {
-      console.log(`Filtered political article: ${article.title}`);
+      logger.info(`Filtered political article: ${article.title}`);
       return null; // Skip political articles
     }
     
@@ -206,7 +207,7 @@ class NewsService {
 
   // Fetch all news from all sources (RSS only - no mock data)
   async fetchAllNews() {
-    console.log('Fetching AI news from real RSS sources only...');
+    logger.info('Fetching AI news from real RSS sources only...');
     const allArticles = [];
 
     for (const source of this.sources) {
@@ -220,16 +221,16 @@ class NewsService {
             .filter(article => article !== null); // Filter out political articles
 
           allArticles.push(...processedArticles);
-          console.log(`Fetched ${processedArticles.length} articles from ${source.company} (after filtering)`);
+          logger.info(`Fetched ${processedArticles.length} articles from ${source.company} (after filtering)`);
         } else {
-          console.log(`Skipping ${source.company} - no RSS feed available`);
+          logger.info(`Skipping ${source.company} - no RSS feed available`);
         }
         
         // Rate limiting - wait 1 second between requests
         await new Promise(resolve => setTimeout(resolve, 1000));
         
       } catch (error) {
-        console.error(`Error processing source ${source.company}:`, error);
+        logger.error(`Error processing source ${source.company}:`, error);
       }
     }
 
@@ -255,25 +256,25 @@ class NewsService {
           // Article is new, add it
           const docRef = await addDoc(newsCollection, article);
           savedOrUpdatedArticles.push({ ...article, firestoreId: docRef.id });
-          console.log(`Saved new article: ${article.title}`);
+          logger.info(`Saved new article: ${article.title}`);
         } else {
           // Article exists, update it
           // Assuming only one match, as title and source should be unique enough
           const existingDoc = querySnapshot.docs[0];
           await updateDoc(existingDoc.ref, article); // article contains all fields, including new colors
           savedOrUpdatedArticles.push({ ...article, firestoreId: existingDoc.id });
-          console.log(`Updated existing article: ${article.title}`);
+          logger.info(`Updated existing article: ${article.title}`);
         }
       }
 
       return savedOrUpdatedArticles;
     } catch (error) {
-      console.error('Error saving news to Firestore:', error);
+      logger.error('Error saving news to Firestore:', error);
       
       // If it's a permissions error, provide helpful message
       if (error.code === 'permission-denied') {
-        console.log('⚠️ Firestore write permissions not set up. Please update Firebase Security Rules.');
-        console.log('📖 See firebase-security-rules.md for instructions.');
+        logger.info('⚠️ Firestore write permissions not set up. Please update Firebase Security Rules.');
+        logger.info('📖 See firebase-security-rules.md for instructions.');
       }
       
       throw error;
@@ -308,11 +309,11 @@ class NewsService {
 
       return articles;
     } catch (error) {
-      console.error('Error fetching news from Firestore:', error);
+      logger.error('Error fetching news from Firestore:', error);
       
       // If it's a permissions error, return empty array to trigger fallback
       if (error.code === 'permission-denied') {
-        console.log('Firestore permissions not set up yet. Using fallback news.');
+        logger.info('Firestore permissions not set up yet. Using fallback news.');
         return [];
       }
       
@@ -323,19 +324,19 @@ class NewsService {
   // Main function to update news
   async updateNews() {
     try {
-      console.log('Starting news update process...');
+      logger.info('Starting news update process...');
       
       const newArticles = await this.fetchAllNews();
-      console.log(`Found ${newArticles.length} new articles`);
+      logger.info(`Found ${newArticles.length} new articles`);
       
       if (newArticles.length > 0) {
         await this.saveNewsToFirestore(newArticles);
-        console.log('News update completed successfully');
+        logger.info('News update completed successfully');
       }
       
       return newArticles;
     } catch (error) {
-      console.error('Error in news update process:', error);
+      logger.error('Error in news update process:', error);
       throw error;
     }
   }
@@ -354,10 +355,10 @@ class NewsService {
         for (const doc of docsToDelete) {
           await doc.ref.delete();
         }
-        console.log(`Cleaned ${docsToDelete.length} old news articles`);
+        logger.info(`Cleaned ${docsToDelete.length} old news articles`);
       }
     } catch (error) {
-      console.error('Error cleaning old news:', error);
+      logger.error('Error cleaning old news:', error);
     }
   }
 
@@ -404,11 +405,11 @@ class NewsService {
         'likes.total': totalLikes
       });
       
-      console.log(`Article ${hasLiked ? 'unliked' : 'liked'} by user ${userId}`);
+      logger.info(`Article ${hasLiked ? 'unliked' : 'liked'} by user ${userId}`);
       return { liked: !hasLiked, totalLikes, realLikes };
       
     } catch (error) {
-      console.error('Error liking article:', error);
+      logger.error('Error liking article:', error);
       throw error;
     }
   }
@@ -431,7 +432,7 @@ class NewsService {
       
       return { liked, totalLikes };
     } catch (error) {
-      console.error('Error getting like status:', error);
+      logger.error('Error getting like status:', error);
       return { liked: false, totalLikes: 0 };
     }
   }

@@ -5,7 +5,7 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
   const { title, explanation, icon, keyPoints } = slide.content;
 
   return (
-    <div className="text-center space-y-6">
+    <div className="text-center space-y-8">
       {/* Icon */}
       <motion.div
         initial={{ opacity: 0, scale: 0.5 }}
@@ -31,7 +31,7 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="text-lg text-gray-300 leading-relaxed"
+        className="text-xl md:text-2xl text-gray-100 leading-relaxed font-medium max-w-5xl mx-auto px-4 mb-8 tracking-wide"
       >
         {explanation}
       </motion.p>
@@ -59,7 +59,7 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
                 transition={{ duration: 0.3, delay: 1 + (index * 0.2) }}
                 className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"
               />
-              <span className="text-gray-300 leading-relaxed">{point}</span>
+              <span className="text-gray-100 leading-relaxed text-base font-medium">{point}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -73,7 +73,7 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
         transition={{ duration: 0.5, delay: 1.2 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-full py-4 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl text-white font-semibold text-lg shadow-lg transition-all duration-300"
+        className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold text-base shadow-lg transition-all duration-300"
       >
         Got it! Continue →
       </motion.button>

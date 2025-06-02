@@ -1,5 +1,7 @@
 import { db } from '../firebase';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { v4 as uuidv4 } from 'uuid';
+import logger from '../utils/logger';
 
 /**
  * Secure Sandbox API Service for AI Interactions
@@ -101,7 +103,7 @@ export class SandboxAPIService {
 
       return true;
     } catch (error) {
-      console.error('Rate limit check failed:', error);
+      logger.error('Rate limit check failed:', error);
       throw error;
     }
   }
@@ -111,7 +113,7 @@ export class SandboxAPIService {
    */
   static async sendPromptToAI(prompt, context = {}) {
     const {
-      provider = this.AI_PROVIDERS.XAI,
+      provider = context.sandboxType === 'ai_game_generator' ? this.AI_PROVIDERS.OPENAI : this.AI_PROVIDERS.XAI,
       lessonId = 'unknown',
       sandboxType = 'general',
       userLevel = 'beginner'
@@ -132,7 +134,7 @@ export class SandboxAPIService {
           throw new Error(`Unsupported AI provider: ${provider}`);
       }
     } catch (error) {
-      console.error('AI API call failed:', error);
+      logger.error('AI API call failed:', error);
       throw new Error('AI service temporarily unavailable. Please try again.');
     }
   }
@@ -176,6 +178,19 @@ Guidelines:
 - Help users understand AI terminology and concepts
 - Provide clear, simple explanations of technical terms
 - Use examples and analogies appropriate for their level`;
+
+      case 'ai_game_generator':
+        return `You are a game development AI. Create complete, playable HTML games based on user descriptions. Include all HTML, CSS, and JavaScript in a single file. Make games simple but engaging, using canvas or DOM elements. Include basic graphics using CSS or simple shapes. Add clear instructions and scoring. IMPORTANT: Only generate safe, educational game content. Do not include any external links, network requests, or potentially harmful code.
+
+Guidelines:
+- Create a complete HTML document with embedded CSS and JavaScript
+- Use simple graphics (CSS shapes, emojis, or basic canvas drawing)
+- Include player controls (arrow keys, mouse, spacebar, etc.)
+- Add scoring or objectives to make it engaging
+- Ensure the game works in a modern browser
+- Keep the code educational and beginner-friendly
+- No external dependencies or network requests
+- Include brief instructions in the game`;
 
       default:
         return basePrompt;
@@ -242,7 +257,7 @@ Guidelines:
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        model: 'gpt-3.5-turbo',
+        model: 'gpt-4o',
         temperature: 0.7,
         max_tokens: 1000
       })
@@ -256,7 +271,7 @@ Guidelines:
     return {
       response: data.choices[0]?.message?.content || 'No response generated',
       provider: 'OpenAI',
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
       usage: data.usage
     };
   }
@@ -332,7 +347,7 @@ Guidelines:
       };
 
     } catch (error) {
-      console.error('Sandbox prompt processing failed:', error);
+      logger.error('Sandbox prompt processing failed:', error);
       return {
         success: false,
         error: error.message,
@@ -364,7 +379,7 @@ Guidelines:
       }, { merge: true });
 
     } catch (error) {
-      console.error('Failed to log interaction:', error);
+      logger.error('Failed to log interaction:', error);
       // Don't throw error here - logging failures shouldn't break the main flow
     }
   }
@@ -382,7 +397,7 @@ Guidelines:
   static async cleanupExpiredRateLimits() {
     // This would be called by a scheduled function
     // Implementation would query and clean old rate limit documents
-    console.log('Rate limit cleanup would run here');
+    logger.info('Rate limit cleanup would run here');
   }
 }
 

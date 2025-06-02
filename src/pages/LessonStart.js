@@ -93,7 +93,7 @@ const LessonStart = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-black text-white overflow-hidden">
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
       {/* Star Animation Container for LessonStart */}
@@ -157,7 +157,7 @@ const LessonStart = () => {
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent leading-tight py-2">
               {lessonInfo.lessonTitle}
             </h1>
-            <p className="text-xl text-indigo-200 mb-6">
+            <p className="text-2xl md:text-3xl text-indigo-100 mb-12 font-medium leading-relaxed max-w-5xl mx-auto">
               Choose your learning difficulty to get started
             </p>
             
@@ -189,7 +189,7 @@ const LessonStart = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-12"
+            className="mb-16"
           >
             <h2 className="text-2xl font-bold text-center mb-8 text-indigo-200">
               Select Your Difficulty Level
@@ -220,13 +220,13 @@ const LessonStart = () => {
                   <div className="relative z-10 text-center">
                     <div className="text-4xl mb-3">{difficulty.icon}</div>
                     <h3 className="text-xl font-bold mb-2">{difficulty.title}</h3>
-                    <p className="text-sm text-slate-300 mb-3">{difficulty.description}</p>
-                    <div className="text-xs text-slate-400 mb-3">{difficulty.duration}</div>
+                    <p className="text-base text-slate-200 mb-3 font-medium leading-relaxed">{difficulty.description}</p>
+                    <div className="text-sm text-slate-300 mb-3 font-medium">{difficulty.duration}</div>
                     
                     {/* Features */}
                     <div className="space-y-1">
                       {difficulty.features.map((feature, index) => (
-                        <div key={index} className="flex items-center text-xs text-slate-300">
+                        <div key={index} className="flex items-center text-sm text-slate-200 font-medium">
                           <div className="w-1 h-1 bg-slate-400 rounded-full mr-2"></div>
                           {feature}
                         </div>
@@ -244,7 +244,7 @@ const LessonStart = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="mb-12"
+              className="mb-16"
             >
               {(() => {
                 const selected = difficulties.find(d => d.id === selectedDifficulty);
@@ -254,10 +254,10 @@ const LessonStart = () => {
                       <div className="text-6xl">{selected.icon}</div>
                     </div>
                     <h3 className="text-2xl font-bold text-center mb-4">{selected.title} Level</h3>
-                    <p className="text-center text-slate-200 mb-6 max-w-2xl mx-auto leading-relaxed">
+                    <p className="text-center text-slate-100 mb-8 max-w-5xl mx-auto leading-relaxed text-lg md:text-xl font-medium">
                       {selected.details}
                     </p>
-                    <div className="flex justify-center items-center space-x-6 text-sm">
+                    <div className="flex justify-center items-center space-x-6 text-base font-medium">
                       <div className="flex items-center space-x-2">
                         <div className="text-xl">⏱️</div>
                         <span>{selected.duration}</span>
@@ -282,13 +282,13 @@ const LessonStart = () => {
           >
             <button
               onClick={handleStartLesson}
-              className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-400/40 text-lg"
+              className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg shadow-purple-500/30 hover:shadow-xl hover:shadow-purple-400/40 text-base"
             >
               🚀 Start Learning
             </button>
             <button
               onClick={handleGoBack}
-              className="px-6 py-4 bg-slate-700/80 hover:bg-slate-600/80 text-white font-semibold rounded-2xl transition-all duration-300 border border-slate-500/50 hover:border-slate-400/60 backdrop-blur-sm text-lg"
+              className="px-5 py-3 bg-slate-700/80 hover:bg-slate-600/80 text-white font-semibold rounded-xl transition-all duration-300 border border-slate-500/50 hover:border-slate-400/60 backdrop-blur-sm text-base"
             >
               ← Go Back
             </button>
@@ -299,11 +299,11 @@ const LessonStart = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="mt-12 text-center"
+            className="mt-16 text-center"
           >
             <div className="bg-slate-800/30 backdrop-blur-sm rounded-2xl p-6 border border-slate-600/30">
               <h3 className="text-lg font-semibold mb-4 text-indigo-200">💡 Learning Tips</h3>
-              <div className="grid md:grid-cols-3 gap-4 text-sm text-slate-300">
+              <div className="grid md:grid-cols-3 gap-4 text-base text-slate-100 font-medium">
                 <div className="flex items-start space-x-2">
                   <div className="text-lg">📚</div>
                   <div>

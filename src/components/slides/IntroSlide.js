@@ -5,7 +5,7 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
   const { title, subtitle, icon, description } = slide.content;
 
   return (
-    <div className="text-center space-y-6">
+    <div className="text-center space-y-8">
       {/* Animated Icon */}
       <motion.div
         initial={{ scale: 0, rotate: -180 }}
@@ -31,7 +31,7 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
           {title}
         </h1>
         {subtitle && (
-          <p className="text-xl text-blue-200 font-medium">
+          <p className="text-2xl md:text-3xl text-blue-100 font-medium leading-relaxed">
             {subtitle}
           </p>
         )}
@@ -43,7 +43,7 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.6 }}
-          className="text-lg text-gray-300 leading-relaxed max-w-sm mx-auto"
+          className="text-xl md:text-2xl text-gray-100 leading-relaxed max-w-4xl mx-auto font-medium px-4 mb-8"
         >
           {description}
         </motion.p>
@@ -57,7 +57,7 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
         transition={{ duration: 0.5, delay: 0.8 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl text-white font-semibold text-lg shadow-lg shadow-blue-500/30 transition-all duration-300"
+        className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold text-base shadow-lg shadow-blue-500/30 transition-all duration-300"
       >
         Let's Begin! 🚀
       </motion.button>

@@ -10,6 +10,7 @@ import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { motion } from 'framer-motion';
+import logger from '../utils/logger';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -201,7 +202,7 @@ const HomePage = () => {
             }
           }
         } catch (error) {
-          console.error('Error syncing quiz state with Firebase:', error);
+          logger.error('Error syncing quiz state with Firebase:', error);
         }
       }
       
@@ -222,9 +223,9 @@ const HomePage = () => {
         setLearningProgress(progress);
       }
       
-      console.log('Quiz completion state:', { quizCompletedState, quizResultsData, learningPathData });
+      logger.log('Quiz completion state:', { quizCompletedState, quizResultsData, learningPathData });
     } catch (error) {
-      console.error('Error initializing dashboard:', error);
+      logger.error('Error initializing dashboard:', error);
     }
     
     // Set time-based content
@@ -248,7 +249,7 @@ const HomePage = () => {
       // Load adaptive lessons for quick access
       await loadAdaptiveLessons();
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
+      logger.error('Error loading dashboard data:', error);
     }
     
     setIsLoading(false);
@@ -289,7 +290,7 @@ const HomePage = () => {
           setNextLesson(recommendedLessons[0]);
         }
       } catch (error) {
-        console.error('Error getting recommended lessons:', error);
+        logger.error('Error getting recommended lessons:', error);
       }
     }
   };
@@ -340,14 +341,14 @@ const HomePage = () => {
             allLessons.push(...pathLessons);
           }
         } catch (error) {
-          console.warn(`Failed to load path ${pathId}:`, error);
+          logger.warn(`Failed to load path ${pathId}:`, error);
         }
       }
       
       setAvailablePaths(pathsData);
       setAdaptiveLessons(allLessons.slice(0, 6)); // Show up to 6 lessons total
     } catch (error) {
-      console.error('Failed to load adaptive lessons:', error);
+      logger.error('Failed to load adaptive lessons:', error);
     }
   };
 
@@ -397,14 +398,14 @@ const HomePage = () => {
   };
 
   const handleLearningPathClick = (path) => {
-    console.log('[Learning Path Click] Starting first lesson for path:', path.title);
+    logger.info('[Learning Path Click] Starting first lesson for path:', path.title);
     
     // Find the first lesson in this path
     const pathLessons = adaptiveLessons.filter(lesson => lesson.pathId === path.id);
     
     if (pathLessons.length > 0) {
       const firstLesson = pathLessons[0];
-      console.log('[Learning Path Click] Found first lesson:', firstLesson.title);
+      logger.info('[Learning Path Click] Found first lesson:', firstLesson.title);
       
       // Navigate directly to the first lesson
       navigate(`/lessons/${firstLesson.id}`, {
@@ -416,7 +417,7 @@ const HomePage = () => {
         }
       });
     } else {
-      console.log('[Learning Path Click] No lessons found, falling back to lessons page');
+      logger.info('[Learning Path Click] No lessons found, falling back to lessons page');
       // Fallback to lessons page if no lessons found
       navigate('/lessons', { 
         state: { 
@@ -431,22 +432,24 @@ const HomePage = () => {
     try {
       setShowPaywallModal(false);
       
-      // TODO: Replace with direct Stripe Checkout when implemented
-      // Example of what this would look like:
-      // const { createCheckoutSession } = await import('../services/stripeService');
-      // const checkoutUrl = await createCheckoutSession({
-      //   userId: user?.uid,
-      //   priceId: 'price_premium_monthly', // Stripe price ID
-      //   successUrl: `${window.location.origin}/home?upgrade=success`,
-      //   cancelUrl: `${window.location.origin}/home?upgrade=cancelled`
-      // });
-      // window.location.href = checkoutUrl;
+      // Stripe Checkout Integration - To be implemented
+      // When ready, uncomment and implement the following:
+      /*
+      const { createCheckoutSession } = await import('../services/stripeService');
+      const checkoutUrl = await createCheckoutSession({
+        userId: user?.uid,
+        priceId: process.env.REACT_APP_STRIPE_PRICE_ID || 'price_premium_monthly',
+        successUrl: `${window.location.origin}/home?upgrade=success`,
+        cancelUrl: `${window.location.origin}/home?upgrade=cancelled`
+      });
+      window.location.href = checkoutUrl;
+      */
       
-      // For now, navigate to pricing page
+      // Temporary: Navigate to pricing page
       navigate('/pricing');
     } catch (error) {
-      console.error('Error initiating upgrade:', error);
-      // You could show an error toast here
+      logger.error('Error initiating upgrade:', error);
+      // Consider using a toast notification library for user feedback
     }
   };
 
@@ -458,19 +461,19 @@ const HomePage = () => {
   const handleConfirmQuickAccessDifficulty = (selectedDifficulty) => {
     if (!lessonForDifficultySelection) return;
 
-    console.log('[Paywall Check] Lesson:', lessonForDifficultySelection.title);
-    console.log('[Paywall Check] lessonForDifficultySelection.isPremium:', lessonForDifficultySelection.isPremium);
-    console.log('[Paywall Check] selectedDifficulty:', selectedDifficulty);
-    console.log('[Paywall Check] currentUser?.subscriptionTier:', currentUser?.subscriptionTier);
+    logger.debug('[Paywall Check] Lesson:', lessonForDifficultySelection.title);
+    logger.debug('[Paywall Check] lessonForDifficultySelection.isPremium:', lessonForDifficultySelection.isPremium);
+    logger.debug('[Paywall Check] selectedDifficulty:', selectedDifficulty);
+    logger.debug('[Paywall Check] currentUser?.subscriptionTier:', currentUser?.subscriptionTier);
 
     const isPremiumLessonPart = 
       !!lessonForDifficultySelection.isPremium && // Ensure isPremium is treated as boolean
       (selectedDifficulty === 'Intermediate' || selectedDifficulty === 'Advanced');
     
-    console.log('[Paywall Check] isPremiumLessonPart:', isPremiumLessonPart);
+    logger.debug('[Paywall Check] isPremiumLessonPart:', isPremiumLessonPart);
     
     const hasAccess = !isPremiumLessonPart || (currentUser?.subscriptionTier === 'premium');
-    console.log('[Paywall Check] hasAccess:', hasAccess);
+    logger.debug('[Paywall Check] hasAccess:', hasAccess);
 
     if (hasAccess) {
       navigate(`/lessons/${lessonForDifficultySelection.id}`, {

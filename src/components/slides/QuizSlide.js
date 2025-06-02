@@ -45,7 +45,7 @@ const QuizSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
   };
 
   return (
-    <div className="text-center space-y-6">
+    <div className="text-center space-y-8">
       {/* Question */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -56,14 +56,14 @@ const QuizSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
         <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
           Question
         </h2>
-        <p className="text-lg text-gray-300 leading-relaxed">
+        <p className="text-xl md:text-2xl text-gray-100 leading-relaxed font-medium max-w-5xl mx-auto px-4 mb-8">
           {question}
         </p>
       </motion.div>
 
       {/* Options */}
       <motion.div 
-        className="space-y-3"
+        className="space-y-4"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
@@ -74,7 +74,7 @@ const QuizSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
             onClick={() => handleAnswer(option, index)}
             disabled={hasAnswered}
             className={`
-              w-full p-4 rounded-xl text-left transition-all duration-300 border
+              w-full p-5 rounded-xl text-left transition-all duration-300 border text-lg font-medium
               ${getOptionStyle(option, index)}
               ${!hasAnswered ? 'transform hover:scale-[1.02] active:scale-[0.98]' : ''}
               disabled:cursor-not-allowed
@@ -154,7 +154,7 @@ const QuizSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
           transition={{ duration: 0.5, delay: 0.3 }}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl text-white font-semibold text-lg shadow-lg transition-all duration-300"
+          className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl text-white font-semibold text-base shadow-lg transition-all duration-300"
         >
           Continue →
         </motion.button>

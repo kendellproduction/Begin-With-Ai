@@ -7,8 +7,9 @@ import {
   deleteDoc,
   serverTimestamp 
 } from 'firebase/firestore';
-import { db } from '../firebase-node.js';
+import { db } from '../firebase';
 import { vibeCodeVideoGameLesson, vibeCodeVideoGameLessonSeed } from '../lessons/vibeCodeVideoGameLesson.js';
+import logger from '../utils/logger';
 
 /**
  * Vibe Code Video Game Lesson Seeding Service
@@ -21,7 +22,7 @@ export class VibeCodeLessonSeedService {
    */
   static async seedVibeCodeLesson() {
     try {
-      console.log('Starting Vibe Code Video Game lesson seeding...');
+      logger.info('Starting Vibe Code Video Game lesson seeding...');
       
       const batch = writeBatch(db);
       
@@ -56,7 +57,7 @@ export class VibeCodeLessonSeedService {
         };
         
         batch.set(pathRef, vibeCodePath);
-        console.log('Created Vibe Coding learning path');
+        logger.info('Created Vibe Coding learning path');
       }
       
       // 2. Check if the module exists, create if needed
@@ -75,7 +76,7 @@ export class VibeCodeLessonSeedService {
         };
         
         batch.set(moduleRef, interactiveCodingModule);
-        console.log('Created Interactive Coding module');
+        logger.info('Created Interactive Coding module');
       }
       
       // 3. Add the Vibe Code Video Game lesson
@@ -90,12 +91,12 @@ export class VibeCodeLessonSeedService {
       };
       
       batch.set(lessonRef, lessonData);
-      console.log('Added Vibe Code Video Game lesson');
+      logger.info('Added Vibe Code Video Game lesson');
       
       // 4. Commit all changes
       await batch.commit();
       
-      console.log('Vibe Code Video Game lesson seeded successfully!');
+      logger.info('Vibe Code Video Game lesson seeded successfully!');
       return { 
         success: true, 
         message: 'Vibe Code Video Game lesson seeded successfully',
@@ -105,7 +106,7 @@ export class VibeCodeLessonSeedService {
       };
       
     } catch (error) {
-      console.error('Error seeding Vibe Code lesson:', error);
+      logger.error('Error seeding Vibe Code lesson:', error);
       throw new Error(`Failed to seed Vibe Code lesson: ${error.message}`);
     }
   }
@@ -115,7 +116,7 @@ export class VibeCodeLessonSeedService {
    */
   static async updateVibeCodeLesson() {
     try {
-      console.log('Updating Vibe Code Video Game lesson...');
+      logger.info('Updating Vibe Code Video Game lesson...');
       
       const pathId = vibeCodeVideoGameLessonSeed.pathId;
       const moduleId = vibeCodeVideoGameLessonSeed.moduleId;
@@ -128,7 +129,7 @@ export class VibeCodeLessonSeedService {
       
       await setDoc(lessonRef, lessonData, { merge: true });
       
-      console.log('Vibe Code Video Game lesson updated successfully!');
+      logger.info('Vibe Code Video Game lesson updated successfully!');
       return { 
         success: true, 
         message: 'Vibe Code Video Game lesson updated successfully',
@@ -136,7 +137,7 @@ export class VibeCodeLessonSeedService {
       };
       
     } catch (error) {
-      console.error('Error updating Vibe Code lesson:', error);
+      logger.error('Error updating Vibe Code lesson:', error);
       throw new Error(`Failed to update Vibe Code lesson: ${error.message}`);
     }
   }
@@ -146,7 +147,7 @@ export class VibeCodeLessonSeedService {
    */
   static async removeVibeCodeLesson() {
     try {
-      console.log('Removing Vibe Code Video Game lesson...');
+      logger.info('Removing Vibe Code Video Game lesson...');
       
       const pathId = vibeCodeVideoGameLessonSeed.pathId;
       const moduleId = vibeCodeVideoGameLessonSeed.moduleId;
@@ -154,14 +155,14 @@ export class VibeCodeLessonSeedService {
       
       await deleteDoc(lessonRef);
       
-      console.log('Vibe Code Video Game lesson removed successfully!');
+      logger.info('Vibe Code Video Game lesson removed successfully!');
       return { 
         success: true, 
         message: 'Vibe Code Video Game lesson removed successfully'
       };
       
     } catch (error) {
-      console.error('Error removing Vibe Code lesson:', error);
+      logger.error('Error removing Vibe Code lesson:', error);
       throw new Error(`Failed to remove Vibe Code lesson: ${error.message}`);
     }
   }
@@ -187,7 +188,7 @@ export class VibeCodeLessonSeedService {
       };
       
     } catch (error) {
-      console.error('Error getting Vibe Code lesson:', error);
+      logger.error('Error getting Vibe Code lesson:', error);
       throw new Error(`Failed to get Vibe Code lesson: ${error.message}`);
     }
   }
@@ -205,7 +206,7 @@ export class VibeCodeLessonSeedService {
       return lessonDoc.exists();
       
     } catch (error) {
-      console.error('Error checking if Vibe Code lesson exists:', error);
+      logger.error('Error checking if Vibe Code lesson exists:', error);
       return false;
     }
   }
@@ -217,14 +218,14 @@ export const runVibeCodeLessonSeeding = async () => {
     const exists = await VibeCodeLessonSeedService.lessonExists();
     
     if (exists) {
-      console.log('Vibe Code lesson already exists. Updating...');
+      logger.info('Vibe Code lesson already exists. Updating...');
       return await VibeCodeLessonSeedService.updateVibeCodeLesson();
     } else {
-      console.log('Vibe Code lesson does not exist. Creating...');
+      logger.info('Vibe Code lesson does not exist. Creating...');
       return await VibeCodeLessonSeedService.seedVibeCodeLesson();
     }
   } catch (error) {
-    console.error('Failed to run Vibe Code lesson seeding:', error);
+    logger.error('Failed to run Vibe Code lesson seeding:', error);
     throw error;
   }
 }; 

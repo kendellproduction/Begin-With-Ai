@@ -5,15 +5,20 @@ import {
   getDoc, 
   getDocs, 
   writeBatch,
-  serverTimestamp 
+  serverTimestamp,
+  updateDoc,
+  query,
+  where
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import logger from '../utils/logger';
 import { 
   promptEngineeringMasteryPath,
   vibeCodePath,
   adaptiveModules, 
   adaptiveLessons 
 } from '../utils/adaptiveLessonData';
+import { getAdaptiveLessonData, getAdaptiveLessonById, getAdaptivePathById } from '../utils/adaptiveLessonData';
 
 /**
  * Adaptive Lesson Service - Handles dynamic lesson content and difficulty adaptation
@@ -69,11 +74,11 @@ export class AdaptiveLessonService {
       }
 
       await batch.commit();
-      console.log('All adaptive lessons seeded successfully!');
+      logger.info('All adaptive lessons seeded successfully!');
       return { success: true, message: 'All adaptive lesson data seeded successfully, including Vibe Coding path' };
       
     } catch (error) {
-      console.error('Error seeding adaptive lessons:', error);
+      logger.error('Error seeding adaptive lessons:', error);
       throw new Error(`Failed to seed adaptive lessons: ${error.message}`);
     }
   }
@@ -103,7 +108,7 @@ export class AdaptiveLessonService {
       };
       
     } catch (error) {
-      console.error('Error getting adapted lesson:', error);
+      logger.error('Error getting adapted lesson:', error);
       throw error;
     }
   }
@@ -215,7 +220,7 @@ export class AdaptiveLessonService {
       return result;
       
     } catch (error) {
-      console.error('Error getting adapted learning path:', error);
+      logger.error('Error getting adapted learning path:', error);
       throw error;
     }
   }
@@ -269,7 +274,7 @@ export class AdaptiveLessonService {
       return allLessons.slice(0, limit);
       
     } catch (error) {
-      console.error('Error getting recommended lessons:', error);
+      logger.error('Error getting recommended lessons:', error);
       throw error;
     }
   }
@@ -377,12 +382,12 @@ export class AdaptiveLessonService {
       };
 
       // This would integrate with the existing progress tracking system
-      console.log('Lesson completion with adaptation:', completionData);
+      logger.info('Lesson completion with adaptation:', completionData);
       
       return completionData;
       
     } catch (error) {
-      console.error('Error completing lesson with adaptation:', error);
+      logger.error('Error completing lesson with adaptation:', error);
       throw error;
     }
   }

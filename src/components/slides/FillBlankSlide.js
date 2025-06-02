@@ -58,7 +58,7 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
   };
 
   return (
-    <div className="text-center space-y-6">
+    <div className="text-center space-y-8">
       {/* Title */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -83,7 +83,7 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
         transition={{ duration: 0.5, delay: 0.2 }}
         className="bg-white/5 rounded-2xl p-6 border border-white/10"
       >
-        <p className="text-lg text-white leading-relaxed">
+        <p className="text-xl md:text-2xl text-white leading-relaxed font-medium max-w-5xl mx-auto">
           {parts[0]}
           <span className={`
             inline-block min-w-[120px] mx-2 px-3 py-1 rounded-lg border-2 border-dashed font-semibold
@@ -101,9 +101,9 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
       </motion.div>
 
       {/* Options */}
-      {!hasAnswered && (
+              {!hasAnswered && (
         <motion.div 
-          className="grid grid-cols-2 gap-3"
+          className="grid grid-cols-2 gap-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
@@ -113,7 +113,7 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
               key={index}
               onClick={() => handleAnswer(option)}
               className={`
-                p-3 rounded-xl text-center transition-all duration-300 border
+                p-4 rounded-xl text-center transition-all duration-300 border text-lg font-medium
                 ${getOptionStyle(option)}
                 transform hover:scale-[1.02] active:scale-[0.98]
               `}
