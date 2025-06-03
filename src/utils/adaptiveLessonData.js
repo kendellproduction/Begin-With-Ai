@@ -2569,3 +2569,1537 @@ export default {
   adaptiveModules,
   adaptiveLessons
 }; 
+
+/**
+ * Utility functions to access and convert adaptive lesson data
+ */
+
+// Get a lesson by ID from any module
+export const getAdaptiveLessonById = (lessonId) => {
+  for (const moduleId in adaptiveLessons) {
+    const lessons = adaptiveLessons[moduleId];
+    const lesson = lessons.find(l => l.id === lessonId);
+    if (lesson) {
+      return lesson;
+    }
+  }
+  return null;
+};
+
+// Convert adaptive lesson data to slide format for LessonViewer
+export const convertAdaptiveLessonToSlides = (lesson, difficulty = 'intermediate') => {
+  if (!lesson) return [];
+  
+  const slides = [];
+  const difficultyContent = lesson.content[difficulty] || lesson.content.intermediate || lesson.content.beginner;
+  
+  // Add single "What to Expect" intro slide
+  slides.push({
+    id: `${lesson.id}-intro`,
+    type: 'intro',
+    content: {
+      title: `What to Expect: ${lesson.title}`,
+      subtitle: "Here's what you'll learn in this lesson",
+      icon: getIconForLesson(lesson.id),
+      description: difficultyContent.introduction || lesson.coreConcept,
+      estimatedTime: lesson.estimatedTime?.[difficulty] || 20,
+      xpReward: lesson.xpRewards?.[difficulty] || 100,
+      keyPoints: [
+        getExpectationPoint1(lesson.id, difficultyContent),
+        getExpectationPoint2(lesson.id, difficultyContent), 
+        getExpectationPoint3(lesson.id, difficultyContent)
+      ]
+    }
+  });
+
+  // Special comprehensive handling for vocabulary lessons
+  if (lesson.lessonType === 'interactive_vocabulary' && difficultyContent.vocabulary) {
+    // Create detailed teaching slides for each vocabulary term
+    difficultyContent.vocabulary.forEach((term, index) => {
+      // Main teaching slide for each term
+      slides.push({
+        id: `${lesson.id}-vocab-teach-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: `Key Term: ${term.term}`,
+          term: term.term,
+          definition: term.definition,
+          whatItMeans: term.whatItMeans,
+          example: term.example,
+          category: term.category,
+          icon: getIconForCategory(term.category),
+          explanation: `Let's learn about "${term.term}" - an important AI concept.`,
+          progressInfo: `Term ${index + 1} of ${difficultyContent.vocabulary.length}`
+        }
+      });
+
+      // Interactive definition matching slide every few terms
+      if ((index + 1) % 4 === 0 || index === difficultyContent.vocabulary.length - 1) {
+        const recentTerms = difficultyContent.vocabulary.slice(Math.max(0, index - 3), index + 1);
+        slides.push({
+          id: `${lesson.id}-vocab-check-${index}`,
+          type: 'interactive_check',
+          content: {
+            title: "Quick Knowledge Check",
+            explanation: "Let's review what you just learned! Fill in the blanks by clicking the correct terms.",
+            fillInBlanks: recentTerms.map(t => ({
+              sentence: `${t.definition.replace(t.term, '______')}`,
+              correctAnswer: t.term,
+              options: recentTerms.map(rt => rt.term).sort(() => Math.random() - 0.5)
+            }))
+          }
+        });
+      }
+    });
+
+    // Category summary slides
+    const categories = [...new Set(difficultyContent.vocabulary.map(v => v.category))];
+    categories.forEach(category => {
+      const categoryTerms = difficultyContent.vocabulary.filter(v => v.category === category);
+      slides.push({
+        id: `${lesson.id}-category-${category.toLowerCase().replace(/\s+/g, '-')}`,
+        type: 'concept',
+        content: {
+          title: `${category} Terms`,
+          explanation: `Here are all the ${category.toLowerCase()} terms you've learned:`,
+          icon: getIconForCategory(category),
+          keyPoints: categoryTerms.map(term => `${term.term}: ${term.whatItMeans}`),
+          vocabulary: categoryTerms
+        }
+      });
+    });
+  }
+
+  // Enhanced handling for all other lesson types
+  else {
+    // Create comprehensive content based on lesson structure
+    createComprehensiveLessonSlides(lesson, difficultyContent, slides);
+  }
+
+  // Add assessment questions as quiz slides
+  if (lesson.assessment && lesson.assessment[difficulty]) {
+    lesson.assessment[difficulty].forEach((question, index) => {
+      slides.push({
+        id: `${lesson.id}-quiz-${index}`,
+        type: 'quiz',
+        content: {
+          question: question.question,
+          options: question.options.map(opt => ({ 
+            text: typeof opt === 'string' ? opt : opt.text, 
+            correct: typeof opt === 'string' ? opt === question.correct : opt.correct 
+          })),
+          explanation: question.explanation
+        }
+      });
+    });
+  }
+
+  // Add sandbox slide ONLY for 'vibe-code-video-game' lesson
+  if (lesson.id === 'vibe-code-video-game' && lesson.sandbox?.required) {
+    const sandboxContent = lesson.sandbox[difficulty] || lesson.sandbox.beginner;
+    if (sandboxContent && (sandboxContent.exercises || sandboxContent.scenarios)) {
+        slides.push({
+            id: `${lesson.id}-sandbox`,
+            type: 'sandbox',
+            content: {
+                title: sandboxContent.title || "Practice What You've Learned",
+                instructions: sandboxContent.instructions || "Try out the concepts from this lesson!",
+                ...sandboxContent,
+                exercises: sandboxContent.exercises || sandboxContent.scenarios || []
+            }
+        });
+    }
+  }
+
+  return slides;
+};
+
+// Comprehensive lesson slide creation for all lesson types
+const createComprehensiveLessonSlides = (lesson, difficultyContent, slides) => {
+  const lessonId = lesson.id;
+  
+  // Handle specific lesson types with their unique content structures
+  switch (lessonId) {
+    case 'prompting-essentials':
+      createPromptingEssentialsSlides(lesson, difficultyContent, slides);
+      break;
+    case 'prompt-engineering-action':
+      createPromptEngineeringActionSlides(lesson, difficultyContent, slides);
+      break;
+    case 'creative-ai-mastery':
+      createCreativeAiMasterySlides(lesson, difficultyContent, slides);
+      break;
+    case 'ai-workflow-fundamentals':
+      createWorkflowFundamentalsSlides(lesson, difficultyContent, slides);
+      break;
+    case 'ai-daily-applications':
+      createDailyApplicationsSlides(lesson, difficultyContent, slides);
+      break;
+    case 'local-ai-mastery':
+      createLocalAiMasterySlides(lesson, difficultyContent, slides);
+      break;
+    case 'ai-problem-solving-capstone':
+      createProblemSolvingCapstoneSlides(lesson, difficultyContent, slides);
+      break;
+    case 'welcome-ai-revolution':
+      createWelcomeAiRevolutionSlides(lesson, difficultyContent, slides);
+      break;
+    case 'how-ai-thinks':
+      createHowAiThinksSlides(lesson, difficultyContent, slides);
+      break;
+    default:
+      // Generic comprehensive content creation
+      createGenericComprehensiveSlides(lesson, difficultyContent, slides);
+      break;
+  }
+};
+
+// Prompting Essentials lesson slides
+const createPromptingEssentialsSlides = (lesson, difficultyContent, slides) => {
+  // Core concept introduction
+  slides.push({
+    id: `${lesson.id}-concept-intro`,
+    type: 'concept',
+    content: {
+      title: "What Makes a Good Prompt?",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: [
+        "Prompts are your steering wheel for AI",
+        "Clear instructions lead to better results",
+        "Structure helps AI understand what you want"
+      ]
+    }
+  });
+
+  // Prompt elements teaching
+  if (difficultyContent.promptElements || difficultyContent.promptFramework) {
+    const elements = difficultyContent.promptElements || difficultyContent.promptFramework || [];
+    elements.forEach((element, index) => {
+      slides.push({
+        id: `${lesson.id}-element-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: `Element ${index + 1}: ${element.element || element.component}`,
+          explanation: element.description || `Learn about ${element.element || element.component} in prompts.`,
+          term: element.element || element.component,
+          definition: element.description,
+          whatItMeans: element.example || element.description,
+          example: element.example,
+          category: "Prompt Elements",
+          icon: "✍️",
+          progressInfo: `Element ${index + 1} of ${elements.length}`
+        }
+      });
+    });
+
+         // Interactive practice after learning elements
+     slides.push({
+       id: `${lesson.id}-elements-practice`,
+       type: 'interactive_check',
+       content: {
+         title: "Practice Prompt Elements",
+         explanation: "Fill in the blanks to complete these prompting principles:",
+         fillInBlanks: [
+           {
+             sentence: "To write effective prompts, you should be ______ about what you want AI to do.",
+             correctAnswer: "specific",
+             options: ["specific", "vague", "brief", "creative"]
+           },
+           {
+             sentence: "Good prompts provide ______ to help AI understand the situation.",
+             correctAnswer: "context",
+             options: ["context", "questions", "commands", "confusion"]
+           },
+           {
+             sentence: "When you want structured output, you should ______ the format you need.",
+             correctAnswer: "specify",
+             options: ["specify", "ignore", "assume", "guess"]
+           }
+         ]
+       }
+     });
+  }
+
+  // Example comparisons (weak vs strong prompts)
+  if (difficultyContent.examples) {
+    difficultyContent.examples.forEach((example, index) => {
+      // Weak prompt slide
+      slides.push({
+        id: `${lesson.id}-weak-example-${index}`,
+        type: 'example',
+        content: {
+          title: `❌ Weak Prompt Example ${index + 1}`,
+          example: example.weak,
+          explanation: "This prompt is too vague and doesn't give the AI enough guidance.",
+          icon: "❌"
+        }
+      });
+
+      // Strong prompt slide
+      slides.push({
+        id: `${lesson.id}-strong-example-${index}`,
+        type: 'example',
+        content: {
+          title: `✅ Strong Prompt Example ${index + 1}`,
+          example: example.strong,
+          explanation: example.why || "This prompt is specific, clear, and gives the AI helpful context.",
+          icon: "✅"
+        }
+      });
+
+             // Interactive comparison
+       slides.push({
+         id: `${lesson.id}-comparison-${index}`,
+         type: 'interactive_check',
+         content: {
+           title: "Why is the Strong Prompt Better?",
+           explanation: "Complete this explanation:",
+           fillInBlanks: [{
+             sentence: "The strong prompt works better because it ______",
+             correctAnswer: "gives specific details",
+             options: ["gives specific details", "uses fancy words", "is much longer", "sounds more formal"]
+           }]
+         }
+       });
+    });
+  }
+
+  // Final review and practice
+  slides.push({
+    id: `${lesson.id}-final-practice`,
+    type: 'interactive_check',
+    content: {
+      title: "Put It All Together",
+      explanation: "Complete these sentences about effective prompting:",
+      fillInBlanks: [
+        {
+          sentence: "The most important thing in prompting is to be ______ about what you want.",
+          correctAnswer: "specific",
+          options: ["specific", "general", "creative", "brief"]
+        },
+        {
+          sentence: "Good prompts provide ______ to help the AI understand the situation.",
+          correctAnswer: "context",
+          options: ["context", "questions", "examples", "commands"]
+        },
+        {
+          sentence: "When you want the AI to format output in a certain way, you should ______ the format.",
+          correctAnswer: "specify",
+          options: ["specify", "guess", "ignore", "assume"]
+        }
+      ]
+    }
+  });
+};
+
+// Prompt Engineering Action lesson slides
+const createPromptEngineeringActionSlides = (lesson, difficultyContent, slides) => {
+  // Introduction to advanced techniques
+  slides.push({
+    id: `${lesson.id}-advanced-intro`,
+    type: 'concept',
+    content: {
+      title: "Advanced Prompting Techniques",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: [
+        "Prompt engineering is a craft that improves with practice",
+        "Advanced techniques help you get consistent, high-quality results",
+        "Examples, structure, and step-by-step logic are powerful tools"
+      ]
+    }
+  });
+
+  // Techniques deep dive
+  if (difficultyContent.techniques) {
+    difficultyContent.techniques.forEach((technique, index) => {
+      // Technique introduction
+      slides.push({
+        id: `${lesson.id}-technique-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: technique.name,
+          explanation: `Master the ${technique.name} technique for better AI results.`,
+          term: technique.name,
+          definition: technique.description,
+          whatItMeans: technique.description,
+          example: technique.example || technique.structure,
+          category: "Advanced Techniques",
+          icon: "⚡",
+          progressInfo: `Technique ${index + 1} of ${difficultyContent.techniques.length}`
+        }
+      });
+
+             // Interactive practice for each technique  
+       slides.push({
+         id: `${lesson.id}-technique-practice-${index}`,
+         type: 'interactive_check',
+         content: {
+           title: `Practice: ${technique.name}`,
+           explanation: "Complete this technique application:",
+           fillInBlanks: [{
+             sentence: getTechniquePracticeSentence(technique.name),
+             correctAnswer: getTechniqueAnswer(technique.name),
+             options: getTechniqueOptions(technique.name),
+             explanation: technique.description
+           }]
+         }
+       });
+    });
+  }
+
+  // Real-world applications
+  slides.push({
+    id: `${lesson.id}-applications`,
+    type: 'concept',
+    content: {
+      title: "Real-World Applications",
+      explanation: "These techniques work great for business, creative projects, and personal use.",
+      icon: "🌍",
+      keyPoints: [
+        "Business: Creating consistent marketing content",
+        "Creative: Generating ideas with specific styles",
+        "Personal: Getting help with complex decisions",
+        "Learning: Breaking down difficult concepts"
+      ]
+    }
+  });
+
+  // Advanced practice scenarios
+  slides.push({
+    id: `${lesson.id}-scenarios`,
+    type: 'interactive_check',
+    content: {
+      title: "Advanced Scenarios",
+      explanation: "Choose the best technique for each situation:",
+      fillInBlanks: [
+        {
+          sentence: "To teach AI a specific writing style, you should use ______",
+          correctAnswer: "few-shot examples",
+          options: ["few-shot examples", "simple commands", "longer prompts", "multiple questions"]
+        },
+        {
+          sentence: "For complex problem-solving, ask the AI to think ______",
+          correctAnswer: "step by step",
+          options: ["step by step", "very quickly", "creatively", "differently"]
+        },
+        {
+          sentence: "To improve a response that's almost right, you should ______",
+          correctAnswer: "iterate and refine",
+          options: ["iterate and refine", "start over", "accept it", "make it shorter"]
+        }
+      ]
+    }
+  });
+};
+
+// Creative AI Mastery lesson slides
+const createCreativeAiMasterySlides = (lesson, difficultyContent, slides) => {
+  // Introduction to creative AI
+  slides.push({
+    id: `${lesson.id}-creative-intro`,
+    type: 'concept',
+    content: {
+      title: "AI as Your Creative Partner",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: [
+        "AI can create images, videos, and voices from text descriptions",
+        "Creative AI opens up new possibilities for personal and professional projects",
+        "The key is learning how to describe what you want clearly"
+      ]
+    }
+  });
+
+  // Tools overview
+  if (difficultyContent.tools || difficultyContent.toolCategories) {
+    const tools = difficultyContent.tools || difficultyContent.toolCategories || [];
+    tools.forEach((tool, index) => {
+             slides.push({
+         id: `${lesson.id}-tool-${index}`,
+         type: 'interactive_teaching',
+         content: {
+           title: tool.type || tool.category,
+           explanation: `Learn about ${tool.type || tool.category} and how to use it effectively.`,
+           term: tool.type || tool.category,
+           definition: tool.description,
+           whatItMeans: getSimplifiedExplanation(tool.type || tool.category, tool.description),
+           example: tool.example || getToolExample(tool.type || tool.category),
+           category: "Creative AI Tools",
+           icon: tool.icon || "🎨",
+           progressInfo: `Tool ${index + 1} of ${tools.length}`
+         }
+       });
+
+      // Interactive application practice
+      if (tool.applications || tool.personalUse) {
+        slides.push({
+          id: `${tool.type?.toLowerCase().replace(/\s+/g, '-') || tool.category?.toLowerCase().replace(/\s+/g, '-')}-practice`,
+          type: 'interactive_check',
+          content: {
+            title: `${tool.type || tool.category} Applications`,
+            explanation: "What would you use this tool for?",
+            fillInBlanks: [{
+              sentence: `${tool.type || tool.category} is perfect for ______`,
+              correctAnswer: tool.personalUse?.split(',')[0] || tool.applications?.[0] || "creative projects",
+              options: [
+                tool.personalUse?.split(',')[0] || tool.applications?.[0] || "creative projects",
+                "writing code",
+                "solving math problems",
+                "reading emails"
+              ].sort(() => Math.random() - 0.5)
+            }]
+          }
+        });
+      }
+    });
+  }
+
+  // Prompting tips for creative AI
+  if (difficultyContent.promptingTips || difficultyContent.bestPractices) {
+    const tips = difficultyContent.promptingTips || difficultyContent.bestPractices || [];
+    slides.push({
+      id: `${lesson.id}-prompting-tips`,
+      type: 'concept',
+      content: {
+        title: "Creative AI Prompting Tips",
+        explanation: "Master these tips to get amazing results from creative AI tools.",
+        icon: "💡",
+        keyPoints: tips
+      }
+    });
+
+    // Interactive prompting practice
+    slides.push({
+      id: `${lesson.id}-prompting-practice`,
+      type: 'interactive_check',
+      content: {
+        title: "Craft Better Creative Prompts",
+        explanation: "Complete these creative prompting principles:",
+        fillInBlanks: [
+          {
+            sentence: "For AI art, you should be ______ about colors, style, and mood.",
+            correctAnswer: "descriptive",
+            options: ["descriptive", "brief", "vague", "technical"]
+          },
+          {
+            sentence: "When creating videos with AI, mention the ______ movement and style.",
+            correctAnswer: "camera",
+            options: ["camera", "audio", "text", "background"]
+          },
+          {
+            sentence: "For voice AI, specify the ______ and emotional tone you want.",
+            correctAnswer: "personality",
+            options: ["personality", "volume", "speed", "accent"]
+          }
+        ]
+      }
+    });
+  }
+
+  // Real project examples
+  slides.push({
+    id: `${lesson.id}-project-examples`,
+    type: 'concept',
+    content: {
+      title: "Real Creative Projects",
+      explanation: "See how people use creative AI for amazing projects!",
+      icon: "🌟",
+      keyPoints: [
+        "Social media creators make custom artwork for their brand",
+        "Students create unique presentation visuals",
+        "Families make personalized birthday cards and invitations",
+        "Small businesses design marketing materials on a budget",
+        "Hobbyists bring their creative ideas to life"
+      ]
+    }
+  });
+};
+
+// AI Workflow Fundamentals lesson slides
+const createWorkflowFundamentalsSlides = (lesson, difficultyContent, slides) => {
+  // Workflow concept introduction
+  slides.push({
+    id: `${lesson.id}-workflow-intro`,
+    type: 'concept',
+    content: {
+      title: "Thinking in Workflows",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: [
+        "Workflows break complex tasks into manageable steps",
+        "Each AI tool is good at specific things",
+        "Combining tools creates powerful solutions"
+      ]
+    }
+  });
+
+  // Simple workflow examples
+  if (difficultyContent.simpleWorkflows || difficultyContent.businessWorkflows) {
+    const workflows = difficultyContent.simpleWorkflows || difficultyContent.businessWorkflows || [];
+    workflows.forEach((workflow, index) => {
+      // Workflow introduction
+      slides.push({
+        id: `${lesson.id}-workflow-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: workflow.name,
+          explanation: `Learn how to create a ${workflow.name} using multiple AI tools.`,
+          term: workflow.name,
+          definition: workflow.steps ? workflow.steps.join(' → ') : "A step-by-step process using AI tools",
+          whatItMeans: `Breaking ${workflow.name.toLowerCase()} into simple steps that AI tools can handle`,
+          example: workflow.result || workflow.benefits?.[0] || "A complete solution using multiple AI tools",
+          category: "AI Workflows",
+          icon: "🔄",
+          progressInfo: `Workflow ${index + 1} of ${workflows.length}`
+        }
+      });
+
+      // Interactive step building
+      if (workflow.steps) {
+        slides.push({
+          id: `${lesson.id}-workflow-steps-${index}`,
+          type: 'interactive_check',
+          content: {
+            title: `Build the ${workflow.name} Workflow`,
+            explanation: "Put the steps in the right order:",
+            fillInBlanks: workflow.steps.slice(0, 3).map((step, stepIndex) => ({
+              sentence: `Step ${stepIndex + 1}: ${step.replace(/^\d+\.?\s*/, '').split(' ')[0]} ______`,
+              correctAnswer: step.replace(/^\d+\.?\s*/, '').split(' ').slice(1, 3).join(' '),
+              options: [
+                step.replace(/^\d+\.?\s*/, '').split(' ').slice(1, 3).join(' '),
+                "randomly",
+                "quickly",
+                "manually"
+              ].sort(() => Math.random() - 0.5)
+            }))
+          }
+        });
+      }
+    });
+  }
+
+  // Workflow principles
+  if (difficultyContent.workflowPrinciples) {
+    slides.push({
+      id: `${lesson.id}-principles`,
+      type: 'concept',
+      content: {
+        title: "Workflow Design Principles",
+        explanation: "Follow these principles to create effective AI workflows.",
+        icon: "🎯",
+        keyPoints: difficultyContent.workflowPrinciples
+      }
+    });
+  }
+
+  // Practice designing workflows
+  slides.push({
+    id: `${lesson.id}-design-practice`,
+    type: 'interactive_check',
+    content: {
+      title: "Design Your Own Workflow",
+      explanation: "Complete these workflow design principles:",
+      fillInBlanks: [
+        {
+          sentence: "When designing workflows, start by identifying your ______ goal.",
+          correctAnswer: "end",
+          options: ["end", "first", "hardest", "easiest"]
+        },
+        {
+          sentence: "Choose the ______ tool for each specific task in your workflow.",
+          correctAnswer: "right",
+          options: ["right", "fastest", "cheapest", "newest"]
+        },
+        {
+          sentence: "Make sure outputs from one step ______ into the next step effectively.",
+          correctAnswer: "feed",
+          options: ["feed", "jump", "copy", "transform"]
+        }
+      ]
+    }
+  });
+};
+
+// AI Daily Applications lesson slides
+const createDailyApplicationsSlides = (lesson, difficultyContent, slides) => {
+  // Introduction to daily AI use
+  slides.push({
+    id: `${lesson.id}-daily-intro`,
+    type: 'concept',
+    content: {
+      title: "AI as Your Daily Assistant",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: [
+        "AI can help with school, work, and personal life",
+        "The key is knowing when and how to use AI effectively",
+        "Start small and build AI into your daily routines"
+      ]
+    }
+  });
+
+  // Application categories
+  if (difficultyContent.schoolHelp || difficultyContent.categories) {
+    const categories = difficultyContent.categories || [
+      { area: "School", applications: difficultyContent.schoolHelp || [] },
+      { area: "Home", applications: difficultyContent.homeHelp || [] },
+      { area: "Personal Growth", applications: difficultyContent.personalGrowth || [] }
+    ];
+
+    categories.forEach((category, index) => {
+      if (category.applications && category.applications.length > 0) {
+        slides.push({
+          id: `${lesson.id}-category-${index}`,
+          type: 'interactive_teaching',
+          content: {
+            title: `AI for ${category.area || category.category}`,
+            explanation: `Discover how AI can help with your ${(category.area || category.category).toLowerCase()} activities.`,
+            term: `AI for ${category.area || category.category}`,
+            definition: `Using AI tools to improve your ${(category.area || category.category).toLowerCase()} experience`,
+            whatItMeans: `Getting AI help with daily ${(category.area || category.category).toLowerCase()} tasks and challenges`,
+            example: category.applications[0],
+            category: "Daily Applications",
+            icon: category.area === "School" ? "📚" : category.area === "Home" ? "🏠" : "💪",
+            progressInfo: `Category ${index + 1} of ${categories.length}`
+          }
+        });
+
+        // Interactive application matching
+        slides.push({
+          id: `${lesson.id}-${category.area?.toLowerCase() || category.category?.toLowerCase()}-practice`,
+          type: 'interactive_check',
+          content: {
+            title: `${category.area || category.category} AI Applications`,
+            explanation: `Match these ${(category.area || category.category).toLowerCase()} tasks with AI solutions:`,
+            fillInBlanks: category.applications.slice(0, 3).map(app => ({
+              sentence: `To "${app.toLowerCase()}", you could use AI to ______`,
+              correctAnswer: "help and guide you",
+              options: ["help and guide you", "do it completely", "make it harder", "avoid the task"]
+            }))
+          }
+        });
+      }
+    });
+  }
+
+  // Simple prompts for daily use
+  if (difficultyContent.simplePrompts) {
+    slides.push({
+      id: `${lesson.id}-simple-prompts`,
+      type: 'concept',
+      content: {
+        title: "Simple Daily Prompts",
+        explanation: "Use these proven prompt templates for common daily tasks.",
+        icon: "💬",
+        keyPoints: difficultyContent.simplePrompts
+      }
+    });
+
+    // Interactive prompt building
+    slides.push({
+      id: `${lesson.id}-prompt-building`,
+      type: 'interactive_check',
+      content: {
+        title: "Build Effective Daily Prompts",
+        explanation: "Complete these daily prompt templates:",
+        fillInBlanks: [
+          {
+            sentence: "To get simple explanations, start with 'Explain ______ like I'm 10 years old'",
+            correctAnswer: "[topic]",
+            options: ["[topic]", "everything", "quickly", "simply"]
+          },
+          {
+            sentence: "For planning help, ask 'Help me make a ______ of things to do for [activity]'",
+            correctAnswer: "list",
+            options: ["list", "story", "picture", "song"]
+          },
+          {
+            sentence: "To learn about topics, ask 'What are ______ fun ways to learn about [subject]?'",
+            correctAnswer: "3",
+            options: ["3", "many", "some", "all"]
+          }
+        ]
+      }
+    });
+  }
+
+  // Real success stories
+  slides.push({
+    id: `${lesson.id}-success-stories`,
+    type: 'concept',
+    content: {
+      title: "Real Success Stories",
+      explanation: "See how people are already using AI to improve their daily lives!",
+      icon: "⭐",
+      keyPoints: [
+        "Students improve grades by getting AI tutoring help",
+        "Parents save hours each week with AI meal planning",
+        "Professionals learn new skills faster with AI guidance",
+        "Families create better memories with AI trip planning",
+        "People achieve personal goals with AI coaching support"
+      ]
+    }
+  });
+};
+
+// Local AI Mastery lesson slides
+const createLocalAiMasterySlides = (lesson, difficultyContent, slides) => {
+  // Why local AI matters
+  slides.push({
+    id: `${lesson.id}-why-local`,
+    type: 'concept',
+    content: {
+      title: "Why Run AI Locally?",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: difficultyContent.whyLocal || [
+        "Complete privacy - your data stays on your device",
+        "No internet required - works anywhere",
+        "No monthly fees - one-time setup",
+        "No usage limits - use as much as you want"
+      ]
+    }
+  });
+
+  // Benefits deep dive
+  if (difficultyContent.benefits) {
+    difficultyContent.benefits.forEach((benefit, index) => {
+      slides.push({
+        id: `${lesson.id}-benefit-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: benefit.benefit,
+          explanation: `Understand why ${benefit.benefit.toLowerCase()} matters for local AI.`,
+          term: benefit.benefit,
+          definition: benefit.description,
+          whatItMeans: benefit.importance,
+          example: benefit.importance,
+          category: "Local AI Benefits",
+          icon: "💻",
+          progressInfo: `Benefit ${index + 1} of ${difficultyContent.benefits.length}`
+        }
+      });
+    });
+
+    // Interactive benefits matching
+    slides.push({
+      id: `${lesson.id}-benefits-practice`,
+      type: 'interactive_check',
+      content: {
+        title: "Match the Benefits",
+        explanation: "Why would you choose local AI for these situations?",
+        fillInBlanks: difficultyContent.benefits.slice(0, 3).map(benefit => ({
+          sentence: `For ${benefit.importance?.toLowerCase() || benefit.benefit.toLowerCase()}, local AI provides ______`,
+          correctAnswer: benefit.benefit.toLowerCase(),
+          options: [
+            benefit.benefit.toLowerCase(),
+            "slower performance",
+            "higher costs",
+            "less control"
+          ].sort(() => Math.random() - 0.5)
+        }))
+      }
+    });
+  }
+
+  // Popular tools overview
+  if (difficultyContent.popularTools || difficultyContent.simpleOptions) {
+    const tools = difficultyContent.popularTools || difficultyContent.simpleOptions || [];
+    tools.forEach((tool, index) => {
+      slides.push({
+        id: `${lesson.id}-tool-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: tool.tool || tool.name,
+          explanation: `Learn about ${tool.tool || tool.name} and how to get started.`,
+          term: tool.tool || tool.name,
+          definition: tool.description,
+          whatItMeans: tool.description,
+          example: tool.useCase || tool.difficulty,
+          category: "Local AI Tools",
+          icon: "🛠️",
+          progressInfo: `Tool ${index + 1} of ${tools.length}`
+        }
+      });
+    });
+  }
+
+  // Getting started guide
+  if (difficultyContent.whatYouNeed) {
+    slides.push({
+      id: `${lesson.id}-getting-started`,
+      type: 'concept',
+      content: {
+        title: "What You Need to Get Started",
+        explanation: "Here's what you need to run AI on your own computer.",
+        icon: "🚀",
+        keyPoints: difficultyContent.whatYouNeed
+      }
+    });
+  }
+
+  // Considerations and planning
+  if (difficultyContent.considerations) {
+    slides.push({
+      id: `${lesson.id}-considerations`,
+      type: 'interactive_check',
+      content: {
+        title: "Planning Your Local AI Setup",
+        explanation: "Consider these important factors:",
+        fillInBlanks: [
+          {
+            sentence: "Choose models based on ______ vs performance tradeoffs.",
+            correctAnswer: "size",
+            options: ["size", "color", "age", "brand"]
+          },
+          {
+            sentence: "Consider your ______ requirements and available resources.",
+            correctAnswer: "hardware",
+            options: ["hardware", "software", "internet", "storage"]
+          },
+          {
+            sentence: "Think about ______ complexity and ongoing maintenance needs.",
+            correctAnswer: "setup",
+            options: ["setup", "usage", "learning", "sharing"]
+          }
+        ]
+      }
+    });
+  }
+};
+
+// Problem Solving Capstone lesson slides
+const createProblemSolvingCapstoneSlides = (lesson, difficultyContent, slides) => {
+  // Capstone introduction
+  slides.push({
+    id: `${lesson.id}-capstone-intro`,
+    type: 'concept',
+    content: {
+      title: "Your AI Problem-Solving Challenge",
+      explanation: difficultyContent.introduction,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: [
+        "Apply everything you've learned about AI",
+        "Choose a real problem you want to solve",
+        "Create a comprehensive solution using AI tools"
+      ]
+    }
+  });
+
+  // Challenge categories
+  if (difficultyContent.challengeCategories) {
+    difficultyContent.challengeCategories.forEach((category, index) => {
+      slides.push({
+        id: `${lesson.id}-category-${index}`,
+        type: 'interactive_teaching',
+        content: {
+          title: category.category,
+          explanation: `Explore ${category.category.toLowerCase()} project ideas for your capstone.`,
+          term: category.category,
+          definition: `Projects that focus on ${category.category.toLowerCase()}`,
+          whatItMeans: `Using AI to create meaningful ${category.category.toLowerCase()}`,
+          example: category.challenges?.[0] || `AI-powered ${category.category.toLowerCase()} solution`,
+          category: "Capstone Categories",
+          icon: "🎯",
+          progressInfo: `Category ${index + 1} of ${difficultyContent.challengeCategories.length}`
+        }
+      });
+
+      // Show specific challenges
+      if (category.challenges) {
+        slides.push({
+          id: `${lesson.id}-challenges-${index}`,
+          type: 'concept',
+          content: {
+            title: `${category.category} Project Ideas`,
+            explanation: "Here are specific project ideas you could tackle:",
+            icon: "💡",
+            keyPoints: category.challenges
+          }
+        });
+      }
+    });
+
+    // Project selection guidance
+    slides.push({
+      id: `${lesson.id}-selection-guidance`,
+      type: 'interactive_check',
+      content: {
+        title: "Choose Your Project Wisely",
+        explanation: "What makes a good capstone project?",
+        fillInBlanks: [
+          {
+            sentence: "Choose a project you ______ care about for better motivation.",
+            correctAnswer: "actually",
+            options: ["actually", "never", "might", "should"]
+          },
+          {
+            sentence: "Use at least ______ different AI tools in your solution.",
+            correctAnswer: "2",
+            options: ["2", "1", "10", "5"]
+          },
+          {
+            sentence: "Focus on ______ rather than perfection in your first attempt.",
+            correctAnswer: "learning",
+            options: ["learning", "speed", "complexity", "winning"]
+          }
+        ]
+      }
+    });
+  }
+
+  // Success tips
+  if (difficultyContent.successTips) {
+    slides.push({
+      id: `${lesson.id}-success-tips`,
+      type: 'concept',
+      content: {
+        title: "Tips for Success",
+        explanation: "Follow these tips to create an amazing capstone project.",
+        icon: "⭐",
+        keyPoints: difficultyContent.successTips
+      }
+    });
+  }
+
+  // Final motivation and next steps
+  slides.push({
+    id: `${lesson.id}-final-motivation`,
+    type: 'concept',
+    content: {
+      title: "You're Ready to Create!",
+      explanation: "You have all the tools and knowledge you need. Now it's time to build something amazing!",
+      icon: "🚀",
+      keyPoints: [
+        "You've mastered AI vocabulary and concepts",
+        "You know how to write effective prompts",
+        "You understand how to combine AI tools",
+        "You can apply AI to real-world problems",
+        "Time to create your masterpiece!"
+      ]
+    }
+  });
+};
+
+// Welcome AI Revolution lesson slides
+const createWelcomeAiRevolutionSlides = (lesson, difficultyContent, slides) => {
+  // Main content concept
+  if (difficultyContent.mainContent) {
+    const content = difficultyContent.mainContent;
+    
+    // AI definition deep dive
+    slides.push({
+      id: `${lesson.id}-ai-definition`,
+      type: 'interactive_teaching',
+      content: {
+        title: "What is Artificial Intelligence?",
+        explanation: "Let's break down what AI really means and how it works.",
+        term: "Artificial Intelligence (AI)",
+        definition: content.aiDefinition,
+        whatItMeans: content.aiDefinition,
+        example: "ChatGPT understanding and responding to your questions",
+        category: "Core Concepts",
+        icon: "🤖",
+        progressInfo: "Core Concept 1 of 4"
+      }
+    });
+
+    // AI vs Chatbots clarification
+    slides.push({
+      id: `${lesson.id}-ai-vs-chatbots`,
+      type: 'interactive_teaching',
+      content: {
+        title: "AI vs Chatbots: What's the Difference?",
+        explanation: "Understand the relationship between AI and chatbots.",
+        term: "AI vs Chatbots",
+        definition: content.aiVsChatbots,
+        whatItMeans: content.aiVsChatbots,
+        example: "ChatGPT is a chatbot powered by AI, but AI can also create images, videos, and more",
+        category: "Core Concepts",
+        icon: "🔍",
+        progressInfo: "Core Concept 2 of 4"
+      }
+    });
+
+    // Categories of AI
+    if (content.categories) {
+      content.categories.forEach((category, index) => {
+        slides.push({
+          id: `${lesson.id}-category-${index}`,
+          type: 'interactive_teaching',
+          content: {
+            title: category.type,
+            explanation: `Learn about ${category.type} and how you can use it.`,
+            term: category.type,
+            definition: category.description,
+            whatItMeans: category.description,
+            example: category.example || `Using ${category.type} for creative projects`,
+            category: "AI Categories",
+            icon: category.icon,
+            progressInfo: `AI Type ${index + 1} of ${content.categories.length}`
+          }
+        });
+      });
+
+      // Interactive category matching
+      slides.push({
+        id: `${lesson.id}-category-matching`,
+        type: 'interactive_check',
+        content: {
+          title: "Match AI Types to Uses",
+          explanation: "What type of AI would you use for these tasks?",
+          fillInBlanks: content.categories.slice(0, 3).map(category => ({
+            sentence: `To ${category.example?.toLowerCase() || 'work with ' + category.type.toLowerCase()}, you would use ______`,
+            correctAnswer: category.type,
+            options: [
+              category.type,
+              ...content.categories.filter(c => c.type !== category.type).slice(0, 2).map(c => c.type)
+            ].sort(() => Math.random() - 0.5)
+          }))
+        }
+      });
+    }
+
+    // Major AI companies
+    if (content.companies) {
+      slides.push({
+        id: `${lesson.id}-companies`,
+        type: 'concept',
+        content: {
+          title: "Major AI Companies",
+          explanation: "Get to know the companies creating the AI tools you'll use.",
+          icon: "🏢",
+          keyPoints: content.companies.map(company => 
+            `${company.name}: ${company.tool || company.tools} - ${company.description}`
+          )
+        }
+      });
+    }
+  }
+
+  // Examples and applications
+  if (difficultyContent.examples) {
+    slides.push({
+      id: `${lesson.id}-examples`,
+      type: 'concept',
+      content: {
+        title: "AI in Your Daily Life",
+        explanation: "Here are practical ways you can start using AI today!",
+        icon: "🌟",
+        keyPoints: difficultyContent.examples
+      }
+    });
+  }
+
+  // Common misunderstandings
+  if (difficultyContent.commonMisunderstandings) {
+    slides.push({
+      id: `${lesson.id}-misconceptions`,
+      type: 'interactive_check',
+      content: {
+        title: "Clear Up Common Misconceptions",
+        explanation: "Let's fix these common misunderstandings about AI:",
+        fillInBlanks: difficultyContent.commonMisunderstandings.map(misconception => {
+          const parts = misconception.split(' → ');
+          return {
+            sentence: `It's wrong to think that ${parts[0].toLowerCase()}. Actually, ______`,
+            correctAnswer: parts[1]?.split(' ')[0]?.toLowerCase() || "AI",
+            options: [
+              parts[1]?.split(' ')[0]?.toLowerCase() || "AI",
+              "nothing",
+              "everything",
+              "sometimes"
+            ].sort(() => Math.random() - 0.5),
+            explanation: parts[1] || "This is a common misconception about AI."
+          };
+        })
+      }
+    });
+  }
+};
+
+// How AI Thinks lesson slides
+const createHowAiThinksSlides = (lesson, difficultyContent, slides) => {
+  if (difficultyContent.mainContent) {
+    const content = difficultyContent.mainContent;
+    
+    // Training process explanation
+    slides.push({
+      id: `${lesson.id}-training`,
+      type: 'interactive_teaching',
+      content: {
+        title: "How AI Learns",
+        explanation: "Discover how AI models are trained to understand and generate text.",
+        term: "AI Training",
+        definition: content.training,
+        whatItMeans: content.training,
+        example: "AI reads millions of books and websites to learn patterns in language",
+        category: "How AI Works",
+        icon: "📚",
+        progressInfo: "Core Concept 1 of 3"
+      }
+    });
+
+    // Tokens explanation
+    slides.push({
+      id: `${lesson.id}-tokens`,
+      type: 'interactive_teaching',
+      content: {
+        title: "Understanding Tokens",
+        explanation: "Learn how AI breaks down and processes text.",
+        term: "Tokens",
+        definition: content.tokens,
+        whatItMeans: content.tokens,
+        example: "The word 'wonderful' might be split into 'wonder' + 'ful' = 2 tokens",
+        category: "How AI Works",
+        icon: "🧩",
+        progressInfo: "Core Concept 2 of 3"
+      }
+    });
+
+    // Inference explanation
+    slides.push({
+      id: `${lesson.id}-inference`,
+      type: 'interactive_teaching',
+      content: {
+        title: "How AI Generates Responses",
+        explanation: "Understand how AI creates responses to your questions.",
+        term: "AI Inference",
+        definition: content.inference,
+        whatItMeans: content.inference,
+        example: "When you ask a question, AI predicts the most likely words to answer based on patterns it learned",
+        category: "How AI Works",
+        icon: "⚡",
+        progressInfo: "Core Concept 3 of 3"
+      }
+    });
+
+    // Technical concepts for intermediate/advanced
+    if (content.technicalConcepts) {
+      slides.push({
+        id: `${lesson.id}-technical-concepts`,
+        type: 'concept',
+        content: {
+          title: "Technical AI Concepts",
+          explanation: "Understand these important technical aspects of how AI works.",
+          icon: "🔧",
+          keyPoints: content.technicalConcepts
+        }
+      });
+    }
+
+    // Practical implications
+    if (content.practicalImplications || difficultyContent.practicalImplications) {
+      const implications = content.practicalImplications || difficultyContent.practicalImplications;
+      slides.push({
+        id: `${lesson.id}-implications`,
+        type: 'concept',
+        content: {
+          title: "What This Means for You",
+          explanation: "Here's how understanding AI's thinking helps you use it better.",
+          icon: "💡",
+          keyPoints: implications
+        }
+      });
+    }
+
+    // Examples of AI pattern recognition
+    if (difficultyContent.examples || content.examples) {
+      const examples = difficultyContent.examples || content.examples;
+      slides.push({
+        id: `${lesson.id}-pattern-examples`,
+        type: 'interactive_check',
+        content: {
+          title: "AI Pattern Recognition",
+          explanation: "Complete these examples of how AI recognizes patterns:",
+          fillInBlanks: examples.slice(0, 3).map(example => ({
+            sentence: example.replace(/AI.*/, "AI guesses ______"),
+            correctAnswer: "based on patterns",
+            options: ["based on patterns", "randomly", "perfectly", "slowly"]
+          }))
+        }
+      });
+    }
+  }
+
+  // Key points summary
+  if (difficultyContent.keyPoints) {
+    slides.push({
+      id: `${lesson.id}-key-points`,
+      type: 'concept',
+      content: {
+        title: "Key Takeaways",
+        explanation: "Remember these important points about how AI thinks:",
+        icon: "🎯",
+        keyPoints: difficultyContent.keyPoints
+      }
+    });
+  }
+};
+
+// Generic comprehensive slide creation for any lesson not specifically handled
+const createGenericComprehensiveSlides = (lesson, difficultyContent, slides) => {
+  const content = difficultyContent.mainContent || difficultyContent;
+  
+  // Core concept introduction
+  slides.push({
+    id: `${lesson.id}-concept-intro`,
+    type: 'concept',
+    content: {
+      title: "Core Concept",
+      explanation: content.introduction || difficultyContent.introduction || lesson.coreConcept,
+      icon: getIconForLesson(lesson.id),
+      keyPoints: difficultyContent.keyPoints || extractKeyPoints(content)
+    }
+  });
+
+  // Handle any categories
+  if (content.categories) {
+    content.categories.forEach((category, index) => {
+      slides.push({
+        id: `${lesson.id}-category-${index}`,
+        type: 'concept',
+        content: {
+          title: category.type || category.name || `Category ${index + 1}`,
+          explanation: category.description,
+          icon: category.icon || "🔹",
+          keyPoints: [
+            ...(category.tools ? [`Tools: ${category.tools.join(', ')}`] : []),
+            ...(category.examples ? category.examples : []),
+            ...(category.applications ? category.applications : [])
+          ]
+        }
+      });
+    });
+  }
+
+  // Handle examples
+  if (difficultyContent.examples) {
+    difficultyContent.examples.forEach((example, index) => {
+      slides.push({
+        id: `${lesson.id}-example-${index}`,
+        type: 'example',
+        content: {
+          title: `Example ${index + 1}`,
+          example: typeof example === 'string' ? example : example.description || example.task,
+          explanation: typeof example === 'object' ? example.explanation || example.why : "This demonstrates the concept in practice.",
+          icon: "💡"
+        }
+      });
+    });
+  }
+
+  // Review slide
+  slides.push({
+    id: `${lesson.id}-review`,
+    type: 'concept',
+    content: {
+      title: "Lesson Review",
+      explanation: "Great work! Let's review what you've learned:",
+      icon: "📝",
+      keyPoints: [
+        ...(difficultyContent.keyPoints || []),
+        ...(content.categories ? [`Learned ${content.categories.length} main categories`] : []),
+        ...(difficultyContent.examples ? [`Explored ${difficultyContent.examples.length} examples`] : []),
+        "Ready for the assessment!"
+      ]
+    }
+  });
+};
+
+// Helper function to get appropriate icon for lesson
+const getIconForLesson = (lessonId) => {
+  const iconMap = {
+    'welcome-ai-revolution': '🚀',
+    'how-ai-thinks': '🧠',
+    'ai-vocabulary-bootcamp': '📚',
+    'prompting-essentials': '✍️',
+    'prompt-engineering-action': '⚡',
+    'creative-ai-mastery': '🎨',
+    'ai-workflow-fundamentals': '🔄',
+    'ai-daily-applications': '🏠',
+    'local-ai-mastery': '💻',
+    'ai-problem-solving-capstone': '🎯',
+    'vibe-code-video-game': '🎮'
+  };
+  return iconMap[lessonId] || '🤖';
+};
+
+// Helper function to get appropriate icon for vocabulary categories
+const getIconForCategory = (category) => {
+  const categoryIconMap = {
+    'Core Concepts': '🎯',
+    'How to Use AI': '✍️',
+    'How AI Works': '⚙️',
+    'AI Problems': '⚠️',
+    'AI Settings': '🔧',
+    'How AI Learns': '📖',
+    'Computer Science': '💻',
+    'AI Applications': '🔮',
+    'Technical Terms': '🔧',
+    'AI Capabilities': '🚀',
+    'AI Development': '🛠️',
+    'Technical Process': '⚡',
+    'AI Ethics': '⚖️',
+    'AI Types': '🔍',
+    'AI Architecture': '🏗️',
+    'AI Mechanisms': '⚙️',
+    'AI Training': '🎓',
+    'AI Enhancement': '📈',
+    'AI Optimization': '⚡',
+    'AI Phenomena': '✨',
+    'AI Safety': '🛡️'
+  };
+  return categoryIconMap[category] || '📚';
+};
+
+// Helper functions for lesson expectations
+const getExpectationPoint1 = (lessonId, content) => {
+  const expectations = {
+    'prompting-essentials': 'Master the key elements of effective prompts',
+    'prompt-engineering-action': 'Learn advanced prompting techniques like few-shot and chain-of-thought',
+    'creative-ai-mastery': 'Discover how to create images, videos, and voices with AI',
+    'ai-workflow-fundamentals': 'Build multi-step AI workflows for complex tasks',
+    'ai-daily-applications': 'Apply AI to school, work, and personal life',
+    'local-ai-mastery': 'Run AI privately on your own computer',
+    'ai-problem-solving-capstone': 'Create a complete project using all your AI skills',
+    'welcome-ai-revolution': 'Understand what AI is and its different types',
+    'how-ai-thinks': 'Learn how AI processes information and generates responses',
+    'ai-vocabulary-bootcamp': 'Master 25+ essential AI terms and concepts'
+  };
+  return expectations[lessonId] || 'Learn core concepts and principles';
+};
+
+const getExpectationPoint2 = (lessonId, content) => {
+  const expectations = {
+    'prompting-essentials': 'Practice with weak vs strong prompt examples',
+    'prompt-engineering-action': 'Apply techniques through hands-on practice exercises',
+    'creative-ai-mastery': 'Practice prompting for different creative tools',
+    'ai-workflow-fundamentals': 'Design and build your own AI workflows',
+    'ai-daily-applications': 'Get practical prompts for everyday tasks',
+    'local-ai-mastery': 'Choose the right tools and setup for your needs',
+    'ai-problem-solving-capstone': 'Plan and execute a real-world AI solution',
+    'welcome-ai-revolution': 'Explore AI tools and their real-world applications',
+    'how-ai-thinks': 'Understand training, tokens, and prediction processes',
+    'ai-vocabulary-bootcamp': 'Practice with interactive exercises and quizzes'
+  };
+  return expectations[lessonId] || 'Practice through interactive exercises';
+};
+
+const getExpectationPoint3 = (lessonId, content) => {
+  const expectations = {
+    'prompting-essentials': 'Build confidence in writing clear, effective prompts',
+    'prompt-engineering-action': 'Create professional-quality AI interactions',
+    'creative-ai-mastery': 'Start creating amazing visual and audio content',
+    'ai-workflow-fundamentals': 'Combine multiple AI tools for powerful results',
+    'ai-daily-applications': 'Make AI a helpful part of your daily routine',
+    'local-ai-mastery': 'Set up and use AI tools privately and securely',
+    'ai-problem-solving-capstone': 'Showcase your complete AI mastery',
+    'welcome-ai-revolution': 'Start using AI tools confidently in your projects',
+    'how-ai-thinks': 'Write better prompts by understanding AI limitations',
+    'ai-vocabulary-bootcamp': 'Speak confidently about AI with proper terminology'
+  };
+  return expectations[lessonId] || 'Apply knowledge to real-world scenarios';
+};
+
+// Helper functions for unique content generation
+const getSimplifiedExplanation = (term, definition) => {
+  const simplifications = {
+    'Image AI': 'You type words describing a picture, and AI draws it for you',
+    'Image Generation': 'You type words describing a picture, and AI draws it for you',
+    'Video AI': 'You describe a scene and AI creates a short video of it',
+    'Video Generation': 'You describe a scene and AI creates a short video of it',
+    'Voice AI': 'AI that can speak text out loud in different voices and styles',
+    'Voice & Audio AI': 'AI that can speak text out loud in different voices and styles',
+    'Text AI': 'AI that reads your questions and writes helpful answers back',
+    'Large Language Models (LLMs)': 'Super smart AI that understands and writes text like a human'
+  };
+  
+  const generic = definition.split(' ').slice(0, 8).join(' ') + '...';
+  return simplifications[term] || `In simple terms: ${generic}`;
+};
+
+const getToolExample = (toolType) => {
+  const examples = {
+    'Image AI': 'Create a logo for your family business or artwork for your bedroom wall',
+    'Image Generation': 'Design birthday invitations or make custom phone wallpapers',
+    'Video AI': 'Make a short video explaining your school project or hobby',
+    'Video Generation': 'Create animated stories or document family memories creatively',
+    'Voice AI': 'Record audiobooks of your stories or create podcast intros',
+    'Voice & Audio AI': 'Make custom alarm sounds or practice language pronunciation',
+    'Text AI': 'Get help writing essays, emails, or creative stories',
+    'Large Language Models (LLMs)': 'Ask questions about homework or get help planning projects'
+  };
+  
+  return examples[toolType] || 'Use this tool for creative projects and problem-solving';
+};
+
+// Helper functions for technique practice
+const getTechniquePracticeSentence = (techniqueName) => {
+  const sentences = {
+    'Show Examples': 'To teach AI a pattern, you should ______ a few examples first.',
+    'Few-Shot Prompting': 'To establish a format, provide ______ examples for the AI to follow.',
+    'Ask for Steps': 'For complex problems, tell AI to think ______.',
+    'Chain-of-Thought Reasoning': 'To get better reasoning, ask AI to work through problems ______.',
+    'Try Again Better': 'If the first response isn\'t quite right, you should ______ it.',
+    'Iterative Refinement': 'To improve AI responses, give ______ feedback and ask for improvements.'
+  };
+  return sentences[techniqueName] || `${techniqueName} helps you ______ better AI responses.`;
+};
+
+const getTechniqueAnswer = (techniqueName) => {
+  const answers = {
+    'Show Examples': 'show',
+    'Few-Shot Prompting': 'two or three',
+    'Ask for Steps': 'step by step',
+    'Chain-of-Thought Reasoning': 'step by step',
+    'Try Again Better': 'improve',
+    'Iterative Refinement': 'specific'
+  };
+  return answers[techniqueName] || 'get';
+};
+
+const getTechniqueOptions = (techniqueName) => {
+  const options = {
+    'Show Examples': ['show', 'hide', 'skip', 'ignore'],
+    'Few-Shot Prompting': ['two or three', 'many', 'one', 'no'],
+    'Ask for Steps': ['step by step', 'very fast', 'creatively', 'randomly'],
+    'Chain-of-Thought Reasoning': ['step by step', 'quickly', 'silently', 'backwards'],
+    'Try Again Better': ['improve', 'accept', 'delete', 'ignore'],
+    'Iterative Refinement': ['specific', 'vague', 'no', 'random']
+  };
+  return options[techniqueName] || ['get', 'avoid', 'ignore', 'skip'];
+};
+
+// Helper function to extract key points from content
+const extractKeyPoints = (content) => {
+  if (content.keyPoints) return content.keyPoints;
+  
+  const points = [];
+  if (content.aiDefinition) points.push(`Definition: ${content.aiDefinition}`);
+  if (content.aiVsChatbots) points.push(`Key distinction: ${content.aiVsChatbots}`);
+  if (content.categories) points.push(`Categories covered: ${content.categories.length} types`);
+  
+  return points.length > 0 ? points : ['Important concepts covered in this lesson'];
+};
+
+// Get lesson adapted for specific difficulty level
+export const getAdaptedLessonContent = (lessonId, difficulty = 'intermediate') => {
+  const lesson = getAdaptiveLessonById(lessonId);
+  if (!lesson) return null;
+  
+  const slides = convertAdaptiveLessonToSlides(lesson, difficulty);
+  
+  return {
+    id: lesson.id,
+    title: lesson.title,
+    description: lesson.coreConcept,
+    estimatedTime: lesson.estimatedTime?.[difficulty] || 20,
+    xpReward: lesson.xpRewards?.[difficulty] || 100,
+    slides: slides,
+    difficulty: difficulty,
+    lessonType: lesson.lessonType
+  };
+};

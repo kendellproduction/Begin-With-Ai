@@ -6,7 +6,14 @@ import reportWebVitals from './reportWebVitals';
 import { unregister as unregisterSW } from './utils/serviceWorkerRegistration';
 import './firebase'; // Simply import to run initialization code within firebase.js
 
-// Error boundary component
+// Initialize monitoring and analytics
+import { initSentry, initGoogleAnalytics } from './utils/monitoring';
+
+// Initialize error tracking and analytics
+initSentry();
+initGoogleAnalytics();
+
+// Error boundary component with Sentry integration
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -19,6 +26,12 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+    
+    // Send error to Sentry in production
+    if (process.env.NODE_ENV === 'production') {
+      const Sentry = require('@sentry/react');
+      Sentry.captureException(error, { extra: errorInfo });
+    }
   }
 
   render() {

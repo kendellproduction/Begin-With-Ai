@@ -2,13 +2,35 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
-  const { sentence, answer, options, hint, explanation } = slide.content;
+  const { 
+    sentence, 
+    answer, 
+    options, 
+    hint, 
+    explanation,
+    title,
+    fillInBlanks
+  } = slide.content;
+  
+  // Check if this is an interactive check with multiple fill-in-blanks
+  const isInteractiveCheck = slide.type === 'interactive_check' && fillInBlanks;
+  
   const [selectedAnswer, setSelectedAnswer] = useState('');
   const [showResult, setShowResult] = useState(false);
   const [hasAnswered, setHasAnswered] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [questionResults, setQuestionResults] = useState([]);
 
-  // Split sentence at the blank (represented by ______)
-  const parts = sentence.split('______');
+  // Get current question data
+  const getCurrentQuestionData = () => {
+    if (isInteractiveCheck) {
+      return fillInBlanks[currentQuestionIndex] || {};
+    }
+    return { sentence, correctAnswer: answer, options };
+  };
+
+  const currentQuestion = getCurrentQuestionData();
+  const parts = currentQuestion.sentence ? currentQuestion.sentence.split('______') : (sentence ? sentence.split('______') : ['']);
 
   const handleAnswer = (selectedOption) => {
     if (hasAnswered) return;
@@ -16,7 +38,8 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
     setSelectedAnswer(selectedOption);
     setHasAnswered(true);
     
-    const isCorrect = selectedOption.toLowerCase().trim() === answer.toLowerCase().trim();
+    const correctAnswer = currentQuestion.correctAnswer || answer;
+    const isCorrect = selectedOption.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
     
     // Trigger audio feedback
     onAnswer(isCorrect, { selectedAnswer: selectedOption, isCorrect });
@@ -26,14 +49,44 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
       setShowResult(true);
     }, 500);
 
-    // Auto-advance after showing explanation
-    setTimeout(() => {
-      onComplete(slide.id, {
-        selectedAnswer: selectedOption,
-        correctAnswer: answer,
-        isCorrect
-      });
-    }, 3000);
+         // Handle multi-question progression
+     if (isInteractiveCheck) {
+       // Store result for this question
+       const newResult = {
+         question: currentQuestion.sentence,
+         selectedAnswer: selectedOption,
+         correctAnswer,
+         isCorrect
+       };
+       setQuestionResults(prev => [...prev, newResult]);
+
+       // Check if there are more questions
+       setTimeout(() => {
+         if (currentQuestionIndex < fillInBlanks.length - 1) {
+           // Move to next question
+           setCurrentQuestionIndex(prev => prev + 1);
+           setSelectedAnswer('');
+           setShowResult(false);
+           setHasAnswered(false);
+         } else {
+           // All questions completed
+           onComplete(slide.id, {
+             allResults: [...questionResults, newResult],
+             totalQuestions: fillInBlanks.length,
+             correctCount: [...questionResults, newResult].filter(r => r.isCorrect).length
+           });
+         }
+       }, isCorrect ? 2000 : 4000); // Correct: 2s, Wrong: 4s
+     } else {
+       // Single question - longer time for wrong answers
+       setTimeout(() => {
+         onComplete(slide.id, {
+           selectedAnswer: selectedOption,
+           correctAnswer,
+           isCorrect
+         });
+       }, isCorrect ? 2500 : 5000); // Correct: 2.5s, Wrong: 5s
+     }
   };
 
   const getOptionStyle = (option) => {
@@ -41,7 +94,8 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
       return 'bg-white/10 text-gray-300 hover:bg-white/20 border-white/20';
     }
     
-    const isCorrect = option.toLowerCase().trim() === answer.toLowerCase().trim();
+    const correctAnswer = currentQuestion.correctAnswer || answer;
+    const isCorrect = option.toLowerCase().trim() === correctAnswer.toLowerCase().trim();
     const isSelected = option === selectedAnswer;
     
     if (isSelected) {
@@ -67,11 +121,34 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
       >
         <div className="text-4xl mb-4">🧩</div>
         <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
-          Fill in the Blank
+          {title || (isInteractiveCheck ? "Quick Knowledge Check" : "Fill in the Blank")}
         </h2>
+        
+        {/* Progress indicator for multiple questions */}
+        {isInteractiveCheck && (
+          <div className="mb-4">
+            <p className="text-sm text-blue-200 mb-2">
+              Question {currentQuestionIndex + 1} of {fillInBlanks.length}
+            </p>
+            <div className="w-full bg-gray-700 rounded-full h-2">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${((currentQuestionIndex + 1) / fillInBlanks.length) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+        
         {hint && (
           <p className="text-sm text-blue-200 italic">
             💡 Hint: {hint}
+          </p>
+        )}
+        
+        {/* Explanation for interactive check */}
+        {isInteractiveCheck && slide.content.explanation && (
+          <p className="text-sm text-gray-300 mt-2">
+            {slide.content.explanation}
           </p>
         )}
       </motion.div>
@@ -88,7 +165,7 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
           <span className={`
             inline-block min-w-[120px] mx-2 px-3 py-1 rounded-lg border-2 border-dashed font-semibold
             ${hasAnswered 
-              ? (selectedAnswer.toLowerCase().trim() === answer.toLowerCase().trim() 
+              ? (selectedAnswer.toLowerCase().trim() === (currentQuestion.correctAnswer || answer).toLowerCase().trim() 
                 ? 'bg-green-600 text-white border-green-400' 
                 : 'bg-red-600 text-white border-red-400')
               : 'bg-blue-900/50 text-blue-200 border-blue-400'
@@ -108,7 +185,7 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          {options.map((option, index) => (
+          {(currentQuestion.options || options || []).map((option, index) => (
             <motion.button
               key={index}
               onClick={() => handleAnswer(option)}
@@ -139,7 +216,7 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
             transition={{ duration: 0.4 }}
             className={`
               p-4 rounded-xl border-2
-              ${selectedAnswer.toLowerCase().trim() === answer.toLowerCase().trim()
+              ${selectedAnswer.toLowerCase().trim() === (currentQuestion.correctAnswer || answer).toLowerCase().trim()
                 ? 'bg-green-900/30 border-green-400 text-green-200' 
                 : 'bg-blue-900/30 border-blue-400 text-blue-200'
               }
@@ -147,16 +224,18 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
           >
             <div className="flex items-start space-x-3">
               <div className="text-2xl">
-                {selectedAnswer.toLowerCase().trim() === answer.toLowerCase().trim() ? '🎉' : '💡'}
+                {selectedAnswer.toLowerCase().trim() === (currentQuestion.correctAnswer || answer).toLowerCase().trim() ? '🎉' : '💡'}
               </div>
               <div className="flex-1 text-left">
                 <h3 className="font-semibold mb-2">
-                  {selectedAnswer.toLowerCase().trim() === answer.toLowerCase().trim() 
-                    ? 'Perfect!' 
-                    : `Close! The answer is "${answer}"`}
+                  {selectedAnswer.toLowerCase().trim() === (currentQuestion.correctAnswer || answer).toLowerCase().trim() 
+                    ? (isInteractiveCheck 
+                        ? (currentQuestionIndex < fillInBlanks.length - 1 ? 'Great! Next question...' : 'Perfect! All done!') 
+                        : 'Perfect!') 
+                    : `Close! The answer is "${currentQuestion.correctAnswer || answer}"`}
                 </h3>
                 <p className="text-sm leading-relaxed">
-                  {explanation}
+                  {currentQuestion.explanation || explanation || "Good job practicing!"}
                 </p>
               </div>
             </div>
@@ -165,13 +244,58 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
       </AnimatePresence>
 
       {/* Progress Indicator */}
-      {hasAnswered && (
+      {hasAnswered && showResult && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-gray-400 text-sm"
+          className="space-y-4"
         >
-          Moving to next slide...
+          <div className="text-gray-400 text-sm">
+            {isInteractiveCheck && currentQuestionIndex < fillInBlanks.length - 1 
+              ? "Moving to next question..." 
+              : "Moving to next slide..."
+            }
+          </div>
+          
+          {/* Manual Continue Button - appears after 3 seconds */}
+          <motion.button
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 3 }}
+            onClick={() => {
+              if (isInteractiveCheck) {
+                if (currentQuestionIndex < fillInBlanks.length - 1) {
+                  // Move to next question
+                  setCurrentQuestionIndex(prev => prev + 1);
+                  setSelectedAnswer('');
+                  setShowResult(false);
+                  setHasAnswered(false);
+                } else {
+                  // Complete the slide
+                  const allResults = [...questionResults, {
+                    question: currentQuestion.sentence,
+                    selectedAnswer,
+                    correctAnswer: currentQuestion.correctAnswer || answer,
+                    isCorrect: selectedAnswer.toLowerCase().trim() === (currentQuestion.correctAnswer || answer).toLowerCase().trim()
+                  }];
+                  onComplete(slide.id, {
+                    allResults,
+                    totalQuestions: fillInBlanks.length,
+                    correctCount: allResults.filter(r => r.isCorrect).length
+                  });
+                }
+              } else {
+                onComplete(slide.id, {
+                  selectedAnswer,
+                  correctAnswer: currentQuestion.correctAnswer || answer,
+                  isCorrect: selectedAnswer.toLowerCase().trim() === (currentQuestion.correctAnswer || answer).toLowerCase().trim()
+                });
+              }
+            }}
+            className="px-6 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm"
+          >
+            Continue →
+          </motion.button>
         </motion.div>
       )}
 

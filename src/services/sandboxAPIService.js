@@ -2,6 +2,7 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { v4 as uuidv4 } from 'uuid';
 import logger from '../utils/logger';
+import { analytics, performanceMonitor } from '../utils/monitoring';
 
 /**
  * Secure Sandbox API Service for AI Interactions
@@ -77,10 +78,12 @@ export class SandboxAPIService {
         const recentMinutePrompts = recentPrompts.filter(timestamp => timestamp > oneMinuteAgo);
 
         if (recentMinutePrompts.length >= this.RATE_LIMITS.promptsPerMinute) {
+          analytics.apiError('rate_limit_exceeded', `${this.RATE_LIMITS.promptsPerMinute} prompts per minute`);
           throw new Error(`Rate limit exceeded: ${this.RATE_LIMITS.promptsPerMinute} prompts per minute`);
         }
 
         if (recentPrompts.length >= this.RATE_LIMITS.promptsPerHour) {
+          analytics.apiError('rate_limit_exceeded', `${this.RATE_LIMITS.promptsPerHour} prompts per hour`);
           throw new Error(`Rate limit exceeded: ${this.RATE_LIMITS.promptsPerHour} prompts per hour`);
         }
 
@@ -122,18 +125,39 @@ export class SandboxAPIService {
     // Create system prompt based on sandbox context
     const systemPrompt = this.generateSystemPrompt(sandboxType, userLevel, lessonId);
     
+    const startTime = performance.now();
+    let success = false;
+    
     try {
+      let result;
       switch (provider) {
         case this.AI_PROVIDERS.XAI:
-          return await this.sendToXAI(systemPrompt, prompt);
+          result = await this.sendToXAI(systemPrompt, prompt);
+          break;
         case this.AI_PROVIDERS.OPENAI:
-          return await this.sendToOpenAI(systemPrompt, prompt);
+          result = await this.sendToOpenAI(systemPrompt, prompt);
+          break;
         case this.AI_PROVIDERS.ANTHROPIC:
-          return await this.sendToAnthropic(systemPrompt, prompt);
+          result = await this.sendToAnthropic(systemPrompt, prompt);
+          break;
         default:
           throw new Error(`Unsupported AI provider: ${provider}`);
       }
+      
+      success = true;
+      const duration = performance.now() - startTime;
+      
+      // Track successful API call
+      performanceMonitor.trackAPICall(provider, duration, success);
+      
+      return result;
     } catch (error) {
+      const duration = performance.now() - startTime;
+      
+      // Track failed API call
+      performanceMonitor.trackAPICall(provider, duration, success);
+      analytics.apiError('ai_api_call_failed', `${provider}: ${error.message}`);
+      
       logger.error('AI API call failed:', error);
       throw new Error('AI service temporarily unavailable. Please try again.');
     }
@@ -325,6 +349,9 @@ Guidelines:
         throw new Error('User ID, session ID, and prompt are required');
       }
 
+      // Track sandbox prompt submission
+      analytics.sandboxPromptSubmitted(context.lessonId || 'unknown');
+
       // 2. Sanitize the prompt
       const sanitizedPrompt = this.sanitizePrompt(prompt);
 
@@ -348,6 +375,8 @@ Guidelines:
 
     } catch (error) {
       logger.error('Sandbox prompt processing failed:', error);
+      analytics.apiError('sandbox_processing_error', error.message);
+      
       return {
         success: false,
         error: error.message,

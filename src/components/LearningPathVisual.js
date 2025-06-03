@@ -99,7 +99,7 @@ const LearningPathVisual = ({
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `float ${3 + Math.random() * 4}s ease-in-out infinite alternate`,
+              animation: `learning-path-float ${3 + Math.random() * 4}s ease-in-out infinite alternate`,
               animationDelay: `${Math.random() * 3}s`
             }}
           />
@@ -127,7 +127,7 @@ const LearningPathVisual = ({
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
-              animation: `drift ${8 + Math.random() * 6}s linear infinite`,
+              animation: `learning-path-drift ${8 + Math.random() * 6}s linear infinite`,
               animationDelay: `${Math.random() * 8}s`
             }}
           />
@@ -140,20 +140,20 @@ const LearningPathVisual = ({
         }}></div>
       </div>
 
-      {/* Enhanced CSS animations */}
-      <style jsx>{`
-        @keyframes float {
+      {/* CSS animations - using inline styles for Tailwind compatibility */}
+      <style>{`
+        @keyframes learning-path-float {
           0% { transform: translateY(0px) translateX(0px) scale(0.8); opacity: 0.4; }
           50% { transform: translateY(-15px) translateX(8px) scale(1.2); opacity: 0.9; }
           100% { transform: translateY(-30px) translateX(-8px) scale(0.6); opacity: 0.2; }
         }
-        @keyframes drift {
+        @keyframes learning-path-drift {
           0% { transform: translateX(-100px) translateY(0px) rotate(0deg) scale(0.5); opacity: 0; }
-          10% { opacity: 1; scale: 1; }
-          90% { opacity: 1; scale: 1; }
+          10% { opacity: 1; transform: scale(1); }
+          90% { opacity: 1; transform: scale(1); }
           100% { transform: translateX(calc(100vw + 100px)) translateY(-60px) rotate(360deg) scale(0.3); opacity: 0; }
         }
-        @keyframes glow {
+        @keyframes learning-path-glow {
           0%, 100% { box-shadow: 0 0 20px rgba(34, 211, 238, 0.3), 0 0 40px rgba(139, 92, 246, 0.2); }
           50% { box-shadow: 0 0 30px rgba(34, 211, 238, 0.5), 0 0 60px rgba(139, 92, 246, 0.4); }
         }

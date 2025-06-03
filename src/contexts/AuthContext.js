@@ -14,6 +14,7 @@ import {
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { upsertUserProfile, getUserProfile, deleteUserFirestoreData } from '../services/firestoreService';
+import { analytics } from '../utils/monitoring';
 
 const AuthContext = createContext({});
 
@@ -29,6 +30,11 @@ export const AuthProvider = ({ children }) => {
         console.log('Auth state changed:', authUser ? 'User logged in' : 'No user');
         if (authUser) {
           try {
+            // Track email verification status
+            if (authUser.emailVerified) {
+              analytics.emailVerified();
+            }
+
             // First, ensure the profile is created or updated in Firestore
             // Wrapped in a try-catch to handle potential quota errors
             try {
@@ -37,9 +43,11 @@ export const AuthProvider = ({ children }) => {
             } catch (upsertError) {
               if (upsertError.code === 'resource-exhausted') {
                 console.warn('Firestore quota exceeded during profile upsert. User data might be stale.');
+                analytics.apiError('firestore_quota_exceeded', 'Profile upsert failed due to quota limit');
                 // Proceed with authUser, but Firestore profile will likely fail to load or be incomplete.
               } else {
                 // Rethrow other errors
+                analytics.apiError('firestore_upsert_error', upsertError.message);
                 throw upsertError;
               }
             }
@@ -53,9 +61,11 @@ export const AuthProvider = ({ children }) => {
             } catch (fetchError) {
               if (fetchError.code === 'resource-exhausted') {
                 console.warn('Firestore quota exceeded during profile fetch. Using basic auth data.');
+                analytics.apiError('firestore_quota_exceeded', 'Profile fetch failed due to quota limit');
                 // Fallback to authUser data only.
               } else {
                 // Rethrow other errors
+                analytics.apiError('firestore_fetch_error', fetchError.message);
                 throw fetchError;
               }
             }
@@ -70,6 +80,7 @@ export const AuthProvider = ({ children }) => {
             }
           } catch (profileError) {
             console.error('Error during profile processing after auth state change (outside specific quota checks):', profileError);
+            analytics.apiError('auth_profile_error', profileError.message);
             // If profile operations fail (other than quota exceeded during specific steps), 
             // set user to basic authUser and potentially set an error state
             setUser(authUser); 
@@ -82,6 +93,7 @@ export const AuthProvider = ({ children }) => {
       }, 
       (error) => {
         console.error('Auth state error:', error);
+        analytics.apiError('auth_state_error', error.message);
         setError(error.message);
         setLoading(false);
       }
@@ -98,11 +110,14 @@ export const AuthProvider = ({ children }) => {
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
+      // Track successful Google sign-in
+      analytics.userLogin('google');
       // onAuthStateChanged will handle user profile creation/fetching
       console.log('Google sign in successful, onAuthStateChanged will process profile.');
       return result.user; // Still return the auth user for immediate use if needed by caller
     } catch (error) {
       console.error('Error signing in with Google:', error);
+      analytics.apiError('google_signin_error', error.message);
       throw error;
     }
   };
@@ -111,11 +126,14 @@ export const AuthProvider = ({ children }) => {
     console.log('Attempting email sign in...');
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
+      // Track successful email sign-in
+      analytics.userLogin('email');
       // onAuthStateChanged will handle user profile creation/fetching
       console.log('Email sign in successful, onAuthStateChanged will process profile.');
       return result.user;
     } catch (error) {
       console.error('Error signing in with email:', error);
+      analytics.apiError('email_signin_error', error.message);
       throw error;
     }
   };
@@ -124,11 +142,14 @@ export const AuthProvider = ({ children }) => {
     console.log('Attempting email sign up...');
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
+      // Track successful email sign-up
+      analytics.userSignUp('email');
       // onAuthStateChanged will handle user profile creation/fetching
       console.log('Email sign up successful, onAuthStateChanged will process profile.');
       return result.user;
     } catch (error) {
       console.error('Error signing up with email:', error);
+      analytics.apiError('email_signup_error', error.message);
       throw error;
     }
   };
@@ -140,6 +161,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Logout successful');
     } catch (error) {
       console.error('Error signing out:', error);
+      analytics.apiError('logout_error', error.message);
       throw error;
     }
   };

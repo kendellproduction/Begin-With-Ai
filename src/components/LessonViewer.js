@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 import logger from '../utils/logger';
+import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
 
 // Import slide components
 import IntroSlide from './slides/IntroSlide';
@@ -54,7 +55,7 @@ const LessonViewer = () => {
   // Sample lesson data (replace with actual API call)
   useEffect(() => {
     loadLessonData();
-  }, [lessonId]);
+  }, [lessonId, difficulty]);
 
   // Detect difficulty level from URL params or location state
   useEffect(() => {
@@ -62,459 +63,216 @@ const LessonViewer = () => {
     const urlDifficulty = urlParams.get('difficulty');
     const stateDifficulty = location.state?.difficulty;
     
-    const selectedDifficulty = urlDifficulty || stateDifficulty || 'intermediate';
+    // Default to beginner for vocabulary lessons to show proper exercises
+    const selectedDifficulty = urlDifficulty || stateDifficulty || 'beginner';
     setDifficulty(selectedDifficulty.toLowerCase());
-    
-    // Reload lesson data when difficulty changes
-    if (selectedDifficulty.toLowerCase() !== difficulty) {
-      loadLessonData();
-    }
-  }, [location, difficulty]);
+  }, [location]);
 
   const loadLessonData = async () => {
-    logger.info('Loading lesson data for:', lessonId);
+    logger.info('Loading lesson data for:', lessonId, 'difficulty:', difficulty);
     setIsLoading(true);
     
     try {
-      // Check if lesson exists in adaptiveLessonData
-      const adaptiveLesson = getAdaptiveLessonById(lessonId);
+      // Get adaptive lesson content
+      const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
       
-      if (adaptiveLesson) {
-        // Use adaptive lesson data structure
-        setLesson(adaptiveLesson);
-        setSlides(adaptiveLesson.slides || []);
-        logger.info('Adaptive lesson loaded successfully');
+      if (adaptedLesson && adaptedLesson.slides.length > 0) {
+        // Use adaptive lesson data
+        setLesson(adaptedLesson);
+        setSlides(adaptedLesson.slides);
+        logger.info('Adaptive lesson loaded successfully:', adaptedLesson.title);
       } else {
-        // Fallback to generic content if lesson not found locally
-        logger.warn(`Lesson ${lessonId} not found in local data, using fallback content`);
-        const mockLesson = getLessonContent(difficulty);
-        setLesson(mockLesson);
-        setSlides(mockLesson.slides);
+        // Fallback to local lesson data if available
+        logger.warn(`Lesson ${lessonId} not found in adaptive data, trying local fallback`);
+        const localLesson = getLocalLessonFallback(lessonId, difficulty);
+        setLesson(localLesson);
+        setSlides(localLesson.slides);
       }
       
     } catch (error) {
       logger.error('Error loading lesson:', error);
-      // Fallback to mock lesson on error
-      const mockLesson = getLessonContent(difficulty);
-      setLesson(mockLesson);
-      setSlides(mockLesson.slides);
+      // Final fallback to ensure app doesn't break
+      const fallbackLesson = createFallbackLesson(lessonId, difficulty);
+      setLesson(fallbackLesson);
+      setSlides(fallbackLesson.slides);
     }
     
     setIsLoading(false);
-    logger.info('Loading completed');
+    logger.info('Lesson loading completed');
   };
 
-  // Map lesson IDs to their path/module structure
-  const getLessonMetadata = (lessonId) => {
-    const lessonMap = {
-      'welcome-ai-revolution': { pathId: 'prompt-engineering-mastery', moduleId: 'ai-foundations' },
-      'how-ai-thinks': { pathId: 'prompt-engineering-mastery', moduleId: 'ai-foundations' },
-      'ai-vocabulary-bootcamp': { pathId: 'prompt-engineering-mastery', moduleId: 'ai-foundations' },
-      'prompting-essentials': { pathId: 'prompt-engineering-mastery', moduleId: 'prompting-skills' },
-      'prompt-engineering-action': { pathId: 'prompt-engineering-mastery', moduleId: 'prompting-skills' },
-      'creative-ai-mastery': { pathId: 'prompt-engineering-mastery', moduleId: 'creative-applications' },
-      'ai-workflow-fundamentals': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
-      'ai-daily-applications': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
-      'local-ai-mastery': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
-      'ai-problem-solving-capstone': { pathId: 'prompt-engineering-mastery', moduleId: 'practical-applications' },
-      'vibe-code-video-game': { pathId: 'vibe-coding', moduleId: 'interactive-coding' }
-    };
+  // Fallback for lessons that might be in local data
+  const getLocalLessonFallback = (lessonId, difficulty) => {
+    // Import local lessons data if available
+    try {
+      const { localLessonsData } = require('../data/lessonsData');
+      const localLesson = localLessonsData[lessonId];
+      
+      if (localLesson) {
+        return convertLocalLessonToSlides(localLesson, difficulty);
+      }
+    } catch (error) {
+      logger.warn('Local lessons data not available');
+    }
     
-    return lessonMap[lessonId];
+    return createFallbackLesson(lessonId, difficulty);
   };
 
-  // Convert lesson data to slides format
-  const convertLessonToSlides = (lesson) => {
+  // Convert local lesson format to slides
+  const convertLocalLessonToSlides = (localLesson, difficulty) => {
     const slides = [];
     
-    // Add intro slide
+    // Intro slide
     slides.push({
-      id: `${lesson.id}-intro`,
+      id: `${localLesson.id}-intro`,
       type: 'intro',
       content: {
-        title: lesson.title,
-        description: lesson.coreConcept,
-        estimatedTime: lesson.adaptedContent?.estimatedTime || 20,
-        xpReward: lesson.adaptedContent?.xpReward || 100
+        title: localLesson.title,
+        subtitle: localLesson.coreConcept,
+        icon: "🤖",
+        description: localLesson.adaptedContent?.content?.introduction || localLesson.coreConcept,
+        estimatedTime: localLesson.adaptedContent?.estimatedTime || 20,
+        xpReward: localLesson.adaptedContent?.xpReward || 100
       }
     });
 
-    // Add concept slides from lesson content
-    if (lesson.adaptedContent?.content) {
-      const content = lesson.adaptedContent.content;
-      
-      // Main concept slide
+    // Main content slide
+    if (localLesson.adaptedContent?.content) {
+      const content = localLesson.adaptedContent.content;
       slides.push({
-        id: `${lesson.id}-concept`,
+        id: `${localLesson.id}-concept`,
         type: 'concept',
         content: {
-          title: lesson.title,
-          explanation: content.introduction || lesson.coreConcept,
+          title: localLesson.title,
+          explanation: content.introduction,
           icon: "🤖",
           keyPoints: content.keyPoints || []
         }
       });
 
-      // Add examples if available
-      if (content.examples && content.examples.length > 0) {
+      // Add example slides
+      if (content.examples) {
         content.examples.forEach((example, index) => {
           slides.push({
-            id: `${lesson.id}-example-${index}`,
+            id: `${localLesson.id}-example-${index}`,
             type: 'example',
             content: {
               title: `Example ${index + 1}`,
               example: example,
-              explanation: `This shows how ${lesson.title.toLowerCase()} works in practice.`
+              explanation: "This demonstrates the concept in practice."
             }
           });
         });
       }
-
-      // Add quiz if available from assessment
-      if (lesson.adaptedContent?.assessment?.questions && lesson.adaptedContent.assessment.questions.length > 0) {
-        lesson.adaptedContent.assessment.questions.forEach((question, index) => {
-          slides.push({
-            id: `${lesson.id}-quiz-${index}`,
-            type: 'quiz',
-            content: question
-          });
-        });
-      }
     }
 
-    // Add sandbox slide if available
-    if (lesson.sandbox?.required) {
+    // Add quiz slides
+    if (localLesson.adaptedContent?.assessment?.questions) {
+      localLesson.adaptedContent.assessment.questions.forEach((question, index) => {
+        slides.push({
+          id: `${localLesson.id}-quiz-${index}`,
+          type: 'quiz',
+          content: question
+        });
+      });
+    }
+
+    // Add sandbox slide if required
+    if (localLesson.sandbox?.required) {
       slides.push({
-        id: `${lesson.id}-sandbox`,
+        id: `${localLesson.id}-sandbox`,
         type: 'sandbox',
         content: {
-          title: "Try It Yourself",
-          instructions: lesson.adaptedContent?.sandbox?.instructions || "Practice what you've learned!",
-          exercises: lesson.adaptedContent?.sandbox?.exercises || []
+          title: "Practice What You've Learned",
+          instructions: localLesson.adaptedContent?.sandbox?.instructions || "Try out the concepts!",
+          exercises: localLesson.adaptedContent?.sandbox?.exercises || []
         }
       });
     }
 
-    // Ensure we have at least some slides
-    if (slides.length === 0) {
-      slides.push({
-        id: `${lesson.id}-fallback`,
-        type: 'concept',
-        content: {
-          title: lesson.title,
-          explanation: lesson.coreConcept,
-          icon: "🤖",
-          keyPoints: ["This lesson covers important AI concepts"]
-        }
-      });
-    }
-
-    return slides;
-  };
-
-  // Get lesson content based on difficulty level (fallback function)
-  const getLessonContent = (difficultyLevel) => {
-    const baseContent = createIntermediateContent(); // Use existing intermediate content as base
-    
-    if (difficultyLevel === 'beginner') {
-      return {
-        ...baseContent,
-        title: "How AI Makes Decisions",
-        description: "Simple introduction to how computers think and make choices",
-        estimatedTime: 20,
-        xpReward: 75,
-        slides: baseContent.slides.slice(0, 12).map(slide => simplifyForBeginners(slide))
-      };
-    } else if (difficultyLevel === 'advanced') {
-      return {
-        ...baseContent,
-        title: "AI Decision-Making: Computational Mechanisms & Neural Architectures",
-        description: "Deep dive into AI decision-making processes, neural architectures, and computational mechanisms",
-        estimatedTime: 45,
-        xpReward: 200,
-        slides: [...baseContent.slides, ...createAdvancedSlides()].map(slide => enhanceForAdvanced(slide))
-      };
-    }
-    
-    return baseContent; // Return intermediate content as-is
-  };
-
-  // Simplify content for beginners (kids/seniors)
-  const simplifyForBeginners = (slide) => {
-    if (slide.type === 'concept') {
-      return {
-        ...slide,
-        content: {
-          ...slide.content,
-          explanation: slide.content.explanation.replace(/mathematical|statistical|computational/gi, 'smart computer')
-            .replace(/parameters|embeddings|tokens/gi, 'computer memory')
-            .replace(/neural networks/gi, 'computer brain'),
-          keyPoints: slide.content.keyPoints.map(point => 
-            point.replace(/AI operates on|GPT-4 has|Training cost/gi, 'The computer')
-              .replace(/billion|trillion/gi, 'lots of')
-              .replace(/probability calculations/gi, 'smart guessing')
-          )
-        }
-      };
-    } else if (slide.type === 'quiz') {
-      return {
-        ...slide,
-        content: {
-          ...slide.content,
-          explanation: slide.content.explanation.replace(/statistical|mathematical/gi, 'smart pattern finding')
-        }
-      };
-    }
-    return slide;
-  };
-
-  // Enhance content for advanced users
-  const enhanceForAdvanced = (slide) => {
-    if (slide.type === 'concept') {
-      return {
-        ...slide,
-        content: {
-          ...slide.content,
-          keyPoints: [
-            ...slide.content.keyPoints,
-            `Technical insight: ${getAdvancedInsight(slide.content.title)}`
-          ]
-        }
-      };
-    }
-    return slide;
-  };
-
-  const getAdvancedInsight = (title) => {
-    const insights = {
-      'Pattern Recognition at Scale': 'Uses sparse attention patterns and mixture-of-experts architectures',
-      'How AI Makes Decisions': 'Implements softmax normalization over logit distributions',
-      'The Role of Neural Networks': 'Employs gradient-based optimization with Adam/AdamW optimizers',
-      'Why AI Can Be Wrong': 'Suffers from distribution shift and out-of-distribution generalization failures'
+    return {
+      id: localLesson.id,
+      title: localLesson.title,
+      description: localLesson.coreConcept,
+      estimatedTime: localLesson.adaptedContent?.estimatedTime || 20,
+      xpReward: localLesson.adaptedContent?.xpReward || 100,
+      slides: slides,
+      difficulty: difficulty
     };
-    return insights[title] || 'Advanced computational mechanisms at play';
   };
 
-  const createAdvancedSlides = () => [
-    {
-      id: "slide-advanced-1",
-      type: "concept",
-      content: {
-        title: "Mechanistic Interpretability",
-        explanation: "Understanding AI decision-making requires reverse-engineering learned algorithms and identifying causal mechanisms in neural networks through circuit analysis.",
-        icon: "🔬",
-        keyPoints: [
-          "Circuit-level analysis using activation patching",
-          "Sparse dictionary learning for feature decomposition",
-          "Identifying polysemantic neurons and superposition",
-          "Causal intervention studies on attention heads"
-        ]
-      }
-    },
-    {
-      id: "slide-advanced-2",
-      type: "quiz",
-      content: {
-        question: "What is the primary goal of mechanistic interpretability research?",
-        options: [
-          { text: "Making AI run faster", correct: false },
-          { text: "Reverse-engineering learned algorithms in neural networks", correct: true },
-          { text: "Reducing model size", correct: false },
-          { text: "Improving training efficiency", correct: false }
-        ],
-        explanation: "Mechanistic interpretability aims to understand the internal algorithms and circuits that emerge in trained neural networks, providing insights into AI decision-making processes."
-      }
-    }
-  ];
+  // Create a basic fallback lesson to prevent app crashes
+  const createFallbackLesson = (lessonId, difficulty) => {
+    const lessonTitles = {
+      'welcome-ai-revolution': 'Welcome to the AI Revolution',
+      'how-ai-thinks': 'How AI "Thinks" — From Data to Decisions',
+      'ai-vocabulary-bootcamp': 'AI Vocabulary Bootcamp',
+      'prompting-essentials': 'Prompting Essentials',
+      'prompt-engineering-action': 'Prompt Engineering in Action',
+      'creative-ai-mastery': 'Creative AI — Art, Video, and Voice',
+      'ai-workflow-fundamentals': 'AI Workflow Fundamentals',
+      'ai-daily-applications': 'AI for School, Work, and Life',
+      'local-ai-mastery': 'Hosting AI Locally & Open Source Models',
+      'ai-problem-solving-capstone': 'AI Problem-Solving Lab',
+      'vibe-code-video-game': 'Create a Video Game with AI'
+    };
 
-  const createIntermediateContent = () => ({
-    id: lessonId,
-    title: "How AI 'Thinks' — From Data to Decisions",
-    description: "Deep dive into how artificial intelligence processes information and makes decisions",
-    estimatedTime: 35,
-    xpReward: 150,
-    slides: [
-      {
-        id: "slide-1",
-        type: "intro",
-        content: {
-          title: "How AI 'Thinks'",
-          subtitle: "From Data to Decisions",
-          icon: "🧠",
-          description: "Understanding the fundamental processes behind artificial intelligence decision-making"
+    const title = lessonTitles[lessonId] || 'AI Learning Lesson';
+    
+    return {
+      id: lessonId,
+      title: title,
+      description: `Learn about ${title.toLowerCase()} in this interactive lesson.`,
+      estimatedTime: 20,
+      xpReward: 100,
+      slides: [
+        {
+          id: `${lessonId}-intro`,
+          type: 'intro',
+          content: {
+            title: title,
+            subtitle: `Interactive ${difficulty} level lesson`,
+            icon: "🤖",
+            description: `Explore the fundamentals of ${title.toLowerCase()}.`,
+            estimatedTime: 20,
+            xpReward: 100
+          }
+        },
+        {
+          id: `${lessonId}-concept`,
+          type: 'concept',
+          content: {
+            title: title,
+            explanation: `This lesson covers the key concepts and principles of ${title.toLowerCase()}. Content is being loaded from the adaptive lesson system.`,
+            icon: "🧠",
+            keyPoints: [
+              "Core concepts and fundamentals",
+              "Practical applications and examples", 
+              "Hands-on exercises and practice",
+              "Assessment and skill validation"
+            ]
+          }
+        },
+        {
+          id: `${lessonId}-sandbox`,
+          type: 'sandbox',
+          content: {
+            title: "Practice & Apply",
+            instructions: "Use the sandbox to practice what you've learned in this lesson!",
+            exercises: ["Try out the concepts", "Experiment with examples", "Apply your knowledge"]
+          }
         }
-      },
-      {
-        id: "slide-2",
-        type: "concept",
-        content: {
-          title: "The Big Misconception",
-          explanation: "AI doesn't 'think' like humans do. It doesn't have consciousness, emotions, or subjective experiences. Instead, AI processes information through mathematical patterns and statistical relationships.",
-          icon: "💭",
-          keyPoints: [
-            "AI operates on mathematical computations, not conscious thought",
-            "No emotions, intuition, or subjective experience",
-            "Decisions based on pattern recognition in data",
-            "Every output is a calculated probability"
-          ]
-        }
-      },
-      {
-        id: "slide-3",
-        type: "quiz",
-        content: {
-          question: "What is the most accurate description of how AI makes decisions?",
-          options: [
-            { text: "AI uses logic and reasoning like humans", correct: false },
-            { text: "AI follows pre-written rules and instructions", correct: false },
-            { text: "AI calculates probabilities based on data patterns", correct: true },
-            { text: "AI randomly generates responses", correct: false }
-          ],
-          explanation: "AI makes decisions by calculating probabilities based on patterns it learned from training data. It doesn't use human-like logic or follow pre-written rules."
-        }
-      },
-      {
-        id: "slide-4",
-        type: "concept",
-        content: {
-          title: "What is Data to AI?",
-          explanation: "To understand AI decision-making, we must first understand how AI sees data. Data is the raw material that AI systems use to learn patterns and make predictions.",
-          icon: "📊",
-          keyPoints: [
-            "Text becomes numbers (tokens and embeddings)",
-            "Images become pixel values and feature maps",
-            "Everything is converted to mathematical representations",
-            "GPT-3 was trained on ~45TB of text data (570GB compressed)"
-          ]
-        }
-      },
-      {
-        id: "slide-5",
-        type: "example",
-        content: {
-          title: "Data Conversion Example",
-          prompt: "How does AI see the word 'happy'?",
-          response: "AI converts 'happy' into:\n\n• Token ID: 8057 (in GPT models)\n• Vector embedding: 1,536 numbers like [0.23, -0.41, 0.78...]\n• Each number represents learned associations\n• Similar words get similar number patterns\n\nWords like 'joyful', 'cheerful' have similar embeddings.",
-          explanation: "AI doesn't understand 'happy' as an emotion. It sees mathematical patterns that connect 'happy' to other words based on how they appeared together in training data."
-        }
-      },
-      {
-        id: "slide-6",
-        type: "concept",
-        content: {
-          title: "The Learning Process",
-          explanation: "AI learns by analyzing millions of examples to find patterns. This process involves adjusting billions of parameters to minimize prediction errors.",
-          icon: "📚",
-          keyPoints: [
-            "GPT-4 has approximately 1.76 trillion parameters",
-            "Training cost: estimated $63-78 million for compute alone",
-            "Used ~13 trillion tokens of text data",
-            "Training took several months on thousands of GPUs"
-          ]
-        }
-      },
-      {
-        id: "slide-7",
-        type: "quiz",
-        content: {
-          question: "What are 'parameters' in an AI model?",
-          options: [
-            { text: "Settings that humans manually adjust", correct: false },
-            { text: "Mathematical weights learned during training", correct: true },
-            { text: "Rules programmed by developers", correct: false },
-            { text: "The questions users ask the AI", correct: false }
-          ],
-          explanation: "Parameters are mathematical weights that get automatically adjusted during training. Modern models like GPT-4 have over a trillion of these learned weights that encode patterns from training data."
-        }
-      },
-      {
-        id: "slide-8",
-        type: "concept",
-        content: {
-          title: "Pattern Recognition at Scale",
-          explanation: "AI excels at finding subtle patterns in data that humans might miss. These patterns form the basis of all AI predictions and decisions.",
-          icon: "🔍",
-          keyPoints: [
-            "Can process patterns across billions of data points simultaneously",
-            "Identifies correlations invisible to human analysis", 
-            "Finds non-linear relationships in high-dimensional data",
-            "ChatGPT processes ~100 billion words per day globally"
-          ]
-        }
-      },
-      {
-        id: "slide-9",
-        type: "example",
-        content: {
-          title: "Pattern Recognition in Action",
-          prompt: "The weather is sunny, so I'll wear my ____",
-          response: "AI Pattern Analysis:\n\n1. 'sunny' + 'wear' context detected\n2. Statistical relationships from training:\n   • 'sunglasses' appears after 'sunny' in 12% of cases\n   • 'shorts' appears in 8% of cases\n   • 'hat' appears in 6% of cases\n\n3. Selects highest probability: 'sunglasses'",
-          explanation: "The AI doesn't understand weather or clothing. It recognizes that in its training data, 'sunglasses' frequently followed similar sentence patterns."
-        }
-      },
-      {
-        id: "slide-10",
-        type: "quiz",
-        content: {
-          question: "If an AI consistently suggests 'pizza' when asked about dinner, what's the most likely reason?",
-          options: [
-            { text: "The AI loves pizza", correct: false },
-            { text: "Pizza appeared frequently in training data dinner contexts", correct: true },
-            { text: "The AI was programmed to prefer pizza", correct: false },
-            { text: "Pizza is objectively the best dinner choice", correct: false }
-          ],
-          explanation: "AI suggestions reflect patterns in training data. If 'pizza' appeared often in dinner-related text, the AI learned this statistical association, not a preference."
-        }
-      },
-      {
-        id: "slide-11",
-        type: "concept",
-        content: {
-          title: "Why AI Can Be Wrong",
-          explanation: "AI errors occur when training data is incomplete, biased, or when encountering patterns outside its training scope.",
-          icon: "⚠️",
-          keyPoints: [
-            "Limited by training data coverage",
-            "Can't reason about truly novel situations",
-            "May confidently give wrong answers",
-            "GPT-4 has ~8% error rate on standardized tests"
-          ]
-        }
-      },
-      {
-        id: "slide-12",
-        type: "fill-blank",
-        content: {
-          sentence: "AI makes decisions based on ______ rather than genuine understanding",
-          answer: "patterns",
-          options: ["patterns", "emotions", "logic", "intuition"],
-          hint: "Think about what AI learns from training data",
-          explanation: "AI identifies and uses statistical patterns from training data to make decisions. It doesn't have genuine understanding, emotions, or intuitive reasoning."
-        }
-      },
-      {
-        id: "slide-13",
-        type: "sandbox",
-        content: {
-          title: "Apply Your Understanding",
-          instruction: "Analyze how AI would handle a real-world scenario",
-          scenario: "You ask AI to help write a professional email declining a job offer while keeping the door open for future opportunities.",
-          suggestedPrompt: "Explain: 1) How AI processes this request, 2) What patterns it uses, 3) Why it might succeed or fail, 4) What limitations to consider.",
-          successCriteria: [
-            "Explains pattern matching from training data",
-            "Identifies relevant learned associations (politeness, professionalism)",
-            "Recognizes probability-based word selection",
-            "Acknowledges AI lacks true understanding of emotions/career implications"
-          ]
-        }
-      }
-    ]
-  });
+      ],
+      difficulty: difficulty
+    };
+  };
 
   // Handle slide navigation
   const goToNextSlide = useCallback(() => {
     if (currentSlideIndex < slides.length - 1) {
       setCurrentSlideIndex(prev => prev + 1);
+      // Scroll to top when changing slides
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       handleLessonComplete();
     }
@@ -523,6 +281,8 @@ const LessonViewer = () => {
   const goToPreviousSlide = useCallback(() => {
     if (currentSlideIndex > 0) {
       setCurrentSlideIndex(prev => prev - 1);
+      // Scroll to top when changing slides
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentSlideIndex]);
 
@@ -537,10 +297,10 @@ const LessonViewer = () => {
       }
     }));
     
-    // Only auto-advance for certain slide types (not sandbox slides)
+    // Only auto-advance for certain slide types (not sandbox slides or interactive exercises)
     const currentSlide = slides[currentSlideIndex];
     const shouldAutoAdvance = currentSlide && 
-      !['sandbox', 'interactive_sandbox', 'fill-blank', 'multiple-choice'].includes(currentSlide.type);
+      !['sandbox', 'interactive_sandbox', 'fill-blank', 'multiple-choice', 'interactive_check', 'quiz'].includes(currentSlide.type);
     
     if (shouldAutoAdvance) {
       // Auto-advance after a brief delay for content slides
@@ -652,6 +412,10 @@ const LessonViewer = () => {
         return <IntroSlide {...commonProps} />;
       case 'concept':
         return <ConceptSlide {...commonProps} />;
+      case 'interactive_teaching':
+        return <ConceptSlide {...commonProps} />;
+      case 'interactive_check':
+        return <FillBlankSlide {...commonProps} onAnswer={handleQuizAnswer} />;
       case 'quiz':
         return <QuizSlide {...commonProps} onAnswer={handleQuizAnswer} />;
       case 'example':

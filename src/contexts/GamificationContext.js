@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { getUserStats, awardXP, checkAndAwardBadges } from '../services/firestoreService';
 import progressService from '../services/progressService';
+import { analytics } from '../utils/monitoring';
 
 const GamificationContext = createContext();
 
@@ -80,6 +81,7 @@ export function GamificationProvider({ children }) {
       }
     } catch (error) {
       console.error('Error loading user stats:', error);
+      analytics.apiError('gamification_load_error', error.message);
       setUserStats(prev => ({
         ...prev,
         loading: false,
@@ -100,10 +102,18 @@ export function GamificationProvider({ children }) {
     }
 
     try {
+      const startTime = performance.now();
       const result = await progressService.completeLesson(user.uid, lessonId, completionData);
       
       if (result.success && result.firestoreUpdate) {
         const { xp, streak, badges } = result.firestoreUpdate;
+        
+        // Track lesson completion
+        analytics.lessonCompleted(
+          lessonId, 
+          completionData.lessonTitle || 'Unknown Lesson',
+          Math.round((performance.now() - startTime) / 1000)
+        );
         
         // Update local state
         setUserStats(prev => ({
@@ -116,8 +126,12 @@ export function GamificationProvider({ children }) {
           longestStreak: streak?.longestStreak || prev.longestStreak
         }));
 
+        // Track XP earned
+        analytics.xpEarned(xp.xpAwarded, 'lesson_completion');
+
         // Show level up notification
         if (xp.leveledUp) {
+          analytics.levelUp(xp.newLevel);
           showNotification(`🎉 Level Up! You're now level ${xp.newLevel}!`, 'success');
           setShowLevelUpModal(true);
         }
@@ -127,6 +141,7 @@ export function GamificationProvider({ children }) {
 
         // Show streak notification
         if (streak?.streakIncreased) {
+          analytics.streakAchieved(streak.currentStreak);
           showNotification(`🔥 ${streak.currentStreak} day streak!`, 'streak');
         }
 
@@ -135,7 +150,9 @@ export function GamificationProvider({ children }) {
           setNewBadges(badges);
           setShowBadgeModal(true);
           badges.forEach(badge => {
-            showNotification(`🏆 New badge: ${badge.name}!`, 'badge');
+            const badgeInfo = getBadgeById(badge.id);
+            analytics.badgeEarned(badge.id, badgeInfo.name);
+            showNotification(`🏆 New badge: ${badgeInfo.name}!`, 'badge');
           });
         }
       }
@@ -143,6 +160,7 @@ export function GamificationProvider({ children }) {
       return result;
     } catch (error) {
       console.error('Error completing lesson:', error);
+      analytics.apiError('lesson_completion_error', error.message);
       showNotification('Error completing lesson. Please try again.', 'error');
       throw error;
     }
@@ -169,10 +187,14 @@ export function GamificationProvider({ children }) {
           xpToNextLevel: 100 - (result.xp.newXP % 100)
         }));
 
+        // Track XP earned
+        analytics.xpEarned(amount, reason);
+
         // Show notifications
         showNotification(`+${amount} XP earned!`, 'xp');
         
         if (result.xp.leveledUp) {
+          analytics.levelUp(result.xp.newLevel);
           showNotification(`🎉 Level Up! You're now level ${result.xp.newLevel}!`, 'success');
           setShowLevelUpModal(true);
         }
@@ -180,12 +202,17 @@ export function GamificationProvider({ children }) {
         if (result.badges && result.badges.length > 0) {
           setNewBadges(result.badges);
           setShowBadgeModal(true);
+          result.badges.forEach(badge => {
+            const badgeInfo = getBadgeById(badge.id);
+            analytics.badgeEarned(badge.id, badgeInfo.name);
+          });
         }
       }
 
       return result;
     } catch (error) {
       console.error('Error awarding XP:', error);
+      analytics.apiError('xp_award_error', error.message);
       showNotification('Error awarding XP. Please try again.', 'error');
       throw error;
     }

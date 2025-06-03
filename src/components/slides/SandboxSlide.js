@@ -3,9 +3,505 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import SandboxAPIService from '../../services/sandboxAPIService';
 
+// Vocabulary Exercises Component
+const VocabularyExercises = ({ exercises, instructions, title, onComplete, onNext }) => {
+  const [currentExercise, setCurrentExercise] = useState(0);
+  const [showResults, setShowResults] = useState(false);
+  const [userAnswers, setUserAnswers] = useState({}); // Stores answers for the current exercise
+  const [allUserAnswers, setAllUserAnswers] = useState({}); // Stores answers for ALL exercises
+
+  const exercise = exercises[currentExercise];
+
+  // For Matching exercise
+  const [selectedTerm, setSelectedTerm] = useState(null); // { index: number, term: string }
+  const [selectedDefinition, setSelectedDefinition] = useState(null); // { index: number, definition: string }
+  const [matchStatuses, setMatchStatuses] = useState({}); // { [termIndex]: 'correct' | 'incorrect' | 'unanswered' }
+  const [incorrectAttempt, setIncorrectAttempt] = useState(null); // Tracks temp incorrect definition index
+
+  useEffect(() => {
+    setSelectedTerm(null);
+    setSelectedDefinition(null);
+    setUserAnswers(allUserAnswers[currentExercise] || {});
+    // Initialize match statuses for the current matching exercise
+    if (exercise && exercise.type === 'matching') {
+      const initialStatuses = {};
+      exercise.items.forEach((_, index) => {
+        if (allUserAnswers[currentExercise] && allUserAnswers[currentExercise][index] !== undefined) {
+          // Check if the stored answer was correct (term index should match definition index for correctness)
+          initialStatuses[index] = allUserAnswers[currentExercise][index] === index ? 'correct' : 'unanswered'; // Or handle how past incorrects were stored
+        } else {
+          initialStatuses[index] = 'unanswered';
+        }
+      });
+      setMatchStatuses(initialStatuses);
+    }
+  }, [currentExercise, allUserAnswers, exercise]);
+
+  const handleAnswer = (questionIndex, answer) => {
+    const newAnswers = { ...userAnswers, [questionIndex]: answer };
+    setUserAnswers(newAnswers);
+  };
+
+  const handleMatchingSelect = (type, index, text) => {
+    if (incorrectAttempt !== null) setIncorrectAttempt(null); // Clear previous incorrect flash
+
+    if (type === 'term') {
+      // Prevent selecting an already correctly matched term
+      if (matchStatuses[index] === 'correct') return;
+
+      if (selectedTerm && selectedTerm.index === index) {
+        setSelectedTerm(null); // Deselect if clicking the same term
+      } else {
+        setSelectedTerm({ index, text });
+        // If this term was previously marked incorrect, reset its status as user is re-attempting
+        if(matchStatuses[index] === 'incorrect') {
+          setMatchStatuses(prev => ({...prev, [index]: 'unanswered'}));
+        }
+      }
+    } else if (type === 'definition') {
+      // Prevent selecting a definition if its corresponding term is already correctly matched
+      // This logic assumes definition index directly corresponds to term index for correct pair
+      if (matchStatuses[index] === 'correct' && userAnswers[index] === index) return; 
+
+      if (selectedDefinition && selectedDefinition.index === index) {
+        setSelectedDefinition(null); // Deselect if clicking the same definition
+      } else {
+        setSelectedDefinition({ index, text });
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (selectedTerm !== null && selectedDefinition !== null && exercise && exercise.type === 'matching') {
+      const termIdx = selectedTerm.index;
+      const defIdx = selectedDefinition.index;
+
+      if (termIdx === defIdx) { // Correct Match!
+        setUserAnswers(prev => ({ ...prev, [termIdx]: defIdx }));
+        setMatchStatuses(prev => ({ ...prev, [termIdx]: 'correct' }));
+        setSelectedTerm(null);
+        setSelectedDefinition(null);
+      } else { // Incorrect Match
+        setMatchStatuses(prev => ({ ...prev, [termIdx]: 'incorrect' }));
+        setIncorrectAttempt(defIdx); // Set for flashing
+        setSelectedDefinition(null); // Deselect definition, keep term selected for another try
+        // Do not save to userAnswers
+      }
+    }
+  }, [selectedTerm, selectedDefinition, exercise]);
+
+  const recordCurrentAnswersAndProceed = (proceedFunction) => {
+    // For matching, ensure only correct answers are saved to allUserAnswers
+    let answersToSave = { ...userAnswers };
+    if (exercise && exercise.type === 'matching') {
+      answersToSave = {};
+      Object.keys(userAnswers).forEach(termIdx => {
+        if (matchStatuses[termIdx] === 'correct') {
+          answersToSave[termIdx] = userAnswers[termIdx];
+        }
+      });
+    }
+    setAllUserAnswers(prev => ({ ...prev, [currentExercise]: answersToSave }));
+    proceedFunction();
+  };
+
+  const nextExercise = () => {
+    if (currentExercise < exercises.length - 1) {
+      recordCurrentAnswersAndProceed(() => setCurrentExercise(curr => curr + 1));
+    } else {
+      recordCurrentAnswersAndProceed(() => setShowResults(true));
+    }
+  };
+
+  const prevExercise = () => {
+    if (currentExercise > 0) {
+      recordCurrentAnswersAndProceed(() => setCurrentExercise(curr => curr - 1));
+    }
+  };
+
+  const finishExercises = () => {
+    let finalAnswersToSave = { ...userAnswers };
+    if (exercise && exercise.type === 'matching') {
+        finalAnswersToSave = {};
+        Object.keys(userAnswers).forEach(termIdx => {
+            if (matchStatuses[termIdx] === 'correct') {
+                finalAnswersToSave[termIdx] = userAnswers[termIdx];
+            }
+        });
+    }
+    setAllUserAnswers(prev => ({ ...prev, [currentExercise]: finalAnswersToSave }));
+    onComplete('vocabulary-exercises', {
+      answers: { ...allUserAnswers, [currentExercise]: finalAnswersToSave }, // Ensure the very last set of answers is included
+      completed: true,
+      exercisesCompleted: exercises.length
+    });
+  };
+
+  useEffect(() => {
+    if (incorrectAttempt !== null) {
+      const timer = setTimeout(() => setIncorrectAttempt(null), 700); // Flash duration
+      return () => clearTimeout(timer);
+    }
+  }, [incorrectAttempt]);
+
+  if (showResults) {
+    return (
+      <div className="text-center space-y-6">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.6, type: "spring" }}
+          className="text-8xl mb-6"
+        >
+          📚
+        </motion.div>
+        <h2 className="text-4xl font-bold text-white mb-4">Vocabulary Practice Complete!</h2>
+        <p className="text-gray-300 mb-6">Great work! You've completed all the vocabulary exercises.</p>
+        <motion.button
+          onClick={finishExercises}
+          className="px-8 py-4 bg-gradient-to-r from-green-500 to-blue-500 rounded-xl text-white font-semibold text-lg shadow-lg transition-all duration-300 hover:scale-105"
+        >
+          Continue to Next Lesson →
+        </motion.button>
+      </div>
+    );
+  }
+
+  // Safety check
+  if (!exercise) {
+    return (
+      <div className="text-center space-y-6">
+        <div className="text-6xl mb-4">⚠️</div>
+        <h2 className="text-2xl font-bold text-white mb-4">Exercise Not Found</h2>
+        <p className="text-gray-300 mb-6">Unable to load exercise {currentExercise + 1}.</p>
+        <button
+          onClick={() => setCurrentExercise(0)}
+          className="px-6 py-3 bg-blue-600 rounded-xl text-white font-medium"
+        >
+          Return to First Exercise
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <h2 className="text-4xl font-bold text-white mb-4">{title}</h2>
+        <p className="text-xl text-gray-300 mb-6">{instructions}</p>
+        <div className="text-sm text-gray-400">
+          Exercise {currentExercise + 1} of {exercises.length}
+        </div>
+      </div>
+
+      {/* Progress Bar */}
+      <div className="w-full bg-gray-700 rounded-full h-2">
+        <div 
+          className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+          style={{ width: `${((currentExercise + 1) / exercises.length) * 100}%` }}
+        />
+      </div>
+
+      {/* Exercise Content */}
+      <div className="bg-slate-800/50 rounded-2xl p-8 border border-slate-600/50">
+        <h3 className="text-2xl font-bold text-white mb-6">{exercise.title}</h3>
+        
+        {/* Matching Exercise */}
+        {exercise.type === 'matching' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Terms Column */}
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-cyan-300 mb-2 text-center">Terms</h4>
+              {exercise.items && exercise.items.map((item, termIndex) => {
+                const status = matchStatuses[termIndex];
+                let termClasses = 'bg-slate-700 hover:bg-slate-600 text-white';
+                if (selectedTerm && selectedTerm.index === termIndex) {
+                  termClasses = 'bg-blue-500 text-white ring-2 ring-blue-300 scale-105';
+                } else if (status === 'correct') {
+                  termClasses = 'bg-green-700 text-white cursor-not-allowed opacity-80';
+                } else if (status === 'incorrect') {
+                  termClasses = 'bg-red-500 text-white ring-2 ring-red-400 scale-105'; // Incorrect term attempt
+                }
+
+                return (
+                  <button
+                    key={`term-${termIndex}`}
+                    onClick={() => handleMatchingSelect('term', termIndex, item.term)}
+                    className={`w-full p-4 rounded-lg transition-all duration-200 text-left ${termClasses}`}
+                    disabled={status === 'correct'}
+                  >
+                    {item.term}
+                    {status === 'correct' && exercise.items[termIndex] && (
+                      <span className="text-xs block opacity-90 mt-1">✓ Matched: {exercise.items[termIndex].definition}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Definitions Column */}
+            <div className="space-y-3">
+              <h4 className="text-lg font-semibold text-purple-300 mb-2 text-center">Definitions</h4>
+              {exercise.items && exercise.items.map((item, defIndex) => {
+                const isMatchedToSomeTerm = Object.entries(userAnswers).some(([termIdx, matchedDefIdx]) => matchedDefIdx === defIndex && matchStatuses[termIdx] === 'correct');
+                let defClasses = 'bg-slate-700 hover:bg-slate-600 text-white';
+                if (selectedDefinition && selectedDefinition.index === defIndex) {
+                  defClasses = 'bg-purple-500 text-white ring-2 ring-purple-300 scale-105';
+                } else if (isMatchedToSomeTerm) {
+                  defClasses = 'bg-slate-600 text-slate-400 cursor-not-allowed opacity-70';
+                } else if (incorrectAttempt === defIndex) {
+                  defClasses = 'bg-red-600 text-white ring-2 ring-red-400 animate-pulse'; // Flashing incorrect definition
+                }
+
+                return (
+                  <button
+                    key={`def-${defIndex}`}
+                    onClick={() => handleMatchingSelect('definition', defIndex, item.definition)}
+                    className={`w-full p-4 rounded-lg transition-all duration-200 text-left ${defClasses}`}
+                    disabled={isMatchedToSomeTerm}
+                  >
+                    {item.definition}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Fill in the Blank Exercise */}
+        {exercise.type === 'fill_in_blank' && (
+          <div className="space-y-6">
+            {exercise.sentences && exercise.sentences.length > 0 ? (
+              exercise.sentences.map((sentence, index) => (
+                <div key={index} className="space-y-2">
+                  <p className="text-white text-lg">{sentence}</p>
+                  <input
+                    type="text"
+                    placeholder="Your answer..."
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:border-blue-500 focus:outline-none"
+                    onChange={(e) => handleAnswer(`${currentExercise}-${index}`, e.target.value)}
+                  />
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                <p>No sentences available for fill-in-the-blank.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* True/False Exercise */}
+        {exercise.type === 'true_false' && (
+          <div className="space-y-4">
+            {exercise.statements && exercise.statements.length > 0 ? (
+              exercise.statements.map((item, index) => (
+                <div key={index} className="bg-slate-700/50 rounded-xl p-4">
+                  <p className="text-white mb-4">{item.statement}</p>
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => handleAnswer(index, true)}
+                      className={`px-6 py-2 rounded-lg text-white font-medium transition-colors
+                        ${userAnswers[index] === true ? 'bg-green-700 ring-2 ring-green-400' : 'bg-green-600 hover:bg-green-700'}
+                      `}
+                    >
+                      True
+                    </button>
+                    <button
+                      onClick={() => handleAnswer(index, false)}
+                      className={`px-6 py-2 rounded-lg text-white font-medium transition-colors
+                        ${userAnswers[index] === false ? 'bg-red-700 ring-2 ring-red-400' : 'bg-red-600 hover:bg-red-700'}
+                      `}
+                    >
+                      False
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                <p>No statements available for true/false.</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Category Sort Exercise */}
+        {exercise.type === 'category_sort' && (
+          <div className="space-y-6">
+            {exercise.terms && exercise.categories ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+                {/* Terms to Sort Column */}
+                <div className="md:col-span-1 space-y-3">
+                  <h4 className="text-lg font-semibold text-cyan-300 mb-2 text-center">Terms to Sort</h4>
+                  {exercise.terms.map((term, termIndex) => {
+                    // Find which category this term is currently assigned to, if any
+                    const assignedCategoryName = Object.keys(userAnswers).find(catName => 
+                      Array.isArray(userAnswers[catName]) && userAnswers[catName].includes(termIndex)
+                    );
+                    const isSelected = selectedTerm && selectedTerm.index === termIndex && selectedTerm.type === 'category_term';
+                    
+                    let termBg = 'bg-slate-700 hover:bg-slate-600 text-white';
+                    if (isSelected) termBg = 'bg-blue-500 text-white ring-2 ring-blue-300 scale-105';
+                    else if (assignedCategoryName) termBg = 'bg-green-600 text-white';
+
+                    return (
+                      <button
+                        key={`cat-term-${termIndex}`}
+                        onClick={() => {
+                          if (assignedCategoryName) { // If term is already assigned, clicking it unassigns it
+                            const categoryTerms = userAnswers[assignedCategoryName].filter(idx => idx !== termIndex);
+                            const newAnswers = {
+                              ...userAnswers,
+                              [assignedCategoryName]: categoryTerms.length > 0 ? categoryTerms : undefined
+                            };
+                            setUserAnswers(newAnswers);
+                            if(selectedTerm && selectedTerm.index === termIndex) setSelectedTerm(null); // Deselect if it was selected
+                          } else { // Not assigned, so select it
+                            handleMatchingSelect('category_term', termIndex, term);
+                          }
+                        }}
+                        className={`w-full p-3 rounded-lg transition-all duration-200 text-left ${termBg}`}
+                      >
+                        {term}
+                        {assignedCategoryName && (
+                          <span className="text-xs block opacity-70 mt-1">→ {assignedCategoryName.replace(/_/g, ' ')}</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Categories Columns */}
+                <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {Object.entries(exercise.categories).map(([categoryKey, categoryDetails]) => {
+                    // Use categoryKey for userAnswers, as it's the direct key from data
+                    const assignedTermIndices = userAnswers[categoryKey] || [];
+                    return (
+                      <div key={categoryKey} className="space-y-3 flex flex-col bg-slate-700/30 p-4 rounded-xl border border-slate-600/50">
+                        <button
+                          onClick={() => {
+                            if (selectedTerm && selectedTerm.type === 'category_term' && selectedTerm.index !== null) {
+                              const termIdxToAssign = selectedTerm.index;
+                              let updatedAnswers = { ...userAnswers };
+
+                              // Remove term from any other category it might be in
+                              Object.keys(exercise.categories).forEach(catKey => {
+                                if (updatedAnswers[catKey] && catKey !== categoryKey) {
+                                  updatedAnswers[catKey] = (updatedAnswers[catKey] || []).filter(idx => idx !== termIdxToAssign);
+                                  if (updatedAnswers[catKey].length === 0) delete updatedAnswers[catKey];
+                                }
+                              });
+
+                              // Add/remove from the clicked category
+                              let currentCategoryTerms = updatedAnswers[categoryKey] || [];
+                              if (currentCategoryTerms.includes(termIdxToAssign)) {
+                                // Already in this category, so unassign (remove it)
+                                currentCategoryTerms = currentCategoryTerms.filter(idx => idx !== termIdxToAssign);
+                              } else {
+                                // Not in this category, so add it
+                                currentCategoryTerms = [...currentCategoryTerms, termIdxToAssign];
+                              }
+                              
+                              if (currentCategoryTerms.length > 0) {
+                                updatedAnswers[categoryKey] = currentCategoryTerms;
+                              } else {
+                                delete updatedAnswers[categoryKey]; // Clean up if category becomes empty
+                              }
+
+                              setUserAnswers(updatedAnswers);
+                              setSelectedTerm(null); // Clear selected term after action
+                            }
+                          }}
+                          className={`w-full p-3 rounded-lg text-center transition-all duration-200 mb-2
+                            ${selectedTerm && selectedTerm.type === 'category_term' 
+                              ? 'bg-purple-600 hover:bg-purple-500 text-white ring-2 ring-purple-300 shadow-lg' 
+                              : 'bg-slate-600/80 hover:bg-slate-500/80 text-purple-200 shadow-md'
+                            }
+                          `}
+                          // Disable if no term is selected for categorization
+                          // Or, enable to allow clicking to assign the selected term.
+                        >
+                          <h4 className="text-lg font-semibold">{categoryDetails.title || categoryKey.replace(/_/g, ' ')}</h4>
+                          {categoryDetails.description && 
+                            <p className="text-xs opacity-70 mt-1">{categoryDetails.description}</p>
+                          }
+                           {selectedTerm && selectedTerm.type === 'category_term' && (
+                            <span className="block text-xs mt-1 text-purple-100 italic">Assign "{selectedTerm.text}" here?</span>
+                          )}
+                        </button>
+                        <div className="bg-slate-800/70 rounded-lg p-3 min-h-[100px] space-y-2 border border-slate-600/70 flex-grow flex flex-col justify-center">
+                          {assignedTermIndices.length > 0 ? (
+                            assignedTermIndices.map((termIndex) => (
+                              <div key={`assigned-${categoryKey}-${termIndex}`} className="bg-slate-700 p-2 rounded text-sm text-white shadow-md">
+                                {exercise.terms[termIndex]}
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-xs text-slate-400 text-center italic py-2">No terms assigned yet.</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-8">
+                <p>Category sorting data not available.</p>
+              </div>
+            )}
+          </div>
+                 )}
+
+         {/* Fallback for unknown exercise types */}
+         {!['matching', 'fill_in_blank', 'true_false', 'category_sort'].includes(exercise.type) && (
+           <div className="text-center text-gray-400 py-8">
+             <p>Exercise type not supported: {exercise.type}</p>
+             <p className="text-sm mt-2">Please try refreshing the page or contact support.</p>
+           </div>
+         )}
+      </div>
+
+      {/* Navigation */}
+      <div className="flex justify-between items-center">
+        <button
+          onClick={prevExercise}
+          disabled={currentExercise === 0}
+          className="px-6 py-3 bg-gray-600 disabled:bg-gray-700 disabled:opacity-50 rounded-xl text-white font-medium transition-all duration-300 hover:bg-gray-500 disabled:hover:bg-gray-700"
+        >
+          ← Previous
+        </button>
+        
+        <div className="text-center">
+          <div className="text-sm text-gray-400 mb-2">Progress</div>
+          <div className="flex space-x-2">
+            {exercises.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full ${
+                  index <= currentExercise ? 'bg-blue-500' : 'bg-gray-600'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <button
+          onClick={nextExercise}
+          className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl text-white font-medium transition-all duration-300 hover:scale-105"
+        >
+          {currentExercise === exercises.length - 1 ? 'Finish' : 'Next →'}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const SandboxSlide = ({ slide, onComplete, onNext, isActive }) => {
   const { user } = useAuth();
-  const { title, instruction, scenario, suggestedPrompt, successCriteria } = slide.content;
+  const { title, instructions, scenario, suggestedPrompt, successCriteria, exercises } = slide.content;
   const [showInstructions, setShowInstructions] = useState(true);
   const [userInput, setUserInput] = useState('');
   const [conversation, setConversation] = useState([]);
@@ -19,6 +515,24 @@ const SandboxSlide = ({ slide, onComplete, onNext, isActive }) => {
 
   const MAX_PROMPTS_PER_LESSON = 3;
   const MAX_DAILY_PROMPTS = 15;
+
+  // Check if this is a vocabulary exercise lesson
+  const isVocabularyLesson = exercises && exercises.length > 0;
+
+
+
+  // If this is a vocabulary lesson, render the vocabulary exercises component
+  if (isVocabularyLesson) {
+    return (
+      <VocabularyExercises 
+        exercises={exercises}
+        instructions={instructions}
+        title={title}
+        onComplete={onComplete}
+        onNext={onNext}
+      />
+    );
+  }
 
   // Load daily usage on component mount
   useEffect(() => {
@@ -181,7 +695,7 @@ const SandboxSlide = ({ slide, onComplete, onNext, isActive }) => {
           >
             <div className="text-8xl mb-8">🎮</div>
             <h2 className="text-5xl font-bold text-white mb-6">{title}</h2>
-            <p className="text-2xl text-slate-300 leading-relaxed max-w-4xl mx-auto">{instruction}</p>
+            <p className="text-2xl text-slate-300 leading-relaxed max-w-4xl mx-auto">{instructions}</p>
           </motion.div>
 
           {/* Goal Card */}

@@ -11,6 +11,49 @@ html, body, #root {
   overflow-x: hidden;
 }
 
+/* Hide mobile browser UI elements that might cause purple line */
+@supports (padding: max(0px)) {
+  html, body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Ensure no purple elements on mobile */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Additional mobile browser UI fixes */
+@media screen and (max-width: 768px) {
+  /* Prevent purple status bar issues */
+  html {
+    background-color: #0f172a !important;
+  }
+  
+  /* Ensure proper viewport on mobile */
+  body {
+    position: relative;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    background-color: #0f172a;
+  }
+  
+  /* Fix for mobile browser address bar issues */
+  #root {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Remove any purple highlights or borders */
+  input, button, select, textarea {
+    outline: none;
+    border: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

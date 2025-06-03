@@ -231,10 +231,6 @@ const LessonsOverview = () => {
       
       setAdaptiveLessons(allLessons);
       
-      // Update available modules based on all loaded lessons
-      const modules = [...new Set(allLessons.map(lesson => lesson.moduleTitle))];
-      setAvailableModules(modules);
-      
     } catch (error) {
       logger.error('Error loading adaptive lessons:', error);
     } finally {
@@ -786,7 +782,7 @@ const LessonsOverview = () => {
       />
 
       {/* Custom CSS for animations */}
-      <style jsx>{`
+                <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;

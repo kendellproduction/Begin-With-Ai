@@ -1,18 +1,38 @@
 {
-  "name": "frontend",
+  "name": "beginningwithai",
   "version": "1.0.0",
-  "description": "",
+  "description": "Interactive AI learning platform with adaptive lessons and hands-on coding exercises",
   "main": "index.js",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:production": "npm run build && npm run test:coverage",
+    "eject": "react-scripts eject",
+    "analyze": "npm run build && npx serve -s build",
+    "build:analyze": "npm run build && echo 'Build complete! Check build folder size:' && du -sh build/",
+    "lint": "echo 'Linting not configured yet'",
+    "serve": "npx serve -s build -l 3000",
+    "deploy:firebase": "npm run build && firebase deploy",
+    "deploy:hosting-only": "npm run build && firebase deploy --only hosting",
+    "check-env": "node -e \"console.log('Environment check:', process.env.NODE_ENV); console.log('Firebase API Key:', process.env.REACT_APP_FIREBASE_API_KEY ? 'Set' : 'Missing'); console.log('OpenAI API Key:', process.env.REACT_APP_OPENAI_API_KEY ? 'Set' : 'Missing');\""
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "ai",
+    "learning",
+    "education",
+    "react",
+    "firebase",
+    "openai",
+    "interactive",
+    "gamification"
+  ],
+  "author": "BeginningWithAi Team",
+  "license": "MIT",
   "dependencies": {
+    "@sentry/react": "^9.24.0",
+    "@sentry/tracing": "^7.120.3",
     "@tailwindcss/postcss": "^4.1.7",
     "@types/dompurify": "^3.0.5",
     "ajv": "^8.17.1",
@@ -40,5 +60,21 @@
     ">0.2%",
     "not dead",
     "not op_mini all"
-  ]
+  ],
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx}",
+      "!src/index.js",
+      "!src/reportWebVitals.js",
+      "!src/**/*.test.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    }
+  }
 }
