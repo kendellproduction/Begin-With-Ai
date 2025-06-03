@@ -36,15 +36,12 @@ const LoggedInNavbar = () => {
 
   return (
     <nav 
-      className={`sticky top-0 z-50 ${
+      className={`app-header sticky top-0 z-50 ${
         isDarkSpacePage 
           ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
           : ''
       }`}
-      style={{
-        ...(!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}),
-        paddingTop: 'env(safe-area-inset-top)',
-      }}
+      style={!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(numStars)].map((_, i) => {
@@ -102,7 +99,7 @@ const LoggedInNavbar = () => {
         })}
       </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pwa-safe-top-padding">
         <div className="flex justify-between h-16">
           {/* Logo */}
           <div className="flex items-center">

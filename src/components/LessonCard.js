@@ -431,7 +431,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
                 handleClick();
               }}
               className={`
-                w-full py-3 rounded-xl font-semibold text-sm
+                w-full py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm
                 bg-gradient-to-r ${thematicBg.accent}
                 hover:shadow-lg hover:shadow-${thematicBg.accent.split(' ')[1]}/30
                 text-white shadow-md

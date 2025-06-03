@@ -667,30 +667,32 @@ const LessonViewer = () => {
         })}
       </div>
       {/* Progress Bar */}
-      <div className="absolute top-0 left-0 right-0 h-1 bg-gray-800 z-10">
-        <motion.div 
-          className="h-full bg-gradient-to-r from-green-400 to-blue-500"
-          initial={{ width: 0 }}
-          animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5 }}
-        />
+      <div className="lesson-progress-bar-container absolute top-0 left-0 right-0 h-auto bg-gray-800 z-10">
+        <div className="h-1">
+          <motion.div 
+            className="h-full bg-gradient-to-r from-green-400 to-blue-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.5 }}
+          />
+        </div>
       </div>
 
       {/* Exit Button (top-right corner) */}
       <button
         onClick={() => setShowExitModal(true)}
-        className="absolute top-4 right-4 z-20 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+        className="lesson-exit-button absolute right-4 z-20 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
       >
         ✕
       </button>
 
       {/* Slide Counter (top-left corner) */}
-      <div className="absolute top-4 left-4 z-20 bg-black/50 rounded-full px-3 py-1 text-white text-sm">
+      <div className="lesson-slide-counter absolute left-4 z-20 bg-black/50 rounded-full px-3 py-1 text-white text-sm">
         {currentSlideIndex + 1} / {slides.length}
       </div>
 
       {/* Main Slide Content */}
-      <div className="h-full flex flex-col pt-8 pb-20 overflow-y-auto">
+      <div className="h-full flex flex-col pt-12 pb-16 overflow-y-auto">
         <div className="flex-1 flex items-center justify-center p-4">
           <AnimatePresence mode="wait">
             <motion.div
@@ -708,7 +710,7 @@ const LessonViewer = () => {
       </div>
 
       {/* Navigation Dots (bottom) */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-10">
+      <div className="lesson-navigation-dots absolute left-1/2 transform -translate-x-1/2 z-10">
         <div className="flex space-x-2">
           {slides.map((_, index) => (
             <button
