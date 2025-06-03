@@ -24,9 +24,10 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
+  "orientation": "portrait-primary", 
   "theme_color": "#1e293b",
   "background_color": "#0f172a",
+  "display_override": ["window-controls-overlay", "standalone"],
   "lang": "en-US",
   "categories": ["education", "developer", "productivity"],
   "shortcuts": [

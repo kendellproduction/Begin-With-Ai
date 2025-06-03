@@ -11,11 +11,17 @@ html, body, #root {
   overflow-x: hidden;
 }
 
-/* Hide mobile browser UI elements that might cause purple line */
+/* PWA Safe Area Insets - Fix for status bar overlap when saved to home screen */
 @supports (padding: max(0px)) {
   html, body {
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  /* Ensure app header respects safe area */
+  .app-header, .navbar, nav, header {
+    padding-top: calc(env(safe-area-inset-top) + 1rem) !important;
+    margin-top: 0 !important;
   }
 }
 
@@ -24,7 +30,7 @@ html, body, #root {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Additional mobile browser UI fixes */
+/* Mobile PWA and browser UI fixes */
 @media screen and (max-width: 768px) {
   /* Prevent purple status bar issues */
   html {
@@ -43,6 +49,17 @@ html, body, #root {
   #root {
     min-height: 100vh;
     min-height: -webkit-fill-available;
+  }
+  
+  /* PWA Status Bar Safe Area - for when saved to home screen */
+  .min-h-screen {
+    padding-top: env(safe-area-inset-top);
+    min-height: calc(100vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  }
+  
+  /* Fix header positioning for PWA */
+  .app-header, .navbar, nav, header, .bg-slate-900 {
+    padding-top: calc(env(safe-area-inset-top) + 1rem) !important;
   }
   
   /* Remove any purple highlights or borders */

@@ -41,7 +41,10 @@ const LoggedInNavbar = () => {
           ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
           : ''
       }`}
-      style={!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}}
+      style={{
+        ...(!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}),
+        paddingTop: 'env(safe-area-inset-top)',
+      }}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(numStars)].map((_, i) => {
