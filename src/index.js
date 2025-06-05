@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import { unregister as unregisterSW } from './utils/serviceWorkerRegistration';
+// import { unregister as unregisterSW } from './utils/serviceWorkerRegistration'; // REMOVED
 import './firebase'; // Simply import to run initialization code within firebase.js
 
 // Initialize monitoring and analytics
@@ -59,6 +59,28 @@ class ErrorBoundary extends React.Component {
 // Initialize Firebase - THIS IS NO LONGER NEEDED HERE, as firebase.js does it on import
 // initializeFirebase(); 
 
+// FORCE UNREGISTER ALL SERVICE WORKERS AND CLEAR CACHES
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function(registrations) {
+    for(let registration of registrations) {
+      registration.unregister().then(() => {
+        console.log('Force unregistered service worker');
+      });
+    }
+  });
+}
+
+// Clear all caches
+if ('caches' in window) {
+  caches.keys().then(function(names) {
+    for (let name of names) {
+      caches.delete(name).then(() => {
+        console.log('Cleared cache:', name);
+      });
+    }
+  });
+}
+
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
@@ -68,11 +90,12 @@ root.render(
   </React.StrictMode>
 );
 
+// SERVICE WORKER COMPLETELY DISABLED
 // If you want your app to work offline and load faster, you can change
 // unregisterSW() to registerSW() below. Note this comes with some pitfalls.
 // Learn more about service workers: https://cra.link/PWA
 // registerSW(); // Comment out original call
-unregisterSW(); // Call unregister
+// unregisterSW(); // REMOVED - No service worker at all
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))

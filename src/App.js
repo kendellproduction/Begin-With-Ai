@@ -6,7 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Navigation from './components/Navigation';
 import SwipeNavigationWrapper from './components/SwipeNavigationWrapper';
-import PWAInstallPrompt from './components/PWAInstallPrompt';
+
 import OfflineStatus from './components/OfflineStatus';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -141,9 +141,7 @@ function App() {
               <BadgeModal />
               
               {/* Development Tools */}
-              <AdaptiveDatabaseSeeder />
-              
-              <PWAInstallPrompt />
+              {process.env.NODE_ENV === 'development' && <AdaptiveDatabaseSeeder />}
             </Layout>
           </ErrorBoundary>
         </GamificationProvider>
