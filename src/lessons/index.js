@@ -3,6 +3,12 @@
  * Exports all lesson data and utilities
  */
 
+// First Time User Welcome Lesson
+export { 
+  firstTimeUserWelcomeLesson, 
+  firstTimeUserWelcomeLessonSeed 
+} from './firstTimeUserLesson.js';
+
 // Vibe Code Video Game Lesson
 export { 
   vibeCodeVideoGameLesson, 
@@ -10,6 +16,11 @@ export {
 } from './vibeCodeVideoGameLesson.js';
 
 // Re-export seeding services for convenience
+export { 
+  WelcomeLessonSeedService,
+  runWelcomeLessonSeeding 
+} from '../services/welcomeLessonSeedService.js';
+
 export { 
   VibeCodeLessonSeedService,
   runVibeCodeLessonSeeding 

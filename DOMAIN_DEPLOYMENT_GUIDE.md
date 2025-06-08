@@ -166,7 +166,7 @@ npm run build
 ```bash
 # .env.production (create this file)
 REACT_APP_FIREBASE_API_KEY=your_production_api_key
-REACT_APP_FIREBASE_AUTH_DOMAIN=beginai1.firebaseapp.com
+REACT_APP_FIREBASE_AUTH_DOMAIN=www.beginningwithai.com
 REACT_APP_FIREBASE_PROJECT_ID=beginai1
 REACT_APP_FIREBASE_STORAGE_BUCKET=beginai1.appspot.com
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=943264382873

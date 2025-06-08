@@ -48,7 +48,7 @@ npm run build:analyze
 ```bash
 # Required environment variables for hosting platform:
 REACT_APP_FIREBASE_API_KEY=your_new_firebase_key
-REACT_APP_FIREBASE_AUTH_DOMAIN=beginai1.firebaseapp.com  
+REACT_APP_FIREBASE_AUTH_DOMAIN=www.beginningwithai.com  
 REACT_APP_FIREBASE_PROJECT_ID=beginai1
 REACT_APP_FIREBASE_STORAGE_BUCKET=beginai1.firebasestorage.com
 REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_sender_id

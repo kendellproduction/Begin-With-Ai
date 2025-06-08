@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { checkPasswordStrength } from '../utils/validation'; // Import from utils
+import { navigateAfterAuth } from '../utils/navigationUtils';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -19,8 +20,8 @@ const Signup = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('SignupPage: User is logged in, redirecting to /home');
-      navigate('/home', { replace: true });
+      console.log('SignupPage: User is logged in, determining redirect destination...');
+      navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);
 
@@ -69,7 +70,7 @@ const Signup = () => {
     setLoading(true);
     try {
       await signUpWithEmail(formData.email, formData.password);
-      navigate('/home');
+      navigateAfterAuth(navigate, false);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -83,7 +84,7 @@ const Signup = () => {
 
     try {
       await signInWithGoogle();
-      navigate('/home');
+      navigateAfterAuth(navigate, false);
     } catch (error) {
       setError(error.message);
     } finally {

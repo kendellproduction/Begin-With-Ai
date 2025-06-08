@@ -22,14 +22,26 @@ auth.useDeviceLanguage();
 
 // Add better error handling for development
 if (process.env.NODE_ENV === 'development') {
-  console.log('Firebase Config:', {
-    authDomain: firebaseConfig.authDomain,
-    projectId: firebaseConfig.projectId
-  });
+  console.log('🔧 Firebase Debug Info:');
+  console.log('- API Key:', firebaseConfig.apiKey ? '✅ LOADED' : '❌ MISSING');
+  console.log('- Auth Domain:', firebaseConfig.authDomain ? '✅ LOADED' : '❌ MISSING');
+  console.log('- Project ID:', firebaseConfig.projectId ? '✅ LOADED' : '❌ MISSING');
+  console.log('- Storage Bucket:', firebaseConfig.storageBucket ? '✅ LOADED' : '❌ MISSING');
+  console.log('- Messaging Sender ID:', firebaseConfig.messagingSenderId ? '✅ LOADED' : '❌ MISSING');
+  console.log('- App ID:', firebaseConfig.appId ? '✅ LOADED' : '❌ MISSING');
   
   // Helpful development message
   if (!firebaseConfig.authDomain || firebaseConfig.authDomain.includes('your_')) {
     console.warn('⚠️  Firebase not configured! Please check FIREBASE_SETUP_GUIDE.md');
+  }
+  
+  // Check if any required fields are missing
+  const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+  const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+  if (missingFields.length > 0) {
+    console.error('🚨 Missing Firebase configuration fields:', missingFields);
+  } else {
+    console.log('✅ All required Firebase fields are loaded');
   }
 }
 
@@ -39,8 +51,9 @@ googleProvider.setCustomParameters({
     prompt: 'select_account'
 });
 
-// Initialize Analytics
-const analytics = getAnalytics(app);
+// TEMPORARILY DISABLED: Analytics causing API issues
+// const analytics = getAnalytics(app);
+const analytics = null;
 
 // Initialize Firestore Database
 const db = getFirestore(app);

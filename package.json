@@ -31,6 +31,7 @@
   "author": "BeginningWithAi Team",
   "license": "MIT",
   "dependencies": {
+    "@heroicons/react": "^2.2.0",
     "@sentry/react": "^9.24.0",
     "@sentry/tracing": "^7.120.3",
     "@tailwindcss/postcss": "^4.1.7",

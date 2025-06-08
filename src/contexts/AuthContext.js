@@ -15,6 +15,7 @@ import {
 import { auth, db } from '../firebase';
 import { upsertUserProfile, getUserProfile, deleteUserFirestoreData } from '../services/firestoreService';
 import { analytics } from '../utils/monitoring';
+import { NewUserOnboardingService } from '../services/newUserOnboardingService';
 
 const AuthContext = createContext({});
 
@@ -33,6 +34,19 @@ export const AuthProvider = ({ children }) => {
             // Track email verification status
             if (authUser.emailVerified) {
               analytics.emailVerified();
+            }
+
+            // Check if this is a new user and handle onboarding
+            let isNewUser = false;
+            try {
+              isNewUser = await NewUserOnboardingService.isNewUser(authUser.uid);
+              if (isNewUser) {
+                console.log('🎯 New user detected, enrolling in welcome lesson...');
+                await NewUserOnboardingService.enrollNewUser(authUser.uid, authUser);
+              }
+            } catch (onboardingError) {
+              console.warn('Onboarding check/enrollment failed:', onboardingError);
+              // Continue with normal flow even if onboarding fails
             }
 
             // First, ensure the profile is created or updated in Firestore

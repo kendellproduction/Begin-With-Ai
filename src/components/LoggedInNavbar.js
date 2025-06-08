@@ -13,7 +13,8 @@ const LoggedInNavbar = () => {
   const location = useLocation();
   
   // Check if current page should use dark space theme
-  const isDarkSpacePage = location.pathname.startsWith('/lessons');
+  const isDarkSpacePage = location.pathname.startsWith('/lessons') || 
+                          location.pathname.includes('/learning-path/adaptive-quiz');
 
   const handleLogout = async () => {
     try {

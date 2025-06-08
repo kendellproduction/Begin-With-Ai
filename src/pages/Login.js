@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from 'framer-motion';
 import { useAuth } from "../contexts/AuthContext";
 import { sanitizeText, checkRateLimit } from "../utils/sanitization";
+import { navigateAfterAuth } from "../utils/navigationUtils";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -15,8 +16,8 @@ function Login() {
 
   useEffect(() => {
     if (user) {
-      console.log('User is logged in, redirecting to home page...');
-      navigate('/home');
+      console.log('User is logged in, determining redirect destination...');
+      navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);
 
@@ -94,8 +95,8 @@ function Login() {
     try {
       console.log('Attempting to register with email:', email);
       await signUpWithEmail(email, password);
-      console.log('Registration successful, redirecting to home page...');
-      navigate("/home");
+      console.log('Registration successful, determining redirect destination...');
+      navigateAfterAuth(navigate, false);
     } catch (err) {
       console.error('Registration error:', err);
       setError(err.message);
@@ -119,8 +120,8 @@ function Login() {
     try {
       console.log('Attempting to login with email:', email);
       await signInWithEmail(email, password);
-      console.log('Login successful, redirecting to home page...');
-      navigate("/home");
+      console.log('Login successful, determining redirect destination...');
+      navigateAfterAuth(navigate, false);
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message);
@@ -144,8 +145,8 @@ function Login() {
     try {
       console.log('Attempting Google login...');
       await signInWithGoogle();
-      console.log('Google login successful, redirecting to home page...');
-      navigate("/home");
+      console.log('Google login successful, determining redirect destination...');
+      navigateAfterAuth(navigate, false);
     } catch (err) {
       console.error('Google login error:', err);
       setError(err.message);

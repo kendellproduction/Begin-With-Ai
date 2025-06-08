@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const LearningPathVisual = ({ 
@@ -11,13 +11,20 @@ const LearningPathVisual = ({
 }) => {
   const navigate = useNavigate();
   const [hoveredLesson, setHoveredLesson] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (!learningProgress || !userLearningPath) {
     return null;
   }
 
-  // Define lessons array first
-  const lessons = [
+  const baseLessons = userLearningPath.lessons || [
     { id: 1, title: "AI Basics", icon: "🚀", difficulty: "beginner" },
     { id: 2, title: "Understanding AI", icon: "🧠", difficulty: "beginner" },
     { id: 3, title: "Prompt Engineering", icon: "⚡", difficulty: "intermediate" },
@@ -30,9 +37,11 @@ const LearningPathVisual = ({
     { id: 10, title: "Mastery", icon: "👑", difficulty: "expert" },
   ];
 
-  // Use real user data - no fake fallbacks
+  const lessons = isMobile ? baseLessons.slice(0, 5) : baseLessons;
+
+  // Use real user data
   const completedLessons = learningProgress?.completedLessons || 0;
-  const totalLessons = lessons.length; // Use actual lessons array length instead of passed value
+  const totalLessons = lessons.length;
   const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
   // Handle lesson click - use callback or navigate to difficulty selection

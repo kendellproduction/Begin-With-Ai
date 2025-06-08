@@ -9,6 +9,7 @@ import LearningPathVisual from '../components/LearningPathVisual';
 import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
+import { NewUserOnboardingService } from '../services/newUserOnboardingService';
 import { motion } from 'framer-motion';
 import logger from '../utils/logger';
 
@@ -112,6 +113,9 @@ const HomePage = () => {
 
   const initializeDashboard = async () => {
     setIsLoading(true);
+    
+    // Note: Redirect logic for new users is now handled in LandingPage.js
+    // This ensures consistent routing based on authentication state
     
     // Enhanced quiz completion detection - check both localStorage and Firebase
     try {
@@ -472,7 +476,9 @@ const HomePage = () => {
     
     logger.debug('[Paywall Check] isPremiumLessonPart:', isPremiumLessonPart);
     
-    const hasAccess = !isPremiumLessonPart || (currentUser?.subscriptionTier === 'premium');
+    // TEMPORARILY DISABLED: Premium paywall for testing
+    // const hasAccess = !isPremiumLessonPart || (currentUser?.subscriptionTier === 'premium');
+    const hasAccess = true; // Always allow access for testing
     logger.debug('[Paywall Check] hasAccess:', hasAccess);
 
     if (hasAccess) {

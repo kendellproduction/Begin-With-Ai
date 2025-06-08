@@ -6,18 +6,19 @@ import { sanitizeText, checkRateLimit } from '../utils/sanitization';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import lessonsData from '../utils/lessonsData';
+import { navigateAfterAuth } from '../utils/navigationUtils';
 
 const LandingPage = () => {
-  console.log('🚀 IMPROVED LANDING PAGE IS LOADING!!!');
+  // Removed excessive logging to prevent console spam
   
   const navigate = useNavigate();
   const { user, signInWithEmail, signInWithGoogle, signUpWithEmail } = useAuth();
   
-  // Redirect if user is already logged in
+  // Redirect if user is already logged in, but check if they need to complete questionnaire first
   useEffect(() => {
     if (user) {
-      console.log('LandingPage: User is logged in, redirecting to /home');
-      navigate('/home', { replace: true });
+      console.log('LandingPage: User is logged in, determining redirect destination...');
+      navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);
 
@@ -148,7 +149,7 @@ const LandingPage = () => {
         navigate('/pricing');
         setRedirectToPremiumAfterAuth(false);
       } else {
-        navigate('/home');
+        navigateAfterAuth(navigate, false);
       }
       
       setTimeout(() => {
@@ -175,7 +176,7 @@ const LandingPage = () => {
         navigate('/pricing');
         setRedirectToPremiumAfterAuth(false);
       } else {
-        navigate('/home');
+        navigateAfterAuth(navigate, false);
       }
       
       setTimeout(() => {

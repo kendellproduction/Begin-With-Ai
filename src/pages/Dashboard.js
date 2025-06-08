@@ -447,7 +447,7 @@ const Dashboard = () => {
                 </button>
                 
                 <button
-                  onClick={() => navigate('/learning-path/quiz')}
+                  onClick={() => navigate('/learning-path/adaptive-quiz')}
                   className="pulse-shadow group bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 hover:scale-105 text-lg"
                 >
                   <div className="flex items-center justify-center space-x-2">

@@ -1,0 +1,42 @@
+/**
+ * Navigation utilities for handling post-authentication routing
+ */
+
+/**
+ * Determines where to redirect a user after successful authentication
+ * @param {function} navigate - React Router navigate function
+ * @param {boolean} replace - Whether to replace the current history entry
+ */
+export const navigateAfterAuth = (navigate, replace = true) => {
+  // Check if user has completed the adaptive quiz/questionnaire
+  if (hasCompletedQuestionnaire()) {
+    console.log('NavigationUtils: User has completed questionnaire, redirecting to /home');
+    navigate('/home', { replace });
+  } else {
+    console.log('NavigationUtils: User needs to complete questionnaire, redirecting to adaptive quiz');
+    navigate('/learning-path/adaptive-quiz', { replace });
+  }
+};
+
+/**
+ * Checks if a user has completed the initial questionnaire
+ * @returns {boolean} True if the user has completed the questionnaire
+ */
+export const hasCompletedQuestionnaire = () => {
+  const quizCompleted = localStorage.getItem('quizCompleted');
+  const aiAssessmentResults = localStorage.getItem('aiAssessmentResults');
+  const activeLearningPath = localStorage.getItem('activeLearningPath');
+  
+  // Check if quiz is marked as completed
+  if (quizCompleted) {
+    try {
+      const completionState = JSON.parse(quizCompleted);
+      if (completionState.completed) return true;
+    } catch (e) {
+      console.warn('Invalid quizCompleted data in localStorage');
+    }
+  }
+  
+  // Check if we have assessment results or active learning path
+  return !!(aiAssessmentResults || activeLearningPath);
+}; 

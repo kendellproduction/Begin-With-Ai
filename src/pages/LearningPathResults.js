@@ -13,7 +13,7 @@ const LearningPathResults = () => {
     const path = location.state?.personalizedPath || JSON.parse(localStorage.getItem('userLearningPath') || 'null');
     
     if (!path) {
-      navigate('/learning-path/quiz');
+      navigate('/learning-path/adaptive-quiz');
       return;
     }
     
@@ -32,7 +32,7 @@ const LearningPathResults = () => {
   };
 
   const handleRetakePath = () => {
-    navigate('/learning-path/quiz');
+    navigate('/learning-path/adaptive-quiz');
   };
 
   const handleExploreLessons = () => {

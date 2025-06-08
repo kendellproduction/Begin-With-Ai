@@ -15,24 +15,27 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   const [showDifficultyOptions, setShowDifficultyOptions] = useState(false);
   const [showPaywallModal, setShowPaywallModal] = useState(false);
 
-  // Check if lesson requires premium access
-  const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
+  // TEMPORARILY DISABLED: Check if lesson requires premium access
+  // const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
+  const isPremiumLesson = false; // Always false for testing
   
   // Activate paywall: Check user's subscription tier from AuthContext
   // const hasAccess = user?.subscriptionTier === 'premium' || !isPremiumLesson; // Old logic
 
   const handleClick = () => {
+    // TEMPORARILY DISABLED: Premium paywall for testing
     // What difficulty is the user attempting to start?
-    const attemptingPremiumDifficulty = selectedDifficulty === 'Intermediate' || selectedDifficulty === 'Advanced';
+    // const attemptingPremiumDifficulty = selectedDifficulty === 'Intermediate' || selectedDifficulty === 'Advanced';
     // Does the user have a premium subscription?
-    const userIsActuallyPremium = user?.subscriptionTier === 'premium';
+    // const userIsActuallyPremium = user?.subscriptionTier === 'premium';
 
+    // TEMPORARILY DISABLED: Premium access check
     // If the user is trying to access premium-tier difficulty (Inter/Adv) 
     // AND they are NOT actually premium:
-    if (attemptingPremiumDifficulty && !userIsActuallyPremium) {
-      setShowPaywallModal(true); // Show the modal
-      return; // And stop further action
-    }
+    // if (attemptingPremiumDifficulty && !userIsActuallyPremium) {
+    //   setShowPaywallModal(true); // Show the modal
+    //   return; // And stop further action
+    // }
 
     // If we've reached this point, it means either:
     // 1. The user selected 'Beginner' (attemptingPremiumDifficulty is false). Access is allowed.
@@ -297,8 +300,8 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
 
             {/* Badges Container */}
             <div className="flex flex-col items-end space-y-2">
-              {/* Premium Badge */}
-              {isPremiumLesson && (
+              {/* TEMPORARILY DISABLED: Premium Badge */}
+              {false && isPremiumLesson && (
                 <div className="
                   flex items-center space-x-1 px-2.5 py-1 rounded-full
                   bg-gradient-to-r from-yellow-500/30 to-amber-500/30 
@@ -464,8 +467,8 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
         `} />
       </div>
 
-      {/* Paywall Modal */}
-      {showPaywallModal && (
+      {/* TEMPORARILY DISABLED: Paywall Modal */}
+      {false && showPaywallModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 max-w-md w-full border border-white/20 shadow-2xl">
             <div className="text-center">

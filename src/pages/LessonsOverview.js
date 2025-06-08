@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
@@ -46,35 +46,41 @@ const LessonsOverview = () => {
   const [selectedModule, setSelectedModule] = useState('');
   const [searchSuggestions, setSearchSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
   
-  // View state
-  const [activeSection, setActiveSection] = useState('overview'); // 'overview' or 'browse'
-
-  // State for Foundation Lessons carousel
-  const [foundationPage, setFoundationPage] = useState(0);
-  const [foundationItemsPerPage, setFoundationItemsPerPage] = useState(3);
-
+  // Recent searches (stored in localStorage)
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      const saved = localStorage.getItem('recentLessonSearches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+  
   // State for difficulty selection modal
   const [showDifficultyModal, setShowDifficultyModal] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
 
-  useEffect(() => {
-    const calculateItemsPerPage = () => {
-      if (window.innerWidth < 640) { // Tailwind's 'sm' breakpoint
-        setFoundationItemsPerPage(1);
-      } else if (window.innerWidth < 1024) { // Tailwind's 'lg' breakpoint
-        setFoundationItemsPerPage(2);
-      } else {
-        setFoundationItemsPerPage(3);
-      }
-    };
-
-    calculateItemsPerPage(); // Initial calculation
-    window.addEventListener('resize', calculateItemsPerPage);
-    return () => window.removeEventListener('resize', calculateItemsPerPage);
+  // Helper function for targeted fuzzy text matching (only meaningful content)
+  const fuzzyMatch = useCallback((text, query) => {
+    if (!text || !query || typeof text !== 'string' || typeof query !== 'string') return false;
+    const textLower = text.toLowerCase().trim();
+    const queryLower = query.toLowerCase().trim();
+    
+    // Exact substring match for titles, concepts, and tags
+    if (textLower.includes(queryLower)) return true;
+    
+    // Word boundary matches only for multi-word queries
+    if (queryLower.includes(' ')) {
+      const words = queryLower.split(/\s+/).filter(word => word.length > 2); // Ignore short words
+      return words.length > 0 && words.every(word => textLower.includes(word));
+    }
+    
+    // For single words, require minimum length to avoid random matches
+    return queryLower.length >= 3 && textLower.includes(queryLower);
   }, []);
 
-  // Set random quote on component mount
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * motivationalQuotes.length);
     setCurrentQuote(motivationalQuotes[randomIndex]);
@@ -198,9 +204,30 @@ const LessonsOverview = () => {
       const assessmentResults = localStorage.getItem('aiAssessmentResults');
       const skillLevel = assessmentResults ? JSON.parse(assessmentResults).skillLevel : 'intermediate';
 
+      // Add the adaptive welcome lesson as the first lesson
+      const adaptiveWelcomeLesson = {
+        id: 'adaptive-welcome',
+        title: '🚀 Personalized AI Welcome',
+        description: 'Discover your perfect AI learning path with our adaptive welcome experience.',
+        coreConcept: 'Take a quick assessment to get a personalized AI learning journey tailored to your comfort level and goals.',
+        difficulty: 'beginner',
+        duration: '5-8 min',
+        category: 'Onboarding',
+        moduleTitle: 'Welcome & Assessment',
+        pathTitle: 'Adaptive Welcome',
+        pathId: 'adaptive-welcome',
+        moduleId: 'welcome-assessment',
+        isPremium: false,
+        hasCodeSandbox: false,
+        imageUrl: null,
+        order: 0,
+        isAdaptiveWelcome: true,
+        tags: ['welcome', 'assessment', 'personalized', 'onboarding']
+      };
+
       // Load multiple learning paths
       const paths = ['prompt-engineering-mastery', 'vibe-coding'];
-      const allLessons = [];
+      const allLessons = [adaptiveWelcomeLesson]; // Start with welcome lesson
 
       for (const pathId of paths) {
         try {
@@ -229,6 +256,8 @@ const LessonsOverview = () => {
         }
       }
       
+      // Note: Deduplication is handled in the filteredLessons useMemo to ensure
+      // only one result per unique lesson appears in search results
       setAdaptiveLessons(allLessons);
       
     } catch (error) {
@@ -238,66 +267,156 @@ const LessonsOverview = () => {
     }
   };
 
-  // Auto-prediction for search
+  // Auto-prediction for search with enhanced error handling and deduplication
   useEffect(() => {
-    if (searchQuery.length > 1) {
-      const suggestions = new Set();
-      adaptiveLessons.forEach(lesson => {
-        // Add title matches
-        if (lesson.title.toLowerCase().includes(searchQuery.toLowerCase())) {
-          suggestions.add(lesson.title);
-        }
-        // Add tag matches
-        lesson.tags?.forEach(tag => {
-          if (tag.toLowerCase().includes(searchQuery.toLowerCase())) {
-            suggestions.add(tag);
+    if (searchQuery && searchQuery.length >= 1) {
+      setIsSearching(true);
+    }
+    
+    const timeoutId = setTimeout(() => {
+      setIsSearching(false);
+      try {
+        if (searchQuery && searchQuery.length >= 2 && Array.isArray(adaptiveLessons)) {
+        const suggestions = new Set();
+        const searchLower = searchQuery.toLowerCase().trim();
+        
+        // Deduplicate lessons first to avoid suggesting duplicates
+        const uniqueLessons = new Map();
+        adaptiveLessons.forEach(lesson => {
+          if (!lesson || typeof lesson !== 'object') return;
+          
+          const uniqueKey = lesson.id || `${lesson.title}-${lesson.moduleId || 'unknown'}`;
+          if (!uniqueLessons.has(uniqueKey)) {
+            uniqueLessons.set(uniqueKey, lesson);
           }
         });
-        // Add module matches
-        if (lesson.moduleTitle.toLowerCase().includes(searchQuery.toLowerCase())) {
-          suggestions.add(lesson.moduleTitle);
+        
+        // Generate suggestions from unique lessons only
+        uniqueLessons.forEach(lesson => {
+          // Add title matches (highest priority)
+          if (fuzzyMatch(lesson.title, searchQuery)) {
+            suggestions.add(lesson.title);
+          }
+          
+          // Add core concept matches (high priority for themes/use cases)
+          if (fuzzyMatch(lesson.coreConcept, searchQuery)) {
+            suggestions.add(lesson.coreConcept);
+          }
+          
+          // Add module matches (medium priority)
+          if (fuzzyMatch(lesson.moduleTitle, searchQuery)) {
+            suggestions.add(lesson.moduleTitle);
+          }
+          
+          // Add tag matches (relevant topics/themes)
+          if (Array.isArray(lesson.tags)) {
+            lesson.tags.forEach(tag => {
+              if (fuzzyMatch(tag, searchQuery)) {
+                suggestions.add(tag);
+              }
+            });
+          }
+        });
+        
+        setSearchSuggestions(Array.from(suggestions).slice(0, 6));
+        setShowSuggestions(true);
+      } else if (searchQuery === '' && recentSearches.length > 0) {
+        // Show recent searches when input is focused but empty
+        setSearchSuggestions(recentSearches.slice(0, 4));
+        setShowSuggestions(true);
+      } else {
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
         }
-        // Add concept matches
-        if (lesson.coreConcept?.toLowerCase().includes(searchQuery.toLowerCase())) {
-          suggestions.add(lesson.coreConcept);
+      } catch (error) {
+        logger.error('Error generating search suggestions:', error);
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
+      }
+    }, 300); // 300ms debounce
+    
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, adaptiveLessons, fuzzyMatch, recentSearches]);
+
+  // Optimized filter lessons with memoization, enhanced error handling, and deduplication
+  const filteredLessons = useMemo(() => {
+    try {
+      if (!Array.isArray(adaptiveLessons)) {
+        return [];
+      }
+      
+      // First, filter lessons based on search criteria
+      const matchingLessons = adaptiveLessons.filter(lesson => {
+        // Ensure lesson has basic required properties
+        if (!lesson || typeof lesson !== 'object' || !lesson.title || typeof lesson.title !== 'string') {
+          return false;
+        }
+
+        // Only search in meaningful fields: title, core concept, tags, and module title
+        // Exclude description to avoid random word matches
+        const matchesSearch = searchQuery === '' || 
+          fuzzyMatch(lesson.title, searchQuery) ||
+          fuzzyMatch(lesson.coreConcept, searchQuery) ||
+          fuzzyMatch(lesson.moduleTitle, searchQuery) ||
+          (Array.isArray(lesson.tags) && lesson.tags.some(tag => fuzzyMatch(tag, searchQuery)));
+
+        const matchesDifficulty = !selectedDifficulty || lesson.difficulty === selectedDifficulty;
+        const matchesModule = !selectedModule || lesson.moduleTitle === selectedModule;
+
+        return matchesSearch && matchesDifficulty && matchesModule;
+      });
+
+      // Deduplicate lessons - ensure only one result per unique lesson
+      // Use lesson ID as primary key, fallback to title if ID not available
+      const seenLessons = new Map();
+      const uniqueLessons = [];
+
+      matchingLessons.forEach(lesson => {
+        // Create a unique key for this lesson (prefer ID, fallback to title + moduleId)
+        const uniqueKey = lesson.id || `${lesson.title}-${lesson.moduleId || 'unknown'}`;
+        
+        if (!seenLessons.has(uniqueKey)) {
+          seenLessons.set(uniqueKey, true);
+          uniqueLessons.push(lesson);
         }
       });
-      setSearchSuggestions(Array.from(suggestions).slice(0, 6));
-      setShowSuggestions(true);
-    } else {
-      setSearchSuggestions([]);
-      setShowSuggestions(false);
+
+      return uniqueLessons;
+    } catch (error) {
+      logger.error('Error filtering lessons:', error);
+      return [];
     }
-  }, [searchQuery, adaptiveLessons]);
+  }, [adaptiveLessons, searchQuery, selectedDifficulty, selectedModule, fuzzyMatch]);
 
-  // Filter lessons
-  const getFilteredLessons = () => {
-    return adaptiveLessons.filter(lesson => {
-      const matchesSearch = searchQuery === '' || 
-        lesson.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lesson.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lesson.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        lesson.moduleTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        lesson.coreConcept.toLowerCase().includes(searchQuery.toLowerCase());
+  // Get unique modules for filter with memoization
+  const availableModules = useMemo(() => {
+    return [...new Set(adaptiveLessons.map(lesson => lesson.moduleTitle).filter(Boolean))];
+  }, [adaptiveLessons]);
 
-      const matchesDifficulty = !selectedDifficulty || lesson.difficulty === selectedDifficulty;
-      const matchesModule = !selectedModule || lesson.moduleTitle === selectedModule;
-
-      return matchesSearch && matchesDifficulty && matchesModule;
-    });
-  };
-
-  const filteredLessons = getFilteredLessons();
-
-  // Get unique modules for filter
-  const availableModules = [...new Set(adaptiveLessons.map(lesson => lesson.moduleTitle))];
-
-  const handleSuggestionClick = (suggestion) => {
+  const handleSuggestionClick = useCallback((suggestion) => {
     setSearchQuery(suggestion);
     setShowSuggestions(false);
-  };
+    
+    // Save to recent searches (avoid duplicates and limit to 10)
+    setRecentSearches(prev => {
+      const filtered = prev.filter(item => item !== suggestion);
+      const updated = [suggestion, ...filtered].slice(0, 10);
+      try {
+        localStorage.setItem('recentLessonSearches', JSON.stringify(updated));
+      } catch (error) {
+        logger.warn('Failed to save recent search:', error);
+      }
+      return updated;
+    });
+  }, []);
 
-  const handleLessonClick = (lesson, selectedDifficulty = null) => {
+  const handleLessonClick = useCallback((lesson, selectedDifficulty = null) => {
+    // Handle adaptive welcome lesson specially
+    if (lesson.isAdaptiveWelcome) {
+      navigate('/learning-path/adaptive-quiz');
+      return;
+    }
+    
     if (selectedDifficulty) {
       // Direct navigation with specific difficulty
       navigate(`/lessons/${lesson.id}`, { 
@@ -312,9 +431,9 @@ const LessonsOverview = () => {
       setSelectedLesson(lesson);
       setShowDifficultyModal(true);
     }
-  };
+  }, [navigate]);
 
-  const handleDifficultyConfirm = (difficulty) => {
+  const handleDifficultyConfirm = useCallback((difficulty) => {
     if (!selectedLesson) return;
     
     navigate(`/lessons/${selectedLesson.id}`, { 
@@ -327,13 +446,13 @@ const LessonsOverview = () => {
     
     setShowDifficultyModal(false);
     setSelectedLesson(null);
-  };
+  }, [navigate, selectedLesson]);
 
-  const handleCreateLearningPath = () => {
+  const handleCreateLearningPath = useCallback(() => {
     navigate('/learning-path/adaptive-quiz');
-  };
+  }, [navigate]);
 
-  const handleContinueLearning = () => {
+  const handleContinueLearning = useCallback(() => {
     if (userLearningPath && learningProgress) {
       // Find the next lesson to continue
       const nextLessonIndex = learningProgress.nextLessonIndex || 0;
@@ -356,24 +475,24 @@ const LessonsOverview = () => {
       // No learning path, redirect to create one
       navigate('/learning-path/adaptive-quiz');
     }
-  };
+  }, [navigate, userLearningPath, learningProgress, adaptiveLessons]);
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setSearchQuery('');
     setSelectedDifficulty('');
     setSelectedModule('');
     setShowSuggestions(false);
-  };
+  }, []);
 
-  // Quick stats
-  const stats = {
+  // Quick stats with memoization
+  const stats = useMemo(() => ({
     totalLessons: adaptiveLessons.length,
     completedLessons: learningProgress?.completedLessons || 0,
     modules: availableModules.length,
     avgDuration: Math.round(
       adaptiveLessons.reduce((acc, lesson) => acc + (lesson.duration || 15), 0) / (adaptiveLessons.length || 1)
     )
-  };
+  }), [adaptiveLessons.length, learningProgress?.completedLessons, availableModules.length]);
 
   if (isLoading) {
     return (
@@ -454,8 +573,8 @@ const LessonsOverview = () => {
             </p>
           </div>
 
-          {/* Progress Section (if user has active path) */}
-          {userLearningPath && learningProgress && (
+          {/* Progress Section (if user has active path) or CTA */}
+          {userLearningPath && learningProgress ? (
             <div className="mb-8">
               <div className="bg-gradient-to-br from-yellow-500/25 via-amber-400/20 to-orange-500/25 backdrop-blur-xl rounded-2xl p-4 border border-yellow-300/60 relative transition-all duration-500 breathing-shadow">
                 
@@ -493,279 +612,190 @@ const LessonsOverview = () => {
                 </div>
               </div>
             </div>
+          ) : (
+            <div className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-2xl p-8 border border-indigo-500/30 text-center mb-12">
+              <h2 className="text-3xl font-bold text-indigo-400 mb-4">🚀 Ready to Start Your AI Journey?</h2>
+              <p className="text-xl text-indigo-200 mb-6">
+                Take our quick assessment to get a personalized learning path
+              </p>
+              <button
+                onClick={handleCreateLearningPath}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 text-lg"
+              >
+                Start AI Assessment 🎯
+              </button>
+            </div>
           )}
 
-          {/* Navigation Tabs - Simplified */}
-          <div className="flex space-x-4 mb-8">
-            <button
-              onClick={() => {
-                // If user has a learning path, take them to next lesson
-                if (userLearningPath && learningProgress) {
-                  handleContinueLearning();
-                } else {
-                  // Otherwise just show the overview section
-                  setActiveSection('overview');
-                }
-              }}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-                activeSection === 'overview'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-              } ${userLearningPath ? 'hover:bg-gradient-to-r hover:from-cyan-500 hover:to-purple-600' : ''}`}
-            >
-              {userLearningPath ? '🚀 Continue Learning' : '✨ Start Here'}
-            </button>
-            <button
-              onClick={() => setActiveSection('browse')}
-              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
-                activeSection === 'browse'
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/30'
-                  : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              🔍 Browse All ({adaptiveLessons.length})
-            </button>
-          </div>
-
-          {activeSection === 'overview' ? (
-            /* Overview Section */
-            <div className="space-y-8">
-              {/* Start Learning CTA */}
-              {!userLearningPath && (
-                <div className="bg-gradient-to-br from-indigo-600/20 to-purple-600/20 backdrop-blur-xl rounded-2xl p-8 border border-indigo-500/30 text-center">
-                  <h2 className="text-3xl font-bold text-indigo-400 mb-4">🚀 Ready to Start Your AI Journey?</h2>
-                  <p className="text-xl text-indigo-200 mb-6">
-                    Take our quick assessment to get a personalized learning path
-                  </p>
-                  <button
-                    onClick={handleCreateLearningPath}
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 text-lg"
-                  >
-                    Start AI Assessment 🎯
-                  </button>
-                </div>
-              )}
-
-              {/* Featured Lessons - Now with Carousel Controls */}
-              <div className="pb-20">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold text-white">✨ Start Here - Foundation Lessons</h3>
-                  {adaptiveLessons.length > foundationItemsPerPage && (
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => setFoundationPage(p => Math.max(0, p - 1))}
-                        disabled={foundationPage === 0}
-                        className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                        </svg>
-                      </button>
-                      <button 
-                        onClick={() => setFoundationPage(p => Math.min(p + 1, Math.ceil(adaptiveLessons.length / foundationItemsPerPage) - 1))}
-                        disabled={foundationPage >= Math.ceil(adaptiveLessons.length / foundationItemsPerPage) - 1}
-                        className="p-2 rounded-full bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 text-white">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {adaptiveLessons.slice(foundationPage * foundationItemsPerPage, (foundationPage + 1) * foundationItemsPerPage).map((lesson, index) => (
-                    <LessonCard
-                      key={lesson.id}
-                      lesson={{
-                        ...lesson,
-                        id: lesson.id,
-                        title: lesson.title,
-                        description: lesson.coreConcept || lesson.content?.beginner?.introduction || 'Interactive AI lesson',
-                        difficulty: lesson.difficulty || 'Intermediate',
-                        duration: lesson.estimatedTime?.beginner || 15,
-                        company: 'BeginningWithAI',
-                        category: lesson.pathTitle || 'AI Learning',
-                        pathIcon: lesson.pathIcon,
-                        isPremium: lesson.isPremium,
-                        tags: [
-                          ...(lesson.tags || []),
-                          lesson.pathTitle,
-                          lesson.moduleTitle
-                        ].filter(Boolean).slice(0, 4), // Limit to 4 tags
-                        hasCodeSandbox: lesson.sandbox?.required || false
-                      }}
-                      onClick={() => handleLessonClick(lesson)}
-                      showDifficultyModal={true}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Browse All Lessons Section */
-            <div>
-              {/* Search and Filter Bar - All on one line */}
-              <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-6 mb-8 border border-white/10">
-                <div className="flex flex-col lg:flex-row gap-4 items-center">
-                  {/* Search with auto-prediction */}
-                  <div className="flex-1 relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          {/* Explore All Lessons Section */}
+          <div className="mt-12">
+            <h2 className="text-3xl font-bold text-white mb-6 text-center">Explore All Lessons</h2>
+            {/* Search and Filter Bar */}
+            <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-6 mb-8 border border-white/10">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
+                {/* Search with auto-prediction */}
+                <div className="flex-1 relative w-full">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    {isSearching ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
+                    ) : (
                       <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                       </svg>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Search lessons, topics, concepts..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onFocus={() => searchQuery.length > 1 && setShowSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      className="w-full pl-12 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 transition-all duration-300"
-                    />
-                    
-                    {/* Auto-predictions dropdown */}
-                    {showSuggestions && searchSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/20 overflow-hidden z-50 shadow-xl">
-                        {searchSuggestions.map((suggestion, index) => (
-                          <button
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="w-full text-left px-4 py-3 text-white hover:bg-indigo-500/20 transition-colors duration-200 border-b border-white/10 last:border-b-0"
-                          >
-                            <span className="flex items-center space-x-2">
-                              <span className="text-slate-400">🔍</span>
-                              <span>{suggestion}</span>
+                    )}
+                  </div>
+                  {searchQuery && (
+                    <button
+                      onMouseDown={(e) => {
+                        e.preventDefault(); // Prevent input blur
+                        setSearchQuery('');
+                        setShowSuggestions(false);
+                      }}
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-white transition-colors duration-200 z-10"
+                      type="button"
+                      tabIndex={-1}
+                    >
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                  <input
+                    type="text"
+                    placeholder="Search by lesson name, theme, or topic..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => {
+                      if (searchQuery.length >= 2) {
+                        setShowSuggestions(true);
+                      } else if (recentSearches.length > 0) {
+                        setSearchSuggestions(recentSearches.slice(0, 4));
+                        setShowSuggestions(true);
+                      }
+                    }}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        setSearchQuery('');
+                        setShowSuggestions(false);
+                        e.target.blur();
+                      } else if (e.key === 'Enter' && searchSuggestions.length > 0 && showSuggestions) {
+                        // Auto-select first suggestion on Enter
+                        handleSuggestionClick(searchSuggestions[0]);
+                      }
+                    }}
+                    className={`w-full pl-12 ${searchQuery ? 'pr-12' : 'pr-4'} py-3 text-sm sm:text-base bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 transition-all duration-300`}
+                  />
+                  {showSuggestions && searchSuggestions.length > 0 && (
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/20 overflow-hidden z-50 shadow-xl max-h-64 overflow-y-auto">
+                      {searchSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          onMouseDown={(e) => {
+                            e.preventDefault(); // Prevent input blur
+                            handleSuggestionClick(suggestion);
+                          }}
+                          className="w-full text-left px-4 py-3 text-white hover:bg-indigo-500/20 transition-colors duration-200 border-b border-white/10 last:border-b-0 text-sm sm:text-base"
+                        >
+                          <span className="flex items-center space-x-2">
+                            <span className="text-slate-400 text-xs">
+                              {searchQuery === '' ? '🕒' : '🔍'}
                             </span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Filters */}
-                  <div className="flex flex-wrap gap-3">
-                    <select
-                      value={selectedDifficulty}
-                      onChange={(e) => setSelectedDifficulty(e.target.value)}
-                      className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
-                    >
-                      <option value="" className="bg-slate-800">All Levels</option>
-                      <option value="beginner" className="bg-slate-800">Beginner</option>
-                      <option value="intermediate" className="bg-slate-800">Intermediate</option>
-                      <option value="advanced" className="bg-slate-800">Advanced</option>
-                    </select>
-
-                    <select
-                      value={selectedModule}
-                      onChange={(e) => setSelectedModule(e.target.value)}
-                      className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer"
-                    >
-                      <option value="" className="bg-slate-800">All Modules</option>
-                      {availableModules.map(module => (
-                        <option key={module} value={module} className="bg-slate-800">{module}</option>
+                            <span className="truncate">{suggestion}</span>
+                            {searchQuery === '' && (
+                              <span className="text-xs text-slate-500 ml-auto">recent</span>
+                            )}
+                          </span>
+                        </button>
                       ))}
-                    </select>
-
-                    {/* Clear filters button */}
-                    {(searchQuery || selectedDifficulty || selectedModule) && (
-                      <button
-                        onClick={clearFilters}
-                        className="px-4 py-3 bg-red-500/20 border border-red-400/30 text-red-300 rounded-xl hover:bg-red-500/30 transition-all duration-300"
-                      >
-                        Clear
-                      </button>
-                    )}
-                  </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Results count */}
-                <div className="mt-4 text-slate-300">
-                  <span className="text-indigo-300 font-bold">{filteredLessons.length}</span> of{' '}
-                  <span className="text-white">{adaptiveLessons.length}</span> lessons
+                {/* Filters */}
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 sm:gap-3 w-full sm:w-auto">
+                  <select
+                    value={selectedDifficulty}
+                    onChange={(e) => setSelectedDifficulty(e.target.value)}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-3 sm:px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer text-sm sm:text-base min-w-0 sm:min-w-[120px]"
+                  >
+                    <option value="" className="bg-slate-800">All Levels</option>
+                    <option value="beginner" className="bg-slate-800">Beginner</option>
+                    <option value="intermediate" className="bg-slate-800">Intermediate</option>
+                    <option value="advanced" className="bg-slate-800">Advanced</option>
+                  </select>
+
+                  <select
+                    value={selectedModule}
+                    onChange={(e) => setSelectedModule(e.target.value)}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-3 sm:px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer text-sm sm:text-base min-w-0 sm:min-w-[140px]"
+                  >
+                    <option value="" className="bg-slate-800">All Modules</option>
+                    {availableModules.map(module => (
+                      <option key={module} value={module} className="bg-slate-800">{module}</option>
+                    ))}
+                  </select>
+
                   {(searchQuery || selectedDifficulty || selectedModule) && (
-                    <span className="text-slate-400"> matching your filters</span>
+                    <button
+                      onClick={clearFilters}
+                      className="px-3 sm:px-4 py-3 bg-red-500/20 border border-red-400/30 text-red-300 rounded-xl hover:bg-red-500/30 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+                    >
+                      Clear Filters
+                    </button>
                   )}
                 </div>
               </div>
-
-              {/* Lessons Grid */}
-              {filteredLessons.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredLessons.map((lesson, index) => (
-                    <div
-                      key={lesson.id}
-                      style={{
-                        animationDelay: `${index * 50}ms`,
-                        animation: 'fadeInUp 0.6s ease-out forwards'
-                      }}
-                    >
-                      <LessonCard
-                        lesson={{
-                          ...lesson,
-                          id: lesson.id,
-                          title: lesson.title,
-                          description: lesson.coreConcept || lesson.content?.beginner?.introduction || 'Interactive AI lesson',
-                          difficulty: lesson.difficulty || 'Intermediate',
-                          duration: lesson.estimatedTime?.beginner || 15,
-                          company: 'BeginningWithAI',
-                          category: lesson.pathTitle || 'AI Learning',
-                          pathIcon: lesson.pathIcon,
-                          isPremium: lesson.isPremium,
-                          tags: [
-                            ...(lesson.tags || []),
-                            lesson.pathTitle,
-                            lesson.moduleTitle
-                          ].filter(Boolean).slice(0, 4), // Limit to 4 tags
-                          hasCodeSandbox: lesson.sandbox?.required || false
-                        }}
-                        onClick={() => handleLessonClick(lesson)}
-                        showDifficultyModal={true}
-                      />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-20">
-                  <div className="text-8xl mb-8">🔍</div>
-                  <h3 className="text-3xl font-bold text-white mb-4">No lessons found</h3>
-                  <p className="text-slate-400 text-lg mb-8">
-                    Try adjusting your search or filters to find more lessons
-                  </p>
-                  <button
-                    onClick={clearFilters}
-                    className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
-                  >
-                    Show All Lessons
-                  </button>
-                </div>
-              )}
-
-              {/* Collection Stats - Only in browse mode */}
-              <div className="mt-12 pt-8 border-t border-white/10">
-                <h4 className="text-lg font-semibold text-white mb-4 text-center">📊 Collection Overview</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
-                    <div className="text-xl font-bold text-indigo-400">{stats.totalLessons}</div>
-                    <div className="text-xs text-slate-400">Total Lessons</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
-                    <div className="text-xl font-bold text-green-400">{stats.completedLessons}</div>
-                    <div className="text-xs text-slate-400">Completed</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
-                    <div className="text-xl font-bold text-purple-400">{stats.modules}</div>
-                    <div className="text-xs text-slate-400">Modules</div>
-                  </div>
-                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
-                    <div className="text-xl font-bold text-yellow-400">{stats.avgDuration}m</div>
-                    <div className="text-xs text-slate-400">Avg Duration</div>
-                  </div>
-                </div>
-              </div>
             </div>
-          )}
+
+            {/* Search Results Summary */}
+            {(searchQuery || selectedDifficulty || selectedModule) && (
+              <div className="mb-6 text-center">
+                <p className="text-slate-300 text-sm sm:text-base">
+                  {filteredLessons.length > 0 
+                    ? `Found ${filteredLessons.length} lesson${filteredLessons.length === 1 ? '' : 's'}`
+                    : 'No lessons found'
+                  }
+                  {searchQuery && ` matching "${searchQuery}"`}
+                </p>
+              </div>
+            )}
+
+            {/* Lessons Grid */}
+            {filteredLessons.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                {filteredLessons.map((lesson, index) => (
+                  <div
+                    key={lesson.id || index}
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                      animation: 'fadeInUp 0.6s ease-out forwards'
+                    }}
+                  >
+                    <LessonCard
+                      lesson={lesson}
+                      onClick={() => handleLessonClick(lesson)}
+                      showDifficultyModal={true}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20">
+                <div className="text-8xl mb-8">🔍</div>
+                <h3 className="text-3xl font-bold text-white mb-4">No lessons found</h3>
+                <p className="text-slate-400 text-lg mb-8">
+                  Try adjusting your search or filters to find more lessons
+                </p>
+                <button
+                  onClick={clearFilters}
+                  className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105"
+                >
+                  Show All Lessons
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

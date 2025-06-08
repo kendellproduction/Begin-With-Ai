@@ -24,10 +24,12 @@ import HomePage from './pages/HomePage'; // Simplified version
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import LessonsOverview from './pages/LessonsOverview';
-import LessonsExplore from './pages/LessonsExplore';
 import LessonDetail from './pages/LessonDetail';
 import LessonStart from './pages/LessonStart';
 import LessonViewer from './components/LessonViewer';
+import WelcomeLessonViewer from './components/WelcomeLessonViewer';
+import AdaptiveWelcomeLesson from './components/AdaptiveWelcomeLesson';
+import WelcomeRedirect from './components/WelcomeRedirect';
 import LearningPathQuiz from './pages/LearningPathQuiz';
 import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
 import LearningPathResults from './pages/LearningPathResults';
@@ -101,6 +103,16 @@ function App() {
                 {/* New slide-based lesson viewer - full screen, no layout */}
                 <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
                   <Route index element={<LessonViewer />} />
+                </Route>
+
+                {/* Welcome lesson for first-time users - full screen, no layout */}
+                <Route path="/lessons/first-time-welcome" element={<ProtectedRoute />}>
+                  <Route index element={<WelcomeLessonViewer />} />
+                </Route>
+
+                {/* Redirect old welcome route to new adaptive quiz */}
+                <Route path="/welcome" element={<ProtectedRoute />}>
+                  <Route index element={<WelcomeRedirect />} />
                 </Route>
 
                 <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
