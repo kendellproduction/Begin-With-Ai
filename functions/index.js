@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 
 // Configure CORS
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3002', 'https://beginai1.firebaseapp.com', 'https://beginai1.web.app'],
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'https://beginai1.firebaseapp.com', 'https://beginai1.web.app'],
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -245,7 +245,9 @@ class CloudNewsService {
 
 const newsService = new CloudNewsService();
 
-// Scheduled function - runs once per day
+// Scheduled function - runs once per day (commented out for now)
+// Note: Uncomment and redeploy when pubsub schedule functions are properly configured
+/*
 exports.updateAINewsScheduled = functions.pubsub
   .schedule('every day')
   .timeZone('America/New_York')
@@ -261,6 +263,7 @@ exports.updateAINewsScheduled = functions.pubsub
       throw error;
     }
   });
+*/
 
 // Manual trigger function (can be called via HTTP)
 exports.updateAINewsManual = functions.https.onRequest(async (req, res) => {
@@ -319,11 +322,11 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
       }
 
       // Configure nodemailer with Gmail SMTP
-      const transporter = nodemailer.createTransporter({
+      const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
           user: 'kendellproduction@gmail.com',
-          pass: 'usno hlwv vcmj xzf'
+          pass: 'rnug tjwb jtjo aqbh'
         }
       });
 
@@ -332,12 +335,12 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
         from: 'kendellproduction@gmail.com',
         to: 'kendellproduction@gmail.com',
         replyTo: email,
-        subject: `BeginningWithAI Contact: ${subject}`,
+        subject: `Beginning With Ai Contact: ${subject}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: linear-gradient(135deg, #2061a6, #1e40af); color: white; padding: 20px; border-radius: 10px 10px 0 0;">
               <h2 style="margin: 0;">New Contact Form Submission</h2>
-              <p style="margin: 5px 0 0 0; opacity: 0.9;">BeginningWithAI</p>
+              <p style="margin: 5px 0 0 0; opacity: 0.9;">Beginning With Ai</p>
             </div>
             
             <div style="background: #f8f9fa; padding: 20px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
@@ -399,6 +402,235 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
       res.status(500).json({
         success: false,
         message: 'Sorry, there was an error sending your message. Please try again later.'
+      });
+    }
+  });
+});
+
+// Bug reporting function for logged-in users
+exports.sendBugReport = functions.https.onRequest(async (req, res) => {
+  return corsHandler(req, res, async () => {
+    try {
+      // Only allow POST requests
+      if (req.method !== 'POST') {
+        res.status(405).json({ success: false, message: 'Method not allowed' });
+        return;
+      }
+
+      const { 
+        bugTitle, 
+        bugDescription, 
+        bugCategory, 
+        bugPriority,
+        userAgent,
+        currentUrl,
+        userEmail,
+        userId,
+        userName,
+        reproductionSteps,
+        expectedBehavior,
+        actualBehavior
+      } = req.body;
+
+      // Validate required fields (user email and ID are optional for anonymous reports)
+      if (!bugTitle || !bugDescription || !bugCategory) {
+        res.status(400).json({ 
+          success: false, 
+          message: 'Missing required fields: title, description, and category are required' 
+        });
+        return;
+      }
+
+      // Configure nodemailer with Gmail SMTP
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'kendellproduction@gmail.com',
+          pass: 'rnug tjwb jtjo aqbh'
+        }
+      });
+
+      // Bug severity emoji mapping
+      const priorityEmojis = {
+        'critical': '🚨',
+        'high': '⚠️',
+        'medium': '🔶',
+        'low': '🔵'
+      };
+
+      // Category emoji mapping
+      const categoryEmojis = {
+        'lesson-content': '📚',
+        'authentication': '🔐',
+        'payment-billing': '💳',
+        'user-interface': '🖥️',
+        'performance': '⚡',
+        'mobile-app': '📱',
+        'data-sync': '🔄',
+        'other': '🐛'
+      };
+
+      const priorityEmoji = priorityEmojis[bugPriority] || '🐛';
+      const categoryEmoji = categoryEmojis[bugCategory] || '🐛';
+
+      // Email content to send to kendellproduction@gmail.com
+      const mailOptions = {
+        from: 'kendellproduction@gmail.com',
+        to: 'kendellproduction@gmail.com',
+        replyTo: userEmail || 'noreply@beginningwithai.com',
+        subject: `${priorityEmoji} Bug Report: ${bugTitle}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 700px; margin: 0 auto; background: #f8f9fa;">
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #dc2626, #ef4444); color: white; padding: 20px; border-radius: 10px 10px 0 0;">
+              <h1 style="margin: 0; font-size: 24px;">🐛 Bug Report - Beginning With Ai</h1>
+              <p style="margin: 5px 0 0 0; opacity: 0.9;">Priority: ${bugPriority.toUpperCase()} • Category: ${bugCategory.replace('-', ' ').toUpperCase()}</p>
+            </div>
+            
+            <!-- Main Content -->
+            <div style="background: white; padding: 25px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+              
+              <!-- Bug Overview -->
+              <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #dc2626;">
+                <h2 style="color: #dc2626; margin: 0 0 10px 0; font-size: 20px;">
+                  ${categoryEmoji} ${bugTitle}
+                </h2>
+                <p style="color: #666; margin: 0; font-size: 16px; line-height: 1.5;">
+                  ${bugDescription.replace(/\n/g, '<br>')}
+                </p>
+              </div>
+
+              <!-- User Information -->
+              <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="color: #1976d2; margin: 0 0 15px 0; font-size: 16px;">👤 Reporter Information</h3>
+                <div style="color: #333;">
+                  <strong>Name:</strong> ${userName || 'Anonymous User'}<br>
+                  <strong>Email:</strong> ${userEmail ? `<a href="mailto:${userEmail}" style="color: #1976d2;">${userEmail}</a>` : 'Not provided (anonymous report)'}<br>
+                  <strong>User ID:</strong> ${userId || 'Anonymous'}<br>
+                  <strong>Current URL:</strong> ${currentUrl || 'Not provided'}<br>
+                  <strong>User Agent:</strong> ${userAgent || 'Not provided'}
+                </div>
+              </div>
+
+              <!-- Technical Details -->
+              ${reproductionSteps || expectedBehavior || actualBehavior ? `
+              <div style="background: #fff3e0; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <h3 style="color: #f57c00; margin: 0 0 15px 0; font-size: 16px;">🔧 Technical Details</h3>
+                
+                ${reproductionSteps ? `
+                <div style="margin-bottom: 15px;">
+                  <strong style="color: #333;">Steps to Reproduce:</strong>
+                  <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 5px; border-left: 3px solid #f57c00;">
+                    ${reproductionSteps.replace(/\n/g, '<br>')}
+                  </div>
+                </div>
+                ` : ''}
+                
+                ${expectedBehavior ? `
+                <div style="margin-bottom: 15px;">
+                  <strong style="color: #333;">Expected Behavior:</strong>
+                  <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 5px; border-left: 3px solid #4caf50;">
+                    ${expectedBehavior.replace(/\n/g, '<br>')}
+                  </div>
+                </div>
+                ` : ''}
+                
+                ${actualBehavior ? `
+                <div style="margin-bottom: 15px;">
+                  <strong style="color: #333;">Actual Behavior:</strong>
+                  <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 5px; border-left: 3px solid #dc2626;">
+                    ${actualBehavior.replace(/\n/g, '<br>')}
+                  </div>
+                </div>
+                ` : ''}
+              </div>
+              ` : ''}
+
+              <!-- Priority & Category Info -->
+              <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div style="flex: 1; background: #ffebee; padding: 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; margin-bottom: 5px;">${priorityEmoji}</div>
+                  <strong style="color: #c62828;">Priority: ${bugPriority.toUpperCase()}</strong>
+                </div>
+                <div style="flex: 1; background: #e8f5e8; padding: 15px; border-radius: 8px; text-align: center;">
+                  <div style="font-size: 24px; margin-bottom: 5px;">${categoryEmoji}</div>
+                  <strong style="color: #2e7d32;">Category: ${bugCategory.replace('-', ' ').toUpperCase()}</strong>
+                </div>
+              </div>
+              
+              <!-- Action Required -->
+              <div style="background: #f3e5f5; padding: 20px; border-radius: 8px; text-align: center;">
+                <h3 style="color: #7b1fa2; margin: 0 0 10px 0;">⚡ Quick Actions</h3>
+                <p style="margin: 0 0 15px 0; color: #666;">
+                  ${userEmail ? `<strong>Reply directly to this email</strong> to communicate with ${userName || userEmail}` : '<strong>Anonymous report</strong> - no reply email available'}
+                </p>
+                <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+                  ${userEmail ? `
+                  <a href="mailto:${userEmail}?subject=Re: Bug Report - ${bugTitle}" 
+                     style="background: #7b1fa2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                    📧 Reply to User
+                  </a>
+                  ` : ''}
+                  ${userId ? `
+                  <a href="https://console.firebase.google.com/project/beginai1/firestore/data/users/${userId}" 
+                     style="background: #1976d2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;" 
+                     target="_blank">
+                    👤 View User Profile
+                  </a>
+                  ` : ''}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Footer -->
+            <div style="text-align: center; padding: 20px; color: #666; font-size: 14px;">
+              <p style="margin: 0;">Beginning With Ai Bug Tracking System</p>
+              <p style="margin: 5px 0 0 0;">This report was automatically generated on ${new Date().toLocaleString()}</p>
+            </div>
+          </div>
+        `
+      };
+
+      // TEMPORARILY DISABLED: Gmail still rejecting authentication with new password
+      // Gmail error: "Username and Password not accepted"
+      // Need to verify the App Password is correctly generated for "Beginning With Ai"
+      // await transporter.sendMail(mailOptions);
+      console.log('Bug report received and saved to Firestore (email temporarily disabled):', { bugTitle, bugDescription, bugCategory, bugPriority, userEmail });
+      
+      // Log the bug report to Firestore for record keeping and analytics
+      try {
+        await db.collection('bugReports').add({
+          title: bugTitle,
+          description: bugDescription,
+          category: bugCategory,
+          priority: bugPriority,
+          userEmail: userEmail || null,
+          userId: userId || null,
+          userName: userName || null,
+          userAgent: userAgent || null,
+          currentUrl: currentUrl || null,
+          reproductionSteps: reproductionSteps || null,
+          expectedBehavior: expectedBehavior || null,
+          actualBehavior: actualBehavior || null,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+          status: 'reported',
+          emailSent: false
+        });
+      } catch (firestoreError) {
+        console.error('Error logging bug report to Firestore:', firestoreError);
+        // Don't fail the request if Firestore logging fails
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Thank you for the bug report! We\'ve received your report and saved it to our database. We\'ll investigate this issue promptly.'
+      });
+
+    } catch (error) {
+      console.error('Error sending bug report:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Sorry, there was an error submitting your bug report. Please try again later or email us directly.'
       });
     }
   });

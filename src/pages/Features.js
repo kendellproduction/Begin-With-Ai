@@ -136,7 +136,8 @@ const Features = () => {
                     description: "Write, test, and experiment with AI code directly in your browser. No downloads, no setup - just pure learning and creation.",
                     benefit: "Build real AI projects from day one",
                     color: "from-green-500/20 to-emerald-500/20",
-                    border: "border-green-400/30"
+                    border: "border-green-400/30",
+                    comingSoon: true
                   },
                   {
                     icon: "🤖",
@@ -144,13 +145,14 @@ const Features = () => {
                     description: "Get instant, personalized feedback on your code and progress. It's like having a patient AI expert by your side 24/7.",
                     benefit: "Never get stuck - always have guidance",
                     color: "from-purple-500/20 to-indigo-500/20",
-                    border: "border-purple-400/30"
+                    border: "border-purple-400/30",
+                    comingSoon: true
                   },
                   {
-                    icon: "🏗️",
-                    title: "Real-World Projects",
-                    description: "Build actual applications you can showcase to employers. From chatbots to data analyzers - create things that matter.",
-                    benefit: "Portfolio projects that land jobs",
+                    icon: "🎓",
+                    title: "Focused Learning Exercises",
+                    description: "Master AI concepts through targeted lessons and interactive examples. We limit prompts per day to ensure quality learning over quantity.",
+                    benefit: "Deep understanding through focused practice",
                     color: "from-orange-500/20 to-red-500/20",
                     border: "border-orange-400/30"
                   },
@@ -173,13 +175,18 @@ const Features = () => {
                 ].map((feature, index) => (
                   <motion.div
                     key={index}
-                    className={`bg-gradient-to-br ${feature.color} backdrop-blur-xl rounded-2xl p-6 border ${feature.border}`}
+                    className={`bg-gradient-to-br ${feature.color} backdrop-blur-xl rounded-2xl p-6 border ${feature.border} relative`}
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
                     viewport={{ once: true }}
                     whileHover={{ scale: 1.05 }}
                   >
+                    {feature.comingSoon && (
+                      <div className="absolute -top-3 -right-3 bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg transform rotate-12">
+                        Coming Soon
+                      </div>
+                    )}
                     <div className="text-4xl mb-4">{feature.icon}</div>
                     <h3 className="text-xl font-bold text-white mb-3">{feature.title}</h3>
                     <p className="text-gray-200 leading-relaxed mb-4">{feature.description}</p>

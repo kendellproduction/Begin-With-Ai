@@ -3,6 +3,7 @@ import { useAuth } from '../hooks/useAuth';
 import { motion } from 'framer-motion';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { checkPasswordStrength } from '../utils/validation';
+import BugReportModal from '../components/BugReportModal';
 
 const Settings = () => {
   const { user, reauthenticateWithPassword, updateUserPassword, deleteUserAccount } = useAuth();
@@ -29,6 +30,7 @@ const Settings = () => {
   const [deleteConfirmationPassword, setDeleteConfirmationPassword] = useState('');
   const [deleteError, setDeleteError] = useState('');
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
 
   const handleNotificationChange = (type) => {
     setNotifications(prev => ({
@@ -262,6 +264,44 @@ const Settings = () => {
           </div>
         </div>
 
+        {/* Help & Support */}
+        <div className="bg-gray-800 rounded-xl p-6 mb-8">
+          <h2 className="text-xl font-bold text-white mb-6">Help & Support</h2>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-400/30">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">🐛</div>
+                <div>
+                  <h3 className="text-white font-semibold">Report a Bug</h3>
+                  <p className="text-gray-400 text-sm">Found something that's not working? Let us know!</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsBugReportModalOpen(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold"
+              >
+                Report Issue
+              </button>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-400/30">
+              <div className="flex items-center space-x-3">
+                <div className="text-2xl">💬</div>
+                <div>
+                  <h3 className="text-white font-semibold">General Support</h3>
+                  <p className="text-gray-400 text-sm">Need help or have questions? We're here for you!</p>
+                </div>
+              </div>
+              <a 
+                href="/contact"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 font-semibold"
+              >
+                Contact Us
+              </a>
+            </div>
+          </div>
+        </div>
+
         {/* Danger Zone */}
         <div className="bg-gray-800 rounded-xl p-6">
           <h2 className="text-xl font-bold text-red-500 mb-6">Danger Zone</h2>
@@ -432,6 +472,12 @@ const Settings = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Bug Report Modal */}
+      <BugReportModal 
+        isOpen={isBugReportModalOpen} 
+        onClose={() => setIsBugReportModalOpen(false)} 
+      />
     </motion.div>
   );
 };

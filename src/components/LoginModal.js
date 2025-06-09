@@ -59,7 +59,7 @@ const LoginModal = ({ onClose }) => {
         >
           <div className="text-center mb-6">
             <h2 className="text-2xl font-bold text-white mb-2">
-              Welcome to BeginAI! 🚀
+              Welcome to BeginningWithAI! 🚀
             </h2>
             <p className="text-gray-400">
               Join our community and start your AI learning journey today - it's completely free!

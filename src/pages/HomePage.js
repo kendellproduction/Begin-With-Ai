@@ -7,6 +7,7 @@ import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
 import LearningPathMap from '../components/LearningPathMap';
 import LearningPathVisual from '../components/LearningPathVisual';
 import DifficultySelectionModal from '../components/DifficultySelectionModal';
+import FloatingHelpButton from '../components/FloatingHelpButton';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { NewUserOnboardingService } from '../services/newUserOnboardingService';
@@ -1027,6 +1028,9 @@ const HomePage = () => {
           </motion.div>
         </div>
       )}
+
+      {/* Floating Help Button */}
+      <FloatingHelpButton />
     </div>
   );
 };

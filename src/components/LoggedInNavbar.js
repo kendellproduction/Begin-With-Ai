@@ -3,10 +3,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import { motion } from 'framer-motion';
+import BugReportModal from './BugReportModal';
 
 const LoggedInNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
   const { currentUser, logout } = useAuth();
   const { userStats } = useGamification();
   const navigate = useNavigate();
@@ -171,6 +173,19 @@ const LoggedInNavbar = () => {
                     >
                       Settings
                     </Link>
+                    <div className="border-t border-slate-600 my-1"></div>
+                    <button
+                      onClick={() => { 
+                        setIsBugReportModalOpen(true); 
+                        setIsProfileOpen(false); 
+                      }}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                      role="menuitem"
+                    >
+                      <span className="mr-2">🐛</span>
+                      Report Bug
+                    </button>
+                    <div className="border-t border-slate-600 my-1"></div>
                     <button
                       onClick={() => { handleLogout(); setIsProfileOpen(false); }}
                       className="block w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
@@ -241,10 +256,27 @@ const LoggedInNavbar = () => {
           <div className="mt-3 px-2 space-y-1">
             <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors" onClick={() => setIsMenuOpen(false)}>Your Profile</Link>
             <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors" onClick={() => setIsMenuOpen(false)}>Settings</Link>
+            <button 
+              onClick={() => { 
+                setIsBugReportModalOpen(true); 
+                setIsMenuOpen(false); 
+              }} 
+              className="flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            >
+              <span className="mr-2">🐛</span>
+              Report Bug
+            </button>
+            <div className="border-t border-slate-600 mx-3 my-2"></div>
             <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors">Log Out</button>
           </div>
         </div>
       </div>
+
+      {/* Bug Report Modal */}
+      <BugReportModal 
+        isOpen={isBugReportModalOpen} 
+        onClose={() => setIsBugReportModalOpen(false)} 
+      />
     </nav>
   );
 };

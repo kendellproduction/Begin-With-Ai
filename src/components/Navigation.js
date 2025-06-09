@@ -68,7 +68,7 @@ const Navigation = () => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-indigo-400">BeginAI</span>
+                <span className="text-xl font-bold text-indigo-400">BeginningWithAI</span>
               </Link>
             </div>
 
