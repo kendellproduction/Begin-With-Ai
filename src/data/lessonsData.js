@@ -50,36 +50,37 @@ export const localLessonsData = {
   },
   'welcome-ai-revolution': {
     id: 'welcome-ai-revolution',
-    title: 'Welcome to the AI Revolution',
-    coreConcept: 'Understanding the fundamentals of artificial intelligence and its impact on our world',
+    title: 'AI History: How We Got Here & Where We\'re Going',
+    coreConcept: 'Understanding how AI evolved from 1950s research to today\'s tools like ChatGPT, and where we\'re headed next',
     adaptedContent: {
       estimatedTime: 25,
       xpReward: 150,
       content: {
-        introduction: 'Artificial Intelligence is transforming every aspect of our lives. In this lesson, you\'ll learn what AI really is, how it works, and why it matters for your future.',
+        introduction: 'AI didn\'t appear overnight - it\'s been 70+ years in the making! Learn how we went from room-sized computers in the 1950s to ChatGPT in your pocket, and discover where AI is headed next.',
         keyPoints: [
-          'AI is not magic - it\'s mathematics and pattern recognition',
-          'AI systems learn from data to make predictions',
-          'Understanding AI helps you use it more effectively',
-          'AI is a tool that amplifies human capabilities'
+          'AI research started in the 1950s with big dreams and basic tools',
+          'The 2022 ChatGPT release was a turning point that made AI accessible to everyone',
+          'We\'re still in the early stages of the AI transformation',
+          'Understanding AI history helps us prepare for what\'s coming next'
         ],
         examples: [
-          'ChatGPT uses patterns in text to generate human-like responses',
-          'Image recognition AI identifies objects by learning from millions of photos',
-          'Recommendation systems suggest content based on user behavior patterns'
+          'Before ChatGPT: AI worked behind the scenes in search engines and recommendations',
+          'The ChatGPT moment: Suddenly anyone could have conversations with AI',
+          'Today: AI helps with writing, art, video, code, and solving complex problems',
+          'Tomorrow: AI assistants that understand context and help with bigger challenges'
         ]
       },
       assessment: {
         questions: [
           {
-            question: 'What is the most accurate description of how AI works?',
+            question: 'What was the biggest change when ChatGPT was released in 2022?',
             options: [
-              { text: 'AI thinks like humans but faster', correct: false },
-              { text: 'AI follows pre-written rules and instructions', correct: false },
-              { text: 'AI finds patterns in data to make predictions', correct: true },
-              { text: 'AI uses magic to solve problems', correct: false }
+              { text: 'AI was invented for the first time', correct: false },
+              { text: 'AI became available to everyone through conversation', correct: true },
+              { text: 'AI became perfect and stopped making mistakes', correct: false },
+              { text: 'AI was restricted to only computer experts', correct: false }
             ],
-            explanation: 'AI systems analyze vast amounts of data to identify patterns, which they then use to make predictions or decisions on new, unseen data.'
+            explanation: 'ChatGPT democratized AI by making it conversational and accessible to anyone, not just technical experts. This marked a huge shift from AI working behind the scenes to being a tool everyone could directly interact with.'
           }
         ]
       }

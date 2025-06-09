@@ -319,19 +319,21 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
       }
 
       // Configure nodemailer with Gmail SMTP
+      // Note: In production, you should store these credentials in Firebase environment config
+      // For now, we'll use a more basic approach that works with Gmail
       const transporter = nodemailer.createTransporter({
         service: 'gmail',
         auth: {
           user: 'kendellproduction@gmail.com',
-          pass: 'usno hlwv vcmj xzf'
+          pass: process.env.EMAIL_PASSWORD || 'usno hlwv vcmj xzf'
         }
       });
 
       // Email content to send to kendellproduction@gmail.com
       const mailOptions = {
-        from: 'kendellproduction@gmail.com',
-        to: 'kendellproduction@gmail.com',
-        replyTo: email,
+        from: 'kendellproduction@gmail.com', // Your email
+        to: 'kendellproduction@gmail.com',   // Where to send the contact form
+        replyTo: email,                      // User's email for easy reply
         subject: `BeginningWithAI Contact: ${subject}`,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -387,6 +389,7 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
         });
       } catch (firestoreError) {
         console.error('Error logging to Firestore:', firestoreError);
+        // Don't fail the email send if Firestore logging fails
       }
 
       res.status(200).json({
@@ -402,7 +405,7 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
       });
     }
   });
-});
+}); 
 
 // Initialize with some sample data
 exports.initializeNewsData = functions.https.onRequest(async (req, res) => {

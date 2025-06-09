@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "beginai1"
-  }
+    "default": "beginai1",
+    "BeginningWithAi": "beginai1"
+  },
+  "targets": {},
+  "etags": {}
 }

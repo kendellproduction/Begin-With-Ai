@@ -38,6 +38,9 @@ import Quiz from './pages/Quiz';
 import QuizResults from './pages/QuizResults';
 import ForgotPassword from './pages/ForgotPassword';
 import Pricing from './pages/Pricing';
+import About from './pages/About';
+import Features from './pages/Features';
+import Contact from './pages/Contact';
 
 function App() {
   // Simple inline component for testing
@@ -58,6 +61,9 @@ function App() {
               <Routes>
                 {/* Public routes */}
                 <Route path="/" element={<LandingPage />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/contact" element={<Contact />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/signup" element={<Signup />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />

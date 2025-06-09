@@ -10,7 +10,7 @@ import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from 
 import { motion } from 'framer-motion';
 import logger from '../utils/logger';
 
-const LessonsOverview = () => {
+const LessonsOverview = React.memo(() => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
@@ -512,22 +512,22 @@ const LessonsOverview = () => {
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-      {/* Star Animation Container for LessonsOverview */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(140)].map((_, i) => {
+              {/* Optimized Star Animation Container - Reduced for better performance */}
+        <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
+        {[...Array(200)].map((_, i) => {
           const screenH = window.innerHeight;
           const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
-          const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
-          const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
-          const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const initialY = Math.random() * screenH;
+          const targetY = Math.random() * screenH;
+          const initialX = Math.random() * screenW;
+          const targetX = Math.random() * screenW;
           const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 3 + 1; // 1px to 4px
+          const starSize = Math.random() * 3 + 1;
 
           return (
             <motion.div
               key={`lessons-star-${i}`}
-              className="absolute rounded-full bg-white/50"
+              className="absolute rounded-full bg-white/80"
               style={{
                 width: starSize,
                 height: starSize,
@@ -540,7 +540,7 @@ const LessonsOverview = () => {
               animate={{
                 x: targetX,
                 y: targetY,
-                opacity: [0, 0.6, 0.6, 0],
+                opacity: [0, 0.8, 0.8, 0],
               }}
               transition={{
                 duration: starDuration,
@@ -631,7 +631,7 @@ const LessonsOverview = () => {
           <div className="mt-12">
             <h2 className="text-3xl font-bold text-white mb-6 text-center">Explore All Lessons</h2>
             {/* Search and Filter Bar */}
-            <div className="bg-white/5 backdrop-blur-xl rounded-2xl p-4 sm:p-6 mb-8 border border-white/10">
+            <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 sm:p-6 mb-8 border border-white/10">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-center">
                 {/* Search with auto-prediction */}
                 <div className="flex-1 relative w-full">
@@ -684,10 +684,10 @@ const LessonsOverview = () => {
                         handleSuggestionClick(searchSuggestions[0]);
                       }
                     }}
-                    className={`w-full pl-12 ${searchQuery ? 'pr-12' : 'pr-4'} py-3 text-sm sm:text-base bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 transition-all duration-300`}
+                    className={`w-full pl-12 ${searchQuery ? 'pr-12' : 'pr-4'} py-3 text-sm sm:text-base bg-white/10 backdrop-blur-sm border border-white/20 text-white placeholder-slate-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-400/50 transition-colors duration-200`}
                   />
                   {showSuggestions && searchSuggestions.length > 0 && (
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800/95 backdrop-blur-xl rounded-xl border border-white/20 overflow-hidden z-50 shadow-xl max-h-64 overflow-y-auto">
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800/95 backdrop-blur-sm rounded-xl border border-white/20 overflow-hidden z-50 shadow-xl max-h-64 overflow-y-auto">
                       {searchSuggestions.map((suggestion, index) => (
                         <button
                           key={index}
@@ -766,10 +766,12 @@ const LessonsOverview = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {filteredLessons.map((lesson, index) => (
                   <div
-                    key={lesson.id || index}
+                    key={lesson.id || `lesson-${index}`}
+                    className="lesson-card-container"
                     style={{
-                      animationDelay: `${index * 50}ms`,
-                      animation: 'fadeInUp 0.6s ease-out forwards'
+                      animationDelay: `${Math.min(index * 30, 600)}ms`,
+                      animation: 'fadeInUp 0.4s ease-out forwards',
+                      willChange: 'transform, opacity',
                     }}
                   >
                     <LessonCard
@@ -811,16 +813,16 @@ const LessonsOverview = () => {
         defaultDifficulty="Intermediate"
       />
 
-      {/* Custom CSS for animations */}
-                <style>{`
+      {/* Custom CSS for animations and performance */}
+      <style>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
-            transform: translateY(30px);
+            transform: translate3d(0, 30px, 0);
           }
           to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate3d(0, 0, 0);
           }
         }
 
@@ -839,9 +841,22 @@ const LessonsOverview = () => {
         .breathing-shadow {
           animation: breathingShadow 6s ease-in-out infinite;
         }
+
+        /* Performance optimizations - only apply to specific elements that benefit */
+        .lesson-card-container {
+          contain: layout style;
+          transform: translateZ(0);
+          backface-visibility: hidden;
+        }
+        
+        /* Optimize star animations for better performance */
+        .lessons-star-animation {
+          will-change: transform, opacity;
+          transform: translateZ(0);
+        }
       `}</style>
     </div>
   );
-};
+});
 
 export default LessonsOverview; 

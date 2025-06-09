@@ -6,11 +6,11 @@ const Footer = () => {
   return (
     <footer 
       className="py-8 relative overflow-hidden"
-      style={{ backgroundColor: '#2c8ecd' }}
+      style={{ backgroundColor: '#2061a6' }}
     >
       {/* Moving Stars Background */}
       <div className="absolute inset-0 z-0">
-        {[...Array(50)].map((_, i) => (
+        {[...Array(100)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute"
@@ -38,7 +38,7 @@ const Footer = () => {
             }}
           >
             <div 
-              className={`bg-white/30 rounded-full ${
+              className={`bg-white/80 rounded-full ${
                 i % 10 === 0 ? 'w-2 h-2 animate-pulse' : 
                 i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
               }`}

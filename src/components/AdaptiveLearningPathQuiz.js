@@ -1303,21 +1303,21 @@ const AdaptiveLearningPathQuiz = () => {
       <LoggedInNavbar />
 
       {/* Black Space Background with Stars Animation */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        {[...Array(120)].map((_, i) => {
+      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
+        {[...Array(200)].map((_, i) => {
           const screenH = window.innerHeight;
           const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
-          const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
-          const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
-          const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
+          const initialY = Math.random() * screenH;
+          const targetY = Math.random() * screenH;
+          const initialX = Math.random() * screenW;
+          const targetX = Math.random() * screenW;
           const starDuration = 30 + Math.random() * 25;
           const starSize = Math.random() * 3 + 1;
 
           return (
             <motion.div
               key={`quiz-star-${i}`}
-              className="absolute rounded-full bg-white/40"
+              className="absolute rounded-full bg-white/80"
               style={{
                 width: starSize,
                 height: starSize,
@@ -1330,7 +1330,7 @@ const AdaptiveLearningPathQuiz = () => {
               animate={{
                 x: targetX,
                 y: targetY,
-                opacity: [0, 0.5, 0.5, 0],
+                opacity: [0, 0.8, 0.8, 0],
               }}
               transition={{
                 duration: starDuration,

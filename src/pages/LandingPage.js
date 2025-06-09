@@ -1456,7 +1456,7 @@ const LandingPage = () => {
       </section>
 
       {/* Enhanced Final CTA Section */}
-      <section className="py-32 relative overflow-hidden" style={{ backgroundColor: '#2c8ecd' }}>
+      <section className="py-32 relative overflow-hidden" style={{ backgroundColor: '#2061a6' }}>
         {/* Moving Stars Background */}
         <div className="absolute inset-0 z-0">
           {[...Array(150)].map((_, i) => (

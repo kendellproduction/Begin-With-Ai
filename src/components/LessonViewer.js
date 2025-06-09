@@ -204,7 +204,7 @@ const LessonViewer = () => {
   // Create a basic fallback lesson to prevent app crashes
   const createFallbackLesson = (lessonId, difficulty) => {
     const lessonTitles = {
-      'welcome-ai-revolution': 'Welcome to the AI Revolution',
+      'welcome-ai-revolution': 'AI History: How We Got Here & Where We\'re Going',
       'how-ai-thinks': 'How AI "Thinks" — From Data to Decisions',
       'ai-vocabulary-bootcamp': 'AI Vocabulary Bootcamp',
       'prompting-essentials': 'Prompting Essentials',

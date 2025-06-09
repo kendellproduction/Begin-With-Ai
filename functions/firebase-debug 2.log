@@ -1,0 +1,138 @@
+[debug] [2025-06-09T00:24:59.533Z] ----------------------------------------------------------------------
+[debug] [2025-06-09T00:24:59.535Z] Command:       /opt/homebrew/Cellar/node/23.11.0/bin/node /opt/homebrew/bin/firebase deploy --only functions
+[debug] [2025-06-09T00:24:59.535Z] CLI Version:   14.5.1
+[debug] [2025-06-09T00:24:59.535Z] Platform:      darwin
+[debug] [2025-06-09T00:24:59.535Z] Node Version:  v23.11.0
+[debug] [2025-06-09T00:24:59.536Z] Time:          Sun Jun 08 2025 18:24:59 GMT-0600 (Mountain Daylight Time)
+[debug] [2025-06-09T00:24:59.536Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2025-06-09T00:24:59.610Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-06-09T00:24:59.610Z] > authorizing via signed-in user (kendellproduction@gmail.com)
+[debug] [2025-06-09T00:24:59.610Z] [iam] checking project beginai1 for permissions ["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]
+[debug] [2025-06-09T00:24:59.610Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:24:59.610Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:24:59.611Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/beginai1:testIamPermissions [none]
+[debug] [2025-06-09T00:24:59.611Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/beginai1:testIamPermissions x-goog-quota-user=projects/beginai1
+[debug] [2025-06-09T00:24:59.611Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/beginai1:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-06-09T00:24:59.865Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/beginai1:testIamPermissions 200
+[debug] [2025-06-09T00:24:59.865Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/beginai1:testIamPermissions {"permissions":["cloudfunctions.functions.create","cloudfunctions.functions.delete","cloudfunctions.functions.get","cloudfunctions.functions.list","cloudfunctions.functions.update","cloudfunctions.operations.get","firebase.projects.get"]}
+[debug] [2025-06-09T00:24:59.865Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:24:59.865Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:24:59.865Z] >>> [apiv2][query] POST https://iam.googleapis.com/v1/projects/beginai1/serviceAccounts/beginai1@appspot.gserviceaccount.com:testIamPermissions [none]
+[debug] [2025-06-09T00:24:59.865Z] >>> [apiv2][body] POST https://iam.googleapis.com/v1/projects/beginai1/serviceAccounts/beginai1@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[debug] [2025-06-09T00:25:00.085Z] <<< [apiv2][status] POST https://iam.googleapis.com/v1/projects/beginai1/serviceAccounts/beginai1@appspot.gserviceaccount.com:testIamPermissions 200
+[debug] [2025-06-09T00:25:00.085Z] <<< [apiv2][body] POST https://iam.googleapis.com/v1/projects/beginai1/serviceAccounts/beginai1@appspot.gserviceaccount.com:testIamPermissions {"permissions":["iam.serviceAccounts.actAs"]}
+[info] 
+[info] === Deploying to 'beginai1'...
+[info] 
+[info] i  deploying functions 
+[debug] [2025-06-09T00:25:00.088Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.088Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.088Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudresourcemanager.googleapis.com [none]
+[debug] [2025-06-09T00:25:00.088Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudresourcemanager.googleapis.com x-goog-quota-user=projects/beginai1
+[debug] [2025-06-09T00:25:00.338Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudresourcemanager.googleapis.com 200
+[debug] [2025-06-09T00:25:00.339Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudresourcemanager.googleapis.com [omitted]
+[debug] [2025-06-09T00:25:00.339Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.339Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.339Z] >>> [apiv2][query] GET https://cloudresourcemanager.googleapis.com/v1/projects/beginai1 [none]
+[debug] [2025-06-09T00:25:00.400Z] <<< [apiv2][status] GET https://cloudresourcemanager.googleapis.com/v1/projects/beginai1 200
+[debug] [2025-06-09T00:25:00.401Z] <<< [apiv2][body] GET https://cloudresourcemanager.googleapis.com/v1/projects/beginai1 {"projectNumber":"943264382873","projectId":"beginai1","lifecycleState":"ACTIVE","name":"beginningwithai","labels":{"firebase":"enabled","firebase-core":"disabled"},"createTime":"2025-05-15T04:59:32.340809Z"}
+[info] i  functions: preparing codebase default for deployment 
+[info] i  functions: preparing codebase beginningwithainewsfetch for deployment 
+[info] i  functions: ensuring required API cloudfunctions.googleapis.com is enabled... 
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[info] i  functions: ensuring required API cloudbuild.googleapis.com is enabled... 
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[info] i  artifactregistry: ensuring required API artifactregistry.googleapis.com is enabled... 
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.402Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.403Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudfunctions.googleapis.com [none]
+[debug] [2025-06-09T00:25:00.403Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/beginai1
+[debug] [2025-06-09T00:25:00.403Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/runtimeconfig.googleapis.com [none]
+[debug] [2025-06-09T00:25:00.403Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/beginai1
+[debug] [2025-06-09T00:25:00.405Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudbuild.googleapis.com [none]
+[debug] [2025-06-09T00:25:00.405Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudbuild.googleapis.com x-goog-quota-user=projects/beginai1
+[debug] [2025-06-09T00:25:00.407Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/artifactregistry.googleapis.com [none]
+[debug] [2025-06-09T00:25:00.407Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/artifactregistry.googleapis.com x-goog-quota-user=projects/beginai1
+[debug] [2025-06-09T00:25:00.535Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudfunctions.googleapis.com 200
+[debug] [2025-06-09T00:25:00.535Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudfunctions.googleapis.com [omitted]
+[info] ✔  functions: required API cloudfunctions.googleapis.com is enabled 
+[debug] [2025-06-09T00:25:00.630Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudbuild.googleapis.com 200
+[debug] [2025-06-09T00:25:00.630Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/cloudbuild.googleapis.com [omitted]
+[info] ✔  functions: required API cloudbuild.googleapis.com is enabled 
+[debug] [2025-06-09T00:25:00.640Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/runtimeconfig.googleapis.com 200
+[debug] [2025-06-09T00:25:00.640Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2025-06-09T00:25:00.660Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/artifactregistry.googleapis.com 200
+[debug] [2025-06-09T00:25:00.661Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/beginai1/services/artifactregistry.googleapis.com [omitted]
+[info] ✔  artifactregistry: required API artifactregistry.googleapis.com is enabled 
+[debug] [2025-06-09T00:25:00.661Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.661Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.661Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/beginai1/adminSdkConfig [none]
+[debug] [2025-06-09T00:25:00.805Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/beginai1/adminSdkConfig 200
+[debug] [2025-06-09T00:25:00.806Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/beginai1/adminSdkConfig {"projectId":"beginai1","storageBucket":"beginai1.firebasestorage.app"}
+[debug] [2025-06-09T00:25:00.806Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.806Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.806Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs [none]
+[debug] [2025-06-09T00:25:00.960Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs 200
+[debug] [2025-06-09T00:25:00.960Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs {"configs":[{"name":"projects/beginai1/configs/email"},{"name":"projects/beginai1/configs/openai"}]}
+[debug] [2025-06-09T00:25:00.960Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.960Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.960Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.960Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:00.960Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/email/variables [none]
+[debug] [2025-06-09T00:25:00.960Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/openai/variables [none]
+[debug] [2025-06-09T00:25:01.072Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/email/variables 200
+[debug] [2025-06-09T00:25:01.072Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/email/variables {"variables":[{"name":"projects/beginai1/configs/email/variables/password","updateTime":"2025-06-09T00:20:02.008043535Z"}]}
+[debug] [2025-06-09T00:25:01.072Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:01.072Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:01.072Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/email/variables/password [none]
+[debug] [2025-06-09T00:25:01.108Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/openai/variables 200
+[debug] [2025-06-09T00:25:01.108Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/openai/variables {"variables":[{"name":"projects/beginai1/configs/openai/variables/key","updateTime":"2025-06-02T17:33:49.492532714Z"}]}
+[debug] [2025-06-09T00:25:01.108Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:01.108Z] Checked if tokens are valid: true, expires at: 1749431998783
+[debug] [2025-06-09T00:25:01.108Z] >>> [apiv2][query] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/openai/variables/key [none]
+[debug] [2025-06-09T00:25:01.191Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/email/variables/password 200
+[debug] [2025-06-09T00:25:01.191Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/email/variables/password {"name":"projects/beginai1/configs/email/variables/password","updateTime":"2025-06-09T00:20:02.008043535Z","text":"usno hlwv vcmj xzf"}
+[debug] [2025-06-09T00:25:01.221Z] <<< [apiv2][status] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/openai/variables/key 200
+[debug] [2025-06-09T00:25:01.221Z] <<< [apiv2][body] GET https://runtimeconfig.googleapis.com/v1beta1/projects/beginai1/configs/openai/variables/key {"name":"projects/beginai1/configs/openai/variables/key","updateTime":"2025-06-02T17:33:49.492532714Z","text":"your-openai-api-key"}
+[debug] [2025-06-09T00:25:01.222Z] Validating nodejs source
+[warn] ⚠  functions: Runtime Node.js 18 was deprecated on 2025-04-30 and will be decommissioned on 2025-10-30, after which you will not be able to deploy without upgrading. Consider upgrading now to avoid disruption. See https://cloud.google.com/functions/docs/runtime-support for full details on the lifecycle policy 
+[debug] [2025-06-09T00:25:01.596Z] > [functions] package.json contents: {
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
+  "scripts": {
+    "lint": "eslint .",
+    "serve": "firebase emulators:start --only functions",
+    "shell": "firebase functions:shell",
+    "start": "npm run shell",
+    "deploy": "firebase deploy --only functions",
+    "logs": "firebase functions:log"
+  },
+  "engines": {
+    "node": "18"
+  },
+  "main": "index.js",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^6.9.7"
+  },
+  "devDependencies": {
+    "eslint": "^8.9.0",
+    "eslint-config-google": "^0.14.0",
+    "firebase-functions-test": "^0.2.0"
+  },
+  "private": true
+}
+[debug] [2025-06-09T00:25:01.596Z] Building nodejs source
+[info] i  functions: Loading and analyzing source code for codebase default to determine what to deploy 
+[debug] [2025-06-09T00:25:01.596Z] Could not find functions.yaml. Must use http discovery
+[debug] [2025-06-09T00:25:01.600Z] Found firebase-functions binary at '/Users/kendellandrews/Desktop/BeginningWithAi/functions/node_modules/.bin/firebase-functions'
+[info] Serving at port 8000
+

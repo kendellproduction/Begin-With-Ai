@@ -89,7 +89,7 @@ export const adaptiveLessons = {
     // LESSON 1: Welcome to the AI Revolution
     {
       id: 'welcome-ai-revolution',
-      title: 'Welcome to the AI Revolution',
+      title: 'AI History: How We Got Here & Where We\'re Going',
       lessonType: 'concept_explanation_with_interaction',
       order: 1,
       
@@ -97,255 +97,569 @@ export const adaptiveLessons = {
       
       content: {
         beginner: {
-          introduction: "Imagine having a super-smart assistant that can help you write, draw, and even talk! That's what AI can do. Let's explore this exciting world together.",
+          introduction: "AI's journey spans seven decades of brilliant minds, breakthrough moments, and incremental progress that suddenly accelerated. Understanding this timeline gives you the context to navigate today's AI landscape with confidence.",
           
           mainContent: {
-            aiDefinition: "AI is like a really smart computer program that learns from lots of examples, just like how you learn to ride a bike by practicing.",
+            // Pre-GPT Era - The Foundation Decades
+            earlyHistory: {
+              title: "The Foundation Era: 1950s-2020",
+              content: "AI research began in 1950 when Alan Turing proposed his famous test: could a machine convince a human it was human too? This started a 70-year journey of scientific breakthroughs, each building on the last.",
+              keyMoments: [
+                { year: "1950s", event: "The Visionaries", description: "Alan Turing, John McCarthy, and others established the field of AI", relatable: "Like the Wright brothers for artificial intelligence - pioneers with big ideas and basic tools" },
+                { year: "1960s-80s", event: "Expert Systems", description: "AI that could make medical diagnoses and play chess", relatable: "Think early medical software that knew facts but couldn't have conversations" },
+                { year: "1990s-2000s", event: "Machine Learning Emergence", description: "AI learned to filter spam, recommend products, and recognize faces", relatable: "When Amazon started suggesting books and Google Photos could find your vacation pictures" },
+                { year: "2010s", event: "Deep Learning Revolution", description: "Neural networks became powerful enough for Siri, self-driving cars, and image recognition", relatable: "Your phone suddenly understood your voice and could identify objects in photos" }
+              ]
+            },
             
-            aiVsChatbots: "A chatbot is like a talking computer. But AI can do much more - it can draw pictures, make videos, and help with lots of different tasks!",
+            // The GPT Revolution
+            gptRevolution: {
+              title: "The ChatGPT Moment: November 2022",
+              content: "ChatGPT's release marked the moment AI became conversational and accessible to everyone. It wasn't just another tool - it was a paradigm shift that democratized artificial intelligence.",
+              whatChanged: [
+                "Accessibility: AI went from requiring technical expertise to working through natural conversation",
+                "Versatility: Instead of narrow, task-specific tools, one interface could handle writing, analysis, creativity, and problem-solving",
+                "Adoption Speed: ChatGPT reached 100 million users in just 2 months - the fastest technology adoption in history",
+                "Cultural Impact: AI became part of mainstream conversation, from offices to classrooms to dinner tables"
+              ],
+              whyItMatters: "ChatGPT proved that powerful AI could be intuitive and helpful rather than intimidating. It opened the door for millions to experience AI's potential firsthand."
+            },
             
-            categories: [
-              { type: "Text AI", description: "Helps you write stories, emails, and homework (like ChatGPT)", icon: "📝" },
-              { type: "Image AI", description: "Creates pictures from your words (like drawing robots)", icon: "🎨" },
-              { type: "Voice AI", description: "Can talk and sing in different voices", icon: "🎤" },
-              { type: "Video AI", description: "Makes short movies and animations", icon: "🎬" },
-              { type: "AI Helpers", description: "Smart assistants that do tasks for you", icon: "🤖" }
-            ],
+            // Current State
+            currentState: {
+              title: "The AI Ecosystem Today: A Cambrian Explosion",
+              content: "Post-ChatGPT, we've seen unprecedented innovation across every AI domain. The 2022-2024 period represents the most rapid advancement in AI capabilities and adoption in history.",
+              categories: [
+                { 
+                  category: "Language & Content", 
+                  leaders: ["OpenAI (ChatGPT)", "Anthropic (Claude)", "Google (Gemini)"],
+                  capabilities: "Sophisticated writing, analysis, coding, and reasoning",
+                  realWorldImpact: "Transforming knowledge work, education, and creative industries"
+                },
+                { 
+                  category: "Visual Creation", 
+                  leaders: ["Midjourney", "Stable Diffusion", "DALL-E"],
+                  capabilities: "Photorealistic image generation from text descriptions",
+                  realWorldImpact: "Revolutionizing design, marketing, and digital art"
+                },
+                { 
+                  category: "Audio & Voice", 
+                  leaders: ["ElevenLabs", "OpenAI Whisper", "Speechify"],
+                  capabilities: "Natural voice synthesis and speech recognition",
+                  realWorldImpact: "Enabling podcast creation, audiobook production, and accessibility tools"
+                }
+              ]
+            },
             
-            companies: [
-              { name: "OpenAI", tool: "ChatGPT", description: "Great for writing and answering questions" },
-              { name: "Google", tool: "Gemini", description: "Helps with research and learning" },
-              { name: "Anthropic", tool: "Claude", description: "Very helpful and safe AI assistant" }
-            ]
+            // Future Direction
+            futureDirection: {
+              title: "The Next Wave: What's Coming",
+              content: "We're still in the early stages of the AI transformation. Understanding current trends helps us prepare for what's next.",
+              trajectories: [
+                { 
+                  timeframe: "2024-2026: Integration Phase", 
+                  prediction: "AI becomes embedded in all major software platforms and workflows",
+                  keyDevelopments: ["Multimodal AI (text + vision + audio)", "AI agents that complete complex tasks", "Personalized AI tutors"],
+                  realWorldExample: "Your work apps will have AI built-in, not bolted-on"
+                },
+                { 
+                  timeframe: "2026-2030: Autonomous Capabilities", 
+                  prediction: "AI systems handle increasingly complex multi-step tasks independently",
+                  keyDevelopments: ["AI scientists making discoveries", "Human-AI collaboration becoming standard", "AI-generated entertainment"],
+                  realWorldExample: "AI research assistants that can run experiments and analyze results"
+                },
+                { 
+                  timeframe: "2030+: Transformative Impact", 
+                  prediction: "AI capabilities approach or exceed human performance in most cognitive domains",
+                  keyDevelopments: ["Climate change mitigation through AI optimization", "Breakthrough drug discovery", "New forms of human-AI partnership"],
+                  realWorldExample: "AI systems that help solve humanity's biggest challenges"
+                }
+              ]
+            }
           },
           
-          examples: [
-            "Ask ChatGPT to help write a letter to your friend or plan your weekend activities",
-            "Use DALL-E to draw a purple elephant wearing a hat or create art for your room",
-            "Have AI help make a fun story about robots or explain your favorite hobby",
-            "Get help with homework or learn something new you've always wanted to know",
-            "Plan a birthday party or family game night with AI suggestions"
-          ],
-          
-          commonMisunderstandings: [
-            "AI is just ChatGPT → AI includes many different tools!",
-            "AI is like a robot → Most AI is software, not machines",
-            "AI is always right → AI can make mistakes and needs checking"
+          timelineHighlights: [
+            { era: "1950-2020", title: "The Foundation Era", description: "Seven decades of scientific breakthroughs building toward conversational AI" },
+            { era: "Nov 2022", title: "The Inflection Point", description: "ChatGPT democratizes AI and sparks mainstream adoption" },
+            { era: "2023-2024", title: "The Cambrian Explosion", description: "Unprecedented innovation across all AI domains" },
+            { era: "2025+", title: "Your Opportunity", description: "Understanding this history positions you for the AI-powered future" }
           ]
         },
         
-        intermediate: {
-          introduction: "AI is transforming industries worldwide. Understanding its capabilities and applications will help you leverage these tools professionally and personally.",
+                intermediate: {
+          introduction: "The AI revolution didn't happen overnight. It's the result of decades of scientific breakthroughs, failed experiments, and sudden innovations. Understanding this journey helps us navigate today's AI landscape more effectively.",
           
           mainContent: {
-            aiDefinition: "AI systems learn patterns from massive datasets to make predictions or generate content, unlike traditional software that follows pre-programmed rules.",
+            // Pre-GPT Foundations (1950s-2021)
+            preGptEra: {
+              title: "The Foundation Years: Building Toward Breakthrough",
+              phases: [
+                {
+                  period: "1950s-1960s: The Visionaries",
+                  description: "Scientists like Alan Turing imagined machines that could think",
+                  achievements: ["Turing Test concept", "First AI conferences", "Early neural network theories"],
+                  realWorldConnection: "Like early space program - big dreams, basic tools"
+                },
+                {
+                  period: "1970s-1980s: Expert Systems",
+                  description: "AI that could make decisions in specific fields like medicine",
+                  achievements: ["Medical diagnosis systems", "Chess-playing computers", "Rule-based AI"],
+                  realWorldConnection: "Like having a digital doctor that knew medical facts but couldn't have a conversation"
+                },
+                {
+                  period: "1990s-2000s: Machine Learning Emerges",
+                  description: "AI that could learn from data instead of just following rules",
+                  achievements: ["Email spam filtering", "Recommendation algorithms", "Search engine improvements"],
+                  realWorldConnection: "Amazon started suggesting products, Netflix recommended movies"
+                },
+                {
+                  period: "2010s: Deep Learning Revolution",
+                  description: "Neural networks got powerful enough to recognize images and understand speech",
+                  achievements: ["ImageNet breakthrough", "Voice assistants (Siri, Alexa)", "Self-driving car research"],
+                  realWorldConnection: "Your phone could suddenly recognize faces in photos and understand your voice"
+                }
+              ]
+            },
             
-            aiVsChatbots: "Chatbots are conversation interfaces that can be powered by AI (like ChatGPT) or rule-based systems. AI encompasses much broader capabilities beyond conversation.",
+            // The GPT Transformation (2022-Present)
+            gptTransformation: {
+              title: "The ChatGPT Moment: From Tool to Conversation",
+              whatChanged: {
+                beforeGpt: {
+                  description: "AI was mostly invisible - working behind the scenes",
+                  examples: ["Search results", "Product recommendations", "Autocorrect", "Photo tagging"],
+                  limitation: "You couldn't directly interact with AI using natural language"
+                },
+                afterGpt: {
+                  description: "AI became conversational and generally useful",
+                  examples: ["Writing assistance", "Code generation", "Creative brainstorming", "Learning support"],
+                  breakthrough: "Anyone could interact with AI using plain English"
+                }
+              },
+              
+              whyItMatters: "ChatGPT democratized AI - it went from a specialist tool to something your grandmother could use to write better emails or plan a garden."
+            },
             
-            categories: [
-              { type: "Large Language Models (LLMs)", description: "Content generation, analysis, and summarization for business applications", icon: "📝", tools: ["ChatGPT", "Claude", "Gemini"] },
-              { type: "Image Generation", description: "Visual content creation for marketing, design, and prototyping", icon: "🎨", tools: ["Midjourney", "DALL-E", "Stable Diffusion"] },
-              { type: "Voice & Audio AI", description: "Audio production for podcasts, training, and accessibility", icon: "🎤", tools: ["ElevenLabs", "Google TTS", "Play.ht"] },
-              { type: "Video Generation", description: "Content creation for social media, advertising, and education", icon: "🎬", tools: ["RunwayML", "Kling AI", "Pika Labs"] },
-              { type: "AI Agents & Automation", description: "Intelligent task execution and business process optimization", icon: "🤖", tools: ["AutoGPT", "n8n", "Zapier"] }
-            ],
+            // Current AI Ecosystem (2024)
+            currentEcosystem: {
+              title: "Today's AI Landscape: A Thriving Ecosystem",
+              categories: [
+                {
+                  category: "Text & Language",
+                  leaders: ["OpenAI (ChatGPT)", "Anthropic (Claude)", "Google (Gemini)"],
+                  capabilities: "Writing, analysis, coding, conversation",
+                  useCases: "Content creation, research, customer service, education"
+                },
+                {
+                  category: "Image Generation", 
+                  leaders: ["Midjourney", "Stable Diffusion", "DALL-E"],
+                  capabilities: "Photorealistic images, artistic styles, design",
+                  useCases: "Marketing visuals, concept art, personal creativity"
+                },
+                {
+                  category: "Voice & Audio",
+                  leaders: ["ElevenLabs", "PlayHT", "Speechify"],
+                  capabilities: "Natural speech synthesis, voice cloning",
+                  useCases: "Podcasts, audiobooks, accessibility, content localization"
+                },
+                {
+                  category: "Video Creation",
+                  leaders: ["RunwayML", "Pika Labs", "Kling AI"], 
+                  capabilities: "Text-to-video, motion graphics, editing",
+                  useCases: "Social media content, advertising, storytelling"
+                }
+              ]
+            },
             
-            companies: [
-              { name: "OpenAI", tools: "ChatGPT, DALL-E", description: "Leading in general-purpose AI with strong API ecosystem" },
-              { name: "Google", tools: "Gemini, Bard", description: "Integrated with productivity tools and search capabilities" },
-              { name: "Anthropic", tools: "Claude", description: "Focus on safety and helpful AI for enterprise applications" }
-            ]
+            // Future Trajectories
+            futureTrajectories: {
+              title: "Where We're Headed: The Next Waves",
+              nearTerm: {
+                timeframe: "2024-2026",
+                trends: [
+                  "Multimodal AI (text + images + video in one system)",
+                  "AI agents that can complete complex tasks autonomously",
+                  "Personalized AI tutors for education",
+                  "AI integration in all major software platforms"
+                ],
+                impact: "AI becomes as common as search engines are today"
+              },
+              mediumTerm: {
+                timeframe: "2026-2030", 
+                trends: [
+                  "AI scientists making breakthrough discoveries",
+                  "Highly realistic AI companions and avatars",
+                  "AI-generated movies and entertainment",
+                  "AI helping solve climate change and healthcare challenges"
+                ],
+                impact: "AI transforms creative industries and scientific research"
+              },
+              longTerm: {
+                timeframe: "2030+",
+                possibilities: [
+                  "AI that rivals human intelligence across all domains",
+                  "Seamless human-AI collaboration in all professions", 
+                  "AI helping design new technologies and solve global problems",
+                  "New forms of human-AI creative partnership"
+                ],
+                uncertainty: "The timeline is uncertain, but the direction is clear: AI will become increasingly capable and integrated into human life"
+              }
+            }
           },
           
-          examples: [
-            "Marketing teams use Midjourney for social media content creation",
-            "Parents use ChatGPT to plan educational activities and explain complex topics to kids",
-            "Hobbyists use DALL-E to create custom artwork for their projects and interests",
-            "Students use Claude for research help and essay writing assistance",
-            "Video creators use RunwayML for quick explainer video production and personal storytelling"
-          ],
-          
-          commonMisunderstandings: [
-            "ChatGPT is AI → It's one product powered by a large language model",
-            "AI means robots → Most AI today is software, not physical machines",
-            "AI always gets things right → AI often needs to be fact-checked"
+          keyInsights: [
+            "AI progress was gradual for 70 years, then suddenly accelerated",
+            "Each AI breakthrough built on decades of previous research",
+            "The GPT moment made AI accessible to everyone, not just experts",
+            "We're still in the early stages of the AI transformation",
+            "Understanding AI history helps predict future developments"
           ]
         },
         
         advanced: {
-          introduction: "Master the complete AI landscape from foundational concepts to cutting-edge implementations. This comprehensive overview covers everything from basic AI principles to enterprise-grade deployment strategies.",
+          introduction: "The artificial intelligence revolution represents one of the most significant technological transformations in human history. To understand where we're going, we must examine the scientific, economic, and social forces that brought us here.",
           
-          foundationalConcepts: {
-            aiDefinition: "AI encompasses any system that can perform tasks requiring human-like intelligence, from simple pattern recognition to complex reasoning and creativity.",
-            basicCategories: [
-              { type: "Text AI", description: "Language understanding and generation", examples: ["ChatGPT for writing", "Translation services", "Content analysis"] },
-              { type: "Image AI", description: "Visual content creation and analysis", examples: ["DALL-E for art", "Medical imaging", "Quality control"] },
-              { type: "Voice AI", description: "Speech synthesis and recognition", examples: ["Siri for assistance", "Podcast narration", "Accessibility tools"] },
-              { type: "Video AI", description: "Moving image generation and editing", examples: ["Marketing content", "Educational videos", "Entertainment"] }
-            ]
+          mainContent: {
+            // Detailed Pre-GPT Analysis
+            foundationalEras: {
+              title: "The Scientific Foundation: Seven Decades of Progress",
+              
+              symbolicAI: {
+                period: "1950s-1980s: The Symbolic Paradigm",
+                keyFigures: ["Alan Turing", "John McCarthy", "Marvin Minsky"],
+                approach: "Rule-based systems and formal logic",
+                achievements: [
+                  "Expert systems like MYCIN and DENDRAL",
+                  "Logic programming languages (Prolog)",
+                  "Early natural language processing"
+                ],
+                limitations: "Brittle, couldn't handle ambiguity or learn from data",
+                businessImpact: "Limited to specialized domains like medical diagnosis"
+              },
+              
+              connectionist: {
+                period: "1980s-2000s: The Connectionist Revival",
+                breakthrough: "Backpropagation algorithm enables training of neural networks",
+                keyDevelopments: [
+                  "Multi-layer perceptrons",
+                  "Support vector machines", 
+                  "Statistical learning theory"
+                ],
+                commercialApplications: [
+                  "Credit card fraud detection",
+                  "Optical character recognition",
+                  "Early speech recognition systems"
+                ],
+                limitations: "Computational constraints limited network size and complexity"
+              },
+              
+              deepLearningRevolution: {
+                period: "2006-2021: The Deep Learning Breakthrough",
+                catalysts: [
+                  "Geoffrey Hinton's deep belief networks (2006)",
+                  "ImageNet competition success (2012)",
+                  "GPU acceleration for neural networks",
+                  "Big data availability"
+                ],
+                architecturalInnovations: [
+                  "Convolutional Neural Networks (CNNs) for vision",
+                  "Recurrent Neural Networks (RNNs) for sequences", 
+                  "Attention mechanisms and Transformers (2017)",
+                  "Generative Adversarial Networks (GANs) for synthesis"
+                ],
+                industrialTransformation: [
+                  "Computer vision: ImageNet accuracy surpassing humans",
+                  "Natural language: BERT and early language models",
+                  "Autonomous systems: Self-driving car development",
+                  "Game AI: AlphaGo defeating world champions"
+                ]
+              }
+            },
+            
+            // The Transformer Revolution
+            transformerParadigm: {
+              title: "The Transformer Paradigm: Architecture That Changed Everything",
+              
+              technicalBreakthrough: {
+                innovation: "Attention Is All You Need (2017)",
+                significance: "Replaced recurrent architectures with parallel processing",
+                advantages: [
+                  "Scalability to massive datasets and model sizes",
+                  "Transfer learning across domains and tasks",
+                  "Emergent capabilities with scale"
+                ]
+              },
+              
+              evolutionToGPT: {
+                gpt1: "Demonstrated unsupervised learning potential",
+                gpt2: "Showed scaling laws and few-shot capabilities", 
+                gpt3: "Achieved human-level performance on many language tasks",
+                gpt4: "Multimodal capabilities and improved reasoning"
+              },
+              
+              paradigmShift: {
+                before: "Task-specific models requiring extensive training data",
+                after: "General-purpose models adaptable through prompting",
+                implication: "Democratized AI development and deployment"
+              }
+            },
+            
+            // Post-GPT Ecosystem Analysis
+            postGptLandscape: {
+              title: "The Post-GPT Ecosystem: Cambrian Explosion of AI",
+              
+              marketDynamics: {
+                incumbentResponse: [
+                  "Google: Bard/Gemini rapid development",
+                  "Microsoft: $10B OpenAI investment and Copilot integration", 
+                  "Meta: Open-source strategy with Llama models",
+                  "Amazon: Bedrock platform for enterprise AI"
+                ],
+                
+                startupInnovation: [
+                  "Anthropic: Constitutional AI and safety focus",
+                  "Midjourney: Community-driven creative AI",
+                  "Stability AI: Open-source generative models",
+                  "Character.AI: Conversational AI companions"
+                ],
+                
+                investmentFlows: "Venture capital shifted dramatically toward AI startups, with $40B+ invested in 2023"
+              },
+              
+              technologicalDiversification: {
+                modalityExpansion: [
+                  "Text-to-image: DALL-E, Midjourney, Stable Diffusion",
+                  "Text-to-video: RunwayML, Pika Labs, emerging competitors",
+                  "Text-to-audio: ElevenLabs, voice synthesis revolution",
+                  "Code generation: GitHub Copilot, transformation of software development"
+                ],
+                
+                architecturalInnovations: [
+                  "Retrieval-Augmented Generation (RAG)",
+                  "Mixture of Experts (MoE) models",
+                  "Multi-agent systems and AI workflows",
+                  "Tool-using AI and function calling"
+                ]
+              }
+            },
+            
+            // Comprehensive Future Analysis
+            futureTrajectoryAnalysis: {
+              title: "Trajectory Analysis: Mapping the Future of Intelligence",
+              
+              technicalProgressionCurves: {
+                computingPower: {
+                  current: "Training runs approaching $100M+ for frontier models",
+                  trend: "Exponential growth in compute, offset by efficiency improvements",
+                  implications: "Potential for AGI-level capabilities within this decade"
+                },
+                
+                algorithmicEfficiency: {
+                  current: "Transformer architecture dominance with incremental improvements",
+                  emerging: "New architectures (Mamba, mixture models, neuromorphic approaches)",
+                  implications: "Order-of-magnitude efficiency gains possible"
+                },
+                
+                dataScaling: {
+                  current: "Internet-scale text data largely exhausted",
+                  solutions: "Synthetic data generation, multimodal training, reinforcement learning",
+                  implications: "New training paradigms beyond supervised learning"
+                }
+              },
+              
+              societalIntegrationPhases: {
+                phase1: {
+                  timeframe: "2024-2026: Integration and Optimization",
+                  characteristics: [
+                    "AI embedded in all major software platforms",
+                    "Productivity gains across knowledge work",
+                    "Educational system transformation beginning",
+                    "Creative industry workflow revolution"
+                  ]
+                },
+                
+                phase2: {
+                  timeframe: "2026-2030: Autonomous Capability Emergence", 
+                  characteristics: [
+                    "AI agents handling complex multi-step tasks",
+                    "Scientific research acceleration through AI assistance",
+                    "Human-AI collaboration as standard practice",
+                    "Economic productivity gains becoming measurable"
+                  ]
+                },
+                
+                phase3: {
+                  timeframe: "2030+: Post-Human-Level AI",
+                  characteristics: [
+                    "AI systems exceeding human experts in most domains",
+                    "Fundamental questions about consciousness and agency",
+                    "Global governance and coordination challenges",
+                    "Potential for technological singularity scenarios"
+                  ]
+                }
+              },
+              
+              riskAndOpportunityMatrix: {
+                opportunities: [
+                  "Scientific breakthrough acceleration",
+                  "Educational personalization at scale",
+                  "Climate change mitigation through optimization",
+                  "Healthcare revolution through AI diagnosis and drug discovery"
+                ],
+                
+                risks: [
+                  "Labor market displacement faster than adaptation",
+                  "Misinformation and manipulation at unprecedented scale",
+                  "Concentration of AI power in few organizations",
+                  "Alignment challenges as AI systems become more capable"
+                ],
+                
+                mitigationStrategies: [
+                  "International AI governance frameworks",
+                  "Investment in education and workforce transition",
+                  "Open-source AI development to democratize access",
+                  "Safety research prioritization and regulation"
+                ]
+              }
+            }
           },
           
-          technicalArchitectures: {
-            transformers: "Neural networks using attention mechanisms that revolutionized language processing and now power most modern AI",
-            diffusionModels: "Generate high-quality images by learning to reverse noise processes",
-            reinforcementLearning: "AI learns through trial and error with reward signals, crucial for alignment and safety"
-          },
-          
-          enterpriseImplementations: [
-            {
-              category: "Transformer-based Language Models",
-              description: "Advanced text processing with attention mechanisms for complex reasoning",
-              icon: "📝",
-              examples: ["GPT-4", "Claude-3", "Gemini Pro"],
-              businessApplications: ["Document analysis", "Code generation", "Strategic planning"],
-              technicalSpecs: ["Billions of parameters", "Context windows up to 2M tokens", "Multimodal capabilities"]
-            },
-            {
-              category: "Diffusion Models & GANs", 
-              description: "High-fidelity image synthesis with controllable generation parameters",
-              icon: "🎨",
-              examples: ["Stable Diffusion", "Midjourney v6", "DALL-E 3"],
-              businessApplications: ["Marketing assets", "Product design", "Personalization at scale"],
-              technicalSpecs: ["1024x1024+ resolution", "Style control", "API integration"]
-            },
-            {
-              category: "Neural Voice Synthesis",
-              description: "Realistic speech synthesis with emotional modulation and speaker adaptation", 
-              icon: "🎤",
-              examples: ["WaveNet", "ElevenLabs", "Bark"],
-              businessApplications: ["Customer service", "Content localization", "Accessibility"],
-              technicalSpecs: ["Real-time generation", "Voice cloning", "Multi-language support"]
-            },
-            {
-              category: "Temporal Consistency Models",
-              description: "Coherent video generation with motion control and narrative structure",
-              icon: "🎬", 
-              examples: ["RunwayML Gen-2", "Kling AI", "Pika 1.0"],
-              businessApplications: ["Advertising", "Training content", "Social media"],
-              technicalSpecs: ["4K resolution", "Camera control", "Text-to-video"]
-            },
-            {
-              category: "Multi-modal Reasoning Systems",
-              description: "Autonomous task execution with tool integration and decision-making",
-              icon: "🤖",
-              examples: ["AutoGPT", "LangChain", "CrewAI"],
-              businessApplications: ["Process automation", "Research assistance", "Complex workflows"],
-              technicalSpecs: ["Tool integration", "Chain-of-thought", "Error correction"]
-            }
-          ],
-          
-          strategicConsiderations: [
-            {
-              factor: "Cost vs Performance",
-              consideration: "Model selection depends on use case, latency, and cost constraints - larger isn't always better"
-            },
-            {
-              factor: "Human Augmentation", 
-              consideration: "AI augments human capabilities and creates new opportunities rather than simply replacing jobs"
-            },
-            {
-              factor: "Open Source vs Proprietary",
-              consideration: "Many open models rival proprietary ones for specific tasks, offering cost and control benefits"
-            },
-            {
-              factor: "Implementation Strategy",
-              consideration: "Start with specific use cases, measure ROI, then scale systematically across the organization"
-            }
-          ],
-          
-          realWorldCaseStudies: [
-            "Enterprise Claude implementation reducing legal document review time by 80%",
-            "Students using AI tutors to improve grades and understanding in difficult subjects",
-            "Families using AI for meal planning, saving 5+ hours per week on food decisions",
-            "Hobbyists creating custom D&D campaigns and stories with AI collaboration",
-            "Production pipelines using Stable Diffusion with custom fine-tuning for brand consistency",
-            "Retirees learning new skills and languages with personalized AI instruction",
-            "Autonomous agent frameworks like AutoGPT handling multi-step research and analysis workflows"
+          strategicImplications: [
+            "We are in the early stages of the most significant technological transformation since the printing press",
+            "The gap between AI leaders and followers will determine economic and geopolitical power",
+            "Human-AI collaboration skills will become as fundamental as literacy",
+            "The next decade will determine whether AI development remains aligned with human values",
+            "Understanding AI history provides the framework for navigating an uncertain but transformative future"
           ]
         }
       },
       
       sandbox: {
         required: true,
-        type: 'ai_tool_matcher',
+        type: 'ai_history_timeline',
         
         beginner: {
-          instructions: "Help someone pick the right AI tool! Read the scenario and choose which type of AI would help.",
+          instructions: "Let's explore AI history! Put these important moments in the right order from oldest to newest.",
           scenarios: [
             {
-              task: "I want to make a birthday card with a drawing of a unicorn",
-              options: ["Text AI", "Image AI", "Voice AI"],
-              correct: "Image AI",
-              explanation: "Image AI like DALL-E can create pictures from your words!"
+              task: "Order these AI milestones from first to last:",
+              events: ["ChatGPT released", "First computers built", "Smartphones get voice assistants", "AI beats humans at chess"],
+              correct: ["First computers built", "AI beats humans at chess", "Smartphones get voice assistants", "ChatGPT released"],
+              explanation: "AI has been developing for over 70 years, with each breakthrough building on the last!"
             },
             {
-              task: "I need help writing my homework about dinosaurs",
-              options: ["Image AI", "Text AI", "Video AI"],
-              correct: "Text AI",
-              explanation: "Text AI like ChatGPT can help you write and research!"
+              task: "Match the AI era with what people could do:",
+              pairs: [
+                { era: "1990s", capability: "Email spam filtering" },
+                { era: "2010s", capability: "Ask Siri questions" },
+                { era: "2022+", capability: "Chat with AI like a friend" }
+              ],
+              explanation: "Each era brought AI closer to how we use it today!"
             }
           ],
-          hints: ["Think about what the person wants to create", "Pictures need Image AI, words need Text AI"]
+          hints: ["Think about when smartphones became popular", "ChatGPT is very recent - just 2022!"]
         },
         
         intermediate: {
-          instructions: "Match business scenarios with appropriate AI solutions. Consider efficiency, quality, and practical implementation.",
+          instructions: "Test your understanding of AI's historical progression and its impact on different industries.",
           scenarios: [
             {
-              task: "Create consistent social media visuals for a coffee shop brand",
-              options: ["ChatGPT for descriptions", "Midjourney with style prompts", "ElevenLabs for audio"],
-              correct: "Midjourney with style prompts",
-              explanation: "Visual content requires image generation with consistent style parameters."
+              task: "Why was ChatGPT's release in 2022 such a turning point?",
+              options: ["It was the first AI ever created", "It made AI conversational for everyone", "It only helped programmers"],
+              correct: "It made AI conversational for everyone",
+              explanation: "ChatGPT democratized AI by making it accessible through natural conversation, not just technical interfaces."
             },
             {
-              task: "Automate customer support for a SaaS company with 24/7 multilingual responses",
-              options: ["Claude API integration", "Midjourney subscription", "ElevenLabs voice cloning"],
-              correct: "Claude API integration",
-              explanation: "Claude can handle complex customer queries with consistent, accurate responses across languages."
+              task: "What major change happened in the 2010s that enabled modern AI?",
+              options: ["The internet was invented", "Deep learning and neural networks improved", "Smartphones were created"],
+              correct: "Deep learning and neural networks improved",
+              explanation: "The deep learning revolution of the 2010s gave us the foundation for today's powerful AI systems."
             }
           ],
-          hints: ["Consider scalability and cost", "Think about integration complexity"]
+          hints: ["Think about accessibility and ease of use", "Consider what technologies enabled current AI capabilities"]
         },
         
         advanced: {
-          instructions: "Design AI implementation strategies for complex enterprise scenarios. Consider technical constraints, ROI, and risk factors.",
+          instructions: "Analyze the strategic implications of AI's historical development and future trajectory.",
           scenarios: [
             {
-              task: "Build an automated content pipeline: script → voiceover → video → social media posts",
-              options: ["Single GPT-4 integration", "Multi-model pipeline (GPT-4 + ElevenLabs + RunwayML)", "Custom trained models"],
-              correct: "Multi-model pipeline (GPT-4 + ElevenLabs + RunwayML)",
-              explanation: "Complex workflows require specialized models for each step, connected through automation tools."
+              task: "What key factor enabled the transformer architecture to revolutionize AI?",
+              options: ["Better marketing by tech companies", "Parallel processing and attention mechanisms", "More venture capital funding"],
+              correct: "Parallel processing and attention mechanisms",
+              explanation: "The transformer's attention mechanism enabled parallel processing and scalability that made modern large language models possible."
+            },
+            {
+              task: "Which risk factor is most concerning for the next phase of AI development?",
+              options: ["Running out of internet data to train on", "AI becoming too expensive", "All AI companies going bankrupt"],
+              correct: "Running out of internet data to train on",
+              explanation: "Data scarcity is driving innovation in synthetic data and new training paradigms like reinforcement learning."
             }
           ],
-          hints: ["Consider the entire pipeline", "Think about specialization vs. general purpose"]
+          hints: ["Consider technical architecture innovations", "Think about fundamental constraints on AI scaling"]
         }
       },
       
       assessment: {
         beginner: [
           {
-            question: "What makes AI different from regular computer programs?",
-            options: ["AI learns from examples", "AI is always right", "AI only works on phones"],
-            correct: "AI learns from examples",
-            explanation: "AI learns patterns from data, unlike regular programs that follow fixed rules."
+            question: "What was the biggest change that happened when ChatGPT was released in 2022?",
+            options: ["AI became available to everyone", "AI was invented for the first time", "AI became perfect and never made mistakes"],
+            correct: "AI became available to everyone",
+            explanation: "ChatGPT made it possible for anyone to talk with AI using normal language, not just computer experts."
+          },
+          {
+            question: "How long has AI been in development before ChatGPT came out?",
+            options: ["About 5 years", "About 20 years", "About 70 years"],
+            correct: "About 70 years",
+            explanation: "AI research started in the 1950s, so it took about 70 years of work to get to ChatGPT!"
+          },
+          {
+            question: "What can we expect AI to help with in the future?",
+            options: ["Only computer programming", "Big problems like climate change", "Nothing new"],
+            correct: "Big problems like climate change",
+            explanation: "AI is getting better at helping solve complex challenges that affect everyone."
           }
         ],
         
         intermediate: [
           {
-            question: "A marketing team wants to create consistent brand visuals at scale. Which approach would be most effective?",
-            options: ["Hire more designers", "Use Midjourney with custom style prompts", "Use ChatGPT for image descriptions"],
-            correct: "Use Midjourney with custom style prompts",
-            explanation: "AI image generation can maintain consistent style while scaling production."
+            question: "What was the key limitation of AI systems before the deep learning revolution of the 2010s?",
+            options: ["They were too expensive", "They couldn't learn from data effectively", "They were only available to universities"],
+            correct: "They couldn't learn from data effectively",
+            explanation: "Early AI relied on hand-coded rules. Deep learning enabled systems to learn patterns from massive datasets."
+          },
+          {
+            question: "Why did ChatGPT represent such a paradigm shift in AI accessibility?",
+            options: ["It was the first free AI tool", "It eliminated the need for technical knowledge to use AI", "It could run on smartphones"],
+            correct: "It eliminated the need for technical knowledge to use AI", 
+            explanation: "ChatGPT democratized AI by enabling natural language interaction, making it accessible to non-technical users."
+          },
+          {
+            question: "What is the most likely trajectory for AI development in the next 5-10 years?",
+            options: ["AI will plateau at current capabilities", "AI will become increasingly integrated into daily workflows", "AI development will slow down significantly"],
+            correct: "AI will become increasingly integrated into daily workflows",
+            explanation: "We're seeing rapid integration of AI into existing tools and the emergence of new AI-powered workflows across industries."
           }
         ],
         
         advanced: [
           {
-            question: "When implementing enterprise AI solutions, what's the primary consideration for choosing between local and cloud-based models?",
-            options: ["Cost only", "Data privacy, latency, and compliance requirements", "Model accuracy only"],
-            correct: "Data privacy, latency, and compliance requirements",
-            explanation: "Enterprise deployments must balance multiple factors including security, performance, and regulatory compliance."
+            question: "What architectural innovation made the transformer paradigm revolutionary for AI development?",
+            options: ["Faster processors", "Attention mechanisms enabling parallel processing", "Better funding for research"],
+            correct: "Attention mechanisms enabling parallel processing",
+            explanation: "The attention mechanism in transformers enabled parallel processing and scalability that made large language models feasible."
+          },
+          {
+            question: "Which factor poses the greatest constraint on continued scaling of current AI architectures?",
+            options: ["Computational cost", "Internet-scale text data exhaustion", "Lack of research talent"],
+            correct: "Internet-scale text data exhaustion",
+            explanation: "High-quality text data is becoming scarce, driving research into synthetic data generation and new training paradigms."
+          },
+          {
+            question: "What distinguishes the post-GPT AI landscape from previous eras?",
+            options: ["Better marketing by AI companies", "Cambrian explosion of specialized AI applications", "Government regulation"],
+            correct: "Cambrian explosion of specialized AI applications",
+            explanation: "Post-GPT, we've seen rapid diversification into multimodal applications across text, image, video, and audio domains."
           }
         ]
       },
@@ -1403,8 +1717,8 @@ export const adaptiveLessons = {
           introduction: "Creative AI tools are revolutionizing content creation. Master these tools to enhance your projects with professional-quality visuals and audio.",
           
           toolCategories: [
-            {
-              category: "Image Generation",
+                {
+                  category: "Image Generation", 
               tools: ["Midjourney", "DALL-E 3", "Stable Diffusion"],
               applications: ["Marketing materials", "Social media content", "Custom artwork for home", "Gifts and personal projects", "Concept art", "Product mockups"],
               promptStructure: "Subject + Setting + Style + Technical specs"
