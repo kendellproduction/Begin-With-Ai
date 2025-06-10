@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import LoggedInNavbar from '../components/LoggedInNavbar';
 import { motion } from 'framer-motion';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { checkPasswordStrength } from '../utils/validation';
 import BugReportModal from '../components/BugReportModal';
 
 const Settings = () => {
-  const { user, reauthenticateWithPassword, updateUserPassword, deleteUserAccount } = useAuth();
+  const { user: currentUser, reauthenticateWithPassword, updateUserPassword, deleteUserAccount } = useAuth();
   const [notifications, setNotifications] = useState({
     email: true,
     push: true,
@@ -116,7 +118,7 @@ const Settings = () => {
         setDeleteError('Account deletion service is currently unavailable.');
         return;
     }
-    if (!user || !user.email) { // Check if user and user.email are available
+    if (!currentUser || !currentUser.email) { // Check if user and user.email are available
         setDeleteError('User information is not available. Cannot proceed with deletion.');
         return;
     }
@@ -146,13 +148,31 @@ const Settings = () => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen bg-gray-900"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#0F172A]">
+      <LoggedInNavbar />
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-6">
+          <Link
+            to="/home"
+            className="inline-flex items-center text-gray-300 hover:text-white"
+          >
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M10 19l-7-7m0 0l7-7m-7 7h18"
+              />
+            </svg>
+            Back to Home
+          </Link>
+        </div>
+
         <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
 
         {/* Account Settings */}
@@ -163,7 +183,7 @@ const Settings = () => {
               <label className="block text-gray-400 mb-2">Email</label>
               <input
                 type="email"
-                value={user?.email}
+                value={currentUser?.email}
                 disabled
                 className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg"
               />
@@ -273,14 +293,14 @@ const Settings = () => {
                 <div className="text-2xl">🐛</div>
                 <div>
                   <h3 className="text-white font-semibold">Report a Bug</h3>
-                  <p className="text-gray-400 text-sm">Found something that's not working? Let us know!</p>
+                  <p className="text-gray-400 text-sm">Found an issue? Help us improve by reporting it!</p>
                 </div>
               </div>
               <button 
                 onClick={() => setIsBugReportModalOpen(true)}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 font-semibold"
               >
-                Report Issue
+                Report Bug
               </button>
             </div>
             
@@ -314,7 +334,7 @@ const Settings = () => {
             </button>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Change Password Modal */}
       {isChangePasswordModalOpen && (
@@ -478,7 +498,7 @@ const Settings = () => {
         isOpen={isBugReportModalOpen} 
         onClose={() => setIsBugReportModalOpen(false)} 
       />
-    </motion.div>
+    </div>
   );
 };
 

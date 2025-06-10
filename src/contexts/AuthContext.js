@@ -122,6 +122,13 @@ export const AuthProvider = ({ children }) => {
   const signInWithGoogle = async () => {
     console.log('Attempting Google sign in...');
     const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({
+      prompt: 'select_account',
+      // Force account selection by clearing any hints
+      login_hint: '',
+      hd: '' // Clear any domain hints
+    });
+    
     try {
       const result = await signInWithPopup(auth, provider);
       // Track successful Google sign-in
@@ -176,6 +183,49 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Error signing out:', error);
       analytics.apiError('logout_error', error.message);
+      throw error;
+    }
+  };
+
+  const switchAccount = async () => {
+    console.log('Attempting account switch...');
+    try {
+      // First, sign out completely
+      await firebaseSignOut(auth);
+      
+      // Clear any cached authentication data
+      localStorage.clear();
+      sessionStorage.clear();
+      
+      // Clear any Google-specific session data by revoking access
+      if (window.gapi && window.gapi.auth2) {
+        const authInstance = window.gapi.auth2.getAuthInstance();
+        if (authInstance) {
+          await authInstance.signOut();
+          await authInstance.disconnect();
+        }
+      }
+      
+      // Wait a moment for the logout to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Create a new Google provider with explicit account selection
+      const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({
+        prompt: 'select_account',
+        // Force account selection by clearing any hints
+        login_hint: '',
+        hd: '' // Clear any domain hints
+      });
+      
+      // Sign in with the fresh provider
+      const result = await signInWithPopup(auth, provider);
+      analytics.userLogin('google_switch');
+      console.log('Account switch successful');
+      return result.user;
+    } catch (error) {
+      console.error('Error switching accounts:', error);
+      analytics.apiError('account_switch_error', error.message);
       throw error;
     }
   };
@@ -265,6 +315,7 @@ export const AuthProvider = ({ children }) => {
     signInWithEmail,
     signUpWithEmail,
     logout,
+    switchAccount,
     reauthenticateWithPassword,
     updatePassword,
     sendPasswordResetEmail,

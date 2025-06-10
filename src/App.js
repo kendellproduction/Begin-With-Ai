@@ -41,6 +41,8 @@ import Pricing from './pages/Pricing';
 import About from './pages/About';
 import Features from './pages/Features';
 import Contact from './pages/Contact';
+import Settings from './pages/Settings';
+import AdminPanel from './pages/AdminPanel';
 
 function App() {
   // Simple inline component for testing
@@ -85,7 +87,7 @@ function App() {
 
                 <Route path="/settings" element={<ProtectedRoute />}>
                   {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile (or a new SettingsPage) or a new layout */}
-                  <Route index element={<Profile />} /> {/* Assuming settings uses Profile page for now */}
+                  <Route index element={<Settings />} />
                 </Route>
 
                 <Route path="/lessons" element={<ProtectedRoute />}>
@@ -149,6 +151,11 @@ function App() {
                 <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
                   {/* <Navigation /> would need to be inside QuizResults or a new layout */}
                   <Route index element={<QuizResults />} />
+                </Route>
+
+                {/* Admin Panel - Only accessible by admin/dev users */}
+                <Route path="/admin" element={<ProtectedRoute />}>
+                  <Route index element={<AdminPanel />} />
                 </Route>
 
               </Routes>

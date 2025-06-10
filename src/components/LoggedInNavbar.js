@@ -4,12 +4,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import { motion } from 'framer-motion';
 import BugReportModal from './BugReportModal';
+import AccountSwitcher from './admin/AccountSwitcher';
 
 const LoggedInNavbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
-  const { currentUser, logout } = useAuth();
+  const [isAccountSwitcherOpen, setIsAccountSwitcherOpen] = useState(false);
+  const { user: currentUser, logout } = useAuth();
   const { userStats } = useGamification();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,6 +20,11 @@ const LoggedInNavbar = () => {
   const isDarkSpacePage = location.pathname.startsWith('/lessons') || 
                           location.pathname.includes('/learning-path/adaptive-quiz');
 
+  // Check if user has admin role
+  const isAdminUser = currentUser?.role === 'admin' || currentUser?.role === 'developer';
+  
+
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -25,6 +32,12 @@ const LoggedInNavbar = () => {
     } catch (error) {
       console.error('Failed to log out:', error);
     }
+  };
+
+  const handleSwitchAccount = () => {
+    setIsProfileOpen(false);
+    setIsMenuOpen(false);
+    setIsAccountSwitcherOpen(true);
   };
 
   const toggleMenu = () => {
@@ -143,6 +156,7 @@ const LoggedInNavbar = () => {
             <div className="text-sm text-slate-300">
               Level {userStats.level || 1}
             </div>
+
             <div className="relative">
               <button
                 onClick={toggleProfile}
@@ -173,7 +187,29 @@ const LoggedInNavbar = () => {
                     >
                       Settings
                     </Link>
+                    {isAdminUser && (
+                      <>
+                        <div className="border-t border-slate-600 my-1"></div>
+                        <Link
+                          to="/admin"
+                          className="flex items-center px-4 py-2 text-sm text-purple-300 hover:bg-slate-700 hover:text-purple-200 transition-colors"
+                          role="menuitem"
+                          onClick={() => setIsProfileOpen(false)}
+                        >
+                          <span className="mr-2">⚙️</span>
+                          Admin Panel
+                        </Link>
+                      </>
+                    )}
                     <div className="border-t border-slate-600 my-1"></div>
+                    <button
+                      onClick={handleSwitchAccount}
+                      className="flex items-center w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                      role="menuitem"
+                    >
+                      <span className="mr-2">🔄</span>
+                      Switch Account
+                    </button>
                     <button
                       onClick={() => { 
                         setIsBugReportModalOpen(true); 
@@ -231,6 +267,15 @@ const LoggedInNavbar = () => {
           <Link to="/dashboard" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
           <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
           <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
+          {isAdminUser && (
+            <Link 
+              to="/admin" 
+              className="text-purple-300 hover:text-purple-200 hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" 
+              onClick={() => setIsMenuOpen(false)}
+            >
+              ⚙️ Admin Panel
+            </Link>
+          )}
           {currentUser?.subscriptionTier !== 'premium' && (
             <Link 
               to="/pricing"
@@ -256,6 +301,13 @@ const LoggedInNavbar = () => {
           <div className="mt-3 px-2 space-y-1">
             <Link to="/profile" className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors" onClick={() => setIsMenuOpen(false)}>Your Profile</Link>
             <Link to="/settings" className="block px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors" onClick={() => setIsMenuOpen(false)}>Settings</Link>
+            <button
+              onClick={handleSwitchAccount}
+              className="flex items-center w-full text-left px-3 py-2 rounded-md text-base font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            >
+              <span className="mr-2">🔄</span>
+              Switch Account
+            </button>
             <button 
               onClick={() => { 
                 setIsBugReportModalOpen(true); 
@@ -276,6 +328,12 @@ const LoggedInNavbar = () => {
       <BugReportModal 
         isOpen={isBugReportModalOpen} 
         onClose={() => setIsBugReportModalOpen(false)} 
+      />
+
+      {/* Account Switcher Modal */}
+      <AccountSwitcher 
+        isOpen={isAccountSwitcherOpen}
+        onClose={() => setIsAccountSwitcherOpen(false)}
       />
     </nav>
   );

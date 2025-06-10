@@ -673,4 +673,10 @@ exports.initializeNewsData = functions.https.onRequest(async (req, res) => {
       });
     }
   });
-}); 
+});
+
+// Export YouTube functions
+const youtubeTranscript = require('./youtubeTranscript');
+exports.extractYouTubeTranscript = youtubeTranscript.extractYouTubeTranscript;
+exports.getYouTubeMetadata = youtubeTranscript.getYouTubeMetadata;
+exports.generateContentFromTranscript = youtubeTranscript.generateContentFromTranscript; 

@@ -57,6 +57,21 @@ const LessonViewer = () => {
     loadLessonData();
   }, [lessonId, difficulty]);
 
+  // Handle admin-generated lessons
+  useEffect(() => {
+    if (location.state?.fromAdmin && location.state?.lesson) {
+      const adminLesson = location.state.lesson;
+      console.log('Loading admin-generated lesson:', adminLesson);
+      
+      // Convert admin lesson format to slide format
+      const convertedLesson = convertAdminLessonToSlides(adminLesson);
+      setLesson(convertedLesson);
+      setSlides(convertedLesson.slides);
+      setIsLoading(false);
+      return;
+    }
+  }, [location.state]);
+
   // Detect difficulty level from URL params or location state
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -264,6 +279,245 @@ const LessonViewer = () => {
         }
       ],
       difficulty: difficulty
+    };
+  };
+
+  // Convert admin lesson format to slide-based format
+  const convertAdminLessonToSlides = (adminLesson) => {
+    const slides = [];
+    
+    console.log('Converting admin lesson:', adminLesson);
+    
+    // Intro slide with key points if available
+    const introSlide = {
+      id: `${adminLesson.id}-intro`,
+      type: 'intro',
+      content: {
+        title: adminLesson.title,
+        subtitle: adminLesson.description || 'Interactive AI lesson',
+        icon: "🤖",
+        description: adminLesson.description || 'Learn about this AI topic through interactive content.',
+        estimatedTime: adminLesson.estimatedTimeMinutes || adminLesson.estimatedDuration || 15,
+        xpReward: adminLesson.xpAward || 100
+      }
+    };
+
+    // Add key points to intro slide if available
+    if (adminLesson.keyPoints && adminLesson.keyPoints.length > 0) {
+      introSlide.content.keyPoints = adminLesson.keyPoints;
+    }
+
+    slides.push(introSlide);
+
+    // Convert content pages to slides
+    if (adminLesson.content && Array.isArray(adminLesson.content) && adminLesson.content.length > 0) {
+      console.log('Processing content pages:', adminLesson.content.length);
+      
+      adminLesson.content.forEach((contentPage, index) => {
+        console.log(`Processing content page ${index}:`, contentPage);
+        
+        switch (contentPage.type) {
+          case 'text':
+            if (contentPage.value && contentPage.value.trim()) {
+              slides.push({
+                id: `${adminLesson.id}-content-${index}`,
+                type: 'concept',
+                content: {
+                  title: `Concept ${index + 1}`,
+                  explanation: contentPage.value,
+                  icon: "📚"
+                }
+              });
+            }
+            break;
+            
+          case 'ai_professor_tip':
+            if (contentPage.value && contentPage.value.trim()) {
+              slides.push({
+                id: `${adminLesson.id}-tip-${index}`,
+                type: 'concept',
+                content: {
+                  title: "💡 AI Professor Tip",
+                  explanation: contentPage.value,
+                  icon: "💡",
+                  isHighlight: true
+                }
+              });
+            }
+            break;
+            
+          case 'quiz':
+            if (contentPage.question && contentPage.options) {
+              slides.push({
+                id: `${adminLesson.id}-quiz-${index}`,
+                type: 'quiz',
+                content: {
+                  question: contentPage.question,
+                  options: contentPage.options.map(opt => ({
+                    text: typeof opt === 'string' ? opt : opt.text || opt,
+                    correct: typeof opt === 'object' ? opt.correct : false
+                  })),
+                  feedback: contentPage.feedback || 'Great job!'
+                }
+              });
+            }
+            break;
+            
+          case 'code_challenge':
+            if (contentPage.value && contentPage.value.trim()) {
+              slides.push({
+                id: `${adminLesson.id}-sandbox-${index}`,
+                type: 'sandbox',
+                content: {
+                  title: "💻 Code Challenge",
+                  instructions: contentPage.value,
+                  exercises: contentPage.hints || ["Try out the concepts", "Experiment with the code"],
+                  startingCode: contentPage.startingCode,
+                  solution: contentPage.solution
+                }
+              });
+            }
+            break;
+            
+          case 'video':
+            if (contentPage.url || contentPage.title) {
+              slides.push({
+                id: `${adminLesson.id}-video-${index}`,
+                type: 'concept',
+                content: {
+                  title: contentPage.title || "🎥 Video Content",
+                  explanation: contentPage.description || "Watch and learn from this video content.",
+                  icon: "🎥",
+                  videoUrl: contentPage.url
+                }
+              });
+            }
+            break;
+            
+          case 'image':
+            if (contentPage.url || contentPage.altText) {
+              slides.push({
+                id: `${adminLesson.id}-image-${index}`,
+                type: 'concept',
+                content: {
+                  title: contentPage.altText || "🖼️ Visual Content",
+                  explanation: contentPage.caption || "Study this visual to understand the concept better.",
+                  icon: "🖼️",
+                  imageUrl: contentPage.url
+                }
+              });
+            }
+            break;
+            
+          default:
+            // Handle unknown content types
+            if (contentPage.value || contentPage.question || contentPage.text) {
+              slides.push({
+                id: `${adminLesson.id}-content-${index}`,
+                type: 'concept',
+                content: {
+                  title: `Content ${index + 1}`,
+                  explanation: contentPage.value || contentPage.question || contentPage.text || 'Content goes here',
+                  icon: "📋"
+                }
+              });
+            }
+        }
+      });
+    } else {
+      console.warn('No valid content found in admin lesson:', adminLesson);
+      // Add a default content slide if no content is available
+      slides.push({
+        id: `${adminLesson.id}-content-default`,
+        type: 'concept',
+        content: {
+          title: "Lesson Content",
+          explanation: "This lesson is being prepared. Content will be available soon.",
+          icon: "📋"
+        }
+      });
+    }
+
+    // Add sandbox slide if sandbox is enabled
+    if (adminLesson.includeSandbox && adminLesson.sandboxType !== 'none') {
+      const sandboxSlide = {
+        id: `${adminLesson.id}-sandbox`,
+        type: 'sandbox',
+        content: {
+          title: "🚀 Practice & Apply",
+          instructions: "Use the sandbox to practice what you've learned in this lesson!",
+          exercises: ["Apply the concepts you've learned", "Experiment with different approaches", "Test your understanding"]
+        }
+      };
+
+      // Customize based on sandbox type
+      if (adminLesson.sandboxType === 'openai_api') {
+        sandboxSlide.content.title = "🤖 Try AI Prompting";
+        sandboxSlide.content.instructions = "Practice prompting AI with what you've learned!";
+        sandboxSlide.content.exercises = [
+          "Send prompts to the AI based on lesson concepts",
+          "Experiment with different prompt styles",
+          "See how the AI responds to your inputs"
+        ];
+      } else if (adminLesson.sandboxType === 'replit') {
+        sandboxSlide.content.title = "💻 Code Sandbox";
+        sandboxSlide.content.instructions = "Write and test code based on the lesson!";
+        sandboxSlide.content.exercises = [
+          "Write code to implement lesson concepts",
+          "Test your code in the sandbox",
+          "Experiment with variations"
+        ];
+      } else if (adminLesson.sandboxType === 'both') {
+        sandboxSlide.content.title = "🚀 Interactive Practice";
+        sandboxSlide.content.instructions = "Practice with both AI prompting and coding!";
+        sandboxSlide.content.exercises = [
+          "Try AI prompting based on lesson concepts",
+          "Write and test code in the sandbox",
+          "Combine AI and coding for complete understanding"
+        ];
+      }
+
+      slides.push(sandboxSlide);
+    }
+
+    // Add summary slide if summary is provided
+    if (adminLesson.summary && adminLesson.summary.trim()) {
+      slides.push({
+        id: `${adminLesson.id}-summary`,
+        type: 'concept',
+        content: {
+          title: "📋 Lesson Summary",
+          explanation: adminLesson.summary,
+          icon: "📋",
+          isComplete: true
+        }
+      });
+    }
+
+    // Add final completion slide
+    slides.push({
+      id: `${adminLesson.id}-complete`,
+      type: 'concept',
+      content: {
+        title: "🎉 Lesson Complete!",
+        explanation: `Congratulations! You've completed "${adminLesson.title}". You've gained valuable knowledge that will help you in your AI journey.`,
+        icon: "🎉",
+        isComplete: true
+      }
+    });
+
+    console.log('Generated slides:', slides.length);
+    console.log('Slides summary:', slides.map(s => ({ id: s.id, type: s.type, title: s.content.title })));
+
+    return {
+      id: adminLesson.id,
+      title: adminLesson.title,
+      description: adminLesson.description,
+      estimatedTime: adminLesson.estimatedTimeMinutes || adminLesson.estimatedDuration || 15,
+      xpReward: adminLesson.xpAward || 100,
+      slides: slides,
+      difficulty: adminLesson.difficulty || 'intermediate',
+      isAdminGenerated: true
     };
   };
 

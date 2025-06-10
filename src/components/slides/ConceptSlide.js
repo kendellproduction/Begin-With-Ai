@@ -13,33 +13,47 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
     whatItMeans,
     example,
     category,
-    progressInfo
+    progressInfo,
+    isHighlight,
+    isComplete,
+    imageUrl,
+    videoUrl
   } = slide.content;
 
   // Check if this is an interactive teaching slide for a single term
   const isInteractiveTeaching = slide.type === 'interactive_teaching';
 
+  // Special styling for summary and completion slides
+  const isSpecialSlide = isComplete || title.includes('Summary') || title.includes('Complete');
+  const containerClass = isSpecialSlide 
+    ? "text-center space-y-6 bg-gradient-to-br from-green-900/20 to-blue-900/20 p-6 rounded-2xl border border-green-500/30"
+    : isHighlight 
+      ? "text-center space-y-6 bg-gradient-to-br from-yellow-900/20 to-orange-900/20 p-6 rounded-2xl border border-yellow-500/30"
+      : "text-center space-y-6";
+
   return (
-    <div className="text-center space-y-8">
+    <div className={containerClass}>
       {/* Icon */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.5 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6, type: "spring", stiffness: 120 }}
+        initial={{ scale: 0, rotate: -90 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ duration: 0.6, type: "spring", stiffness: 100 }}
         className="text-6xl mb-4"
       >
         {icon}
       </motion.div>
 
       {/* Title */}
-      <motion.h1
+      <motion.h2
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="text-2xl md:text-3xl font-bold text-white mb-4"
+        transition={{ duration: 0.6, delay: 0.2 }}
+        className={`text-2xl md:text-3xl font-bold mb-4 ${
+          isComplete ? 'text-green-300' : isHighlight ? 'text-yellow-300' : 'text-white'
+        }`}
       >
         {title}
-      </motion.h1>
+      </motion.h2>
 
       {/* Progress Info for Interactive Teaching */}
       {progressInfo && (
@@ -53,15 +67,51 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
         </motion.div>
       )}
 
-      {/* Explanation */}
-      <motion.p
+      {/* Main explanation */}
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="text-xl md:text-2xl text-gray-100 leading-relaxed font-medium max-w-5xl mx-auto px-4 mb-8 tracking-wide"
+        transition={{ duration: 0.6, delay: 0.4 }}
+        className="space-y-4"
       >
-        {explanation}
-      </motion.p>
+        <p className="text-lg md:text-xl text-gray-100 leading-relaxed max-w-2xl mx-auto">
+          {explanation}
+        </p>
+
+        {/* Display image if provided */}
+        {imageUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-6"
+          >
+            <img 
+              src={imageUrl} 
+              alt={title}
+              className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+            />
+          </motion.div>
+        )}
+
+        {/* Display video if provided */}
+        {videoUrl && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+            className="mt-6"
+          >
+            <video 
+              src={videoUrl} 
+              controls
+              className="max-w-full h-auto rounded-lg shadow-lg mx-auto"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </motion.div>
+        )}
+      </motion.div>
 
       {/* Interactive Teaching: Single Term Display */}
       {isInteractiveTeaching && term && (
@@ -168,51 +218,56 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="space-y-3 text-left bg-white/5 rounded-2xl p-6 border border-white/10"
+          className="space-y-3 text-left bg-white/10 rounded-lg p-4 max-w-2xl mx-auto"
         >
-          <h3 className="text-lg font-semibold text-blue-200 text-center mb-4">Key Points:</h3>
-          {keyPoints.map((point, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.8 + (index * 0.2) }}
-              className="flex items-start space-x-3"
-            >
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.3, delay: 1 + (index * 0.2) }}
-                className="w-2 h-2 bg-blue-400 rounded-full mt-2 flex-shrink-0"
-              />
-              <span className="text-gray-100 leading-relaxed text-base font-medium">{point}</span>
-            </motion.div>
-          ))}
+          <h4 className="text-md font-semibold text-blue-200 mb-3">Key Points:</h4>
+          <ul className="space-y-2 text-left">
+            {keyPoints.map((point, index) => (
+              <motion.li
+                key={index}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.4, delay: 0.8 + (index * 0.1) }}
+                className="flex items-start space-x-2"
+              >
+                <span className="text-blue-400 text-sm mt-1">•</span>
+                <span className="text-gray-200 text-sm leading-relaxed">{point}</span>
+              </motion.li>
+            ))}
+          </ul>
         </motion.div>
       )}
 
-      {/* Continue Button */}
+      {/* Continue button */}
       <motion.button
         onClick={onNext}
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 1.2 }}
+        transition={{ duration: 0.5, delay: 0.8 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold text-base shadow-lg transition-all duration-300"
+        className={`w-full py-3 rounded-xl text-white font-semibold shadow-lg transition-all duration-300 ${
+          isComplete 
+            ? 'bg-gradient-to-r from-green-600 to-emerald-600 shadow-green-500/30' 
+            : isHighlight 
+              ? 'bg-gradient-to-r from-yellow-600 to-orange-600 shadow-yellow-500/30'
+              : 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-blue-500/30'
+        }`}
       >
-        Got it! Continue →
+        {isComplete ? '🎉 Finish Lesson!' : 'Continue'}
       </motion.button>
 
-      {/* Progress hint */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1.4 }}
-        className="text-gray-500 text-sm"
-      >
-        Swipe up when ready
-      </motion.p>
+      {/* Swipe hint for non-completion slides */}
+      {!isComplete && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 1.0 }}
+          className="text-gray-500 text-sm"
+        >
+          Swipe up to continue
+        </motion.p>
+      )}
     </div>
   );
 };
