@@ -4,8 +4,6 @@ import { AuthProvider } from './contexts/AuthContext';
 import { GamificationProvider } from './contexts/GamificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
-import Navigation from './components/Navigation';
-import SwipeNavigationWrapper from './components/SwipeNavigationWrapper';
 
 import OfflineStatus from './components/OfflineStatus';
 import ErrorBoundary from './components/ErrorBoundary';

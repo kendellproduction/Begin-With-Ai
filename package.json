@@ -16,7 +16,10 @@
     "serve": "npx serve -s build -l 3000",
     "deploy:firebase": "npm run build && firebase deploy",
     "deploy:hosting-only": "npm run build && firebase deploy --only hosting",
-    "check-env": "node -e \"console.log('Environment check:', process.env.NODE_ENV); console.log('Firebase API Key:', process.env.REACT_APP_FIREBASE_API_KEY ? 'Set' : 'Missing'); console.log('OpenAI API Key:', process.env.REACT_APP_OPENAI_API_KEY ? 'Set' : 'Missing');\""
+    "check-env": "node -e \"console.log('Environment check:', process.env.NODE_ENV); console.log('Firebase API Key:', process.env.REACT_APP_FIREBASE_API_KEY ? 'Set' : 'Missing'); console.log('OpenAI API Key:', process.env.REACT_APP_OPENAI_API_KEY ? 'Set' : 'Missing');\"",
+    "pre-commit-check": "npm run build && echo '✅ Pre-commit checks passed!'",
+    "check-unused-imports": "echo '🔍 Checking for unused imports...' && echo 'Note: ESLint not configured yet'",
+    "quick-health-check": "echo '🏥 Running health check...' && npm run check-unused-imports"
   },
   "keywords": [
     "ai",
