@@ -1,46 +1,58 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { GamificationProvider } from './contexts/GamificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
+import LoadingSpinner from './components/LoadingSpinner';
 
 import OfflineStatus from './components/OfflineStatus';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// Import gamification components
+// Import gamification components (keep these as they're small and used globally)
 import GamificationNotifications from './components/GamificationNotifications';
 import LevelUpModal from './components/LevelUpModal';
 import BadgeModal from './components/BadgeModal';
 import AdaptiveDatabaseSeeder from './components/AdaptiveDatabaseSeeder';
 
-// Import pages
-import LandingPage from './pages/LandingPage';
-import Login from './pages/Login';
-import Signup from './pages/Signup';
-import HomePage from './pages/HomePage'; // Simplified version
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import LessonsOverview from './pages/LessonsOverview';
-import LessonDetail from './pages/LessonDetail';
-import LessonStart from './pages/LessonStart';
+// Import essential components that are used immediately (keep synchronous)
 import LessonViewer from './components/LessonViewer';
 import WelcomeLessonViewer from './components/WelcomeLessonViewer';
 import AdaptiveWelcomeLesson from './components/AdaptiveWelcomeLesson';
 import WelcomeRedirect from './components/WelcomeRedirect';
-import LearningPathQuiz from './pages/LearningPathQuiz';
 import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
-import LearningPathResults from './pages/LearningPathResults';
-import AiNews from './pages/AiNews';
-import Quiz from './pages/Quiz';
-import QuizResults from './pages/QuizResults';
-import ForgotPassword from './pages/ForgotPassword';
-import Pricing from './pages/Pricing';
-import About from './pages/About';
-import Features from './pages/Features';
-import Contact from './pages/Contact';
-import Settings from './pages/Settings';
-import AdminPanel from './pages/AdminPanel';
+
+// ===== LAZY LOADED PAGES FOR CODE SPLITTING =====
+// High-impact lazy loading - these will significantly reduce initial bundle size
+
+// Priority 1: Heavy/Admin components (highest impact)
+const LandingPage = React.lazy(() => import('./pages/LandingPage'));
+// const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
+// const AiNews = React.lazy(() => import('./pages/AiNews'));
+const LessonsOverview = React.lazy(() => import('./pages/LessonsOverview'));
+
+// Priority 2: User flow pages
+const Settings = React.lazy(() => import('./pages/Settings'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const Features = React.lazy(() => import('./pages/Features'));
+const Contact = React.lazy(() => import('./pages/Contact'));
+const About = React.lazy(() => import('./pages/About'));
+
+// Priority 3: Auth and core pages
+const Login = React.lazy(() => import('./pages/Login'));
+const Signup = React.lazy(() => import('./pages/Signup'));
+const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+// const Pricing = React.lazy(() => import('./pages/Pricing'));
+
+// Learning flow pages
+const LessonDetail = React.lazy(() => import('./pages/LessonDetail'));
+const LessonStart = React.lazy(() => import('./pages/LessonStart'));
+const LearningPathQuiz = React.lazy(() => import('./pages/LearningPathQuiz'));
+const LearningPathResults = React.lazy(() => import('./pages/LearningPathResults'));
+const Quiz = React.lazy(() => import('./pages/Quiz'));
+const QuizResults = React.lazy(() => import('./pages/QuizResults'));
 
 function App() {
   // Simple inline component for testing
@@ -58,113 +70,107 @@ function App() {
           <ErrorBoundary>
             <Layout>
               <OfflineStatus />
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                
-                {/* Protected /home path */}
-                <Route path="/home" element={<ProtectedRoute />}>
-                  <Route index element={<HomePage />} />
-                </Route>
+              <Suspense fallback={<LoadingSpinner message="Loading page..." variant="page" />}>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/features" element={<Features />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  <Route path="/forgot-password" element={<ForgotPassword />} />
+                  
+                  {/* Protected /home path */}
+                  <Route path="/home" element={<ProtectedRoute />}>
+                    <Route index element={<HomePage />} />
+                  </Route>
 
-                {/* Other protected routes - REFACTORED */}
-                <Route path="/dashboard" element={<ProtectedRoute requireEmailVerification={false} />}>
-                  <Route index element={<Dashboard />} />
-                </Route>
+                  {/* Other protected routes - REFACTORED */}
+                  <Route path="/dashboard" element={<ProtectedRoute requireEmailVerification={false} />}>
+                    <Route index element={<Dashboard />} />
+                  </Route>
 
-                <Route path="/profile" element={<ProtectedRoute />}>
-                  {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile or a new layout */}
-                  <Route index element={<Profile />} />
-                </Route>
+                  <Route path="/profile" element={<ProtectedRoute />}>
+                    <Route index element={<Profile />} />
+                  </Route>
 
-                <Route path="/settings" element={<ProtectedRoute />}>
-                  {/* <Navigation /> and <SwipeNavigationWrapper /> would need to be inside Profile (or a new SettingsPage) or a new layout */}
-                  <Route index element={<Settings />} />
-                </Route>
+                  <Route path="/settings" element={<ProtectedRoute />}>
+                    <Route index element={<Settings />} />
+                  </Route>
 
-                <Route path="/lessons" element={<ProtectedRoute />}>
-                  <Route path="" element={<LessonsOverview />} />
-                </Route>
+                  <Route path="/lessons" element={<ProtectedRoute />}>
+                    <Route path="" element={<LessonsOverview />} />
+                  </Route>
 
-                <Route path="/pricing" element={<ProtectedRoute />}>
-                  <Route index element={<Pricing />} />
-                </Route>
+                  {/* <Route path="/pricing" element={<ProtectedRoute />}>
+                    <Route index element={<Pricing />} />
+                  </Route> */}
 
-                {/* Lesson start page with difficulty selection */}
-                <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>
-                  <Route index element={<LessonStart />} />
-                </Route>
+                  {/* Lesson start page with difficulty selection */}
+                  <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>
+                    <Route index element={<LessonStart />} />
+                  </Route>
 
-                <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
-                  {/* <Navigation /> would need to be inside LessonDetail or a new layout */}
-                  <Route index element={<LessonDetail />} />
-                </Route>
+                  <Route path="/lessons/:lessonId" element={<ProtectedRoute />}>
+                    <Route index element={<LessonDetail />} />
+                  </Route>
 
-                {/* New slide-based lesson viewer - full screen, no layout */}
-                <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
-                  <Route index element={<LessonViewer />} />
-                </Route>
+                  {/* New slide-based lesson viewer - full screen, no layout */}
+                  <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
+                    <Route index element={<LessonViewer />} />
+                  </Route>
 
-                {/* Welcome lesson for first-time users - full screen, no layout */}
-                <Route path="/lessons/first-time-welcome" element={<ProtectedRoute />}>
-                  <Route index element={<WelcomeLessonViewer />} />
-                </Route>
+                  {/* Welcome lesson for first-time users - full screen, no layout */}
+                  <Route path="/lessons/first-time-welcome" element={<ProtectedRoute />}>
+                    <Route index element={<WelcomeLessonViewer />} />
+                  </Route>
 
-                {/* Redirect old welcome route to new adaptive quiz */}
-                <Route path="/welcome" element={<ProtectedRoute />}>
-                  <Route index element={<WelcomeRedirect />} />
-                </Route>
+                  {/* Redirect old welcome route to new adaptive quiz */}
+                  <Route path="/welcome" element={<ProtectedRoute />}>
+                    <Route index element={<WelcomeRedirect />} />
+                  </Route>
 
-                <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
-                  {/* <Navigation /> would need to be inside LearningPathQuiz or a new layout */}
-                  <Route index element={<LearningPathQuiz />} />
-                </Route>
+                  <Route path="/learning-path/quiz" element={<ProtectedRoute />}>
+                    <Route index element={<LearningPathQuiz />} />
+                  </Route>
 
-                <Route path="/learning-path/adaptive-quiz" element={<ProtectedRoute />}>
-                  {/* New adaptive quiz for better skill assessment */}
-                  <Route index element={<AdaptiveLearningPathQuiz />} />
-                </Route>
+                  <Route path="/learning-path/adaptive-quiz" element={<ProtectedRoute />}>
+                    {/* New adaptive quiz for better skill assessment */}
+                    <Route index element={<AdaptiveLearningPathQuiz />} />
+                  </Route>
 
-                <Route path="/learning-path/results" element={<ProtectedRoute />}>
-                  {/* <Navigation /> would need to be inside LearningPathResults or a new layout */}
-                  <Route index element={<LearningPathResults />} />
-                </Route>
+                  <Route path="/learning-path/results" element={<ProtectedRoute />}>
+                    <Route index element={<LearningPathResults />} />
+                  </Route>
 
-                <Route path="/ai-news" element={<ProtectedRoute />}>
-                  {/* <Navigation /> would need to be inside AiNews or a new layout */}
-                  <Route index element={<AiNews />} />
-                </Route>
+                  {/* <Route path="/ai-news" element={<ProtectedRoute />}>
+                    <Route index element={<AiNews />} />
+                  </Route> */}
 
-                <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
-                  {/* <Navigation /> would need to be inside Quiz or a new layout */}
-                  <Route index element={<Quiz />} />
-                </Route>
+                  <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
+                    <Route index element={<Quiz />} />
+                  </Route>
 
-                <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
-                  {/* <Navigation /> would need to be inside QuizResults or a new layout */}
-                  <Route index element={<QuizResults />} />
-                </Route>
+                  <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
+                    <Route index element={<QuizResults />} />
+                  </Route>
 
-                {/* Admin Panel - Only accessible by admin/dev users */}
-                <Route path="/admin" element={<ProtectedRoute />}>
-                  <Route index element={<AdminPanel />} />
-                </Route>
+                  {/* Admin Panel - Only accessible by admin/dev users */}
+                  {/* <Route path="/admin" element={<ProtectedRoute />}>
+                    <Route index element={<AdminPanel />} />
+                  </Route> */}
 
-              </Routes>
+                </Routes>
+              </Suspense>
               
               {/* Gamification Components - Available throughout the app */}
               <GamificationNotifications />
               <LevelUpModal />
               <BadgeModal />
               
-              {/* Development Tools */}
-              {process.env.NODE_ENV === 'development' && <AdaptiveDatabaseSeeder />}
+              {/* AdaptiveDatabaseSeeder for development */}
+              <AdaptiveDatabaseSeeder />
             </Layout>
           </ErrorBoundary>
         </GamificationProvider>
