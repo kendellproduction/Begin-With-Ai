@@ -19,7 +19,17 @@
     "check-env": "node -e \"console.log('Environment check:', process.env.NODE_ENV); console.log('Firebase API Key:', process.env.REACT_APP_FIREBASE_API_KEY ? 'Set' : 'Missing'); console.log('OpenAI API Key:', process.env.REACT_APP_OPENAI_API_KEY ? 'Set' : 'Missing');\"",
     "pre-commit-check": "npm run build && echo '✅ Pre-commit checks passed!'",
     "check-unused-imports": "echo '🔍 Checking for unused imports...' && echo 'Note: ESLint not configured yet'",
-    "quick-health-check": "echo '🏥 Running health check...' && npm run check-unused-imports"
+    "quick-health-check": "echo '🏥 Running health check...' && npm run check-unused-imports",
+    "clean-install": "rm -rf node_modules package-lock.json && npm cache clean --force && npm install",
+    "safe-install": "npm ci || npm run clean-install",
+    "pre-dev": "npm run safe-install && npm start",
+    "health-check": "npm ls --depth=0 && npm run build",
+    "fix-corruption": "mv node_modules node_modules_broken_$(date +%Y%m%d_%H%M%S) && rm -f package-lock.json && npm cache clean --force && npm install",
+    "dev-session-start": "echo '🚀 Starting development session...' && npm run health-check && echo '✅ Health check passed! Starting server...' && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
   },
   "keywords": [
     "ai",

@@ -1,0 +1,96 @@
+# Cursor AI Rules for BeginningWithAi Project
+
+## Node.js Dependency Management Rules
+
+### CRITICAL: Always Use Safe Scripts
+- NEVER run raw `npm install` - use `npm run safe-install` instead
+- NEVER run raw `npm start` - use `npm run dev-session-start` for daily startup
+- If corruption detected, ALWAYS use `npm run fix-corruption`
+- Before major changes, ALWAYS run `npm run health-check`
+
+### Package Installation Rules
+- When adding new packages: Stop dev server first, then `npm run safe-install`, then restart
+- NEVER interrupt npm commands with Ctrl+C
+- ALWAYS verify package.json changes before installing
+- Use exact versions in package.json (no ^ or ~ prefixes)
+
+### Development Session Rules
+1. Start each session with: `npm run dev-session-start`
+2. Before making large changes: `npm run health-check`  
+3. If any dependency errors occur: `npm run fix-corruption`
+4. End sessions cleanly - stop dev server before closing
+
+## Code Quality Rules
+
+### React/JavaScript Best Practices
+- Always use functional components with hooks
+- Implement proper error boundaries
+- Use TypeScript-style prop validation with PropTypes
+- Follow consistent naming: camelCase for functions, PascalCase for components
+- Always handle loading and error states in components
+
+### Performance Optimization
+- Lazy load components with React.lazy() for routes
+- Use React.memo() for expensive components
+- Implement proper key props for lists
+- Optimize images and assets
+- Use Web Vitals monitoring
+
+### Security Rules
+- NEVER commit API keys or secrets
+- Always sanitize user input with DOMPurify
+- Use helmet for security headers
+- Implement proper authentication checks
+- Validate all external data
+
+## File Organization Rules
+- Keep components in `/src/components/`
+- Keep pages/routes in `/src/pages/`
+- Keep utilities in `/src/utils/`
+- Keep constants in `/src/constants/`
+- One component per file
+- Use index.js for clean imports
+
+## Testing Requirements
+- Write tests for all new components
+- Maintain minimum 70% coverage threshold
+- Test error scenarios and edge cases
+- Use React Testing Library best practices
+
+## Firebase Integration Rules
+- Always check Firebase connection before operations
+- Implement proper error handling for all Firebase calls
+- Use Firebase Security Rules appropriately
+- Cache Firebase data when possible
+- Handle offline scenarios gracefully
+
+## AI Feature Development
+- Always validate AI responses before displaying
+- Implement rate limiting for AI API calls
+- Cache AI responses when appropriate
+- Provide fallbacks when AI services are unavailable
+- Monitor AI usage and costs
+
+## Deployment Rules
+- Always run `npm run health-check` before building
+- Test production build locally with `npm run serve`
+- Verify environment variables are set correctly
+- Run security audit before deploying
+- Backup current deployment before updates
+
+## Emergency Procedures
+If project breaks:
+1. Try `npm run fix-corruption` first
+2. If still broken, check DEVELOPMENT_WORKFLOW.md
+3. If critical, use emergency recovery from workflow guide
+4. Document the issue and solution for future reference
+
+## Code Review Checklist
+- [ ] No console.logs in production code
+- [ ] Proper error handling implemented
+- [ ] Loading states handled
+- [ ] Mobile responsive design
+- [ ] Accessibility considerations
+- [ ] Performance optimized
+- [ ] Security best practices followed
+- [ ] Tests written and passing 
