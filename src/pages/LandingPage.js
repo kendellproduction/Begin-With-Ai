@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sanitizeText, checkRateLimit } from '../utils/sanitization';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import lessonsData from '../utils/lessonsData';
+import lessonsData from '../data/lessonsData';
 import { navigateAfterAuth } from '../utils/navigationUtils';
 
 const LandingPage = () => {
@@ -39,7 +39,7 @@ const LandingPage = () => {
   const [redirectToPremiumAfterAuth, setRedirectToPremiumAfterAuth] = useState(false);
 
   // Use first 6 lessons from real data for rotation
-  const featuredLessons = lessonsData.slice(0, 6);
+  const featuredLessons = Object.values(lessonsData).slice(0, 6);
 
   // Data collections
   const testimonials = [
@@ -1199,7 +1199,7 @@ const LandingPage = () => {
                       <div className="space-y-4">
                         <h4 className="text-lg font-semibold text-white">Key Topics:</h4>
                         <div className="flex flex-wrap gap-3">
-                          {lesson.models.map((model, i) => (
+                          {(lesson.models || ['AI Fundamentals', 'Interactive Learning', 'Practical Skills']).map((model, i) => (
                             <motion.span 
                               key={i} 
                               className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full text-cyan-300 border border-cyan-500/30 text-sm font-medium"
