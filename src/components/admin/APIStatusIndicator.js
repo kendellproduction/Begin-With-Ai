@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { auth } from '../../firebase';
 
 const APIStatusIndicator = () => {
   const [apiStatus, setApiStatus] = useState('checking');
@@ -7,18 +8,37 @@ const APIStatusIndicator = () => {
   const checkAPIStatus = async () => {
     setApiStatus('checking');
     try {
-      // Simple test to see if API key is available
-      const apiKey = process.env.REACT_APP_OPENAI_API_KEY;
-      if (!apiKey) {
+      // Since Firebase config is working (evidenced by successful Firebase loading),
+      // we know environment variables are accessible. Let's check them directly.
+      
+      // Check for OpenAI API key (multiple possible env var names)
+      const openaiKey = process.env.REACT_APP_OPENAI_API_KEY;
+      const xaiKey = process.env.REACT_APP_XAI_API_KEY;
+      const anthropicKey = process.env.REACT_APP_ANTHROPIC_API_KEY;
+      
+      // Debug logging for development
+      console.log('🔍 API Status Check Debug:');
+      console.log('  OpenAI Key exists:', !!openaiKey);
+      console.log('  OpenAI Key length:', openaiKey ? openaiKey.length : 0);
+      console.log('  OpenAI Key starts with sk-:', openaiKey ? openaiKey.startsWith('sk-') : false);
+      console.log('  xAI Key exists:', !!xaiKey);
+      console.log('  Anthropic Key exists:', !!anthropicKey);
+      console.log('  Firebase Auth available:', !!auth);
+      console.log('  NODE_ENV:', process.env.NODE_ENV);
+      
+      const hasApiKey = openaiKey || xaiKey || anthropicKey;
+      
+      if (!hasApiKey) {
+        console.log('❌ No AI API key found');
         setApiStatus('no-key');
         return;
       }
 
-      // You could add a simple API call here to test, but for now just check if key exists
+      console.log('✅ AI API key found, setting status to available');
       setApiStatus('available');
       setLastChecked(new Date());
     } catch (error) {
-      console.error('API status check failed:', error);
+      console.error('❌ API status check failed:', error);
       setApiStatus('error');
     }
   };
@@ -52,7 +72,13 @@ const APIStatusIndicator = () => {
 
   const getStatusText = () => {
     switch (apiStatus) {
-      case 'available': return 'AI Ready';
+      case 'available': {
+        // Show which API provider is configured
+        if (process.env.REACT_APP_OPENAI_API_KEY) return 'OpenAI Ready';
+        if (process.env.REACT_APP_XAI_API_KEY) return 'xAI Ready';
+        if (process.env.REACT_APP_ANTHROPIC_API_KEY) return 'Anthropic Ready';
+        return 'AI Ready';
+      }
       case 'checking': return 'Checking...';
       case 'no-key': return 'No API Key';
       case 'error': return 'API Error';

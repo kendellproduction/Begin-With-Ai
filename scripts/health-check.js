@@ -11,6 +11,18 @@
 const path = require('path');
 const fs = require('fs');
 
+// Load environment variables from .env.local file
+const envLocalPath = path.join(process.cwd(), '.env.local');
+if (fs.existsSync(envLocalPath)) {
+  const envContent = fs.readFileSync(envLocalPath, 'utf8');
+  envContent.split('\n').forEach(line => {
+    const [key, value] = line.split('=');
+    if (key && value && key.startsWith('REACT_APP_')) {
+      process.env[key] = value.replace(/[\r\n%]/g, '');
+    }
+  });
+}
+
 // Colors for console output
 const colors = {
   reset: '\x1b[0m',
@@ -65,8 +77,6 @@ class ProductionHealthCheck {
     const optionalVars = [
       'REACT_APP_FIREBASE_MEASUREMENT_ID',
       'REACT_APP_OPENAI_API_KEY',
-      'REACT_APP_XAI_API_KEY',
-      'REACT_APP_ANTHROPIC_API_KEY',
       'REACT_APP_GOOGLE_SEARCH_API_KEY',
       'REACT_APP_BING_SEARCH_API_KEY',
       'REACT_APP_STRIPE_PUBLISHABLE_KEY',
