@@ -20,28 +20,15 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 auth.useDeviceLanguage();
 
-// Add better error handling for development
+// Development-only Firebase configuration validation
 if (process.env.NODE_ENV === 'development') {
-  console.log('🔧 Firebase Debug Info:');
-  console.log('- API Key:', firebaseConfig.apiKey ? '✅ LOADED' : '❌ MISSING');
-  console.log('- Auth Domain:', firebaseConfig.authDomain ? '✅ LOADED' : '❌ MISSING');
-  console.log('- Project ID:', firebaseConfig.projectId ? '✅ LOADED' : '❌ MISSING');
-  console.log('- Storage Bucket:', firebaseConfig.storageBucket ? '✅ LOADED' : '❌ MISSING');
-  console.log('- Messaging Sender ID:', firebaseConfig.messagingSenderId ? '✅ LOADED' : '❌ MISSING');
-  console.log('- App ID:', firebaseConfig.appId ? '✅ LOADED' : '❌ MISSING');
-  
-  // Helpful development message
-  if (!firebaseConfig.authDomain || firebaseConfig.authDomain.includes('your_')) {
-    console.warn('⚠️  Firebase not configured! Please check FIREBASE_SETUP_GUIDE.md');
-  }
-  
-  // Check if any required fields are missing
+  // Check if any required fields are missing - only for development debugging
   const requiredFields = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
   const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
+  
   if (missingFields.length > 0) {
     console.error('🚨 Missing Firebase configuration fields:', missingFields);
-  } else {
-    console.log('✅ All required Firebase fields are loaded');
+    console.warn('⚠️  Firebase not configured! Please check FIREBASE_SETUP_GUIDE.md');
   }
 }
 
@@ -57,32 +44,29 @@ try {
   // Only initialize analytics if we have the required configuration
   if (firebaseConfig.measurementId && process.env.NODE_ENV === 'production') {
     analytics = getAnalytics(app);
-    console.log('✅ Firebase Analytics initialized successfully');
   } else if (process.env.NODE_ENV === 'development') {
     // In development, we can still initialize but with warnings
     if (firebaseConfig.measurementId) {
       analytics = getAnalytics(app);
-      console.log('🔧 Firebase Analytics initialized for development');
-    } else {
-      console.warn('⚠️ Firebase Analytics measurement ID not found - analytics disabled');
     }
   }
 } catch (error) {
-  console.warn('⚠️ Firebase Analytics initialization failed:', error.message);
-  console.warn('Analytics will be disabled but app will continue to work');
+  // Silent fail in production, only warn in development
+  if (process.env.NODE_ENV === 'development') {
+    console.warn('⚠️ Firebase Analytics initialization failed:', error.message);
+    console.warn('Analytics will be disabled but app will continue to work');
+  }
   analytics = null;
 }
 
 // Initialize Firestore Database
 const db = getFirestore(app);
 
-// Production ready - no global window object exposure in production
+// Development-only utility exposure for testing
 if (process.env.NODE_ENV === 'development') {
-  // Only expose for development/testing purposes
   window.db = db;
   window.doc = doc;
   window.setDoc = setDoc;
-  console.log("🔧 Firebase utilities available on window object for development");
 }
 
 export { auth, googleProvider, analytics, db }; 

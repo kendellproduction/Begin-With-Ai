@@ -16,7 +16,6 @@ function Login() {
 
   useEffect(() => {
     if (user) {
-      console.log('User is logged in, determining redirect destination...');
       navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);
@@ -93,12 +92,9 @@ function Login() {
     
     setIsLoading(true);
     try {
-      console.log('Attempting to register with email:', email);
       await signUpWithEmail(email, password);
-      console.log('Registration successful, determining redirect destination...');
       navigateAfterAuth(navigate, false);
     } catch (err) {
-      console.error('Registration error:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -118,12 +114,9 @@ function Login() {
     
     setIsLoading(true);
     try {
-      console.log('Attempting to login with email:', email);
       await signInWithEmail(email, password);
-      console.log('Login successful, determining redirect destination...');
       navigateAfterAuth(navigate, false);
     } catch (err) {
-      console.error('Login error:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);
@@ -143,12 +136,9 @@ function Login() {
     
     setIsLoading(true);
     try {
-      console.log('Attempting Google login...');
       await signInWithGoogle();
-      console.log('Google login successful, determining redirect destination...');
       navigateAfterAuth(navigate, false);
     } catch (err) {
-      console.error('Google login error:', err);
       setError(err.message);
     } finally {
       setIsLoading(false);

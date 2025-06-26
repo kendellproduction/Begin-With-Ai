@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext'; // Restored
+import { useAuth } from '../contexts/AuthContext';
 // import EmailVerificationGuard from './EmailVerificationGuard'; // Still commented out for now
 
 const ProtectedRoute = ({ 
@@ -8,17 +8,13 @@ const ProtectedRoute = ({
   requireEmailVerification = true, 
   requireAdminRole = false 
 }) => {
-  const { user, loading } = useAuth(); // Restored
-
-  console.log('ProtectedRoute - User:', user, 'Loading:', loading, 'RequireAdmin:', requireAdminRole);
+  const { user, loading } = useAuth();
 
   if (loading) {
-    console.log('ProtectedRoute - Loading, returning null');
     return null; // AuthProvider handles global loading state
   }
 
   if (!user) {
-    console.log('ProtectedRoute - No user, navigating to /');
     return <Navigate to="/" replace />;
   }
 
@@ -28,13 +24,11 @@ const ProtectedRoute = ({
     const isAdmin = userRole === 'admin' || userRole === 'developer';
     
     if (!isAdmin) {
-      console.log('ProtectedRoute - Admin access required, user role:', userRole, 'redirecting to dashboard');
       // Redirect non-admin users to dashboard with a message
       return <Navigate to="/dashboard?error=admin_required" replace />;
     }
   }
 
-  console.log('ProtectedRoute - Access granted, rendering Outlet');
   return <Outlet />;
 
   /* Original EmailVerificationGuard logic - keep commented for now

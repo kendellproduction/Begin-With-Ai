@@ -423,24 +423,14 @@ REMEMBER: The lesson content must be specifically about what the user requested.
                    process.env.REACT_APP_OPENAI_KEY ||
                    process.env.OPENAI_KEY;
     
-    // Debug logging to help troubleshoot
-    console.log('=== OpenAI API Key Debug ===');
-    console.log('REACT_APP_OPENAI_API_KEY exists:', !!process.env.REACT_APP_OPENAI_API_KEY);
-    console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY);
-    console.log('REACT_APP_OPENAI_KEY exists:', !!process.env.REACT_APP_OPENAI_KEY);
-    console.log('OPENAI_KEY exists:', !!process.env.OPENAI_KEY);
-    console.log('Final apiKey found:', !!apiKey);
-    if (apiKey) {
-      console.log('API key starts with sk-:', apiKey.startsWith('sk-'));
-      console.log('API key starts with org-:', apiKey.startsWith('org-'));
-      console.log('API key first 10 chars:', apiKey.substring(0, 10));
+    // Development-only API key validation
+    if (process.env.NODE_ENV === 'development' && !apiKey) {
+      console.warn('⚠️ OpenAI API key not found in any environment variable');
     }
-    console.log('=== End Debug ===');
     
     // If OpenAI API key is available, use real API
     if (apiKey && (apiKey.startsWith('sk-') || apiKey.startsWith('org-'))) {
       try {
-        console.log('Using OpenAI API for lesson generation...');
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -470,15 +460,13 @@ REMEMBER: The lesson content must be specifically about what the user requested.
         }
 
         const data = await response.json();
-        console.log('OpenAI API response received successfully');
         return data.choices[0].message.content;
       } catch (error) {
         console.warn('OpenAI API failed, using fallback:', error.message);
         return this.generateFallbackResponse(prompt);
       }
-    } else {
-      console.log('No OpenAI API key found, using fallback response');
-    }
+          }
+      // Note: Using fallback when API key is not available
 
     // Fallback mock response for development/when API key not available
     return this.generateFallbackResponse(prompt);
@@ -650,7 +638,6 @@ REMEMBER: The lesson content must be specifically about what the user requested.
       const markdownMatch = cleanResponse.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (markdownMatch) {
         cleanResponse = markdownMatch[1].trim();
-        console.log('🔧 Extracted JSON from markdown wrapper');
       }
       
       // Remove any leading/trailing whitespace and normalize quotes
@@ -679,7 +666,6 @@ REMEMBER: The lesson content must be specifically about what the user requested.
         ...lesson
       }));
 
-      console.log('✅ Successfully parsed AI response with', parsed.lessons.length, 'lessons');
       return parsed;
     } catch (error) {
       console.error('❌ Error parsing AI response:', error);

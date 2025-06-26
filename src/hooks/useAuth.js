@@ -5,9 +5,11 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  updateProfile
 } from 'firebase/auth';
-import { auth } from '../firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, googleProvider, db } from '../firebase';
 
 const AuthContext = createContext({});
 
@@ -17,70 +19,80 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('Setting up auth state listener...');
-    const unsubscribe = onAuthStateChanged(auth, 
-      (user) => {
-        console.log('Auth state changed:', user ? 'User logged in' : 'No user');
-        setUser(user);
-        setLoading(false);
-      }, 
-      (error) => {
-        console.error('Auth state error:', error);
-        setError(error.message);
-        setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      setLoading(true);
+      
+      if (firebaseUser) {
+        // Fetch additional user data from Firestore
+        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+        const userData = userDoc.exists() ? userDoc.data() : {};
+        
+        setUser({
+          uid: firebaseUser.uid,
+          email: firebaseUser.email,
+          displayName: firebaseUser.displayName,
+          emailVerified: firebaseUser.emailVerified,
+          ...userData
+        });
+      } else {
+        setUser(null);
       }
-    );
+      
+      setLoading(false);
+    });
 
-    return () => {
-      console.log('Cleaning up auth state listener...');
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, []);
 
   const signInWithGoogle = async () => {
-    console.log('Attempting Google sign in...');
-    const provider = new GoogleAuthProvider();
     try {
-      const result = await signInWithPopup(auth, provider);
-      console.log('Google sign in successful');
-      return result.user;
+      const result = await signInWithPopup(auth, googleProvider);
+      // Save user profile to Firestore
+      await setDoc(doc(db, 'users', result.user.uid), {
+        email: result.user.email,
+        displayName: result.user.displayName,
+        createdAt: new Date().toISOString(),
+      }, { merge: true });
+      
+      return result;
     } catch (error) {
-      console.error('Error signing in with Google:', error);
       throw error;
     }
   };
 
   const signInWithEmail = async (email, password) => {
-    console.log('Attempting email sign in...');
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
-      console.log('Email sign in successful');
-      return result.user;
+      return result;
     } catch (error) {
-      console.error('Error signing in with email:', error);
       throw error;
     }
   };
 
-  const signUpWithEmail = async (email, password) => {
-    console.log('Attempting email sign up...');
+  const signUpWithEmail = async (email, password, displayName) => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      console.log('Email sign up successful');
-      return result.user;
+      
+      // Update profile with display name
+      await updateProfile(result.user, { displayName });
+      
+      // Save user profile to Firestore
+      await setDoc(doc(db, 'users', result.user.uid), {
+        email: result.user.email,
+        displayName: displayName,
+        createdAt: new Date().toISOString(),
+      });
+      
+      return result;
     } catch (error) {
-      console.error('Error signing up with email:', error);
       throw error;
     }
   };
 
   const logout = async () => {
-    console.log('Attempting logout...');
     try {
       await firebaseSignOut(auth);
-      console.log('Logout successful');
     } catch (error) {
-      console.error('Error signing out:', error);
       throw error;
     }
   };

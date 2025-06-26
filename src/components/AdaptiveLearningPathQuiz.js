@@ -741,7 +741,7 @@ const AdaptiveLearningPathQuiz = () => {
           });
         }
         
-        console.log('✅ Quiz completion saved to database');
+        // Quiz completion saved to database
       } catch (error) {
         console.error('Error saving quiz completion to database:', error);
         // Continue anyway - localStorage is our backup
