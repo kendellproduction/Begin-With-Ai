@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import { motion } from 'framer-motion';
@@ -7,9 +7,23 @@ import { motion } from 'framer-motion';
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState('overview');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Check for error messages from redirects (e.g., admin access denied)
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'admin_required') {
+      setErrorMessage('Admin access required. Contact an administrator to access that feature.');
+      // Clear the URL parameter
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('error');
+      navigate({ search: newSearchParams.toString() }, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   // Real user data - replace with actual data from your backend when available
   const userStats = {
@@ -190,6 +204,22 @@ const Dashboard = () => {
         `}</style>
       
         <main className="container mx-auto px-4 py-8">
+          {/* Error Message Display */}
+          {errorMessage && (
+            <div className="mb-8 max-w-2xl mx-auto">
+              <div className="bg-red-500/20 border border-red-400/50 backdrop-blur-sm rounded-xl p-4 flex items-center space-x-3">
+                <div className="text-red-400 text-xl">⚠️</div>
+                <div className="text-red-200">{errorMessage}</div>
+                <button 
+                  onClick={() => setErrorMessage('')}
+                  className="ml-auto text-red-300 hover:text-red-100 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Hero Welcome Section */}
           <div className="text-center mb-12">
             <div className="mb-6">

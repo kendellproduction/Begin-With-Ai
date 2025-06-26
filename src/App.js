@@ -27,8 +27,8 @@ import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
 
 // Priority 1: Heavy/Admin components (highest impact)
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
-// const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
-// const AiNews = React.lazy(() => import('./pages/AiNews'));
+const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
+const AiNews = React.lazy(() => import('./pages/AiNews'));
 const LessonsOverview = React.lazy(() => import('./pages/LessonsOverview'));
 
 // Priority 2: User flow pages
@@ -44,7 +44,7 @@ const Signup = React.lazy(() => import('./pages/Signup'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
 const HomePage = React.lazy(() => import('./pages/HomePage'));
 const Dashboard = React.lazy(() => import('./pages/Dashboard'));
-// const Pricing = React.lazy(() => import('./pages/Pricing'));
+const Pricing = React.lazy(() => import('./pages/Pricing'));
 
 // Learning flow pages
 const LessonDetail = React.lazy(() => import('./pages/LessonDetail'));
@@ -55,14 +55,6 @@ const Quiz = React.lazy(() => import('./pages/Quiz'));
 const QuizResults = React.lazy(() => import('./pages/QuizResults'));
 
 function App() {
-  // Simple inline component for testing
-  const SimpleHomeTest = () => (
-    <div style={{ padding: "100px", textAlign: "center", fontSize: "30px", background: "orange", color: "black" }}>
-      <h1>RAW APP.JS /home TEST</h1>
-      <p>If you see this, App.js can render a component at /home.</p>
-    </div>
-  );
-
   return (
     <Router>
       <AuthProvider>
@@ -103,9 +95,9 @@ function App() {
                     <Route path="" element={<LessonsOverview />} />
                   </Route>
 
-                  {/* <Route path="/pricing" element={<ProtectedRoute />}>
+                  <Route path="/pricing" element={<ProtectedRoute />}>
                     <Route index element={<Pricing />} />
-                  </Route> */}
+                  </Route>
 
                   {/* Lesson start page with difficulty selection */}
                   <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>
@@ -144,9 +136,9 @@ function App() {
                     <Route index element={<LearningPathResults />} />
                   </Route>
 
-                  {/* <Route path="/ai-news" element={<ProtectedRoute />}>
+                  <Route path="/ai-news" element={<ProtectedRoute />}>
                     <Route index element={<AiNews />} />
-                  </Route> */}
+                  </Route>
 
                   <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
                     <Route index element={<Quiz />} />
@@ -157,9 +149,9 @@ function App() {
                   </Route>
 
                   {/* Admin Panel - Only accessible by admin/dev users */}
-                  {/* <Route path="/admin" element={<ProtectedRoute />}>
+                  <Route path="/admin" element={<ProtectedRoute requireAdminRole={true} />}>
                     <Route index element={<AdminPanel />} />
-                  </Route> */}
+                  </Route>
 
                 </Routes>
               </Suspense>

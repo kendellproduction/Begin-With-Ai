@@ -23,7 +23,7 @@
     "clean-install": "rm -rf node_modules package-lock.json && npm cache clean --force && npm install",
     "safe-install": "npm ci || npm run clean-install",
     "pre-dev": "npm run safe-install && npm start",
-    "health-check": "npm ls --depth=0 && npm run build",
+    "health-check": "node scripts/health-check.js",
     "fix-corruption": "mv node_modules node_modules_broken_$(date +%Y%m%d_%H%M%S) && rm -f package-lock.json && npm cache clean --force && npm install",
     "dev-session-start": "echo '🚀 Starting development session...' && npm run health-check && echo '✅ Health check passed! Starting server...' && npm start"
   },

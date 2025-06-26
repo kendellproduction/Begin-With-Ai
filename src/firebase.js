@@ -51,18 +51,38 @@ googleProvider.setCustomParameters({
     prompt: 'select_account'
 });
 
-// TEMPORARILY DISABLED: Analytics causing API issues
-// const analytics = getAnalytics(app);
-const analytics = null;
+// Initialize Analytics with proper error handling
+let analytics = null;
+try {
+  // Only initialize analytics if we have the required configuration
+  if (firebaseConfig.measurementId && process.env.NODE_ENV === 'production') {
+    analytics = getAnalytics(app);
+    console.log('✅ Firebase Analytics initialized successfully');
+  } else if (process.env.NODE_ENV === 'development') {
+    // In development, we can still initialize but with warnings
+    if (firebaseConfig.measurementId) {
+      analytics = getAnalytics(app);
+      console.log('🔧 Firebase Analytics initialized for development');
+    } else {
+      console.warn('⚠️ Firebase Analytics measurement ID not found - analytics disabled');
+    }
+  }
+} catch (error) {
+  console.warn('⚠️ Firebase Analytics initialization failed:', error.message);
+  console.warn('Analytics will be disabled but app will continue to work');
+  analytics = null;
+}
 
 // Initialize Firestore Database
 const db = getFirestore(app);
 
-// TEMPORARY - REMOVE AFTER DATA POPULATION
-// window.db = db;
-// window.doc = doc;
-// window.setDoc = setDoc;
-// console.log("Firebase db, doc, setDoc are now temporarily on the window object for data seeding.");
-// END TEMPORARY
+// Production ready - no global window object exposure in production
+if (process.env.NODE_ENV === 'development') {
+  // Only expose for development/testing purposes
+  window.db = db;
+  window.doc = doc;
+  window.setDoc = setDoc;
+  console.log("🔧 Firebase utilities available on window object for development");
+}
 
 export { auth, googleProvider, analytics, db }; 
