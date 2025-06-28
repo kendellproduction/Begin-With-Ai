@@ -62,6 +62,7 @@ import LessonBuilder from './components/LessonBuilder';
 import ContentBlockDemo from './pages/ContentBlockDemo';
 import EnterpriseBuilder from './components/admin/EnterpriseBuilder';
 import EnterpriseBuilderTest from './components/admin/EnterpriseBuilderTest';
+import UnifiedLessonBuilder from './components/admin/UnifiedLessonBuilder';
 
 function App() {
   return (
@@ -157,25 +158,19 @@ function App() {
                     <Route index element={<QuizResults />} />
                   </Route>
 
-                  {/* Unified Admin Panel - Modern consolidated interface */}
-                  <Route path="/admin-unified" element={<ProtectedRoute requireAdminRole={true} />}>
+                  {/* ===== CONSOLIDATED ADMIN INTERFACE ===== */}
+                  {/* PRIMARY: Unified Admin Panel - Modern consolidated interface */}
+                  <Route path="/admin" element={<ProtectedRoute requireAdminRole={true} />}>
                     <Route index element={<UnifiedAdminPanel />} />
                   </Route>
 
-                  {/* New Streamlined Admin Dashboard */}
-                  <Route path="/admin-dashboard" element={<ProtectedRoute requireAdminRole={true} />}>
-                    <Route index element={<AdminDashboard />} />
-                  </Route>
+                  {/* LEGACY: Legacy admin interfaces - redirecting to unified panel */}
+                  <Route path="/admin-unified" element={<Navigate to="/admin" replace />} />
+                  <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+                  <Route path="/admin-panel" element={<Navigate to="/admin" replace />} />
 
-                  {/* Admin Panel - Only accessible by admin/dev users */}
-                  <Route path="/admin" element={<ProtectedRoute requireAdminRole={true} />}>
-                    <Route index element={<AdminPanel />} />
-                  </Route>
-
-                  {/* Draft Browser - Admin only */}
-                  <Route path="/drafts" element={<ProtectedRoute requireAdminRole={true} />}>
-                    <Route index element={<DraftBrowser />} />
-                  </Route>
+                  {/* Draft Browser - Integrated into unified admin */}
+                  <Route path="/drafts" element={<Navigate to="/admin" replace />} />
 
                   {/* Demo: Podcast Player Testing */}
                   <Route path="/podcast-demo" element={<ProtectedRoute />}>
@@ -186,13 +181,17 @@ function App() {
                     <Route index element={<ContentBlockDemo />} />
                   </Route>
 
+                  {/* Legacy lesson builders - keeping for compatibility */}
                   <Route path="/lesson-builder" element={<LessonBuilder />} />
-
-                  {/* Enterprise Builder - Phase 3 */}
                   <Route path="/enterprise-builder-test" element={<EnterpriseBuilderTest />} />
                   <Route path="/enterprise-builder" element={<EnterpriseBuilder />} />
                   <Route path="/enterprise-builder-full" element={<ProtectedRoute requireAdminRole={true} />}>
                     <Route index element={<EnterpriseBuilder />} />
+                  </Route>
+
+                  {/* NEW: Unified Lesson Builder - Combines best of both builders */}
+                  <Route path="/unified-lesson-builder" element={<ProtectedRoute requireAdminRole={true} />}>
+                    <Route index element={<UnifiedLessonBuilder />} />
                   </Route>
 
                 </Routes>

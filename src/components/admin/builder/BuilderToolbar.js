@@ -29,7 +29,8 @@ const BuilderToolbar = ({
   onZoomChange,
   onThemeChange,
   currentTheme = 'dark',
-  lastSaved
+  lastSaved,
+  saveStatus = 'saved'
 }) => {
   const zoomLevels = [50, 75, 100, 125, 150, 200];
   
@@ -183,12 +184,22 @@ const BuilderToolbar = ({
 
       {/* Right Section - Save & Templates */}
       <div className="flex items-center space-x-2">
-        {/* Last Saved Indicator */}
-        {lastSaved && (
-          <div className="text-xs text-gray-400 px-2">
-            Last saved: {lastSaved.toLocaleTimeString()}
-          </div>
-        )}
+        {/* Enhanced Save Status Indicator */}
+        <div className="flex items-center space-x-2 px-3 py-2 bg-gray-700 rounded-lg">
+          <div className={`w-2 h-2 rounded-full ${
+            saveStatus === 'saving' ? 'bg-yellow-400 animate-pulse' :
+            saveStatus === 'saved' ? 'bg-green-400' :
+            saveStatus === 'error' ? 'bg-red-400' :
+            'bg-orange-400'
+          }`} />
+          <span className="text-xs text-gray-300">
+            {saveStatus === 'saving' ? 'Saving...' :
+             saveStatus === 'saved' && lastSaved ? `Saved ${lastSaved.toLocaleTimeString()}` :
+             saveStatus === 'error' ? 'Save error' :
+             saveStatus === 'unsaved' ? 'Unsaved changes' :
+             'Ready'}
+          </span>
+        </div>
 
         {/* Theme Selector */}
         <div className="flex items-center space-x-2">

@@ -197,3 +197,163 @@ code {
   background-size: 8px 8px;
   background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
 }
+
+/* Custom Scrollbar Styles - Fix white bar issue */
+@layer utilities {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(75, 85, 99) rgb(31, 41, 55);
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: rgb(75, 85, 99);
+    border-radius: 3px;
+    border: none;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: rgb(107, 114, 128);
+  }
+  
+  .scrollbar-track-gray-800::-webkit-scrollbar-track {
+    background: rgb(31, 41, 55);
+  }
+  
+  .scrollbar-thumb-gray-600::-webkit-scrollbar-thumb {
+    background: rgb(75, 85, 99);
+  }
+  
+  .hover\:scrollbar-thumb-gray-500:hover::-webkit-scrollbar-thumb {
+    background: rgb(107, 114, 128);
+  }
+
+  /* Hide scrollbars completely when needed */
+  .scrollbar-hidden {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-hidden::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Modern glass effect scrollbars */
+  .scrollbar-glass::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .scrollbar-glass::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+}
+
+/* Fix textarea and input movement during editing */
+@layer components {
+  .stable-content {
+    min-height: 1.2em;
+    resize: none;
+    overflow: hidden;
+  }
+  
+  .stable-content:focus {
+    outline: none;
+    box-shadow: none;
+  }
+  
+  /* Prevent layout shifts in content blocks */
+  .content-block-stable {
+    min-height: fit-content;
+    contain: layout;
+  }
+  
+  .content-block-stable * {
+    box-sizing: border-box;
+  }
+}
+
+/* Enhanced focus styles for better UX */
+@layer components {
+  .focus-visible-blue {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-800;
+  }
+  
+  .glass-effect {
+    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .glass-button {
+    @apply glass-effect hover:bg-white/10 transition-all duration-200 rounded-lg;
+  }
+
+  /* Text truncation utilities */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Animation improvements */
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}

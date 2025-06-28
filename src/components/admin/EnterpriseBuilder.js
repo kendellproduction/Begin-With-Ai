@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -11,7 +11,9 @@ import {
   ArrowUturnLeftIcon,
   ArrowUturnRightIcon,
   TrashIcon,
-  PlusIcon
+  PlusIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 
 // Import content block system
@@ -27,6 +29,7 @@ import PageManagerSimple from './builder/PageManagerSimple';
 
 const EnterpriseBuilder = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   
   // Multi-page lesson state
   const [lessonPages, setLessonPages] = useState([]);
@@ -54,11 +57,22 @@ const EnterpriseBuilder = () => {
   // Templates and AI
   const [showTemplateManager, setShowTemplateManager] = useState(false);
   
-  // Draft saving with persistent ID
+  // Enhanced draft saving with better UX
   const [currentDraftId, setCurrentDraftId] = useState(null);
   const [draftName, setDraftName] = useState('');
   const [lastSaved, setLastSaved] = useState(null);
   const [showDraftModal, setShowDraftModal] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('saved'); // 'saving', 'saved', 'error', 'unsaved'
+  const [notification, setNotification] = useState(null);
+
+  // Auto-save functionality
+  const [autoSaveTimer, setAutoSaveTimer] = useState(null);
+
+  // Show notification helper
+  const showNotification = (type, message, duration = 3000) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), duration);
+  };
 
   // Generate unique IDs for new blocks
   const generateBlockId = () => `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -72,7 +86,74 @@ const EnterpriseBuilder = () => {
     newHistory.push(JSON.parse(JSON.stringify(newPages)));
     setHistory(newHistory);
     setHistoryIndex(newHistory.length - 1);
+    
+    // Trigger auto-save after changes
+    triggerAutoSave(newPages);
   }, [history, historyIndex]);
+
+  // Auto-save with debouncing
+  const triggerAutoSave = (pages = lessonPages) => {
+    if (autoSaveTimer) {
+      clearTimeout(autoSaveTimer);
+    }
+    
+    setSaveStatus('unsaved');
+    
+    const timer = setTimeout(() => {
+      saveDraftSilently(pages);
+    }, 2000); // Auto-save after 2 seconds of inactivity
+    
+    setAutoSaveTimer(timer);
+  };
+
+  // Silent draft save for auto-save
+  const saveDraftSilently = async (pages = lessonPages) => {
+    try {
+      setSaveStatus('saving');
+      
+      let draftId = currentDraftId;
+      if (!draftId) {
+        draftId = generateDraftId();
+        setCurrentDraftId(draftId);
+      }
+
+      const finalDraftName = draftName || `Draft ${new Date().toLocaleDateString()}`;
+
+      const draftData = {
+        id: draftId,
+        name: finalDraftName,
+        pages: pages,
+        currentPageIndex,
+        pageTheme,
+        created: currentDraftId ? lastSaved || new Date().toISOString() : new Date().toISOString(),
+        lastSaved: new Date().toISOString(),
+        metadata: {
+          totalPages: pages.length,
+          totalBlocks: pages.reduce((total, page) => total + page.blocks.length, 0),
+          version: '3.0-enterprise'
+        }
+      };
+      
+      // Save to localStorage with the persistent ID
+      const existingDrafts = JSON.parse(localStorage.getItem('lesson-drafts') || '[]');
+      const draftIndex = existingDrafts.findIndex(draft => draft.id === draftId);
+      
+      if (draftIndex >= 0) {
+        existingDrafts[draftIndex] = draftData;
+      } else {
+        existingDrafts.push(draftData);
+      }
+      
+      localStorage.setItem('lesson-drafts', JSON.stringify(existingDrafts));
+      setLastSaved(new Date());
+      setDraftName(finalDraftName);
+      setSaveStatus('saved');
+      
+    } catch (error) {
+      console.error('Error auto-saving draft:', error);
+      setSaveStatus('error');
+    }
+  };
 
   // Update current page's blocks
   const updateCurrentPageBlocks = (newBlocks) => {
@@ -531,73 +612,80 @@ const EnterpriseBuilder = () => {
     }
   };
 
-  // Save as draft with persistent ID
-  const saveDraft = async (name) => {
-    try {
-      // Use existing draft ID or create new one
-      let draftId = currentDraftId;
-      if (!draftId) {
-        draftId = generateDraftId();
-        setCurrentDraftId(draftId);
+  // Enhanced back navigation with proper routing
+  const goBack = () => {
+    // Check if there are unsaved changes
+    if (saveStatus === 'unsaved') {
+      const confirmLeave = window.confirm(
+        'You have unsaved changes. Do you want to save before leaving?'
+      );
+      if (confirmLeave) {
+        saveDraftSilently().then(() => {
+          navigateBack();
+        });
+        return;
       }
+    }
+    navigateBack();
+  };
 
-      const finalDraftName = name || draftName || `Draft ${new Date().toLocaleDateString()}`;
-
-      const draftData = {
-        id: draftId,
-        name: finalDraftName,
-        pages: lessonPages,
-        currentPageIndex,
-        pageTheme,
-        created: currentDraftId ? lastSaved || new Date().toISOString() : new Date().toISOString(),
-        lastSaved: new Date().toISOString(),
-        metadata: {
-          totalPages: lessonPages.length,
-          totalBlocks: lessonPages.reduce((total, page) => total + page.blocks.length, 0),
-          version: '3.0-enterprise'
-        }
-      };
-      
-      // Save to localStorage with the persistent ID
-      const existingDrafts = JSON.parse(localStorage.getItem('lesson-drafts') || '[]');
-      const draftIndex = existingDrafts.findIndex(draft => draft.id === draftId);
-      
-      if (draftIndex >= 0) {
-        // Update existing draft
-        existingDrafts[draftIndex] = draftData;
-      } else {
-        // Add new draft
-        existingDrafts.push(draftData);
-      }
-      
-      localStorage.setItem('lesson-drafts', JSON.stringify(existingDrafts));
-      setLastSaved(new Date());
-      setDraftName(finalDraftName);
-      
-      alert(`Draft "${finalDraftName}" saved successfully!`);
-    } catch (error) {
-      console.error('Error saving draft:', error);
-      alert('Error saving draft. Please try again.');
+  const navigateBack = () => {
+    // Try to go back to the specific admin panel page, not browser history
+    const fromAdmin = location.state?.fromAdmin || 
+                      new URLSearchParams(window.location.search).get('fromAdmin');
+    if (fromAdmin) {
+      navigate('/admin', { state: { activePanel: 'content-creation' } });
+    } else {
+      // Fallback to admin panel if no specific reference
+      navigate('/admin');
     }
   };
 
-  // Initialize draft ID on first component add
-  React.useEffect(() => {
-    if (lessonPages.length > 0 && lessonPages.some(page => page.blocks.length > 0) && !currentDraftId) {
-      setCurrentDraftId(generateDraftId());
+  // Enhanced template application
+  const handleApplyTemplate = (template) => {
+    if (lessonBlocks.length > 0) {
+      const confirmReplace = window.confirm(
+        'This will replace the current page content. Are you sure?'
+      );
+      if (!confirmReplace) return;
     }
-  }, [lessonPages, currentDraftId]);
-
-  // Go back to previous page (admin dashboard)
-  const goBack = () => {
-    if (window.confirm('Are you sure you want to leave? Any unsaved changes will be lost.')) {
-      window.history.back();
-    }
+    
+    // Create new blocks from template with proper IDs
+    const newBlocks = template.blocks.map(blockTemplate => ({
+      ...createNewBlock(blockTemplate.type),
+      content: blockTemplate.content
+    }));
+    
+    updateCurrentPageBlocks(newBlocks);
+    setShowTemplateManager(false);
+    showNotification('success', `Applied template: ${template.name}`);
   };
 
   return (
     <div className="h-screen bg-gray-900 text-white flex flex-col overflow-hidden">
-      {/* Top Toolbar */}
+      {/* Enhanced Notifications */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: -50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 ${
+              notification.type === 'success' 
+                ? 'bg-green-600 text-white' 
+                : notification.type === 'error'
+                ? 'bg-red-600 text-white'
+                : 'bg-blue-600 text-white'
+            }`}
+          >
+            {notification.type === 'success' && <CheckCircleIcon className="w-5 h-5" />}
+            {notification.type === 'error' && <ExclamationTriangleIcon className="w-5 h-5" />}
+            <span>{notification.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Top Toolbar with enhanced save status */}
       <BuilderToolbar
         onSave={saveLesson}
         onSaveDraft={() => setShowDraftModal(true)}
@@ -614,16 +702,17 @@ const EnterpriseBuilder = () => {
         onThemeChange={setPageTheme}
         currentTheme={pageTheme}
         lastSaved={lastSaved}
+        saveStatus={saveStatus}
       />
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex-1 flex overflow-hidden">
+          <div className="flex-1 flex overflow-hidden min-h-0">
             {/* Left Sidebar - Component Palette */}
             {!previewMode && (
             <div className="w-80 bg-gray-800 border-r border-gray-700 flex flex-col">
-              <div className="p-4 border-b border-gray-700">
+              <div className="p-3 border-b border-gray-700 flex-shrink-0">
                 <div className="flex space-x-1 bg-gray-700 rounded-lg p-1">
                   <button
                     onClick={() => setActivePanel('components')}
@@ -650,13 +739,11 @@ const EnterpriseBuilder = () => {
                 </div>
               </div>
               
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-hidden min-h-0">
                 {activePanel === 'components' && <ComponentPalette onAddComponent={handleAddComponent} />}
                 {activePanel === 'templates' && (
                   <TemplateManager
-                    onApplyTemplate={(template) => {
-                      updateCurrentPageBlocks(template.blocks);
-                    }}
+                    onApplyTemplate={handleApplyTemplate}
                   />
                 )}
               </div>
@@ -664,7 +751,7 @@ const EnterpriseBuilder = () => {
           )}
 
           {/* Center Canvas - Live Preview */}
-          <div className="flex-1 flex flex-col bg-gray-850 overflow-hidden">
+          <div className="flex-1 flex flex-col bg-gray-850 overflow-hidden min-h-0">
             <CanvasPreview
               blocks={lessonBlocks}
               selectedBlockId={selectedBlockId}
@@ -682,7 +769,7 @@ const EnterpriseBuilder = () => {
           {/* Right Sidebar - Properties Panel */}
           {!previewMode && showPropertiesPanel && selectedBlock && (
             <div className="w-80 bg-gray-800 border-l border-gray-700 flex flex-col">
-              <div className="p-4 border-b border-gray-700 flex items-center justify-between">
+              <div className="p-4 border-b border-gray-700 flex items-center justify-between flex-shrink-0">
                 <h3 className="text-lg font-semibold">Properties</h3>
                 <button
                   onClick={() => setShowPropertiesPanel(false)}
@@ -692,7 +779,7 @@ const EnterpriseBuilder = () => {
                 </button>
               </div>
               
-              <div className="flex-1 overflow-y-auto">
+              <div className="flex-1 overflow-hidden min-h-0">
                 <PropertiesPanel
                   block={selectedBlock}
                   onContentUpdate={(content) => updateBlockContent(selectedBlock.id, content)}
@@ -706,15 +793,17 @@ const EnterpriseBuilder = () => {
 
           {/* Bottom iPhone Photos-style Page Manager */}
           {!previewMode && (
-            <PageManagerSimple
-              pages={lessonPages}
-              currentPageIndex={currentPageIndex}
-              onPageSelect={handlePageSelect}
-              onPageAdd={handlePageAdd}
-              onPageDelete={handlePageDelete}
-              onPageDuplicate={handlePageDuplicate}
-              className="h-32"
-            />
+            <div className="flex-shrink-0 bg-gray-800 border-t border-gray-700">
+              <PageManagerSimple
+                pages={lessonPages}
+                currentPageIndex={currentPageIndex}
+                onPageSelect={handlePageSelect}
+                onPageAdd={handlePageAdd}
+                onPageDelete={handlePageDelete}
+                onPageDuplicate={handlePageDuplicate}
+                className="h-28 p-4"
+              />
+            </div>
           )}
         </DragDropContext>
       </div>
@@ -769,7 +858,7 @@ const EnterpriseBuilder = () => {
                   </button>
                   <button
                     onClick={() => {
-                      saveDraft(draftName);
+                      saveDraftSilently();
                       setShowDraftModal(false);
                       setDraftName('');
                     }}
@@ -812,10 +901,7 @@ const EnterpriseBuilder = () => {
               </div>
               
               <TemplateManager
-                onApplyTemplate={(template) => {
-                  updateCurrentPageBlocks(template.blocks);
-                  setShowTemplateManager(false);
-                }}
+                onApplyTemplate={handleApplyTemplate}
                 currentBlocks={lessonBlocks}
               />
             </motion.div>

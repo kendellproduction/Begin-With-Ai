@@ -3,297 +3,466 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FolderIcon,
   DocumentTextIcon,
+  AcademicCapIcon,
   EyeIcon,
   PencilSquareIcon,
   TrashIcon,
-  DocumentDuplicateIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
+  ChevronRightIcon,
+  ChevronDownIcon,
   PlusIcon,
+  MagnifyingGlassIcon,
+  TagIcon,
   ClockIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon
+  UserIcon,
+  BookOpenIcon,
+  ArrowPathIcon
 } from '@heroicons/react/24/outline';
 
-// Import existing components
-import ModuleManager from '../ModuleManager';
-import DraftManager from '../DraftManager';
+// Import admin services
+import { 
+  getAllLearningPaths, 
+  getAllModulesFlat,
+  deleteLesson,
+  deleteLearningPath,
+  deleteModule,
+  updateLesson,
+  updateModule,
+  updateLearningPath
+} from '../../../services/adminService';
 
 const ContentManagement = () => {
-  const [activeTab, setActiveTab] = useState('modules');
+  const [learningPaths, setLearningPaths] = useState([]);
+  const [expandedPaths, setExpandedPaths] = useState(new Set());
+  const [expandedModules, setExpandedModules] = useState(new Set());
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [notification, setNotification] = useState(null);
+  const [viewMode, setViewMode] = useState('tree'); // 'tree' or 'list'
 
-  const tabs = [
-    { id: 'modules', name: 'Modules & Lessons', icon: FolderIcon, count: 47 },
-    { id: 'drafts', name: 'Drafts', icon: ClockIcon, count: 12 },
-    { id: 'templates', name: 'Templates', icon: DocumentDuplicateIcon, count: 8 },
-    { id: 'archived', name: 'Archived', icon: ExclamationCircleIcon, count: 3 }
-  ];
+  useEffect(() => {
+    loadContent();
+  }, []);
 
-  const ContentStats = () => (
-    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-400">Published Lessons</p>
-            <p className="text-2xl font-bold text-white">47</p>
-          </div>
-          <CheckCircleIcon className="w-8 h-8 text-green-400" />
-        </div>
-      </div>
-      
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-400">Draft Lessons</p>
-            <p className="text-2xl font-bold text-white">12</p>
-          </div>
-          <ClockIcon className="w-8 h-8 text-yellow-400" />
-        </div>
-      </div>
-      
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-400">Active Modules</p>
-            <p className="text-2xl font-bold text-white">8</p>
-          </div>
-          <FolderIcon className="w-8 h-8 text-blue-400" />
-        </div>
-      </div>
-      
-      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-400">Templates</p>
-            <p className="text-2xl font-bold text-white">8</p>
-          </div>
-          <DocumentDuplicateIcon className="w-8 h-8 text-purple-400" />
-        </div>
-      </div>
-    </div>
-  );
+  const loadContent = async () => {
+    try {
+      setLoading(true);
+      const paths = await getAllLearningPaths();
+      setLearningPaths(paths);
+    } catch (error) {
+      console.error('Error loading content:', error);
+      showNotification('error', 'Error loading content');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const SearchAndFilters = () => (
-    <div className="flex flex-col md:flex-row gap-4 mb-6">
-      {/* Search */}
-      <div className="flex-1 relative">
-        <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search lessons, modules, or templates..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
-      {/* Filters */}
-      <div className="flex items-center space-x-2">
-        <div className="relative">
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="appearance-none bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="all">All Status</option>
-            <option value="published">Published</option>
-            <option value="draft">Draft</option>
-            <option value="archived">Archived</option>
-          </select>
-          <FunnelIcon className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-        </div>
+  const togglePathExpansion = (pathId) => {
+    const newExpanded = new Set(expandedPaths);
+    if (newExpanded.has(pathId)) {
+      newExpanded.delete(pathId);
+    } else {
+      newExpanded.add(pathId);
+    }
+    setExpandedPaths(newExpanded);
+  };
 
-        <button
-          onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          className="px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 hover:text-white transition-colors"
-        >
-          {viewMode === 'grid' ? 'List' : 'Grid'}
-        </button>
-      </div>
-    </div>
-  );
+  const toggleModuleExpansion = (moduleId) => {
+    const newExpanded = new Set(expandedModules);
+    if (newExpanded.has(moduleId)) {
+      newExpanded.delete(moduleId);
+    } else {
+      newExpanded.add(moduleId);
+    }
+    setExpandedModules(newExpanded);
+  };
 
-  const TabNavigation = () => (
-    <div className="flex flex-wrap gap-2 mb-6 border-b border-gray-700">
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
-          className={`flex items-center space-x-2 px-4 py-3 rounded-t-lg transition-all duration-200 ${
-            activeTab === tab.id
-              ? 'bg-gray-800 border-b-2 border-blue-500 text-white'
-              : 'text-gray-400 hover:text-white hover:bg-gray-800'
-          }`}
-        >
-          <tab.icon className="w-4 h-4" />
-          <span>{tab.name}</span>
-          <span className={`px-2 py-1 text-xs rounded-full ${
-            activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300'
-          }`}>
-            {tab.count}
-          </span>
-        </button>
-      ))}
-    </div>
-  );
+  const handleEdit = (item, type) => {
+    setSelectedItem({ ...item, type });
+    showNotification('info', `Opening ${type} editor...`);
+  };
 
-  const EmptyState = ({ title, description, actionText, onAction }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="text-center py-12"
-    >
-      <div className="w-16 h-16 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-        <DocumentTextIcon className="w-8 h-8 text-gray-400" />
-      </div>
-      <h3 className="text-lg font-medium text-white mb-2">{title}</h3>
-      <p className="text-gray-400 mb-6 max-w-md mx-auto">{description}</p>
-      {actionText && onAction && (
-        <button
-          onClick={onAction}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-        >
-          {actionText}
-        </button>
-      )}
-    </motion.div>
-  );
+  const handleDelete = async (item, type) => {
+    if (!window.confirm(`Are you sure you want to delete this ${type}?`)) {
+      return;
+    }
 
-  const TemplatesGrid = () => {
-    const templates = [
-      {
-        id: 1,
-        name: 'Quiz Template',
-        description: 'Multiple choice quiz with explanations',
-        thumbnail: '🧠',
-        uses: 24,
-        lastUsed: '2 days ago',
-        category: 'Assessment'
-      },
-      {
-        id: 2,
-        name: 'Code Challenge',
-        description: 'Interactive coding exercise template',
-        thumbnail: '💻',
-        uses: 18,
-        lastUsed: '1 week ago',
-        category: 'Programming'
-      },
-      {
-        id: 3,
-        name: 'Video Lesson',
-        description: 'Video content with interactive elements',
-        thumbnail: '🎥',
-        uses: 15,
-        lastUsed: '3 days ago',
-        category: 'Media'
+    try {
+      switch (type) {
+        case 'lesson':
+          await deleteLesson(item.pathId, item.moduleId, item.id);
+          break;
+        case 'module':
+          await deleteModule(item.pathId, item.id);
+          break;
+        case 'path':
+          await deleteLearningPath(item.id);
+          break;
       }
-    ];
+      
+      showNotification('success', `${type} deleted successfully`);
+      await loadContent();
+    } catch (error) {
+      console.error(`Error deleting ${type}:`, error);
+      showNotification('error', `Error deleting ${type}`);
+    }
+  };
 
+  const filteredPaths = learningPaths.filter(path => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    
+    // Search in path name and description
+    if (path.title?.toLowerCase().includes(query) || 
+        path.description?.toLowerCase().includes(query)) {
+      return true;
+    }
+    
+    // Search in modules and lessons
+    return path.modules?.some(module => 
+      module.title?.toLowerCase().includes(query) ||
+      module.description?.toLowerCase().includes(query) ||
+      module.lessons?.some(lesson => 
+        lesson.title?.toLowerCase().includes(query) ||
+        lesson.description?.toLowerCase().includes(query)
+      )
+    );
+  });
+
+  const PathTreeItem = ({ path }) => {
+    const isExpanded = expandedPaths.has(path.id);
+    
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map((template, index) => (
-          <motion.div
-            key={template.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="bg-gray-800 border border-gray-700 rounded-lg p-6 hover:border-gray-600 transition-colors"
-          >
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <div className="text-3xl">{template.thumbnail}</div>
-                <div>
-                  <h3 className="font-medium text-white">{template.name}</h3>
-                  <p className="text-sm text-gray-400">{template.category}</p>
+      <div className="border border-gray-700 rounded-lg mb-4 overflow-hidden">
+        {/* Path Header */}
+        <div className="bg-gray-800 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 flex-1">
+              <button
+                onClick={() => togglePathExpansion(path.id)}
+                className="p-1 hover:bg-gray-700 rounded transition-colors"
+              >
+                {isExpanded ? (
+                  <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
+              
+              <BookOpenIcon className="w-5 h-5 text-blue-400" />
+              
+              <div className="flex-1">
+                <h3 className="font-semibold text-white">{path.title}</h3>
+                <p className="text-sm text-gray-400">{path.description}</p>
+                <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                  <span>{path.modules?.length || 0} modules</span>
+                  <span>{path.modules?.reduce((acc, mod) => acc + (mod.lessons?.length || 0), 0) || 0} lessons</span>
+                  <span>Updated {new Date(path.updatedAt || path.createdAt).toLocaleDateString()}</span>
                 </div>
               </div>
-              <div className="flex space-x-1">
-                <button className="p-1 rounded hover:bg-gray-700 transition-colors">
-                  <EyeIcon className="w-4 h-4 text-gray-400" />
-                </button>
-                <button className="p-1 rounded hover:bg-gray-700 transition-colors">
-                  <PencilSquareIcon className="w-4 h-4 text-gray-400" />
-                </button>
-                <button className="p-1 rounded hover:bg-gray-700 transition-colors">
-                  <DocumentDuplicateIcon className="w-4 h-4 text-gray-400" />
-                </button>
-              </div>
             </div>
             
-            <p className="text-sm text-gray-300 mb-4">{template.description}</p>
-            
-            <div className="flex items-center justify-between text-sm text-gray-400">
-              <span>Used {template.uses} times</span>
-              <span>Last used {template.lastUsed}</span>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleEdit(path, 'path')}
+                className="p-2 hover:bg-gray-700 rounded transition-colors"
+              >
+                <PencilSquareIcon className="w-4 h-4 text-gray-400" />
+              </button>
+              <button
+                onClick={() => handleDelete(path, 'path')}
+                className="p-2 hover:bg-red-800 rounded transition-colors"
+              >
+                <TrashIcon className="w-4 h-4 text-red-400" />
+              </button>
             </div>
-          </motion.div>
-        ))}
+          </div>
+        </div>
+        
+        {/* Modules */}
+        {isExpanded && path.modules && (
+          <div className="bg-gray-850 border-t border-gray-700">
+            {path.modules.map((module) => (
+              <ModuleTreeItem 
+                key={module.id} 
+                module={module} 
+                pathId={path.id}
+              />
+            ))}
+            
+            {/* Add Module Button */}
+            <div className="p-4 border-t border-gray-700">
+              <button className="flex items-center space-x-2 text-sm text-blue-400 hover:text-blue-300 transition-colors">
+                <PlusIcon className="w-4 h-4" />
+                <span>Add Module</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'modules':
-        return <ModuleManager onShowNotification={(type, message) => console.log(type, message)} />;
-      case 'drafts':
-        return <DraftManager />;
-      case 'templates':
-        return <TemplatesGrid />;
-      case 'archived':
-        return (
-          <EmptyState
-            title="No archived content"
-            description="Archived lessons and modules will appear here. Archive content to declutter your active workspace while keeping it accessible."
-            actionText="Browse Active Content"
-            onAction={() => setActiveTab('modules')}
-          />
-        );
-      default:
-        return null;
-    }
+  const ModuleTreeItem = ({ module, pathId }) => {
+    const isExpanded = expandedModules.has(module.id);
+    
+    return (
+      <div className="border-l-2 border-gray-600 ml-8">
+        {/* Module Header */}
+        <div className="p-4 border-b border-gray-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3 flex-1">
+              <button
+                onClick={() => toggleModuleExpansion(module.id)}
+                className="p-1 hover:bg-gray-700 rounded transition-colors"
+              >
+                {isExpanded ? (
+                  <ChevronDownIcon className="w-4 h-4 text-gray-400" />
+                ) : (
+                  <ChevronRightIcon className="w-4 h-4 text-gray-400" />
+                )}
+              </button>
+              
+              <FolderIcon className="w-5 h-5 text-yellow-400" />
+              
+              <div className="flex-1">
+                <h4 className="font-medium text-white">{module.title}</h4>
+                <p className="text-sm text-gray-400">{module.description}</p>
+                <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+                  <span>{module.lessons?.length || 0} lessons</span>
+                  <span>Order: {module.order}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => handleEdit({ ...module, pathId }, 'module')}
+                className="p-2 hover:bg-gray-700 rounded transition-colors"
+              >
+                <PencilSquareIcon className="w-4 h-4 text-gray-400" />
+              </button>
+              <button
+                onClick={() => handleDelete({ ...module, pathId }, 'module')}
+                className="p-2 hover:bg-red-800 rounded transition-colors"
+              >
+                <TrashIcon className="w-4 h-4 text-red-400" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Lessons */}
+        {isExpanded && module.lessons && (
+          <div className="ml-4">
+            {module.lessons.map((lesson) => (
+              <LessonTreeItem 
+                key={lesson.id} 
+                lesson={lesson} 
+                pathId={pathId}
+                moduleId={module.id}
+              />
+            ))}
+            
+            {/* Add Lesson Button */}
+            <div className="p-3 border-b border-gray-700">
+              <button className="flex items-center space-x-2 text-sm text-green-400 hover:text-green-300 transition-colors">
+                <PlusIcon className="w-4 h-4" />
+                <span>Add Lesson</span>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
+  const LessonTreeItem = ({ lesson, pathId, moduleId }) => (
+    <div className="p-3 border-b border-gray-700 hover:bg-gray-750 transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3 flex-1">
+          <DocumentTextIcon className="w-4 h-4 text-green-400" />
+          
+          <div className="flex-1">
+            <h5 className="text-white">{lesson.title}</h5>
+            <p className="text-sm text-gray-400">{lesson.description}</p>
+            <div className="flex items-center space-x-4 mt-1 text-xs text-gray-500">
+              <span>Order: {lesson.order}</span>
+              <span>{lesson.pages?.length || 0} pages</span>
+              <span>Difficulty: {lesson.difficulty || 'Not set'}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => window.open(`/lesson-viewer/${lesson.id}`, '_blank')}
+            className="p-2 hover:bg-gray-700 rounded transition-colors"
+          >
+            <EyeIcon className="w-4 h-4 text-gray-400" />
+          </button>
+          <button
+            onClick={() => handleEdit({ ...lesson, pathId, moduleId }, 'lesson')}
+            className="p-2 hover:bg-gray-700 rounded transition-colors"
+          >
+            <PencilSquareIcon className="w-4 h-4 text-gray-400" />
+          </button>
+          <button
+            onClick={() => handleDelete({ ...lesson, pathId, moduleId }, 'lesson')}
+            className="p-2 hover:bg-red-800 rounded transition-colors"
+          >
+            <TrashIcon className="w-4 h-4 text-red-400" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading content...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Notification */}
+      {notification && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-4 rounded-lg border ${
+            notification.type === 'error' 
+              ? 'bg-red-900 border-red-600 text-red-100' 
+              : notification.type === 'success'
+              ? 'bg-green-900 border-green-600 text-green-100'
+              : 'bg-blue-900 border-blue-600 text-blue-100'
+          }`}
+        >
+          {notification.message}
+        </motion.div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Content Management</h1>
-          <p className="text-gray-400">Organize and manage your educational content</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Content Management</h2>
+          <p className="text-gray-400">Organize and manage your learning content</p>
         </div>
         
-        <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-          <PlusIcon className="w-4 h-4" />
-          <span>Create New</span>
-        </button>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={loadContent}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            <ArrowPathIcon className="w-4 h-4" />
+            <span>Refresh</span>
+          </button>
+        </div>
       </div>
 
-      {/* Content Stats */}
-      <ContentStats />
-
       {/* Search and Filters */}
-      <SearchAndFilters />
+      <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+        <div className="flex items-center space-x-4">
+          <div className="relative flex-1">
+            <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search learning paths, modules, and lessons..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          
+          <select 
+            value={viewMode}
+            onChange={(e) => setViewMode(e.target.value)}
+            className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="tree">Tree View</option>
+            <option value="list">List View</option>
+          </select>
+        </div>
+      </div>
 
-      {/* Tab Navigation */}
-      <TabNavigation />
+      {/* Content Tree */}
+      <div className="space-y-4">
+        {filteredPaths.length === 0 ? (
+          <div className="text-center py-12">
+            <AcademicCapIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-400 mb-2">
+              {searchQuery ? 'No matching content found' : 'No content created yet'}
+            </h3>
+            <p className="text-gray-500 mb-6">
+              {searchQuery 
+                ? 'Try adjusting your search terms' 
+                : 'Start by creating your first learning path'
+              }
+            </p>
+            {!searchQuery && (
+              <button className="px-6 py-3 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-medium transition-colors">
+                Create Learning Path
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredPaths.map((path) => (
+              <PathTreeItem key={path.id} path={path} />
+            ))}
+          </div>
+        )}
+      </div>
 
-      {/* Tab Content */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.2 }}
-        >
-          {renderTabContent()}
-        </motion.div>
-      </AnimatePresence>
+      {/* Content Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="flex items-center space-x-3">
+            <BookOpenIcon className="w-8 h-8 text-blue-400" />
+            <div>
+              <h3 className="text-lg font-semibold text-white">Learning Paths</h3>
+              <p className="text-2xl font-bold text-blue-400">{learningPaths.length}</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="flex items-center space-x-3">
+            <FolderIcon className="w-8 h-8 text-yellow-400" />
+            <div>
+              <h3 className="text-lg font-semibold text-white">Modules</h3>
+              <p className="text-2xl font-bold text-yellow-400">
+                {learningPaths.reduce((acc, path) => acc + (path.modules?.length || 0), 0)}
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="flex items-center space-x-3">
+            <DocumentTextIcon className="w-8 h-8 text-green-400" />
+            <div>
+              <h3 className="text-lg font-semibold text-white">Lessons</h3>
+              <p className="text-2xl font-bold text-green-400">
+                {learningPaths.reduce((acc, path) => 
+                  acc + (path.modules?.reduce((modAcc, mod) => modAcc + (mod.lessons?.length || 0), 0) || 0), 0
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

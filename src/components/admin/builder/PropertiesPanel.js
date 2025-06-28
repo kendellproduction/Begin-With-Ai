@@ -31,11 +31,13 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
 
   if (!block) {
     return (
-      <div className="h-full flex items-center justify-center text-gray-400">
-        <div className="text-center">
-          <div className="text-4xl mb-4">🎯</div>
-          <div className="font-medium">No Block Selected</div>
-          <div className="text-sm mt-1">Click on a block to edit its properties</div>
+      <div className="h-full flex items-center justify-center text-gray-400 bg-gradient-to-b from-gray-800 to-gray-850">
+        <div className="text-center p-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-gray-600/30">
+            <div className="text-3xl">🎯</div>
+          </div>
+          <div className="font-semibold text-white mb-2">No Block Selected</div>
+          <div className="text-sm text-gray-400 leading-relaxed">Click on a block in the canvas<br />to edit its properties</div>
         </div>
       </div>
     );
@@ -116,16 +118,38 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
           {/* Typography Controls */}
           <div className="space-y-4">
             <div>
+              <label className="block text-xs text-gray-400 mb-2">Font Family</label>
+              <select
+                value={localStyles.fontFamily || 'inherit'}
+                onChange={(e) => handleStyleChange('fontFamily', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="inherit">Default</option>
+                <option value="'Inter', sans-serif">Inter (Modern)</option>
+                <option value="'Roboto', sans-serif">Roboto (Clean)</option>
+                <option value="'Poppins', sans-serif">Poppins (Friendly)</option>
+                <option value="'Montserrat', sans-serif">Montserrat (Professional)</option>
+                <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="Georgia, serif">Georgia (Serif)</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Courier New', monospace">Courier New (Code)</option>
+                <option value="'Fira Code', monospace">Fira Code (Modern Code)</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-xs text-gray-400 mb-2">Font Size</label>
               <input
                 type="range"
                 min="12"
                 max="48"
-                value={localStyles.fontSize || 16}
-                onChange={(e) => handleStyleChange('fontSize', e.target.value)}
+                value={parseInt(localStyles.fontSize) || 16}
+                onChange={(e) => handleStyleChange('fontSize', e.target.value + 'px')}
                 className="w-full"
               />
-              <div className="text-xs text-gray-400 text-center mt-1">{localStyles.fontSize || 16}px</div>
+              <div className="text-xs text-gray-400 text-center mt-1">{parseInt(localStyles.fontSize) || 16}px</div>
             </div>
 
             <div>
@@ -135,11 +159,11 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
                 min="1"
                 max="3"
                 step="0.1"
-                value={localStyles.lineHeight || 1.5}
+                value={parseFloat(localStyles.lineHeight) || 1.5}
                 onChange={(e) => handleStyleChange('lineHeight', e.target.value)}
                 className="w-full"
               />
-              <div className="text-xs text-gray-400 text-center mt-1">{localStyles.lineHeight || 1.5}</div>
+              <div className="text-xs text-gray-400 text-center mt-1">{parseFloat(localStyles.lineHeight) || 1.5}</div>
             </div>
 
             <div>
@@ -257,16 +281,38 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
           {/* Typography Controls */}
           <div className="space-y-4">
             <div>
+              <label className="block text-xs text-gray-400 mb-2">Font Family</label>
+              <select
+                value={localStyles.fontFamily || 'inherit'}
+                onChange={(e) => handleStyleChange('fontFamily', e.target.value)}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="inherit">Default</option>
+                <option value="'Inter', sans-serif">Inter (Modern)</option>
+                <option value="'Roboto', sans-serif">Roboto (Clean)</option>
+                <option value="'Poppins', sans-serif">Poppins (Friendly)</option>
+                <option value="'Montserrat', sans-serif">Montserrat (Professional)</option>
+                <option value="'Source Sans Pro', sans-serif">Source Sans Pro</option>
+                <option value="'Open Sans', sans-serif">Open Sans</option>
+                <option value="'Lato', sans-serif">Lato</option>
+                <option value="Georgia, serif">Georgia (Serif)</option>
+                <option value="'Times New Roman', serif">Times New Roman</option>
+                <option value="'Courier New', monospace">Courier New (Code)</option>
+                <option value="'Fira Code', monospace">Fira Code (Modern Code)</option>
+              </select>
+            </div>
+
+            <div>
               <label className="block text-xs text-gray-400 mb-2">Font Size</label>
               <input
                 type="range"
                 min="12"
                 max="48"
-                value={localStyles.fontSize || 16}
-                onChange={(e) => handleStyleChange('fontSize', e.target.value)}
+                value={parseInt(localStyles.fontSize) || 16}
+                onChange={(e) => handleStyleChange('fontSize', e.target.value + 'px')}
                 className="w-full"
               />
-              <div className="text-xs text-gray-400 text-center mt-1">{localStyles.fontSize || 16}px</div>
+              <div className="text-xs text-gray-400 text-center mt-1">{parseInt(localStyles.fontSize) || 16}px</div>
             </div>
 
             <div>
@@ -276,11 +322,11 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
                 min="1"
                 max="3"
                 step="0.1"
-                value={localStyles.lineHeight || 1.5}
+                value={parseFloat(localStyles.lineHeight) || 1.5}
                 onChange={(e) => handleStyleChange('lineHeight', e.target.value)}
                 className="w-full"
               />
-              <div className="text-xs text-gray-400 text-center mt-1">{localStyles.lineHeight || 1.5}</div>
+              <div className="text-xs text-gray-400 text-center mt-1">{parseFloat(localStyles.lineHeight) || 1.5}</div>
             </div>
 
             <div>
@@ -598,59 +644,58 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
   const shouldShowTabs = ['text', 'heading'].includes(block.type);
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="flex items-center space-x-3 p-4 border-b border-gray-700 bg-gray-800">
-        <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-lg">
-          {React.createElement(getBlockIconComponent(), { className: "w-4 h-4 text-white" })}
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-white capitalize">
-            {block.type.replace('_', ' ')} Block
-          </h3>
-          <div className="text-xs text-gray-400">
-            ID: {block.id?.slice(-8)}
+    <div className="h-full flex flex-col bg-gradient-to-b from-gray-800 to-gray-850">
+      {/* Enhanced Header */}
+      <div className="p-6 border-b border-gray-700/50 bg-gradient-to-r from-gray-800 to-gray-700">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+            {getBlockIcon()}
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white">{block.type} Properties</h3>
+            <p className="text-sm text-gray-400">Customize this block's appearance and behavior</p>
           </div>
         </div>
-      </div>
-
-      {/* Tabs for text and heading blocks */}
-      {shouldShowTabs && (
-        <div className="flex border-b border-gray-700">
-          <button
-            onClick={() => setActiveTab('content')}
-            className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg ${
-              activeTab === 'content'
-                ? 'bg-gray-700 text-white border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
-            }`}
-          >
-            <DocumentTextIcon className="w-4 h-4 mr-2" />
-            Content
-          </button>
-          <button
-            onClick={() => setActiveTab('styles')}
-            className={`flex-1 px-4 py-3 text-sm font-medium rounded-t-lg ${
-              activeTab === 'styles'
-                ? 'bg-gray-700 text-white border-b-2 border-blue-500'
-                : 'text-gray-400 hover:text-gray-300 hover:bg-gray-800'
-            }`}
-          >
-            <PaintBrushIcon className="w-4 h-4 mr-2" />
-            Styles
-          </button>
+        
+        {/* Enhanced Tab Navigation */}
+        <div className="flex space-x-1 bg-gray-700/50 rounded-xl p-1">
+          {[
+            { id: 'content', label: 'Content', icon: '📝' },
+            { id: 'styles', label: 'Styles', icon: '🎨' },
+            { id: 'config', label: 'Config', icon: '⚙️' }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === tab.id
+                  ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg shadow-blue-600/20'
+                  : 'text-gray-300 hover:text-white hover:bg-gray-600/50'
+              }`}
+            >
+              <span className="mr-2">{tab.icon}</span>
+              {tab.label}
+            </button>
+          ))}
         </div>
-      )}
-
-      {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {renderBlockProperties()}
       </div>
 
-      {/* Footer info */}
-      <div className="p-3 border-t border-gray-700 bg-gray-850">
-        <div className="text-xs text-gray-500">
-          Last updated: {new Date(block.metadata?.updated || Date.now()).toLocaleTimeString()}
+      {/* Enhanced Content Area */}
+      <div className="flex-1 overflow-hidden">
+        <div className="h-full overflow-y-auto scrollbar-glass p-6 space-y-6">
+          {renderBlockProperties()}
+        </div>
+      </div>
+      
+      {/* Enhanced Footer with Block Info */}
+      <div className="p-6 border-t border-gray-700/50 bg-gradient-to-r from-gray-800/50 to-gray-700/50">
+        <div className="text-center">
+          <p className="text-xs text-gray-400 mb-1">💡 Quick Tip</p>
+          <p className="text-xs text-gray-500">
+            {activeTab === 'content' && 'Edit the text and content of your block'}
+            {activeTab === 'styles' && 'Customize colors, spacing, and typography'}
+            {activeTab === 'config' && 'Configure advanced block settings'}
+          </p>
         </div>
       </div>
     </div>

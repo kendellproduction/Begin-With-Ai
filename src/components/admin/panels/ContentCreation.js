@@ -1,285 +1,282 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
-  CubeTransparentIcon,
   DocumentPlusIcon,
+  CubeTransparentIcon,
+  FolderPlusIcon,
+  BookOpenIcon,
   VideoCameraIcon,
   SparklesIcon,
-  DocumentDuplicateIcon,
   ArrowRightIcon,
   PlayIcon,
-  PencilSquareIcon
+  AcademicCapIcon,
+  ClockIcon,
+  UserGroupIcon,
+  CloudArrowUpIcon
 } from '@heroicons/react/24/outline';
 
-const ContentCreation = () => {
-  const [selectedTool, setSelectedTool] = useState(null);
+// Import admin services for lesson management
+import { 
+  getAllLearningPaths, 
+  createLearningPath, 
+  createModule,
+  createLesson
+} from '../../../services/adminService';
 
-  const creationTools = [
+const ContentCreation = () => {
+  const navigate = useNavigate();
+  const [learningPaths, setLearningPaths] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    loadLearningPaths();
+  }, []);
+
+  const loadLearningPaths = async () => {
+    try {
+      const paths = await getAllLearningPaths();
+      setLearningPaths(paths);
+    } catch (error) {
+      console.error('Error loading learning paths:', error);
+      showNotification('error', 'Error loading learning paths');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const showNotification = (type, message) => {
+    setNotification({ type, message });
+    setTimeout(() => setNotification(null), 5000);
+  };
+
+  // Quick creation actions
+  const creationOptions = [
     {
-      id: 'enterprise-builder',
-      name: 'Visual Builder',
-      description: 'iPhone Photos-style lesson builder with drag-and-drop pages',
+      id: 'unified-lesson-builder',
+      title: 'Lesson Builder',
+      description: 'Powerful unified editor with inline editing, drag & drop, and live preview',
       icon: CubeTransparentIcon,
       gradient: 'from-blue-500 to-indigo-600',
-      path: '/enterprise-builder',
+      path: '/unified-lesson-builder',
       featured: true,
-      tags: ['Visual', 'Drag & Drop', 'Multi-page'],
-      features: [
-        'iPhone Photos-style page management',
-        'Drag & drop content blocks',
-        'Real-time preview',
-        'Template system',
-        'Auto-save drafts'
-      ]
-    },
-    {
-      id: 'quick-lesson',
-      name: 'Quick Lesson Builder',
-      description: 'Simple lesson creation with pre-built templates',
-      icon: DocumentPlusIcon,
-      gradient: 'from-green-500 to-emerald-600',
-      path: '/lesson-builder',
-      tags: ['Fast', 'Templates', 'Simple'],
-      features: [
-        'Pre-built templates',
-        'Content block library',
-        'Quick publishing',
-        'Basic customization'
-      ]
-    },
-    {
-      id: 'youtube-import',
-      name: 'YouTube Processor',
-      description: 'Convert YouTube videos into interactive lessons',
-      icon: VideoCameraIcon,
-      gradient: 'from-red-500 to-orange-600',
-      path: '/admin',
-      action: 'youtube',
-      tags: ['AI-Powered', 'Video', 'Auto-generate'],
-      features: [
-        'Automatic transcription',
-        'AI-generated quizzes',
-        'Timestamp navigation',
-        'Interactive elements'
-      ]
+      badges: ['Unified', 'Visual', 'Responsive'],
+      estimatedTime: '5-15 min'
     },
     {
       id: 'ai-generator',
-      name: 'AI Content Generator',
-      description: 'Generate lessons using AI from topics or prompts',
+      title: 'AI Content Generator',
+      description: 'Generate lessons using AI from topics or YouTube videos',
       icon: SparklesIcon,
       gradient: 'from-purple-500 to-violet-600',
-      path: '/admin',
-      action: 'ai-generate',
-      tags: ['AI-Powered', 'Auto-generate', 'Smart'],
-      features: [
-        'Topic-based generation',
-        'Multiple content types',
-        'Customizable output',
-        'Quality validation'
-      ]
+      action: 'openAIGenerator',
+      badges: ['AI', 'Auto-generate'],
+      estimatedTime: '3-7 min'
     },
     {
-      id: 'template-manager',
-      name: 'Template Manager',
-      description: 'Create and manage reusable lesson templates',
-      icon: DocumentDuplicateIcon,
+      id: 'youtube-processor',
+      title: 'YouTube to Lesson',
+      description: 'Convert YouTube videos into interactive lessons',
+      icon: VideoCameraIcon,
+      gradient: 'from-red-500 to-pink-600',
+      action: 'openYouTubeProcessor',
+      badges: ['YouTube', 'Import'],
+      estimatedTime: '5-15 min'
+    },
+    {
+      id: 'module-creator',
+      title: 'Create Module',
+      description: 'Organize lessons into learning modules',
+      icon: FolderPlusIcon,
       gradient: 'from-amber-500 to-orange-600',
-      path: '/admin',
-      action: 'templates',
-      tags: ['Templates', 'Reusable', 'Organization'],
-      features: [
-        'Template library',
-        'Custom layouts',
-        'Share templates',
-        'Version control'
-      ]
+      action: 'createModule',
+      badges: ['Organization'],
+      estimatedTime: '1-3 min'
+    },
+    {
+      id: 'learning-path',
+      title: 'Learning Path',
+      description: 'Create a complete learning journey',
+      icon: BookOpenIcon,
+      gradient: 'from-teal-500 to-cyan-600',
+      action: 'createLearningPath',
+      badges: ['Comprehensive'],
+      estimatedTime: '10-20 min'
     }
   ];
 
-  const recentDrafts = [
-    {
-      id: 1,
-      title: 'JavaScript Fundamentals - Chapter 3',
-      type: 'Visual Builder',
-      lastEdited: '2 hours ago',
-      progress: 75,
-      status: 'draft'
-    },
-    {
-      id: 2,
-      title: 'React Hooks Deep Dive',
-      type: 'Quick Lesson',
-      lastEdited: '1 day ago',
-      progress: 45,
-      status: 'draft'
-    },
-    {
-      id: 3,
-      title: 'Python Data Analysis Tutorial',
-      type: 'YouTube Import',
-      lastEdited: '3 days ago',
-      progress: 90,
-      status: 'review'
+  const handleAction = async (action) => {
+    switch (action) {
+      case 'openAIGenerator':
+        // Open AI content generation modal
+        showNotification('info', 'AI content generator coming soon!');
+        break;
+      case 'openYouTubeProcessor':
+        // Show YouTube processing interface
+        showNotification('info', 'YouTube processor feature available in main admin panel');
+        break;
+      case 'createModule':
+        // Open module creation modal
+        showNotification('info', 'Module creation modal coming soon!');
+        break;
+      case 'createLearningPath':
+        // Open learning path creation modal
+        showNotification('info', 'Learning path creation modal coming soon!');
+        break;
+      default:
+        console.log('Unknown action:', action);
     }
-  ];
+  };
 
-  const CreationToolCard = ({ tool, index }) => (
+  const CreationCard = ({ option, index }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
       whileHover={{ y: -5, scale: 1.02 }}
-      className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${tool.gradient} p-6 text-white shadow-lg ${
-        tool.featured ? 'col-span-2 lg:col-span-2' : ''
+      className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${option.gradient} p-6 text-white shadow-lg cursor-pointer ${
+        option.featured ? 'col-span-2' : ''
       }`}
+      onClick={() => option.path ? navigate(option.path, { state: { fromAdmin: true } }) : handleAction(option.action)}
     >
-      <Link to={tool.path} className="block h-full">
-        <div className="flex flex-col h-full">
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex items-center">
-              <tool.icon className="h-8 w-8 mr-3" />
-              <div>
-                <h3 className="text-xl font-bold">{tool.name}</h3>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {tool.tags.map((tag, i) => (
-                    <span
-                      key={i}
-                      className="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center mb-3">
+            <option.icon className="h-8 w-8 mr-3" />
+            <div>
+              <h3 className="text-xl font-bold">{option.title}</h3>
+              <div className="flex space-x-2 mt-1">
+                {option.badges.map((badge, i) => (
+                  <span
+                    key={i}
+                    className="px-2 py-1 bg-white bg-opacity-20 rounded-full text-xs font-medium"
+                  >
+                    {badge}
+                  </span>
+                ))}
               </div>
             </div>
-            <ArrowRightIcon className="w-5 h-5 text-white text-opacity-70" />
           </div>
           
-          <p className="text-white text-opacity-90 mb-4 flex-1">
-            {tool.description}
+          <p className={`text-white text-opacity-90 mb-3 ${option.featured ? 'text-base' : 'text-sm'}`}>
+            {option.description}
           </p>
           
-          {tool.features && (
-            <div className="space-y-1">
-              {tool.features.slice(0, tool.featured ? 5 : 3).map((feature, i) => (
-                <div key={i} className="flex items-center text-sm text-white text-opacity-80">
-                  <div className="w-1.5 h-1.5 bg-white bg-opacity-60 rounded-full mr-2"></div>
-                  {feature}
-                </div>
-              ))}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-white text-opacity-80">
+              <ClockIcon className="w-4 h-4 mr-1" />
+              <span>{option.estimatedTime}</span>
             </div>
-          )}
-        </div>
-        
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white bg-opacity-10 rounded-full" />
-        <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-16 h-16 bg-white bg-opacity-5 rounded-full" />
-      </Link>
-    </motion.div>
-  );
-
-  const DraftCard = ({ draft, index }) => (
-    <motion.div
-      initial={{ opacity: 0, x: -20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <h4 className="font-medium text-white mb-1">{draft.title}</h4>
-          <div className="flex items-center space-x-2 text-sm text-gray-400">
-            <span>{draft.type}</span>
-            <span>•</span>
-            <span>{draft.lastEdited}</span>
+            <ArrowRightIcon className="w-5 h-5 text-white text-opacity-60" />
           </div>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          <span className={`px-2 py-1 text-xs rounded-full ${
-            draft.status === 'draft' ? 'bg-yellow-900 text-yellow-300' :
-            draft.status === 'review' ? 'bg-blue-900 text-blue-300' :
-            'bg-green-900 text-green-300'
-          }`}>
-            {draft.status}
-          </span>
-          <button className="p-1 rounded hover:bg-gray-700 transition-colors">
-            <PencilSquareIcon className="w-4 h-4 text-gray-400" />
-          </button>
         </div>
       </div>
       
-      <div className="w-full bg-gray-700 rounded-full h-2 mb-2">
-        <div 
-          className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-          style={{ width: `${draft.progress}%` }}
-        ></div>
-      </div>
-      <div className="text-xs text-gray-400">{draft.progress}% complete</div>
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-white bg-opacity-10 rounded-full" />
+      <div className="absolute bottom-0 left-0 -mb-6 -ml-6 w-16 h-16 bg-white bg-opacity-5 rounded-full" />
     </motion.div>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading creation options...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-6 space-y-8">
+    <div className="space-y-8">
+      {/* Notification */}
+      {notification && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`p-4 rounded-lg border ${
+            notification.type === 'error' 
+              ? 'bg-red-900 border-red-600 text-red-100' 
+              : notification.type === 'success'
+              ? 'bg-green-900 border-green-600 text-green-100'
+              : 'bg-blue-900 border-blue-600 text-blue-100'
+          }`}
+        >
+          {notification.message}
+        </motion.div>
+      )}
+
       {/* Header */}
-      <div className="text-center max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-4">Content Creation Hub</h1>
-        <p className="text-xl text-gray-400 mb-8">
-          Choose your preferred tool to create engaging lessons and educational content
+      <div className="text-center mb-8">
+        <h2 className="text-3xl font-bold text-white mb-2">Create New Content</h2>
+        <p className="text-xl text-gray-400">
+          Choose how you'd like to create your next lesson or learning experience
         </p>
       </div>
 
-      {/* Creation Tools Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
-        {creationTools.map((tool, index) => (
-          <CreationToolCard key={tool.id} tool={tool} index={index} />
+      {/* Creation Options Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        {creationOptions.map((option, index) => (
+          <CreationCard key={option.id} option={option} index={index} />
         ))}
       </div>
 
-      {/* Recent Drafts Section */}
-      <div className="bg-gray-800 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-xl font-bold text-white">Recent Drafts</h2>
-            <p className="text-gray-400">Continue working on your saved lessons</p>
+      {/* Recent Activity & Quick Stats */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Recent Drafts */}
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <ClockIcon className="w-5 h-5 mr-2" />
+            Recent Drafts
+          </h3>
+          <div className="space-y-3">
+            {/* Placeholder for recent drafts */}
+            <div className="text-sm text-gray-400">
+              Your recent drafts will appear here
+            </div>
           </div>
-          <Link 
-            to="/drafts"
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-          >
-            <span className="text-white">View All Drafts</span>
-            <ArrowRightIcon className="w-4 h-4 text-white" />
-          </Link>
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {recentDrafts.map((draft, index) => (
-            <DraftCard key={draft.id} draft={draft} index={index} />
-          ))}
+
+        {/* Quick Stats */}
+        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <AcademicCapIcon className="w-5 h-5 mr-2" />
+            Content Overview
+          </h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-blue-400">{learningPaths.length}</div>
+              <div className="text-sm text-gray-400">Learning Paths</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-green-400">0</div>
+              <div className="text-sm text-gray-400">Active Drafts</div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Quick Tips */}
-      <div className="bg-gradient-to-r from-blue-900 to-indigo-900 rounded-xl p-6">
-        <h3 className="text-lg font-bold text-white mb-4">💡 Pro Tips for Content Creation</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <h4 className="font-medium text-blue-300">For Beginners</h4>
-            <ul className="text-sm text-gray-300 space-y-1">
-              <li>• Start with Quick Lesson Builder for simple content</li>
-              <li>• Use templates to maintain consistency</li>
-              <li>• Keep lessons focused on one main concept</li>
-            </ul>
+      {/* Tips Section */}
+      <div className="bg-gradient-to-r from-blue-900 to-purple-900 rounded-lg p-6 border border-blue-600">
+        <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+          <SparklesIcon className="w-5 h-5 mr-2" />
+          Pro Tips for Content Creation
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-100">
+          <div>
+            <strong>Visual Builder:</strong> Best for interactive lessons with multiple content types
           </div>
-          <div className="space-y-2">
-            <h4 className="font-medium text-blue-300">For Advanced Users</h4>
-            <ul className="text-sm text-gray-300 space-y-1">
-              <li>• Visual Builder offers maximum flexibility</li>
-              <li>• Use AI tools to accelerate content creation</li>
-              <li>• Create templates for your common lesson types</li>
-            </ul>
+          <div>
+            <strong>Quick Lesson:</strong> Perfect for simple concepts and quick tutorials
+          </div>
+          <div>
+            <strong>AI Generator:</strong> Great for converting ideas into structured content
+          </div>
+          <div>
+            <strong>YouTube Import:</strong> Ideal for repurposing existing video content
           </div>
         </div>
       </div>

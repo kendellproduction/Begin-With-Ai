@@ -1,160 +1,189 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 
 const TextBlock = ({ 
-  content,
-  config = {},
+  content = {}, 
   styles = {},
-  isVisible = true,
-  onComplete = () => {},
-  className = ""
+  config = {},
+  onContentUpdate,
+  isEditing = false,
+  editable = false 
 }) => {
-  const [isHighlighted, setIsHighlighted] = useState(false);
-  const [hasBeenViewed, setHasBeenViewed] = useState(false);
-  const blockRef = useRef(null);
+  const [localText, setLocalText] = useState(content.text || '');
+  const [isLocalEditing, setIsLocalEditing] = useState(false);
+  const textareaRef = useRef(null);
+  const containerRef = useRef(null);
+  const [containerHeight, setContainerHeight] = useState('auto');
 
-  const defaultConfig = {
-    sanitization: true,
-    markdown: true,
-    typography: 'prose',
-    animations: true,
-    readingTime: true
+  // Debounced update to prevent too many re-renders
+  const debouncedUpdate = useCallback(
+    debounce((newText) => {
+      if (onContentUpdate) {
+        onContentUpdate({ text: newText });
+      }
+    }, 300),
+    [onContentUpdate]
+  );
+
+  useEffect(() => {
+    setLocalText(content.text || '');
+  }, [content.text]);
+
+  // Measure and fix container height to prevent movement
+  useEffect(() => {
+    if (containerRef.current && !isLocalEditing) {
+      const height = containerRef.current.offsetHeight;
+      setContainerHeight(height + 'px');
+    }
+  }, [localText, isLocalEditing]);
+
+  const handleTextClick = () => {
+    if (editable && !isLocalEditing) {
+      setIsLocalEditing(true);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          textareaRef.current.select();
+        }
+      }, 50);
+    }
   };
 
-  const defaultStyles = {
-    fontSize: '16px',
-    lineHeight: '1.6',
-    color: '#ffffff',
-    textAlign: 'left',
-    margin: { top: 0, bottom: 16, left: 0, right: 0 },
-    padding: { top: 0, bottom: 0, left: 0, right: 0 }
+  const handleTextChange = (e) => {
+    const newText = e.target.value;
+    setLocalText(newText);
+    debouncedUpdate(newText);
   };
 
-  const finalConfig = { ...defaultConfig, ...config };
-  const mergedStyles = { ...defaultStyles, ...styles };
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && e.shiftKey) {
+      // Allow line breaks with Shift+Enter
+      return;
+    }
+    if (e.key === 'Enter' || e.key === 'Escape') {
+      handleBlur();
+    }
+  };
 
-  // Convert margin and padding objects to CSS
-  const marginStyle = mergedStyles.margin 
-    ? `${mergedStyles.margin.top}px ${mergedStyles.margin.right}px ${mergedStyles.margin.bottom}px ${mergedStyles.margin.left}px`
-    : '0';
-  
-  const paddingStyle = mergedStyles.padding 
-    ? `${mergedStyles.padding.top}px ${mergedStyles.padding.right}px ${mergedStyles.padding.bottom}px ${mergedStyles.padding.left}px`
-    : '0';
+  const handleBlur = () => {
+    setIsLocalEditing(false);
+    if (onContentUpdate) {
+      onContentUpdate({ text: localText });
+    }
+  };
+
+  // Auto-resize textarea to fit content
+  const autoResizeTextarea = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  };
+
+  useEffect(() => {
+    if (isLocalEditing) {
+      autoResizeTextarea();
+    }
+  }, [localText, isLocalEditing]);
+
+  // Process markdown if enabled
+  const processedContent = content.markdown && !isLocalEditing
+    ? DOMPurify.sanitize(marked(localText || ''))
+    : localText || '';
+
+  // Stable styling to prevent layout shifts
+  const containerStyles = {
+    ...styles,
+    minHeight: containerHeight !== 'auto' ? containerHeight : '1.5em',
+    transition: 'none', // Remove transitions during editing
+    margin: styles.margin ? 
+      `${styles.margin.top || 0}px ${styles.margin.right || 0}px ${styles.margin.bottom || 0}px ${styles.margin.left || 0}px` : 
+      undefined,
+    padding: styles.padding ? 
+      `${styles.padding.top || 0}px ${styles.padding.right || 0}px ${styles.padding.bottom || 0}px ${styles.padding.left || 0}px` : 
+      undefined,
+  };
 
   const textStyles = {
-    fontSize: mergedStyles.fontSize,
-    lineHeight: mergedStyles.lineHeight,
-    color: mergedStyles.color,
-    textAlign: mergedStyles.textAlign,
-    margin: marginStyle,
-    padding: paddingStyle
+    fontSize: styles.fontSize || '16px',
+    fontWeight: styles.fontWeight || 'normal',
+    lineHeight: styles.lineHeight || '1.6',
+    color: styles.color || '#ffffff',
+    textAlign: styles.textAlign || 'left',
+    fontFamily: styles.fontFamily || 'inherit',
   };
 
-  // Intersection observer for view tracking
-  useEffect(() => {
-    if (!blockRef.current || hasBeenViewed) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
-          setHasBeenViewed(true);
-          onComplete({ type: 'text', viewed: true, timestamp: Date.now() });
-        }
-      },
-      { threshold: 0.5 }
+  if (isLocalEditing) {
+    return (
+      <div 
+        ref={containerRef}
+        className="content-block-stable relative"
+        style={containerStyles}
+      >
+        <textarea
+          ref={textareaRef}
+          value={localText}
+          onChange={handleTextChange}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          onInput={autoResizeTextarea}
+          className="w-full bg-transparent border-2 border-blue-500/50 rounded-lg p-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none stable-content"
+          style={{
+            ...textStyles,
+            minHeight: '1.5em',
+            fontFamily: 'inherit',
+          }}
+          placeholder="Enter your text here..."
+        />
+        <div className="absolute -bottom-6 left-0 text-xs text-blue-400 bg-gray-800 px-2 py-1 rounded">
+          Press Enter to save, Shift+Enter for new line
+        </div>
+      </div>
     );
-
-    observer.observe(blockRef.current);
-    return () => observer.disconnect();
-  }, [hasBeenViewed, onComplete]);
-
-  // Podcast synchronization highlight effect
-  useEffect(() => {
-    setIsHighlighted(isVisible);
-  }, [isVisible]);
-
-  // Process content based on configuration
-  const processContent = (rawContent) => {
-    if (!rawContent) return '';
-
-    let processed = rawContent;
-
-    // Convert markdown to HTML if enabled
-    if (finalConfig.markdown && typeof rawContent === 'string') {
-      processed = marked(rawContent);
-    }
-
-    // Sanitize HTML content for security
-    if (finalConfig.sanitization) {
-      processed = DOMPurify.sanitize(processed, {
-        ALLOWED_TAGS: [
-          'p', 'br', 'strong', 'em', 'u', 'strike', 'code', 'pre', 
-          'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-          'ul', 'ol', 'li', 'blockquote',
-          'a', 'img', 'span', 'div'
-        ],
-        ALLOWED_ATTR: ['href', 'title', 'src', 'alt', 'class', 'id'],
-        ALLOW_DATA_ATTR: false
-      });
-    }
-
-    return processed;
-  };
-
-  // Calculate estimated reading time
-  const calculateReadingTime = (text) => {
-    const wordsPerMinute = 200;
-    const words = text.toString().split(/\s+/).length;
-    const minutes = Math.ceil(words / wordsPerMinute);
-    return minutes === 1 ? '1 min read' : `${minutes} min read`;
-  };
-
-  const processedContent = processContent(content.text || content);
-  const readingTime = finalConfig.readingTime ? calculateReadingTime(processedContent) : null;
+  }
 
   return (
-    <div
-      ref={blockRef}
-      className={`text-block ${className}`}
-      style={{
-        ...textStyles,
-        borderRadius: isHighlighted ? '12px' : '0',
-        padding: isHighlighted ? '16px' : '0',
-        border: isHighlighted ? '1px solid rgba(59, 130, 246, 0.3)' : 'none',
-        transition: 'all 0.3s ease'
-      }}
+    <div 
+      ref={containerRef}
+      className={`content-block-stable ${editable ? 'cursor-pointer hover:bg-gray-800/30 rounded-lg transition-colors' : ''}`}
+      style={containerStyles}
+      onClick={handleTextClick}
     >
-      {/* Reading time indicator */}
-      {readingTime && (
-        <div className="flex items-center text-sm text-gray-400 mb-3">
-          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          {readingTime}
+      {content.markdown ? (
+        <div 
+          className="prose prose-invert max-w-none"
+          style={textStyles}
+          dangerouslySetInnerHTML={{ __html: processedContent }}
+        />
+      ) : (
+        <div style={textStyles} className="whitespace-pre-wrap">
+          {processedContent || (editable ? 'Click to edit text...' : '')}
         </div>
       )}
-
-      {/* Main content */}
-      <div 
-        className={`text-content ${finalConfig.typography === 'prose' ? 'prose prose-invert prose-lg max-w-none' : ''}`}
-        dangerouslySetInnerHTML={{ __html: processedContent }}
-      />
-
-      {/* Visual feedback for completion */}
-      {hasBeenViewed && (
-        <div
-          className="inline-flex items-center mt-3 px-3 py-1 bg-green-500/20 text-green-300 text-sm rounded-full"
-        >
-          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-          Read
+      
+      {editable && !isLocalEditing && (
+        <div className="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+          <div className="text-xs text-blue-400 bg-gray-800/80 px-2 py-1 rounded">
+            Click to edit
+          </div>
         </div>
       )}
     </div>
   );
 };
+
+// Debounce utility function
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+}
 
 export default TextBlock; 
