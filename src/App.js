@@ -28,8 +28,11 @@ import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
 // Priority 1: Heavy/Admin components (highest impact)
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const DraftBrowser = React.lazy(() => import('./pages/DraftBrowser'));
 const AiNews = React.lazy(() => import('./pages/AiNews'));
 const LessonsOverview = React.lazy(() => import('./pages/LessonsOverview'));
+const PodcastDemo = React.lazy(() => import('./pages/PodcastDemo'));
 
 // Priority 2: User flow pages
 const Settings = React.lazy(() => import('./pages/Settings'));
@@ -53,6 +56,11 @@ const LearningPathQuiz = React.lazy(() => import('./pages/LearningPathQuiz'));
 const LearningPathResults = React.lazy(() => import('./pages/LearningPathResults'));
 const Quiz = React.lazy(() => import('./pages/Quiz'));
 const QuizResults = React.lazy(() => import('./pages/QuizResults'));
+
+import LessonBuilder from './components/LessonBuilder';
+import ContentBlockDemo from './pages/ContentBlockDemo';
+import EnterpriseBuilder from './components/admin/EnterpriseBuilder';
+import EnterpriseBuilderTest from './components/admin/EnterpriseBuilderTest';
 
 function App() {
   return (
@@ -148,9 +156,37 @@ function App() {
                     <Route index element={<QuizResults />} />
                   </Route>
 
+                  {/* New Streamlined Admin Dashboard */}
+                  <Route path="/admin-dashboard" element={<ProtectedRoute requireAdminRole={true} />}>
+                    <Route index element={<AdminDashboard />} />
+                  </Route>
+
                   {/* Admin Panel - Only accessible by admin/dev users */}
                   <Route path="/admin" element={<ProtectedRoute requireAdminRole={true} />}>
                     <Route index element={<AdminPanel />} />
+                  </Route>
+
+                  {/* Draft Browser - Admin only */}
+                  <Route path="/drafts" element={<ProtectedRoute requireAdminRole={true} />}>
+                    <Route index element={<DraftBrowser />} />
+                  </Route>
+
+                  {/* Demo: Podcast Player Testing */}
+                  <Route path="/podcast-demo" element={<ProtectedRoute />}>
+                    <Route index element={<PodcastDemo />} />
+                  </Route>
+
+                  <Route path="/content-blocks-demo" element={<ProtectedRoute />}>
+                    <Route index element={<ContentBlockDemo />} />
+                  </Route>
+
+                  <Route path="/lesson-builder" element={<LessonBuilder />} />
+
+                  {/* Enterprise Builder - Phase 3 */}
+                  <Route path="/enterprise-builder-test" element={<EnterpriseBuilderTest />} />
+                  <Route path="/enterprise-builder" element={<EnterpriseBuilder />} />
+                  <Route path="/enterprise-builder-full" element={<ProtectedRoute requireAdminRole={true} />}>
+                    <Route index element={<EnterpriseBuilder />} />
                   </Route>
 
                 </Routes>

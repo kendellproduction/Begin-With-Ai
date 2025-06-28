@@ -17,7 +17,8 @@ import {
   FiAlertCircle,
   FiArrowUp,
   FiArrowDown,
-  FiLayers
+  FiLayers,
+  FiBox
 } from 'react-icons/fi';
 import { 
   getAllLearningPaths, 
@@ -392,7 +393,8 @@ const AdminPanel = () => {
                 { id: 'modules', label: 'Module Manager', icon: FiLayers },
                 { id: 'drafts', label: 'Lesson Drafts', icon: FiSave },
                 { id: 'content', label: 'Content Management', icon: FiEdit },
-                { id: 'youtube', label: 'Content Processor', icon: FiYoutube }
+                { id: 'youtube', label: 'Content Processor', icon: FiYoutube },
+                { id: 'enterprise', label: 'Enterprise Builder', icon: FiBox }
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -679,6 +681,73 @@ const AdminPanel = () => {
                 onProcess={handleContentProcess}
                 onSave={handleLessonSave}
               />
+            )}
+
+            {activeTab === 'enterprise' && (
+              <div className="space-y-6">
+                <div className="bg-gray-800 rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Enterprise Builder</h2>
+                      <p className="text-gray-400">Advanced drag-and-drop lesson builder with live preview</p>
+                    </div>
+                    <div className="px-3 py-1 bg-purple-600 text-white text-sm rounded-full">
+                      Phase 3
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div className="bg-gray-700 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-white mb-2">🎨 Visual Builder</h3>
+                      <p className="text-gray-300 text-sm mb-3">
+                        Webflow-style component palette with drag-and-drop functionality
+                      </p>
+                      <ul className="text-gray-400 text-xs space-y-1">
+                        <li>• Component library with search and categories</li>
+                        <li>• Live canvas with real-time preview</li>
+                        <li>• Properties panel for detailed editing</li>
+                      </ul>
+                    </div>
+                    
+                    <div className="bg-gray-700 rounded-lg p-4">
+                      <h3 className="text-lg font-semibold text-white mb-2">⚡ Advanced Features</h3>
+                      <p className="text-gray-300 text-sm mb-3">
+                        Enterprise-grade tools for professional lesson creation
+                      </p>
+                      <ul className="text-gray-400 text-xs space-y-1">
+                        <li>• Template management system</li>
+                        <li>• Undo/redo with full history</li>
+                        <li>• Responsive preview modes</li>
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-center">
+                    <a
+                      href="/enterprise-builder"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                    >
+                      <FiBox className="mr-2 h-5 w-5" />
+                      Launch Enterprise Builder
+                    </a>
+                  </div>
+                  
+                  <div className="mt-6 p-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
+                    <div className="flex items-start">
+                      <div className="text-blue-400 mr-3 mt-0.5">ℹ️</div>
+                      <div>
+                        <h4 className="text-blue-300 font-medium mb-1">Enterprise Builder Features</h4>
+                        <p className="text-blue-200 text-sm">
+                          The Enterprise Builder integrates with our Phase 2 content blocks system, providing a visual 
+                          interface to create sophisticated lessons with drag-and-drop simplicity.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

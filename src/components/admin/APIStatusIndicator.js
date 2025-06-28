@@ -4,6 +4,7 @@ import { auth } from '../../firebase';
 const APIStatusIndicator = () => {
   const [apiStatus, setApiStatus] = useState('checking');
   const [lastChecked, setLastChecked] = useState(null);
+  const [message, setMessage] = useState('');
 
   const checkAPIStatus = async () => {
     setApiStatus('checking');
@@ -17,29 +18,29 @@ const APIStatusIndicator = () => {
       const anthropicKey = process.env.REACT_APP_ANTHROPIC_API_KEY;
       
       // Debug logging for development
-      console.log('🔍 API Status Check Debug:');
-      console.log('  OpenAI Key exists:', !!openaiKey);
-      console.log('  OpenAI Key length:', openaiKey ? openaiKey.length : 0);
-      console.log('  OpenAI Key starts with sk-:', openaiKey ? openaiKey.startsWith('sk-') : false);
-      console.log('  xAI Key exists:', !!xaiKey);
-      console.log('  Anthropic Key exists:', !!anthropicKey);
-      console.log('  Firebase Auth available:', !!auth);
-      console.log('  NODE_ENV:', process.env.NODE_ENV);
+          // API status check
       
-      const hasApiKey = openaiKey || xaiKey || anthropicKey;
+      const hasAPIKey = !!(openaiKey || xaiKey || anthropicKey);
+      const hasFirebaseAuth = !!auth;
       
-      if (!hasApiKey) {
-        console.log('❌ No AI API key found');
-        setApiStatus('no-key');
-        return;
-      }
+              if (!hasAPIKey) {
+          setApiStatus('no-key');
+          setMessage('No AI API key configured');
+          return;
+        }
 
-      console.log('✅ AI API key found, setting status to available');
+        if (!hasFirebaseAuth) {
+          setApiStatus('warning');
+          setMessage('Firebase authentication required');
+          return;
+        }
       setApiStatus('available');
       setLastChecked(new Date());
+      setMessage('AI features ready');
     } catch (error) {
       console.error('❌ API status check failed:', error);
       setApiStatus('error');
+      setMessage('API Error');
     }
   };
 
@@ -56,6 +57,7 @@ const APIStatusIndicator = () => {
       case 'checking': return 'text-yellow-400';
       case 'no-key': return 'text-red-400';
       case 'error': return 'text-red-400';
+      case 'warning': return 'text-yellow-400';
       default: return 'text-gray-400';
     }
   };
@@ -66,6 +68,7 @@ const APIStatusIndicator = () => {
       case 'checking': return '🔄';
       case 'no-key': return '❌';
       case 'error': return '⚠️';
+      case 'warning': return '⚠️';
       default: return '❓';
     }
   };
@@ -82,6 +85,7 @@ const APIStatusIndicator = () => {
       case 'checking': return 'Checking...';
       case 'no-key': return 'No API Key';
       case 'error': return 'API Error';
+      case 'warning': return 'Firebase Authentication Required';
       default: return 'Unknown';
     }
   };
@@ -94,6 +98,11 @@ const APIStatusIndicator = () => {
       {lastChecked && (
         <span className="text-gray-500">
           ({lastChecked.toLocaleTimeString()})
+        </span>
+      )}
+      {message && (
+        <span className="text-gray-500">
+          ({message})
         </span>
       )}
     </div>
