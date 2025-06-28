@@ -29,6 +29,7 @@ import AdaptiveLearningPathQuiz from './components/AdaptiveLearningPathQuiz';
 const LandingPage = React.lazy(() => import('./pages/LandingPage'));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
+const UnifiedAdminPanel = React.lazy(() => import('./components/admin/UnifiedAdminPanel'));
 const DraftBrowser = React.lazy(() => import('./pages/DraftBrowser'));
 const AiNews = React.lazy(() => import('./pages/AiNews'));
 const LessonsOverview = React.lazy(() => import('./pages/LessonsOverview'));
@@ -154,6 +155,11 @@ function App() {
 
                   <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
                     <Route index element={<QuizResults />} />
+                  </Route>
+
+                  {/* Unified Admin Panel - Modern consolidated interface */}
+                  <Route path="/admin-unified" element={<ProtectedRoute requireAdminRole={true} />}>
+                    <Route index element={<UnifiedAdminPanel />} />
                   </Route>
 
                   {/* New Streamlined Admin Dashboard */}

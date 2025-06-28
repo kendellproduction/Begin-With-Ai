@@ -69,13 +69,23 @@ const AdminDashboard = () => {
       tags: ['Demo']
     },
     {
+      id: 'unified-admin',
+      title: 'Unified Admin Panel',
+      description: 'NEW: Consolidated modern admin interface',
+      icon: CubeTransparentIcon,
+      gradient: 'from-purple-500 to-indigo-600',
+      path: '/admin-unified',
+      featured: false,
+      tags: ['New', 'Unified', 'Modern']
+    },
+    {
       id: 'user-management',
       title: 'Admin Panel',
       description: 'Access full admin panel and management tools',
       icon: UsersIcon,
       gradient: 'from-orange-500 to-red-600',
       path: '/admin',
-      tags: ['Admin']
+      tags: ['Admin', 'Legacy']
     }
   ];
 
