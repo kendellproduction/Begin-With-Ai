@@ -106,12 +106,13 @@ const TextBlock = ({
   };
 
   const textStyles = {
-    fontSize: styles.fontSize || '16px',
+    fontSize: styles.fontSize || '18px', // Increased from 16px
     fontWeight: styles.fontWeight || 'normal',
-    lineHeight: styles.lineHeight || '1.6',
+    lineHeight: styles.lineHeight || '1.8', // Increased from 1.6 for better readability
     color: styles.color || '#ffffff',
     textAlign: styles.textAlign || 'left',
     fontFamily: styles.fontFamily || 'inherit',
+    marginBottom: '1.5rem', // Add space between blocks
   };
 
   if (isLocalEditing) {
@@ -152,12 +153,20 @@ const TextBlock = ({
     >
       {content.markdown ? (
         <div 
-          className="prose prose-invert max-w-none"
-          style={textStyles}
+          className="prose prose-invert max-w-none prose-lg prose-enhanced lesson-content"
+          style={{
+            ...textStyles,
+            '--tw-prose-body': '#ffffff',
+            '--tw-prose-headings': '#ffffff',
+            '--tw-prose-bold': '#ffffff',
+            '--tw-prose-bullets': '#94a3b8',
+            '--tw-prose-hr': '#475569',
+            '--tw-prose-quotes': '#e2e8f0',
+          }}
           dangerouslySetInnerHTML={{ __html: processedContent }}
         />
       ) : (
-        <div style={textStyles} className="whitespace-pre-wrap">
+        <div style={textStyles} className="whitespace-pre-wrap leading-relaxed lesson-content">
           {processedContent || (editable ? 'Click to edit text...' : '')}
         </div>
       )}

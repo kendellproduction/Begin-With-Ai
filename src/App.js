@@ -17,6 +17,8 @@ import AdaptiveDatabaseSeeder from './components/AdaptiveDatabaseSeeder';
 
 // Import essential components that are used immediately (keep synchronous)
 import LessonViewer from './components/LessonViewer';
+import ModernLessonViewer from './components/ModernLessonViewer';
+import SynchronizedLessonViewer from './components/SynchronizedLessonViewer';
 import WelcomeLessonViewer from './components/WelcomeLessonViewer';
 import AdaptiveWelcomeLesson from './components/AdaptiveWelcomeLesson';
 import WelcomeRedirect from './components/WelcomeRedirect';
@@ -34,6 +36,7 @@ const DraftBrowser = React.lazy(() => import('./pages/DraftBrowser'));
 const AiNews = React.lazy(() => import('./pages/AiNews'));
 const LessonsOverview = React.lazy(() => import('./pages/LessonsOverview'));
 const PodcastDemo = React.lazy(() => import('./pages/PodcastDemo'));
+const PodcastContent = React.lazy(() => import('./components/PodcastContent'));
 
 // Priority 2: User flow pages
 const Settings = React.lazy(() => import('./pages/Settings'));
@@ -118,8 +121,18 @@ function App() {
                     <Route index element={<LessonDetail />} />
                   </Route>
 
-                  {/* New slide-based lesson viewer - full screen, no layout */}
+                  {/* Modern scroll-based lesson viewer - full screen, no layout */}
                   <Route path="/lesson-viewer/:lessonId" element={<ProtectedRoute />}>
+                    <Route index element={<ModernLessonViewer />} />
+                  </Route>
+
+                  {/* Synchronized audio lesson viewer - for lessons with audio/video content */}
+                  <Route path="/lesson-sync/:lessonId" element={<ProtectedRoute />}>
+                    <Route index element={<SynchronizedLessonViewer />} />
+                  </Route>
+
+                  {/* Legacy slide-based lesson viewer - keeping for compatibility */}
+                  <Route path="/lesson-viewer-legacy/:lessonId" element={<ProtectedRoute />}>
                     <Route index element={<LessonViewer />} />
                   </Route>
 
@@ -154,9 +167,14 @@ function App() {
                     <Route index element={<Quiz />} />
                   </Route>
 
-                  <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
-                    <Route index element={<QuizResults />} />
-                  </Route>
+                    <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
+    <Route index element={<QuizResults />} />
+  </Route>
+
+  {/* Podcast Content Generator */}
+  <Route path="/lesson/:lessonId/podcast" element={<ProtectedRoute />}>
+    <Route index element={<PodcastContent />} />
+  </Route>
 
                   {/* ===== CONSOLIDATED ADMIN INTERFACE ===== */}
                   {/* PRIMARY: Unified Admin Panel - Modern consolidated interface */}
@@ -175,6 +193,11 @@ function App() {
                   {/* Demo: Podcast Player Testing */}
                   <Route path="/podcast-demo" element={<ProtectedRoute />}>
                     <Route index element={<PodcastDemo />} />
+                  </Route>
+
+                  {/* Demo: Synchronized Lesson Testing */}
+                  <Route path="/sync-demo" element={<ProtectedRoute />}>
+                    <Route index element={<SynchronizedLessonViewer />} />
                   </Route>
 
                   <Route path="/content-blocks-demo" element={<ProtectedRoute />}>

@@ -7,9 +7,9 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
   
-  // If showDifficultySelector is true, default to 'Beginner'. 
-  // Otherwise, use the lesson's inherent difficulty (or 'Beginner' as a fallback).
-  const initialDifficulty = showDifficultySelector ? 'Beginner' : (lesson.difficulty || 'Beginner');
+  // If showDifficultySelector is true, default to 'free'. 
+  // Otherwise, use the lesson's inherent difficulty (or 'free' as a fallback).
+  const initialDifficulty = showDifficultySelector ? 'free' : (lesson.difficulty || 'free');
   const [selectedDifficulty, setSelectedDifficulty] = useState(initialDifficulty);
   
   const [showDifficultyOptions, setShowDifficultyOptions] = useState(false);
@@ -65,6 +65,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty?.toLowerCase()) {
+      case 'free':
       case 'beginner':
         return {
           bg: 'bg-emerald-500/90',
@@ -72,19 +73,14 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
           shadow: 'shadow-emerald-500/30',
           text: 'text-emerald-100'
         };
+      case 'premium':
       case 'intermediate':
-        return {
-          bg: 'bg-amber-500/90',
-          border: 'border-amber-400/50',
-          shadow: 'shadow-amber-500/30',
-          text: 'text-amber-100'
-        };
       case 'advanced':
         return {
-          bg: 'bg-red-500/90',
-          border: 'border-red-400/50',
-          shadow: 'shadow-red-500/30',
-          text: 'text-red-100'
+          bg: 'bg-blue-500/90',
+          border: 'border-blue-400/50',
+          shadow: 'shadow-blue-500/30',
+          text: 'text-blue-100'
         };
       default:
         return {
@@ -364,22 +360,9 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
           {/* Spacer to push meta and button to bottom */}
           <div className="flex-1"></div>
 
-          {/* Meta Information */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3 text-xs text-slate-400">
-              {lesson.duration && (
-                <div className="flex items-center space-x-1">
-                  <span>⏱️</span>
-                  <span>{lesson.duration} min</span>
-                </div>
-              )}
-              {lesson.xpReward && (
-                <div className="flex items-center space-x-1">
-                  <span>⭐</span>
-                  <span>{lesson.xpReward} XP</span>
-                </div>
-              )}
-            </div>
+          {/* Meta Information - No time or XP shown upfront */}
+          <div className="mb-4">
+            {/* Meta info removed to avoid setting expectations */}
           </div>
 
           {/* Action Button */}
@@ -403,26 +386,40 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
                 {/* Difficulty Options Dropdown */}
                 {showDifficultyOptions && (
                   <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800/95 backdrop-blur-xl rounded-lg border border-white/20 overflow-hidden z-50 shadow-xl">
-                    {['Beginner', 'Intermediate', 'Advanced'].map((difficultyLevel) => {
-                      const isPremiumDifficulty = difficultyLevel === 'Intermediate' || difficultyLevel === 'Advanced';
-                      return (
-                        <button
-                          key={difficultyLevel}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDifficultyChange(difficultyLevel);
-                          }}
-                          className={`w-full text-left px-3 py-2 text-white transition-colors duration-200 capitalize flex items-center justify-between ${
-                            selectedDifficulty === difficultyLevel 
-                              ? 'bg-indigo-500/30 text-indigo-200' 
-                              : 'hover:bg-white/10'
-                          }`}
-                        >
-                          <span>{difficultyLevel}</span>
-                          {isPremiumDifficulty && <span className="text-xs text-yellow-400">👑</span>}
-                        </button>
-                      );
-                    })}
+                    {user?.subscriptionTier === 'premium' ? (
+                      // Premium users see simplified options
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDifficultyChange('premium');
+                        }}
+                        className="w-full text-left px-3 py-2 text-white transition-colors duration-200 bg-indigo-500/30 text-indigo-200"
+                      >
+                        <span>Start Lesson</span>
+                      </button>
+                    ) : (
+                      // Free users see free/premium options
+                      ['Free', 'Premium'].map((tier) => {
+                        const isPremiumTier = tier === 'Premium';
+                        return (
+                          <button
+                            key={tier}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDifficultyChange(tier.toLowerCase());
+                            }}
+                            className={`w-full text-left px-3 py-2 text-white transition-colors duration-200 capitalize flex items-center justify-between ${
+                              selectedDifficulty === tier.toLowerCase() 
+                                ? 'bg-indigo-500/30 text-indigo-200' 
+                                : 'hover:bg-white/10'
+                            }`}
+                          >
+                            <span>{tier}</span>
+                            {isPremiumTier && <span className="text-xs text-yellow-400">👑</span>}
+                          </button>
+                        );
+                      })
+                    )}
                   </div>
                 )}
               </div>

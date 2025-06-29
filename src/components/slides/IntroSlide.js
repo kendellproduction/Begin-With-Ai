@@ -82,35 +82,14 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
         </motion.div>
       )}
 
-      {/* Lesson Info */}
-      {(estimatedTime || xpReward) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 1.4 }}
-          className="flex justify-center space-x-6 text-sm text-gray-300"
-        >
-          {estimatedTime && (
-            <div className="flex items-center space-x-2">
-              <span>⏱️</span>
-              <span>{estimatedTime} min</span>
-            </div>
-          )}
-          {xpReward && (
-            <div className="flex items-center space-x-2">
-              <span>⭐</span>
-              <span>{xpReward} XP</span>
-            </div>
-          )}
-        </motion.div>
-      )}
+      {/* Lesson Info - No estimated time or XP shown upfront */}
 
       {/* Continue Button */}
       <motion.button
         onClick={onNext}
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, delay: 1.6 }}
+        transition={{ duration: 0.5, delay: 1.2 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl text-white font-semibold text-base shadow-lg shadow-blue-500/30 transition-all duration-300"
@@ -122,7 +101,7 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1.8 }}
+        transition={{ duration: 0.5, delay: 1.4 }}
         className="text-gray-500 text-sm space-y-2"
       >
         <p>Swipe up or tap to continue</p>

@@ -3,358 +3,308 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlay, FiPause, FiSkipBack, FiSkipForward, FiVolume2, FiMaximize2, FiMinimize2 } from 'react-icons/fi';
 
 const PodcastPlayer = ({ 
-  audioUrl, 
-  title = "AI Learning Podcast", 
-  instructor = "BeginningWithAI",
+  audioUrl = null, 
+  title = "AI History Podcast",
+  description = "Listen to the fascinating story of artificial intelligence",
   onTimeUpdate = null,
-  currentChapter = null,
-  chapters = [],
-  isSticky = true,
-  className = ""
+  chapters = []
 }) => {
-  // Player State
+  const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [volume, setVolume] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
-  const [isDragging, setIsDragging] = useState(false);
+  const [showSpeedMenu, setShowSpeedMenu] = useState(false);
+  const [currentChapter, setCurrentChapter] = useState(0);
 
-  // Refs
-  const audioRef = useRef(null);
-  const progressRef = useRef(null);
-  const volumeRef = useRef(null);
-
-  // Load audio when URL changes
   useEffect(() => {
-    if (audioUrl && audioRef.current) {
-      setIsLoading(true);
-      audioRef.current.src = audioUrl;
-      audioRef.current.load();
-    }
-  }, [audioUrl]);
+    const audio = audioRef.current;
+    if (!audio) return;
 
-  // Audio event handlers
-  const handleLoadedMetadata = () => {
-    if (audioRef.current) {
-      setDuration(audioRef.current.duration);
-      setIsLoading(false);
-    }
-  };
-
-  const handleTimeUpdate = () => {
-    if (audioRef.current && !isDragging) {
-      const current = audioRef.current.currentTime;
-      setCurrentTime(current);
+    const updateTime = () => {
+      setCurrentTime(audio.currentTime);
       if (onTimeUpdate) {
-        onTimeUpdate(current, duration);
+        onTimeUpdate(audio.currentTime);
       }
-    }
-  };
+      
+      // Update current chapter based on time
+      if (chapters.length > 0) {
+        const chapterIndex = chapters.findIndex((chapter, index) => {
+          const nextChapter = chapters[index + 1];
+          return audio.currentTime >= chapter.time && (!nextChapter || audio.currentTime < nextChapter.time);
+        });
+        if (chapterIndex !== -1 && chapterIndex !== currentChapter) {
+          setCurrentChapter(chapterIndex);
+        }
+      }
+    };
 
-  const handlePlayPause = () => {
-    if (!audioRef.current || !audioUrl) return;
+    const updateDuration = () => {
+      setDuration(audio.duration);
+    };
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setCurrentTime(0);
+    };
+
+    audio.addEventListener('timeupdate', updateTime);
+    audio.addEventListener('loadedmetadata', updateDuration);
+    audio.addEventListener('ended', handleEnded);
+
+    return () => {
+      audio.removeEventListener('timeupdate', updateTime);
+      audio.removeEventListener('loadedmetadata', updateDuration);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [onTimeUpdate, chapters, currentChapter]);
+
+  const togglePlayPause = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
     if (isPlaying) {
-      audioRef.current.pause();
+      audio.pause();
     } else {
-      audioRef.current.play().catch(error => {
-        console.error('Error playing audio:', error);
-      });
+      audio.play();
     }
     setIsPlaying(!isPlaying);
   };
 
   const handleSeek = (e) => {
-    if (!audioRef.current || !progressRef.current) return;
+    const audio = audioRef.current;
+    if (!audio) return;
 
-    const rect = progressRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const newTime = (clickX / rect.width) * duration;
+    const clickX = e.nativeEvent.offsetX;
+    const width = e.target.offsetWidth;
+    const newTime = (clickX / width) * duration;
     
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
-
-  const handleProgressDrag = (e) => {
-    if (!isDragging || !audioRef.current || !progressRef.current) return;
-
-    const rect = progressRef.current.getBoundingClientRect();
-    const dragX = e.clientX - rect.left;
-    const newTime = Math.max(0, Math.min((dragX / rect.width) * duration, duration));
-    
-    audioRef.current.currentTime = newTime;
-    setCurrentTime(newTime);
-  };
-
-  const handleSkip = (seconds) => {
-    if (!audioRef.current) return;
-    
-    const newTime = Math.max(0, Math.min(currentTime + seconds, duration));
-    audioRef.current.currentTime = newTime;
+    audio.currentTime = newTime;
     setCurrentTime(newTime);
   };
 
   const handleVolumeChange = (e) => {
-    if (!audioRef.current || !volumeRef.current) return;
-
-    const rect = volumeRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const newVolume = Math.max(0, Math.min(clickX / rect.width, 1));
-    
+    const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
-    audioRef.current.volume = newVolume;
+    if (audioRef.current) {
+      audioRef.current.volume = newVolume;
+    }
   };
 
-  const handleSpeedChange = (rate) => {
-    if (!audioRef.current) return;
-    
-    setPlaybackRate(rate);
-    audioRef.current.playbackRate = rate;
+  const handleSpeedChange = (speed) => {
+    setPlaybackRate(speed);
+    if (audioRef.current) {
+      audioRef.current.playbackRate = speed;
+    }
+    setShowSpeedMenu(false);
   };
 
-  const formatTime = (seconds) => {
-    if (isNaN(seconds)) return '0:00';
-    
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = Math.floor(seconds % 60);
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  const skipTime = (seconds) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const newTime = Math.max(0, Math.min(duration, currentTime + seconds));
+    audio.currentTime = newTime;
+    setCurrentTime(newTime);
   };
 
-  const getCurrentChapter = () => {
-    if (!chapters.length) return null;
-    
-    return chapters.find(chapter => 
-      currentTime >= chapter.startTime && 
-      currentTime < (chapter.endTime || duration)
-    ) || chapters[0];
+  const jumpToChapter = (chapterIndex) => {
+    const audio = audioRef.current;
+    if (!audio || !chapters[chapterIndex]) return;
+
+    audio.currentTime = chapters[chapterIndex].time;
+    setCurrentTime(chapters[chapterIndex].time);
+    setCurrentChapter(chapterIndex);
+  };
+
+  const formatTime = (time) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = Math.floor(time % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   const progressPercentage = duration > 0 ? (currentTime / duration) * 100 : 0;
 
-  const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 2];
-
-  if (!audioUrl) {
-    return null;
-  }
-
   return (
-    <>
-      {/* Hidden Audio Element */}
-      <audio
-        ref={audioRef}
-        onLoadedMetadata={handleLoadedMetadata}
-        onTimeUpdate={handleTimeUpdate}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-      />
+    <div className="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-6 shadow-2xl border border-gray-700">
+      {/* Audio Element */}
+      {audioUrl && (
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          preload="metadata"
+        />
+      )}
 
-      {/* Podcast Player */}
-      <motion.div
-        initial={{ y: 100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className={`
-          ${isSticky ? 'fixed bottom-0 left-0 right-0 z-50' : 'relative'}
-          bg-gradient-to-r from-slate-900 via-gray-900 to-slate-900 
-          backdrop-blur-xl border-t border-white/10 shadow-2xl
-          ${className}
-        `}
-      >
-        {/* Compact Player */}
-        <div className="px-4 py-3">
-          <div className="flex items-center space-x-4">
-            {/* Album Art / Avatar */}
-            <div className="flex-shrink-0">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
-                <span className="text-xl">🎧</span>
-              </div>
+      {/* Header */}
+      <div className="mb-6">
+        <h3 className="text-2xl font-bold text-white mb-2">{title}</h3>
+        <p className="text-gray-400">{description}</p>
+        {chapters.length > 0 && currentChapter < chapters.length && (
+          <p className="text-purple-400 text-sm mt-2">
+            Chapter {currentChapter + 1}: {chapters[currentChapter]?.title}
+          </p>
+        )}
+      </div>
+
+      {/* Progress Bar */}
+      <div className="mb-6">
+        <div 
+          className="w-full h-2 bg-gray-700 rounded-full cursor-pointer relative group"
+          onClick={handleSeek}
+        >
+          <div 
+            className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-150"
+            style={{ width: `${progressPercentage}%` }}
+          />
+          <div 
+            className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 bg-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
+            style={{ left: `${progressPercentage}%`, marginLeft: '-8px' }}
+          />
+        </div>
+        <div className="flex justify-between text-gray-400 text-sm mt-2">
+          <span>{formatTime(currentTime)}</span>
+          <span>{formatTime(duration)}</span>
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="flex items-center justify-center space-x-6 mb-6">
+        {/* Skip Backward */}
+        <button
+          onClick={() => skipTime(-15)}
+          className="text-gray-400 hover:text-white transition-colors p-2"
+          title="Skip back 15s"
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8z"/>
+            <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">15</text>
+          </svg>
+        </button>
+
+        {/* Play/Pause */}
+        <button
+          onClick={togglePlayPause}
+          disabled={!audioUrl}
+          className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white rounded-full p-4 transition-colors shadow-lg"
+        >
+          {isPlaying ? (
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+            </svg>
+          ) : (
+            <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+          )}
+        </button>
+
+        {/* Skip Forward */}
+        <button
+          onClick={() => skipTime(30)}
+          className="text-gray-400 hover:text-white transition-colors p-2"
+          title="Skip forward 30s"
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
+            <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">30</text>
+          </svg>
+        </button>
+      </div>
+
+      {/* Additional Controls */}
+      <div className="flex items-center justify-between">
+        {/* Volume Control */}
+        <div className="flex items-center space-x-2 relative">
+          <button
+            onClick={() => setShowVolumeSlider(!showVolumeSlider)}
+            className="text-gray-400 hover:text-white transition-colors p-1"
+          >
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          </button>
+          {showVolumeSlider && (
+            <div className="absolute bottom-full mb-2 left-0">
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.1"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-20 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+              />
             </div>
-
-            {/* Track Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between">
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-white font-medium truncate text-sm">
-                    {getCurrentChapter()?.title || title}
-                  </h3>
-                  <p className="text-gray-400 text-xs truncate">
-                    {instructor} • {formatTime(currentTime)} / {formatTime(duration)}
-                  </p>
-                </div>
-
-                {/* Expand Button */}
-                <button
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="ml-2 p-2 text-gray-400 hover:text-white transition-colors touch-manipulation"
-                >
-                  {isExpanded ? <FiMinimize2 size={16} /> : <FiMaximize2 size={16} />}
-                </button>
-              </div>
-
-              {/* Progress Bar (Compact) */}
-              {!isExpanded && (
-                <div
-                  ref={progressRef}
-                  className="mt-2 h-1 bg-gray-700 rounded-full cursor-pointer touch-manipulation"
-                  onClick={handleSeek}
-                  onMouseDown={() => setIsDragging(true)}
-                  onMouseUp={() => setIsDragging(false)}
-                  onMouseMove={handleProgressDrag}
-                >
-                  <div
-                    className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full transition-all duration-200"
-                    style={{ width: `${progressPercentage}%` }}
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Compact Controls */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => handleSkip(-15)}
-                className="p-2 text-gray-400 hover:text-white transition-colors touch-manipulation"
-              >
-                <FiSkipBack size={20} />
-              </button>
-
-              <button
-                onClick={handlePlayPause}
-                disabled={isLoading}
-                className="p-3 bg-white text-black rounded-full hover:scale-105 transition-transform disabled:opacity-50 touch-manipulation"
-              >
-                {isLoading ? (
-                  <div className="w-5 h-5 border-2 border-gray-800 border-t-transparent rounded-full animate-spin" />
-                ) : isPlaying ? (
-                  <FiPause size={20} />
-                ) : (
-                  <FiPlay size={20} className="ml-0.5" />
-                )}
-              </button>
-
-              <button
-                onClick={() => handleSkip(15)}
-                className="p-2 text-gray-400 hover:text-white transition-colors touch-manipulation"
-              >
-                <FiSkipForward size={20} />
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Expanded Player */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="border-t border-white/10 overflow-hidden"
-            >
-              <div className="px-6 py-4 space-y-4">
-                {/* Large Progress Bar */}
-                <div className="space-y-2">
-                  <div
-                    ref={progressRef}
-                    className="h-2 bg-gray-700 rounded-full cursor-pointer touch-manipulation"
-                    onClick={handleSeek}
-                    onMouseDown={() => setIsDragging(true)}
-                    onMouseUp={() => setIsDragging(false)}
-                    onMouseMove={handleProgressDrag}
-                  >
-                    <div
-                      className="h-full bg-gradient-to-r from-indigo-400 to-purple-500 rounded-full transition-all duration-200 relative"
-                      style={{ width: `${progressPercentage}%` }}
-                    >
-                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 translate-x-1/2 w-4 h-4 bg-white rounded-full shadow-lg" />
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-                </div>
-
-                {/* Advanced Controls */}
-                <div className="flex items-center justify-between">
-                  {/* Speed Control */}
-                  <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-400">Speed:</span>
-                    <div className="flex space-x-1">
-                      {speedOptions.map(speed => (
-                        <button
-                          key={speed}
-                          onClick={() => handleSpeedChange(speed)}
-                          className={`px-2 py-1 text-xs rounded transition-colors touch-manipulation ${
-                            playbackRate === speed
-                              ? 'bg-indigo-600 text-white'
-                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                          }`}
-                        >
-                          {speed}x
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Volume Control */}
-                  <div className="flex items-center space-x-2">
-                    <FiVolume2 className="text-gray-400" size={16} />
-                    <div
-                      ref={volumeRef}
-                      className="w-20 h-1 bg-gray-700 rounded-full cursor-pointer touch-manipulation"
-                      onClick={handleVolumeChange}
-                    >
-                      <div
-                        className="h-full bg-white rounded-full"
-                        style={{ width: `${volume * 100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Chapter Navigation */}
-                {chapters.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-gray-300">Chapters</h4>
-                    <div className="max-h-32 overflow-y-auto space-y-1">
-                      {chapters.map((chapter, index) => (
-                        <button
-                          key={index}
-                          onClick={() => {
-                            if (audioRef.current) {
-                              audioRef.current.currentTime = chapter.startTime;
-                              setCurrentTime(chapter.startTime);
-                            }
-                          }}
-                          className={`w-full text-left px-3 py-2 rounded text-sm transition-colors touch-manipulation ${
-                            getCurrentChapter()?.title === chapter.title
-                              ? 'bg-indigo-600/30 text-indigo-300'
-                              : 'text-gray-400 hover:text-white hover:bg-white/5'
-                          }`}
-                        >
-                          <div className="flex justify-between">
-                            <span className="truncate">{chapter.title}</span>
-                            <span className="ml-2 text-xs opacity-75">
-                              {formatTime(chapter.startTime)}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </motion.div>
+        {/* Speed Control */}
+        <div className="relative">
+          <button
+            onClick={() => setShowSpeedMenu(!showSpeedMenu)}
+            className="text-gray-400 hover:text-white transition-colors px-3 py-1 border border-gray-600 rounded text-sm"
+          >
+            {playbackRate}x
+          </button>
+          {showSpeedMenu && (
+            <div className="absolute bottom-full mb-2 right-0 bg-gray-800 border border-gray-600 rounded-lg p-2 min-w-[80px]">
+              {[0.5, 0.75, 1, 1.25, 1.5, 2].map(speed => (
+                <button
+                  key={speed}
+                  onClick={() => handleSpeedChange(speed)}
+                  className={`block w-full text-left px-2 py-1 text-sm transition-colors rounded ${
+                    speed === playbackRate 
+                      ? 'bg-purple-600 text-white' 
+                      : 'text-gray-300 hover:bg-gray-700'
+                  }`}
+                >
+                  {speed}x
+                </button>
+              ))}
+            </div>
           )}
-        </AnimatePresence>
-      </motion.div>
-    </>
+        </div>
+      </div>
+
+      {/* Chapters */}
+      {chapters.length > 0 && (
+        <div className="mt-6 pt-6 border-t border-gray-700">
+          <h4 className="text-white font-medium mb-3">Chapters</h4>
+          <div className="space-y-2 max-h-32 overflow-y-auto">
+            {chapters.map((chapter, index) => (
+              <button
+                key={index}
+                onClick={() => jumpToChapter(index)}
+                className={`w-full text-left p-2 rounded transition-colors ${
+                  index === currentChapter
+                    ? 'bg-purple-600/30 text-purple-200'
+                    : 'text-gray-400 hover:bg-gray-700 hover:text-white'
+                }`}
+              >
+                <div className="flex justify-between">
+                  <span className="font-medium">{chapter.title}</span>
+                  <span className="text-sm">{formatTime(chapter.time)}</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Upload Area (when no audio) */}
+      {!audioUrl && (
+        <div className="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center">
+          <svg className="w-12 h-12 text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 011 1v2a1 1 0 01-1 1h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V8H3a1 1 0 01-1-1V5a1 1 0 011-1h4zM9 8v8m6-8v8" />
+          </svg>
+          <p className="text-gray-400 mb-2">No podcast audio loaded</p>
+          <p className="text-gray-500 text-sm">Upload an MP4 audio file to get started</p>
+        </div>
+      )}
+    </div>
   );
 };
 

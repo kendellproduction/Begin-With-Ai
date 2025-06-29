@@ -599,14 +599,14 @@ const HomePage = () => {
                   </p>
                 </div>
 
-                {/* Quick Stats - more compact */}
+                {/* Real User Stats - Updated with correct property names */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
-                    <div className="text-xl font-bold text-orange-300">{userStats.streak || 0}</div>
+                    <div className="text-xl font-bold text-orange-300">{userStats.currentStreak || 0}</div>
                     <div className="text-xs text-blue-200">Day Streak 🔥</div>
                   </div>
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
-                    <div className="text-xl font-bold text-green-300">{userStats.lessonsCompleted || 0}</div>
+                    <div className="text-xl font-bold text-green-300">{userStats.completedLessons || 0}</div>
                     <div className="text-xs text-blue-200">Lessons Done ✅</div>
                   </div>
                   <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">

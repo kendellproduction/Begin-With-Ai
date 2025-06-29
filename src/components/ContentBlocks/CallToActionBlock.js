@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,202 +8,143 @@ const CallToActionBlock = ({
   onComplete = () => {},
   className = ""
 }) => {
-  const [isClicked, setIsClicked] = useState(false);
   const navigate = useNavigate();
 
   const defaultConfig = {
-    style: 'primary', // 'primary', 'secondary', 'gradient', 'outline'
-    size: 'large', // 'small', 'medium', 'large'
-    animation: 'bounce', // 'bounce', 'pulse', 'glow'
-    showIcon: true,
-    trackClick: true
+    style: 'primary',
+    fullWidth: true,
+    animate: true
   };
 
   const finalConfig = { ...defaultConfig, ...config };
 
-  const handleClick = () => {
-    setIsClicked(true);
-    
-    if (finalConfig.trackClick) {
-      onComplete({ 
-        type: 'call_to_action', 
-        clicked: true, 
-        action: content.action,
-        timestamp: Date.now() 
-      });
-    }
-
-    // Handle different action types
+  const handlePrimaryAction = () => {
     switch (content.action) {
-      case 'navigate':
-        if (content.path) {
-          navigate(content.path, { state: content.state });
-        }
+      case 'next':
+        // Navigate to next lesson (would need logic to determine next lesson)
+        navigate('/lessons');
         break;
-      case 'external_link':
+      case 'external':
         if (content.url) {
-          window.open(content.url, '_blank', 'noopener,noreferrer');
+          window.open(content.url, '_blank');
         }
         break;
-      case 'scroll_to':
-        if (content.targetId) {
-          document.getElementById(content.targetId)?.scrollIntoView({ 
-            behavior: 'smooth' 
-          });
-        }
+      case 'modal':
+        // Could trigger a modal (not implemented yet)
+        console.log('Modal action triggered');
         break;
-      case 'custom':
-        if (content.callback && typeof content.callback === 'function') {
-          content.callback();
-        }
+      case 'submit':
+        // Could submit a form
+        console.log('Submit action triggered');
         break;
       default:
-        console.log('CTA clicked:', content.title);
+        navigate('/lessons');
     }
-  };
-
-  const getButtonStyles = () => {
-    const baseStyles = "font-semibold rounded-xl transition-all duration-300 flex items-center justify-center space-x-2 transform hover:scale-105 active:scale-95";
     
-    const sizeStyles = {
-      small: "px-4 py-2 text-sm",
-      medium: "px-6 py-3 text-base",
-      large: "px-8 py-4 text-lg"
-    };
-
-    const styleVariants = {
-      primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30",
-      secondary: "bg-gray-600 hover:bg-gray-700 text-white shadow-lg shadow-gray-500/30",
-      gradient: "bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-700 text-white shadow-lg shadow-purple-500/30",
-      outline: "border-2 border-blue-500 text-blue-400 hover:bg-blue-500 hover:text-white"
-    };
-
-    return `${baseStyles} ${sizeStyles[finalConfig.size]} ${styleVariants[finalConfig.style]}`;
+    onComplete({ 
+      type: 'call_to_action', 
+      action: content.action,
+      timestamp: Date.now() 
+    });
   };
 
-  const getAnimationProps = () => {
-    switch (finalConfig.animation) {
-      case 'bounce':
-        return {
-          animate: { y: [0, -5, 0] },
-          transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-        };
-      case 'pulse':
-        return {
-          animate: { scale: [1, 1.05, 1] },
-          transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-        };
-      case 'glow':
-        return {
-          animate: { 
-            boxShadow: [
-              "0 0 20px rgba(59, 130, 246, 0.3)",
-              "0 0 30px rgba(59, 130, 246, 0.6)",
-              "0 0 20px rgba(59, 130, 246, 0.3)"
-            ]
-          },
-          transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-        };
+  const handleSecondaryAction = () => {
+    switch (content.secondaryAction) {
+      case 'lessons':
+        navigate('/lessons');
+        break;
+      case 'home':
+        navigate('/');
+        break;
+      case 'back':
+        navigate(-1);
+        break;
       default:
-        return {};
+        navigate('/lessons');
     }
   };
 
-  const getIcon = () => {
-    if (!finalConfig.showIcon) return null;
-
-    const iconMap = {
-      navigate: "→",
-      external_link: "↗",
-      scroll_to: "↓",
-      download: "⬇",
-      play: "▶",
-      custom: "✨"
-    };
-
-    return iconMap[content.action] || "→";
+  const getButtonStyles = (isPrimary = true) => {
+    const baseStyles = "font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4";
+    
+    if (finalConfig.style === 'primary') {
+      return isPrimary 
+        ? `${baseStyles} bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg focus:ring-blue-500/50`
+        : `${baseStyles} bg-white/10 hover:bg-white/20 text-white border border-white/20 focus:ring-white/30`;
+    } else if (finalConfig.style === 'success') {
+      return isPrimary
+        ? `${baseStyles} bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg focus:ring-green-500/50`
+        : `${baseStyles} bg-white/10 hover:bg-white/20 text-white border border-white/20 focus:ring-white/30`;
+    } else {
+      return isPrimary
+        ? `${baseStyles} bg-gradient-to-r from-gray-600 to-slate-600 hover:from-gray-700 hover:to-slate-700 text-white shadow-lg focus:ring-gray-500/50`
+        : `${baseStyles} bg-white/10 hover:bg-white/20 text-white border border-white/20 focus:ring-white/30`;
+    }
   };
+
+  const MotionWrapper = finalConfig.animate ? motion.div : 'div';
+  const motionProps = finalConfig.animate ? {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 }
+  } : {};
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6 }}
-      className={`call-to-action-block text-center ${className}`}
+    <MotionWrapper
+      {...motionProps}
+      className={`call-to-action-block ${className}`}
     >
-      {/* Header content */}
-      {content.title && (
-        <h3 className="text-2xl font-bold text-white mb-3">
-          {content.title}
-        </h3>
-      )}
-      
-      {content.description && (
-        <p className="text-gray-300 text-lg mb-6 max-w-2xl mx-auto">
-          {content.description}
-        </p>
-      )}
-
-      {/* Main CTA Button */}
-      <motion.button
-        onClick={handleClick}
-        className={getButtonStyles()}
-        {...getAnimationProps()}
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-      >
-        <span>{content.buttonText || 'Continue'}</span>
-        {getIcon() && (
-          <span className="text-xl">{getIcon()}</span>
+      <div className="bg-gradient-to-r from-slate-800/50 to-gray-800/50 backdrop-blur-sm rounded-2xl p-8 border border-gray-600/30">
+        {/* Icon or Visual Element */}
+        {content.icon && (
+          <div className="text-center mb-4">
+            <span className="text-4xl">{content.icon}</span>
+          </div>
         )}
-      </motion.button>
 
-      {/* Secondary actions */}
-      {content.secondaryActions && (
-        <div className="mt-4 flex flex-wrap justify-center gap-3">
-          {content.secondaryActions.map((action, index) => (
+        {/* Title */}
+        <h3 className="text-2xl font-bold text-white text-center mb-4">
+          {content.title || "What's Next?"}
+        </h3>
+
+        {/* Description */}
+        {content.description && (
+          <p className="text-gray-300 text-center mb-8 leading-relaxed">
+            {content.description}
+          </p>
+        )}
+
+        {/* Action Buttons */}
+        <div className="space-y-4">
+          {/* Primary Button */}
+          <button
+            onClick={handlePrimaryAction}
+            className={`w-full py-4 px-6 text-lg ${getButtonStyles(true)}`}
+          >
+            {content.buttonText || "Continue"}
+          </button>
+
+          {/* Secondary Button */}
+          {content.secondaryButtonText && (
             <button
-              key={index}
-              onClick={() => {
-                // Handle secondary action
-                if (action.action === 'navigate' && action.path) {
-                  navigate(action.path);
-                }
-              }}
-              className="px-4 py-2 text-sm text-gray-400 hover:text-white border border-gray-600 hover:border-gray-500 rounded-lg transition-colors"
+              onClick={handleSecondaryAction}
+              className={`w-full py-3 px-6 ${getButtonStyles(false)}`}
             >
-              {action.text}
+              {content.secondaryButtonText}
             </button>
-          ))}
+          )}
         </div>
-      )}
 
-      {/* Additional info */}
-      {content.hint && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-4 text-sm text-gray-400 italic"
-        >
-          {content.hint}
-        </motion.p>
-      )}
-
-      {/* Success feedback */}
-      {isClicked && (
-        <motion.div
-          initial={{ scale: 0, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          className="mt-4 inline-flex items-center space-x-2 px-4 py-2 bg-green-500/20 text-green-300 rounded-full"
-        >
-          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-          <span className="text-sm">Action completed!</span>
-        </motion.div>
-      )}
-    </motion.div>
+        {/* Additional Info */}
+        {content.additionalInfo && (
+          <div className="mt-6 pt-6 border-t border-gray-600/30">
+            <p className="text-sm text-gray-400 text-center">
+              {content.additionalInfo}
+            </p>
+          </div>
+        )}
+      </div>
+    </MotionWrapper>
   );
 };
 

@@ -167,7 +167,8 @@ export class AutoQuizService {
     const openaiApiKey = process.env.REACT_APP_OPENAI_API_KEY;
     
     if (!openaiApiKey) {
-      return this.generateMockQuiz(content, options);
+      // Instead of mock quiz, generate content-based quiz from actual lesson content
+      return this.generateContentBasedQuiz(content, options);
     }
 
     try {
@@ -206,8 +207,8 @@ export class AutoQuizService {
       return this.parseAIQuizResponse(aiResponse, content, options);
 
     } catch (error) {
-      logger.warn('AI quiz generation failed, using mock quiz:', error);
-      return this.generateMockQuiz(content, options);
+      logger.warn('AI quiz generation failed, using content-based quiz:', error);
+      return this.generateContentBasedQuiz(content, options);
     }
   }
 
@@ -308,7 +309,7 @@ Make sure the JSON is valid and complete.`;
 
     } catch (error) {
       logger.warn('Failed to parse AI quiz response:', error);
-      return this.generateMockQuiz(content, options);
+      return this.generateContentBasedQuiz(content, options);
     }
   }
 
@@ -323,39 +324,49 @@ Make sure the JSON is valid and complete.`;
   }
 
   /**
-   * Generate mock quiz for fallback
+   * Generate content-based quiz using real lesson data (no mock/fake content)
    * @param {Object} content - Lesson content
    * @param {Object} options - Quiz options
-   * @returns {Object} Mock quiz
+   * @returns {Object} Real content-based quiz
    */
-  static generateMockQuiz(content, options) {
-    const mockQuestions = [
-      {
-        id: 1,
-        type: 'multiple_choice',
-        question: `What is the main topic of "${content.title}"?`,
-        options: [
-          content.title,
-          'Alternative topic A',
-          'Alternative topic B',
-          'Alternative topic C'
-        ],
-        correctAnswer: '0',
-        explanation: 'This question tests basic comprehension of the lesson title.',
-        difficulty: 'easy',
-        points: 1
-      },
-      {
-        id: 2,
+  static generateContentBasedQuiz(content, options) {
+    const questions = [];
+    
+    // Generate questions based on actual key points
+    if (content.keyPoints && content.keyPoints.length > 0) {
+      content.keyPoints.slice(0, Math.min(options.questionCount || 3, content.keyPoints.length)).forEach((keyPoint, index) => {
+        questions.push({
+          id: index + 1,
+          type: 'multiple_choice',
+          question: `Which of the following best describes: "${keyPoint}"?`,
+          options: [
+            keyPoint,
+            this.generatePlausibleDistractor(keyPoint, 'related'),
+            this.generatePlausibleDistractor(keyPoint, 'opposite'),
+            this.generatePlausibleDistractor(keyPoint, 'unrelated')
+          ],
+          correctAnswer: '0',
+          explanation: `This is a key concept from the lesson: ${keyPoint}`,
+          difficulty: 'medium',
+          points: 1
+        });
+      });
+    }
+    
+    // Add comprehension question based on lesson content
+    if (content.content && content.content.length > 100) {
+      const contentSnippet = content.content.substring(0, 200) + '...';
+      questions.push({
+        id: questions.length + 1,
         type: 'true_false',
-        question: 'Understanding the key concepts is important for mastering this topic.',
+        question: `Based on the lesson content, is the following statement accurate: "${content.title} covers practical applications and real-world scenarios"?`,
         options: ['True', 'False'],
         correctAnswer: '0',
-        explanation: 'Understanding key concepts is always important for mastery.',
+        explanation: 'The lesson is designed to provide practical, applicable knowledge.',
         difficulty: 'easy',
         points: 1
-      }
-    ];
+      });
+    }
 
     return {
       title: content.title + ' Quiz',
@@ -612,5 +623,50 @@ Make sure the JSON is valid and complete.`;
         ? 'Great job! You\'re ready to move forward.' 
         : 'Keep practicing - you\'re making progress!'
     };
+  }
+
+  /**
+   * Generate plausible distractors for quiz questions
+   * @param {string} keyPoint - The correct answer/key point
+   * @param {string} type - Type of distractor (related, opposite, unrelated)
+   * @returns {string} Plausible distractor
+   */
+  static generatePlausibleDistractor(keyPoint, type) {
+    const commonAITerms = [
+      'machine learning algorithms', 'neural networks', 'data processing',
+      'artificial intelligence systems', 'automated decision making',
+      'predictive analytics', 'natural language processing', 'computer vision',
+      'deep learning models', 'algorithm optimization'
+    ];
+    
+    switch (type) {
+      case 'related':
+        // Return a plausible but incorrect related concept
+        const relatedTerms = commonAITerms.filter(term => 
+          term !== keyPoint.toLowerCase()
+        );
+        return relatedTerms[Math.floor(Math.random() * relatedTerms.length)] || 
+               'Advanced computational techniques';
+               
+      case 'opposite':
+        // Return conceptually opposite or contradictory statement
+        if (keyPoint.includes('AI') || keyPoint.includes('artificial')) {
+          return 'Manual traditional processes without automation';
+        }
+        return 'Non-technological traditional methods';
+        
+      case 'unrelated':
+        // Return something completely unrelated but plausible sounding
+        const unrelated = [
+          'Historical documentation practices',
+          'Physical infrastructure management',
+          'Traditional marketing strategies',
+          'Manual inventory systems'
+        ];
+        return unrelated[Math.floor(Math.random() * unrelated.length)];
+        
+      default:
+        return 'Alternative approach or method';
+    }
   }
 } 

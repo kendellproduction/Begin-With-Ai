@@ -68,7 +68,7 @@ const GamificationNotifications = () => {
         </div>
       ))}
       
-      <style jsx>{`
+      <style>{`
         @keyframes slideInRight {
           from {
             transform: translateX(100%);

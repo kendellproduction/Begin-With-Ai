@@ -35,15 +35,30 @@ const QuizBlock = ({
   const checkAnswer = (answerIndex = selectedAnswer) => {
     if (answerIndex === null) return;
     
-    const isCorrect = answerIndex === content.correctAnswer;
+    // Handle both correctAnswer index format and options with correct property
+    let isCorrect = false;
+    if (typeof content.correctAnswer === 'number') {
+      isCorrect = answerIndex === content.correctAnswer;
+    } else if (Array.isArray(options) && options[answerIndex]) {
+      // Check if option has correct property or if it's the correct option
+      const selectedOption = options[answerIndex];
+      if (typeof selectedOption === 'object' && selectedOption.hasOwnProperty('correct')) {
+        isCorrect = selectedOption.correct === true;
+      } else {
+        isCorrect = answerIndex === content.correctAnswer;
+      }
+    }
+    
     setShowFeedback(true);
     
-    if (isCorrect && !isCompleted) {
+    // Always complete the quiz regardless of correct/incorrect answer
+    if (!isCompleted) {
       setIsCompleted(true);
       onComplete({ 
         type: 'quiz', 
         completed: true, 
-        correct: true,
+        correct: isCorrect,
+        quizAnswered: true, // Flag to indicate quiz was answered
         selectedAnswer: answerIndex,
         timestamp: Date.now() 
       });
@@ -60,7 +75,19 @@ const QuizBlock = ({
     setIsCompleted(false);
   };
 
-  const isCorrect = selectedAnswer === content.correctAnswer;
+  // Calculate isCorrect based on the data structure
+  let isCorrect = false;
+  if (selectedAnswer !== null) {
+    if (typeof content.correctAnswer === 'number') {
+      isCorrect = selectedAnswer === content.correctAnswer;
+    } else if (Array.isArray(content.options) && content.options[selectedAnswer]) {
+      const selectedOption = content.options[selectedAnswer];
+      if (typeof selectedOption === 'object' && selectedOption.hasOwnProperty('correct')) {
+        isCorrect = selectedOption.correct === true;
+      }
+    }
+  }
+  
   const options = finalConfig.shuffleOptions 
     ? [...content.options].sort(() => Math.random() - 0.5)
     : content.options;
@@ -89,7 +116,16 @@ const QuizBlock = ({
       <div className="space-y-3 mb-6">
         {options.map((option, index) => {
           const isSelected = selectedAnswer === index;
-          const showCorrect = showFeedback && index === content.correctAnswer;
+          
+          // Determine if this option is the correct one
+          let isCorrectOption = false;
+          if (typeof content.correctAnswer === 'number') {
+            isCorrectOption = index === content.correctAnswer;
+          } else if (typeof option === 'object' && option.hasOwnProperty('correct')) {
+            isCorrectOption = option.correct === true;
+          }
+          
+          const showCorrect = showFeedback && isCorrectOption;
           const showIncorrect = showFeedback && isSelected && !isCorrect;
 
           return (
@@ -128,7 +164,7 @@ const QuizBlock = ({
                   ${isSelected ? 'text-white' : 'text-gray-200'}
                   ${showCorrect && !isSelected ? 'text-green-200' : ''}
                 `}>
-                  {option}
+                  {typeof option === 'object' ? option.text : option}
                 </span>
                 
                 {/* Feedback icons */}
@@ -197,7 +233,19 @@ const QuizBlock = ({
               </p>
               {!isCorrect && finalConfig.showCorrectAnswer && (
                 <p className="text-gray-300 text-sm mt-2">
-                  The correct answer is: <span className="font-medium text-green-300">{options[content.correctAnswer]}</span>
+                  The correct answer is: <span className="font-medium text-green-300">
+                    {(() => {
+                      // Find the correct answer to display
+                      if (typeof content.correctAnswer === 'number' && options[content.correctAnswer]) {
+                        const correctOption = options[content.correctAnswer];
+                        return typeof correctOption === 'object' ? correctOption.text : correctOption;
+                      } else {
+                        // Find option with correct: true
+                        const correctOption = options.find(opt => typeof opt === 'object' && opt.correct === true);
+                        return correctOption ? correctOption.text : 'N/A';
+                      }
+                    })()}
+                  </span>
                 </p>
               )}
             </div>

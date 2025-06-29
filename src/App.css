@@ -40,3 +40,86 @@
     transform: rotate(360deg);
   }
 }
+
+/* Lesson Content Styling for Better Readability */
+.lesson-content {
+  line-height: 1.8;
+  font-size: 18px;
+}
+
+.lesson-content p {
+  margin-bottom: 1.5rem;
+  line-height: 1.8;
+}
+
+.lesson-content h1,
+.lesson-content h2,
+.lesson-content h3,
+.lesson-content h4,
+.lesson-content h5,
+.lesson-content h6 {
+  margin-top: 2rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+.lesson-content h1 {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.lesson-content h2 {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.lesson-content h3 {
+  font-size: 1.5rem;
+}
+
+.lesson-content blockquote {
+  margin: 2rem 0;
+  padding: 1.5rem;
+  border-left: 4px solid #8b5cf6;
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.lesson-content ul,
+.lesson-content ol {
+  margin: 1.5rem 0;
+  padding-left: 2rem;
+}
+
+.lesson-content li {
+  margin: 0.5rem 0;
+  line-height: 1.7;
+}
+
+.lesson-content hr {
+  margin: 2.5rem 0;
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #8b5cf6, transparent);
+}
+
+/* Improved prose styling for markdown content */
+.prose-enhanced {
+  max-width: none;
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+.prose-enhanced p {
+  margin-bottom: 1.5rem;
+  color: #ffffff;
+}
+
+.prose-enhanced strong {
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.prose-enhanced em {
+  color: #cbd5e1;
+  font-style: italic;
+}

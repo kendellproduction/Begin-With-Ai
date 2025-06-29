@@ -7,8 +7,14 @@ const LessonDetail = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Redirect to the new slide-based lesson viewer for immersive learning
-    navigate(`/lesson-viewer/${lessonId}`, { replace: true });
+    // Route specific lessons to their specialized viewers
+    if (lessonId === 'history-of-ai' || lessonId === 'welcome-ai-revolution') {
+      // Use synchronized audio viewer for History of AI lesson
+      navigate(`/lesson-sync/${lessonId}`, { replace: true });
+    } else {
+      // Use standard modern lesson viewer for other lessons
+      navigate(`/lesson-viewer/${lessonId}`, { replace: true });
+    }
   }, [lessonId, navigate]);
 
   // Show brief loading while redirecting
@@ -66,7 +72,11 @@ const LessonDetail = () => {
       </div>
       <div className="text-center text-white relative z-10">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
-        <p className="text-xl">Loading immersive lesson experience...</p>
+        <p className="text-xl">
+          {(lessonId === 'history-of-ai' || lessonId === 'welcome-ai-revolution') 
+            ? 'Loading synchronized audio experience...' 
+            : 'Loading immersive lesson experience...'}
+        </p>
       </div>
     </div>
   );

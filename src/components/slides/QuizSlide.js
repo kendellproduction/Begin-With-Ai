@@ -14,16 +14,30 @@ const QuizSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
     setSelectedAnswer({ option, index });
     setHasAnswered(true);
     
-    // Trigger audio feedback
+    // Trigger audio feedback and vibration feedback
     const isCorrect = option.correct;
     onAnswer(isCorrect, { selectedOption: option, isCorrect });
+    
+    // Haptic feedback for mobile devices
+    if (navigator.vibrate) {
+      navigator.vibrate(isCorrect ? [50] : [100, 50, 100]);
+    }
     
     // Show result after brief delay
     setTimeout(() => {
       setShowResult(true);
     }, 500);
 
-    // User controls advancement - no auto-advance timer
+    // Auto-submit after showing result (if autoSubmit is enabled)
+    if (slide.content.autoSubmit) {
+      setTimeout(() => {
+        onComplete(slide.id, {
+          selectedOption: option,
+          isCorrect,
+          autoSubmitted: true
+        });
+      }, isCorrect ? 2000 : 3000); // Shorter delay for correct answers
+    }
   };
 
   const getOptionStyle = (option, index) => {

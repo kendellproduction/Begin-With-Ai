@@ -6,40 +6,30 @@ const DifficultySelectionModal = ({
   onClose, 
   onConfirm, 
   lesson = null,
-  defaultDifficulty = 'Beginner' 
+  defaultDifficulty = 'Free' 
 }) => {
   const [selectedDifficulty, setSelectedDifficulty] = useState(defaultDifficulty);
 
   const difficulties = [
     {
-      id: 'Beginner',
-      title: 'Beginner',
-      icon: '🌱',
-      description: 'Perfect for AI newcomers',
-      duration: '15-20 min',
+      id: 'Free',
+      title: 'Free',
+      icon: '📚',
+      description: 'Complete AI history lesson',
+      duration: 'Full content',
       color: 'from-green-400 to-emerald-500',
       bgColor: 'from-green-400/20 to-emerald-500/20',
       borderColor: 'border-green-400/50'
     },
     {
-      id: 'Intermediate',
-      title: 'Intermediate',
-      icon: '🎯',
-      description: 'Ideal for expanding knowledge',
-      duration: '20-30 min',
+      id: 'Premium',
+      title: 'Premium',
+      icon: '👑',
+      description: 'Enhanced interactive features',
+      duration: 'Premium content',
       color: 'from-blue-400 to-cyan-500',
       bgColor: 'from-blue-400/20 to-cyan-500/20',
       borderColor: 'border-blue-400/50'
-    },
-    {
-      id: 'Advanced',
-      title: 'Advanced',
-      icon: '🚀',
-      description: 'For experienced practitioners',
-      duration: '30-45 min',
-      color: 'from-orange-400 to-amber-500',
-      bgColor: 'from-orange-400/20 to-amber-500/20',
-      borderColor: 'border-orange-400/50'
     }
   ];
 
@@ -76,7 +66,7 @@ const DifficultySelectionModal = ({
             </div>
 
             {/* Difficulty Grid */}
-            <div className="grid grid-cols-3 gap-2 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               {difficulties.map(difficulty => (
                 <button 
                   key={difficulty.id}

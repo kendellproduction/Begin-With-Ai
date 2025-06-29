@@ -44,6 +44,11 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
     // Trigger audio feedback
     onAnswer(isCorrect, { selectedAnswer: selectedOption, isCorrect });
     
+    // Haptic feedback for mobile devices
+    if (navigator.vibrate) {
+      navigator.vibrate(isCorrect ? [50] : [100, 50, 100]);
+    }
+    
     // Show result after brief delay
     setTimeout(() => {
       setShowResult(true);
@@ -69,24 +74,29 @@ const FillBlankSlide = ({ slide, onComplete, onNext, onAnswer, isActive }) => {
            setShowResult(false);
            setHasAnswered(false);
          } else {
-           // All questions completed
-           onComplete(slide.id, {
-             allResults: [...questionResults, newResult],
-             totalQuestions: fillInBlanks.length,
-             correctCount: [...questionResults, newResult].filter(r => r.isCorrect).length
-           });
-         }
-       }, isCorrect ? 2000 : 4000); // Correct: 2s, Wrong: 4s
-     } else {
-       // Single question - longer time for wrong answers
-       setTimeout(() => {
+                    // All questions completed
          onComplete(slide.id, {
-           selectedAnswer: selectedOption,
-           correctAnswer,
-           isCorrect
+           allResults: [...questionResults, newResult],
+           totalQuestions: fillInBlanks.length,
+           correctCount: [...questionResults, newResult].filter(r => r.isCorrect).length
          });
-       }, isCorrect ? 2500 : 5000); // Correct: 2.5s, Wrong: 5s
-     }
+       }
+     }, isCorrect ? 2000 : 4000); // Correct: 2s, Wrong: 4s
+   } else {
+     // Single question - auto-submit if enabled, otherwise use longer time
+     const delay = slide.content.autoSubmit ? 
+       (isCorrect ? 2000 : 3000) : // Auto-submit: shorter delays
+       (isCorrect ? 2500 : 5000);  // Manual: longer delays
+     
+     setTimeout(() => {
+       onComplete(slide.id, {
+         selectedAnswer: selectedOption,
+         correctAnswer,
+         isCorrect,
+         autoSubmitted: slide.content.autoSubmit
+       });
+     }, delay);
+   }
   };
 
   const getOptionStyle = (option) => {
