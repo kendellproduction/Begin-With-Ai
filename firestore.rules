@@ -1,0 +1,150 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             exists(/databases/$(database)/documents/userProfiles/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    // User-specific data - users can only access their own
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /userStats/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId && 
+                     request.resource.data.xp is number && 
+                     request.resource.data.level is number &&
+                     request.resource.data.completedLessons is list;
+    }
+    
+    match /userProgress/{progressId} {
+      allow read, write: if request.auth != null && 
+                          request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Code submissions for lessons
+    match /codeSubmissions/{submissionId} {
+      allow read, write: if request.auth != null && 
+                          request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid &&
+                     request.resource.data.code is string &&
+                     request.resource.data.lessonId is string;
+    }
+    
+    // User profiles - special admin access
+    match /userProfiles/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow admins to read other profiles for verification
+      allow read: if isAdmin();
+    }
+    
+    // Sandbox rate limiting - users can only access their own
+    match /sandboxRateLimits/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId &&
+                     request.resource.data.prompts is list &&
+                     request.resource.data.sessionId is string;
+    }
+    
+    // Sandbox usage logging
+    match /sandboxUsage/{logId} {
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid &&
+                     request.resource.data.sessionId is string &&
+                     request.resource.data.lessonId is string;
+      allow read: if request.auth != null && 
+                   resource.data.userId == request.auth.uid;
+    }
+    
+    // Learning paths - PRODUCTION READY (admin-only writes)
+    match /learningPaths/{pathId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+      
+      // Modules within learning paths
+      match /modules/{moduleId} {
+        allow read: if request.auth != null;
+        allow write: if isAdmin();
+        
+        // Lessons within modules
+        match /lessons/{lessonId} {
+          allow read: if request.auth != null;
+          allow write: if isAdmin();
+        }
+      }
+    }
+    
+    // Legacy lesson content - read-only
+    match /lessons/{lessonId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Quiz content - read-only for users, writable by admins
+    match /quizzes/{quizId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    // Quiz results - users can access their own
+    match /quizResults/{resultId} {
+      allow read, write: if request.auth != null && 
+                          request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null && 
+                     request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Gamification data
+    match /badges/{badgeId} {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+    
+    match /userBadges/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    match /streaks/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Assessment results - users can access their own
+    match /assessmentResults/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null && request.auth.uid == userId &&
+                     request.resource.data.skillLevel is string &&
+                     request.resource.data.recommendations is map;
+    }
+    
+    // AI News articles - authenticated users can read and like
+    match /aiNews/{newsId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+      allow create: if request.auth != null && 
+                     request.resource.data.title is string &&
+                     request.resource.data.source is string &&
+                     request.resource.data.date is timestamp;
+      // Allow updates to likes and likedBy fields for authenticated users
+      allow update: if request.auth != null && onlyUpdatingLikes();
+    }
+    
+    // Helper function to check if only like-related fields are being updated
+    function onlyUpdatingLikes() {
+      let allowedFields = ['likes', 'likedBy'];
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(allowedFields);
+    }
+    
+    // Default deny - ensures security by default
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+} 

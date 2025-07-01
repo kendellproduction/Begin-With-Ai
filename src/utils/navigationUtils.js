@@ -10,10 +10,8 @@
 export const navigateAfterAuth = (navigate, replace = true) => {
   // Check if user has completed the adaptive quiz/questionnaire
   if (hasCompletedQuestionnaire()) {
-    console.log('NavigationUtils: User has completed questionnaire, redirecting to /home');
     navigate('/home', { replace });
   } else {
-    console.log('NavigationUtils: User needs to complete questionnaire, redirecting to adaptive quiz');
     navigate('/learning-path/adaptive-quiz', { replace });
   }
 };

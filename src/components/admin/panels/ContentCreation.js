@@ -125,7 +125,7 @@ const ContentCreation = () => {
         showNotification('info', 'Learning path creation modal coming soon!');
         break;
       default:
-        console.log('Unknown action:', action);
+        // Unknown action
     }
   };
 

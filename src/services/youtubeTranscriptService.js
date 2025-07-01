@@ -455,9 +455,6 @@ export const generateLessonsFromYouTube = async (youtubeUrl, options = {}) => {
       estimatedLessons: contentAnalysis.suggestedLessonCount
     };
     
-    console.log('Content Analysis:', contentAnalysis);
-    console.log(`Recommended structure: ${contentAnalysis.contentType} with ${contentAnalysis.suggestedLessonCount} lesson(s)`);
-    
     // Step 5: Generate structured content based on analysis
     const learningPath = await generateContentFromTranscript(transcript, enhancedOptions);
     

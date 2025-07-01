@@ -42,8 +42,6 @@ export class NewUserOnboardingService {
    */
   static async enrollNewUser(userId, userAuth) {
     try {
-      console.log(`🎯 Auto-enrolling new user ${userId} into welcome lesson`);
-      
       // Create/update user document with onboarding data
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
@@ -92,8 +90,6 @@ export class NewUserOnboardingService {
         });
       }
       
-      console.log('✅ New user enrolled in welcome lesson successfully');
-      
       // Store onboarding state in localStorage for immediate UI updates
       localStorage.setItem('isFirstTimeUser', 'true');
       localStorage.setItem('shouldShowWelcomeLesson', 'true');
@@ -125,8 +121,6 @@ export class NewUserOnboardingService {
       // Clear localStorage flags
       localStorage.removeItem('isFirstTimeUser');
       localStorage.removeItem('shouldShowWelcomeLesson');
-      
-      console.log('✅ Onboarding marked as completed');
       
     } catch (error) {
       console.error('Error completing onboarding:', error);

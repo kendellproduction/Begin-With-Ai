@@ -130,7 +130,6 @@ const Settings = () => {
       await deleteUserAccount(deleteConfirmationPassword);
       // On successful deletion, AuthContext's onAuthStateChanged should handle redirecting the user (e.g., to login/landing)
       // No need to manually navigate here usually as user becomes null.
-      console.log('Account deletion process initiated successfully.');
       setIsDeleteAccountModalOpen(false); // Close modal
       // Optionally show a global success message if needed, but redirection is primary feedback
     } catch (err) {

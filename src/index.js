@@ -63,9 +63,7 @@ class ErrorBoundary extends React.Component {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.getRegistrations().then(function(registrations) {
     for(let registration of registrations) {
-      registration.unregister().then(() => {
-        console.log('Force unregistered service worker');
-      });
+      registration.unregister();
     }
   });
 }
@@ -74,9 +72,7 @@ if ('serviceWorker' in navigator) {
 if ('caches' in window) {
   caches.keys().then(function(names) {
     for (let name of names) {
-      caches.delete(name).then(() => {
-        console.log('Cleared cache:', name);
-      });
+      caches.delete(name);
     }
   });
 }

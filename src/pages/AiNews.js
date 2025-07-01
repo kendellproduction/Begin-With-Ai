@@ -228,7 +228,6 @@ const AiNews = () => {
       }
 
       if (shouldRefresh) {
-        console.log('Attempting to refresh news (stale or first load after 6 AM).');
         setRefreshing(true); // Show refreshing indicator
         try {
           await updateAINews(); // Fetch from sources and save to Firestore
@@ -242,7 +241,6 @@ const AiNews = () => {
           setRefreshing(false);
         }
       } else {
-        console.log('News is fresh (fetched after 6 AM today). Loading existing.');
         await loadNews(); // Load existing news
       }
     };

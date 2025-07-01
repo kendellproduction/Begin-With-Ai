@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
-import SwipeNavigationWrapper from '../components/SwipeNavigationWrapper';
+
 import LearningPathMap from '../components/LearningPathMap';
 import LearningPathVisual from '../components/LearningPathVisual';
 import DifficultySelectionModal from '../components/DifficultySelectionModal';
@@ -11,7 +11,7 @@ import FloatingHelpButton from '../components/FloatingHelpButton';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { NewUserOnboardingService } from '../services/newUserOnboardingService';
-import { motion } from 'framer-motion';
+import { motion, animations } from '../utils/framerMotion';
 import logger from '../utils/logger';
 
 const HomePage = () => {
@@ -533,9 +533,9 @@ const HomePage = () => {
     >
       <LoggedInNavbar />
 
-      {/* Star Animation Container for HomePage */}
+      {/* Star Animation Container for HomePage - Optimized for mobile */}
       <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
+        {[...Array(window.innerWidth < 768 ? 50 : 200)].map((_, i) => {
           const screenH = window.innerHeight;
           const screenW = window.innerWidth;
           const initialY = Math.random() * screenH;
@@ -583,8 +583,7 @@ const HomePage = () => {
 
       {/* Main content wrapper */}
       <div className="relative z-10">
-        <SwipeNavigationWrapper>
-          <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Welcome Section */}
             <section className="mb-6">
               <div className="bg-blue-500/30 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/40 relative transition-all duration-500" style={{boxShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), 0 0 45px rgba(59, 130, 246, 0.15)'}}>
@@ -925,7 +924,6 @@ const HomePage = () => {
 
 
           </main>
-        </SwipeNavigationWrapper>
       </div>
 
       {/* Difficulty Selection Modal for Quick Access Lessons */}

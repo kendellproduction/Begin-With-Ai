@@ -119,7 +119,6 @@ const useSwipeNavigation = () => {
       
       // Navigate to the target page
       if (targetIndex !== currentIndex) {
-        console.log(`Swiping from ${mainPages[currentIndex].name} to ${mainPages[targetIndex].name}`);
         navigate(mainPages[targetIndex].path);
       }
     }

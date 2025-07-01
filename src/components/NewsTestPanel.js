@@ -11,7 +11,6 @@ const NewsTestPanel = ({ onNewsUpdated }) => {
       setUpdating(true);
       setStatus('Fetching latest AI news...');
       
-      console.log('🔄 Starting manual news update...');
       const results = await updateAINews();
       
       setStatus(`✅ Updated! Found ${results.length} articles`);

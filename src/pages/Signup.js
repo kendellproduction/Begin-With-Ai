@@ -20,7 +20,6 @@ const Signup = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('SignupPage: User is logged in, determining redirect destination...');
       navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);

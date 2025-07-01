@@ -71,8 +71,6 @@ export class AIContentProcessor {
    * Conduct web research on the topic
    */
   static async conductResearch(query) {
-    console.log('Attempting to research topic:', query);
-    
     const searchQueries = this.generateSearchQueries(query);
     const searchResults = [];
 
@@ -81,7 +79,6 @@ export class AIContentProcessor {
     const hasBingAPI = process.env.REACT_APP_BING_SEARCH_API_KEY;
     
     if (!hasGoogleAPI && !hasBingAPI) {
-      console.log('No search APIs configured. Skipping web research.');
       return [{
         title: 'Web Research Not Available',
         snippet: 'To enable automatic web research for current events, please configure Google Search API or Bing Search API in your environment variables. See API_SETUP_GUIDE.md for instructions.',
@@ -95,7 +92,6 @@ export class AIContentProcessor {
         const results = await this.webSearch(searchQuery);
         if (results && results.length > 0) {
           searchResults.push(...results);
-          console.log(`Found ${results.length} results for: ${searchQuery}`);
         }
       } catch (error) {
         console.warn(`Search failed for query: ${searchQuery}`, error.message);

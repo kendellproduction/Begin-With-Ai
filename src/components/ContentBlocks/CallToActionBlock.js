@@ -31,11 +31,9 @@ const CallToActionBlock = ({
         break;
       case 'modal':
         // Could trigger a modal (not implemented yet)
-        console.log('Modal action triggered');
         break;
       case 'submit':
         // Could submit a form
-        console.log('Submit action triggered');
         break;
       default:
         navigate('/lessons');

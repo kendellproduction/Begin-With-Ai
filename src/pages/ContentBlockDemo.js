@@ -189,12 +189,11 @@ console.log("Generated blocks:", demoBlocks);
   };
 
   const handleBlockComplete = (blockIndex, completionData) => {
-    console.log(`Block ${blockIndex} completed:`, completionData);
     setCompletedBlocks(prev => [...prev, blockIndex]);
   };
 
   const handleProgressUpdate = (progressData) => {
-    console.log('Lesson progress:', progressData);
+    // Progress update handled
   };
 
   const handleAudioTimeUpdate = (currentTime, duration) => {

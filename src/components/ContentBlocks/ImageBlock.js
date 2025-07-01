@@ -101,7 +101,6 @@ const ImageBlock = ({
   const handleZoomClick = () => {
     if (finalConfig.zoom) {
       // TODO: Implement zoom modal
-      console.log('Zoom image:', content.src);
     }
   };
 

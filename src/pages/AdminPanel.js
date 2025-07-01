@@ -54,13 +54,7 @@ import DraftManager from '../components/admin/DraftManager';
 const testOpenAIConnection = async () => {
   const openaiApiKey = process.env.REACT_APP_OPENAI_API_KEY;
   
-  console.log('🧪 Testing OpenAI API Connection...');
-  console.log('  API Key exists:', !!openaiApiKey);
-  console.log('  API Key length:', openaiApiKey ? openaiApiKey.length : 0);
-  console.log('  API Key starts with sk-:', openaiApiKey ? openaiApiKey.startsWith('sk-') : false);
-  
   if (!openaiApiKey) {
-    console.log('❌ No OpenAI API key found');
     return { success: false, error: 'No API key configured' };
   }
 
@@ -84,22 +78,17 @@ const testOpenAIConnection = async () => {
       })
     });
 
-    console.log('  API Response Status:', response.status);
-    
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('❌ API Error:', errorText);
       return { success: false, error: `API Error: ${response.status}` };
     }
 
     const data = await response.json();
     const message = data.choices[0]?.message?.content;
-    console.log('✅ API Response:', message);
     
     return { success: true, message };
 
   } catch (error) {
-    console.log('❌ Network Error:', error.message);
     return { success: false, error: error.message };
   }
 };

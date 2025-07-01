@@ -17,7 +17,6 @@ const LandingPage = () => {
   // Redirect if user is already logged in, but check if they need to complete questionnaire first
   useEffect(() => {
     if (user) {
-      console.log('LandingPage: User is logged in, determining redirect destination...');
       navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);

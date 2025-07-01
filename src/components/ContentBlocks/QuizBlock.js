@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, animations } from '../../utils/framerMotion';
 
 const QuizBlock = ({ 
   content,

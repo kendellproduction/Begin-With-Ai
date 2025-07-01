@@ -331,8 +331,7 @@ Return ONLY valid JSON in this exact format (no markdown, no code blocks):
     
     if (apiKey && (apiKey.startsWith('sk-') || apiKey.startsWith('org-'))) {
       try {
-        console.log('Using OpenAI API for lesson editing...');
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+              const response = await fetch('https://api.openai.com/v1/chat/completions', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${apiKey}`,

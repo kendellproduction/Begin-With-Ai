@@ -52,8 +52,6 @@ exports.extractYouTubeTranscript = functions.https.onRequest(async (req, res) =>
         }
       }
 
-      console.log('Extracting transcript for video ID:', extractedVideoId);
-
       // Extract transcript using youtube-transcript library
       const transcript = await YoutubeTranscript.fetchTranscript(extractedVideoId);
       
@@ -70,8 +68,6 @@ exports.extractYouTubeTranscript = functions.https.onRequest(async (req, res) =>
         });
         return;
       }
-
-      console.log('Transcript extracted successfully, length:', fullTranscript.length);
 
       res.status(200).json({
         success: true,

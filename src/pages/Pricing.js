@@ -59,7 +59,6 @@ const Pricing = () => {
     if (planId === 'free') return; // Already on free plan
     
     // Here you would integrate with Stripe or your payment processor
-    console.log('Upgrading to:', planId);
     // For now, just show a message
     alert('Payment integration coming soon! You\'ll be able to upgrade to premium shortly.');
   };

@@ -82,13 +82,11 @@ const Dashboard = () => {
 
   const handleDeleteProfile = () => {
     // Implement profile deletion logic
-    console.log('Deleting profile...');
     setShowDeleteConfirm(false);
   };
 
   const handleCancelSubscription = () => {
     // Implement subscription cancellation logic
-    console.log('Cancelling subscription...');
     setShowCancelConfirm(false);
   };
 

@@ -17,13 +17,11 @@ export class WelcomeLessonSeedService {
       const lessonDoc = await getDoc(lessonRef);
       
       if (lessonDoc.exists()) {
-        console.log(`Welcome lesson ${lesson.id} already exists, skipping...`);
         return { success: true, message: 'Welcome lesson already exists' };
       }
       
       // Seed the lesson
       await setDoc(lessonRef, lesson);
-      console.log(`✅ Seeded welcome lesson: ${lesson.title}`);
       
       // Seed learning path entry
       const pathRef = doc(db, 'learningPaths', pathId);
@@ -59,7 +57,6 @@ export class WelcomeLessonSeedService {
       
       if (!pathDoc.exists()) {
         await setDoc(pathRef, pathData);
-        console.log(`✅ Created onboarding learning path: ${pathData.title}`);
       }
       
       return { 
@@ -79,7 +76,6 @@ export class WelcomeLessonSeedService {
       const badgeDoc = await getDoc(badgeRef);
       
       if (badgeDoc.exists()) {
-        console.log('Welcome badge already exists, skipping...');
         return;
       }
       
@@ -100,7 +96,6 @@ export class WelcomeLessonSeedService {
       };
       
       await setDoc(badgeRef, badgeData);
-      console.log('✅ Created welcome badge');
       
     } catch (error) {
       console.error('Error creating welcome badge:', error);
@@ -111,8 +106,6 @@ export class WelcomeLessonSeedService {
 
 // Main seeding function
 export const runWelcomeLessonSeeding = async () => {
-  console.log('🌱 Starting welcome lesson seeding...');
-  
   try {
     // Seed the welcome lesson and path
     const result = await WelcomeLessonSeedService.seedWelcomeLesson();
@@ -120,7 +113,6 @@ export const runWelcomeLessonSeeding = async () => {
     // Create the welcome badge
     await WelcomeLessonSeedService.createWelcomeBadge();
     
-    console.log('🎉 Welcome lesson seeding completed successfully!');
     return result;
     
   } catch (error) {

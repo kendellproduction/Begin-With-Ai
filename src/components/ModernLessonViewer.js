@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, animations } from '../utils/framerMotion';
 import { useAuth } from '../contexts/AuthContext';
 import { useProgressTracking } from '../hooks/useProgressTracking';
 import { useGamification } from '../contexts/GamificationContext';
