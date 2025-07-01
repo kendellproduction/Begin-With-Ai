@@ -265,7 +265,7 @@ const ConceptSlide = ({ slide, onNext, isActive }) => {
           transition={{ duration: 0.5, delay: 1.0 }}
           className="text-gray-500 text-sm"
         >
-          Swipe up to continue
+          Tap button to continue
         </motion.p>
       )}
     </div>

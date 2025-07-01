@@ -711,13 +711,13 @@ const ModernLessonViewer = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative">
-      {/* Moving Stars Background - Fixed to viewport, doesn't scroll */}
-      <div className="fixed inset-0 z-0 overflow-hidden">
+    <div className="modern-lesson-viewer min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative">
+              {/* Moving Stars Background - High Performance GPU Accelerated */}
+        <div className="star-container fixed inset-0 z-0 overflow-hidden">
         {[...Array(80)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute"
+            className="star-element absolute"
             initial={{
               x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
               y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
@@ -736,11 +736,12 @@ const ModernLessonViewer = () => {
               duration: 12 + Math.random() * 8,
               repeat: Infinity,
               ease: "linear",
+              type: "tween", // More performant than spring
               delay: Math.random() * 6,
             }}
           >
             <div 
-              className={`bg-white/20 rounded-full ${
+              className={`star-element bg-white/20 rounded-full ${
                 i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
                 i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
               }`}

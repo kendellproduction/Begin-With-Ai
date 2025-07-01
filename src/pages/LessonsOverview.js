@@ -512,8 +512,8 @@ const LessonsOverview = React.memo(() => {
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-              {/* Optimized Star Animation Container - Reduced for better performance */}
-        <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
+              {/* Star Animation Container - High Performance GPU Accelerated */}
+        <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
         {[...Array(200)].map((_, i) => {
           const screenH = window.innerHeight;
           const screenW = window.innerWidth;
@@ -522,12 +522,12 @@ const LessonsOverview = React.memo(() => {
           const initialX = Math.random() * screenW;
           const targetX = Math.random() * screenW;
           const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 3 + 1;
+          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
           return (
             <motion.div
               key={`lessons-star-${i}`}
-              className="absolute rounded-full bg-white/80"
+              className="star-element absolute rounded-full bg-white/80"
               style={{
                 width: starSize,
                 height: starSize,
@@ -547,6 +547,7 @@ const LessonsOverview = React.memo(() => {
                 repeat: Infinity,
                 repeatDelay: Math.random() * 5 + 2,
                 ease: "linear",
+                type: "tween", // More performant than spring
                 opacity: {
                   duration: starDuration,
                   ease: "linear",

@@ -11,8 +11,10 @@ import FloatingHelpButton from '../components/FloatingHelpButton';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { NewUserOnboardingService } from '../services/newUserOnboardingService';
-import { motion, animations } from '../utils/framerMotion';
+import { motion } from 'framer-motion'; // Direct import for debugging
+import { animations } from '../utils/framerMotion';
 import logger from '../utils/logger';
+
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -533,22 +535,23 @@ const HomePage = () => {
     >
       <LoggedInNavbar />
 
-      {/* Star Animation Container for HomePage - Optimized for mobile */}
-      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(window.innerWidth < 768 ? 50 : 200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
+      {/* Star Animation Container for HomePage - High Performance GPU Accelerated */}
+      <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
+        {[...Array(200)].map((_, i) => {
+
+          const screenH = typeof window !== 'undefined' ? window.innerHeight : 800;
+          const screenW = typeof window !== 'undefined' ? window.innerWidth : 1200;
           const initialY = Math.random() * screenH;
           const targetY = Math.random() * screenH;
           const initialX = Math.random() * screenW;
           const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 3 + 1; // 1px to 4px (bigger than before)
+          const starDuration = 30 + Math.random() * 25; // 30-55 seconds (subtle)
+          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
           return (
             <motion.div
               key={`homepage-star-${i}`}
-              className="absolute rounded-full bg-white/80"
+              className="star-element absolute rounded-full bg-white/80"
               style={{
                 width: starSize,
                 height: starSize,
@@ -568,6 +571,7 @@ const HomePage = () => {
                 repeat: Infinity,
                 repeatDelay: Math.random() * 5 + 2,
                 ease: "linear",
+                type: "tween", // More performant than spring
                 opacity: {
                   duration: starDuration,
                   ease: "linear",

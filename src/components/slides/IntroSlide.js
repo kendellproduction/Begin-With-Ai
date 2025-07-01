@@ -104,13 +104,13 @@ const IntroSlide = ({ slide, onNext, isActive }) => {
         transition={{ duration: 0.5, delay: 1.4 }}
         className="text-gray-500 text-sm space-y-2"
       >
-        <p>Swipe up or tap to continue</p>
+        <p>Tap button to continue</p>
         <motion.div
-          animate={{ y: [0, -5, 0] }}
+          animate={{ scale: [1, 1.1, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
           className="text-2xl"
         >
-          ⬆️
+          👆
         </motion.div>
       </motion.div>
     </div>

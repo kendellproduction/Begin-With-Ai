@@ -134,7 +134,7 @@ Example: "You are a financial advisor. A 25-year-old just got their first job. W
           const initialX = Math.random() * screenW;
           const targetX = Math.random() * screenW;
           const starDuration = 20 + Math.random() * 15;
-          const starSize = Math.random() * 3 + 1;
+          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
           const twinkleDelay = Math.random() * 2;
 
           return (

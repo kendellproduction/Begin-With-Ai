@@ -891,7 +891,7 @@ const AdaptiveLearningPathQuiz = () => {
             const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
             const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
             const starDuration = 30 + Math.random() * 25;
-            const starSize = Math.random() * 3 + 1;
+            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
             return (
               <motion.div
@@ -958,7 +958,7 @@ const AdaptiveLearningPathQuiz = () => {
             const initialX = Math.random() * screenW * 1.2 - screenW * 0.1;
             const targetX = Math.random() * screenW * 1.2 - screenW * 0.1;
             const starDuration = 30 + Math.random() * 25;
-            const starSize = Math.random() * 3 + 1;
+            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
             return (
               <motion.div
@@ -1312,7 +1312,7 @@ const AdaptiveLearningPathQuiz = () => {
           const initialX = Math.random() * screenW;
           const targetX = Math.random() * screenW;
           const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 3 + 1;
+          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
           return (
             <motion.div

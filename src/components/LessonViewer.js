@@ -30,9 +30,7 @@ const LessonViewer = () => {
   const [showCompletionButtons, setShowCompletionButtons] = useState(false);
   const [difficulty, setDifficulty] = useState('intermediate'); // Default difficulty
   
-  // Touch handling
-  const touchStartY = useRef(null);
-  const touchStartX = useRef(null);
+  // Removed touch navigation - now using button-only navigation
   const containerRef = useRef(null);
 
   // Initialize audio on first user interaction
@@ -579,45 +577,7 @@ const LessonViewer = () => {
     return answerData;
   };
 
-  // Touch event handlers for mobile navigation
-  const handleTouchStart = (e) => {
-    touchStartY.current = e.touches[0].clientY;
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (!touchStartY.current || !touchStartX.current) return;
-    
-    const touchEndY = e.changedTouches[0].clientY;
-    const touchEndX = e.changedTouches[0].clientX;
-    
-    const diffY = touchStartY.current - touchEndY;
-    const diffX = touchStartX.current - touchEndX;
-    
-    // Detect swipe direction (prioritize vertical swipes)
-    if (Math.abs(diffY) > Math.abs(diffX)) {
-      // Vertical swipe
-      if (diffY > 50) {
-        // Swipe up - next slide
-        goToNextSlide();
-      } else if (diffY < -50) {
-        // Swipe down - previous slide
-        goToPreviousSlide();
-      }
-    } else {
-      // Horizontal swipe
-      if (diffX > 50) {
-        // Swipe left - next slide
-        goToNextSlide();
-      } else if (diffX < -50) {
-        // Swipe right - previous slide
-        goToPreviousSlide();
-      }
-    }
-    
-    touchStartY.current = null;
-    touchStartX.current = null;
-  };
+  // Removed touch navigation - lessons now use button-only navigation for better UX
 
   // Keyboard navigation
   useEffect(() => {
@@ -699,7 +659,7 @@ const LessonViewer = () => {
             const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
             const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
             const starDuration = 30 + Math.random() * 25;
-            const starSize = Math.random() * 3 + 1;
+            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
             return (
               <motion.div
@@ -760,7 +720,7 @@ const LessonViewer = () => {
             const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
             const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
             const starDuration = 25 + Math.random() * 20;
-            const starSize = Math.random() * 3 + 1;
+            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
             return (
               <motion.div
@@ -869,12 +829,10 @@ const LessonViewer = () => {
   return (
     <div 
       ref={containerRef}
-      className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black z-50 overflow-hidden"
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      className="lesson-viewer fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black z-50 overflow-hidden"
     >
-      {/* Star Animation Container for LessonViewer */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
+      {/* Star Animation Container for LessonViewer - High Performance GPU Accelerated */}
+      <div className="star-container absolute inset-0 z-0 pointer-events-none">
         {[...Array(120)].map((_, i) => {
           const screenH = window.innerHeight;
           const screenW = window.innerWidth;
@@ -883,12 +841,12 @@ const LessonViewer = () => {
           const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
           const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
           const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 3 + 1;
+          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
 
           return (
             <motion.div
               key={`lesson-viewer-star-${i}`}
-              className="absolute rounded-full bg-white/50"
+              className="star-element absolute rounded-full bg-white/50"
               style={{
                 width: starSize,
                 height: starSize,
@@ -908,6 +866,7 @@ const LessonViewer = () => {
                 repeat: Infinity,
                 repeatDelay: Math.random() * 5 + 2,
                 ease: "linear",
+                type: "tween", // More performant than spring
                 opacity: {
                   duration: starDuration,
                   ease: "linear",

@@ -55,6 +55,79 @@ html, body, #root {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* High-Performance Star Animations - GPU Accelerated */
+.star-container {
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout style paint;
+  /* Force GPU layer */
+  isolation: isolate;
+}
+
+.star-element {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  /* Optimize for animations */
+  animation-fill-mode: both;
+}
+
+/* CSS-based star twinkle animation for better performance */
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.3; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+@keyframes star-glow {
+  0%, 100% { filter: brightness(1) hue-rotate(0deg); }
+  33% { filter: brightness(1.3) hue-rotate(120deg); }
+  66% { filter: brightness(0.8) hue-rotate(240deg); }
+}
+
+/* Optimized pulse animation */
+.star-pulse-optimized {
+  animation: star-twinkle 2s ease-in-out infinite, star-glow 6s linear infinite;
+  animation-delay: var(--star-delay, 0s);
+}
+
+/* Mobile touch optimization and performance improvements */
+@media (max-width: 768px) {
+  /* Optimize scrolling performance on mobile */
+  * {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+  
+  /* Optimized star animations for mobile - keep all stars but make them more efficient */
+  .star-container {
+    /* Use CPU-efficient transforms */
+    animation-timing-function: linear;
+    /* Force GPU layer for better performance */
+    transform: translate3d(0, 0, 0);
+  }
+  
+  .star-element {
+    /* Optimize individual star performance */
+    animation-fill-mode: both;
+    /* Use hardware acceleration */
+    transform: translate3d(0, 0, 0);
+  }
+  
+  /* Improve touch targets */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 8px 12px;
+  }
+  
+  /* Optimize transforms for mobile performance */
+  .lesson-viewer, .modern-lesson-viewer {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+}
+
 /* Mobile PWA and browser UI fixes */
 @media screen and (max-width: 768px) {
   /* Prevent purple status bar issues */
