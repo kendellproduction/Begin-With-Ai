@@ -554,7 +554,7 @@ const EnhancedLearningPathQuiz = () => {
       try {
         awardXP(75, 'Completed Enhanced AI Learning Assessment');
       } catch (error) {
-        console.log('XP award not available:', error);
+        // XP award not available - silently continue
       }
     }
 

@@ -25,10 +25,8 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('Setting up auth state listener...');
     const unsubscribe = onAuthStateChanged(auth, 
       async (authUser) => {
-        console.log('Auth state changed:', authUser ? 'User logged in' : 'No user');
         if (authUser) {
           try {
             // Track email verification status
@@ -41,7 +39,6 @@ export const AuthProvider = ({ children }) => {
             try {
               isNewUser = await NewUserOnboardingService.isNewUser(authUser.uid);
               if (isNewUser) {
-                console.log('🎯 New user detected, enrolling in welcome lesson...');
                 await NewUserOnboardingService.enrollNewUser(authUser.uid, authUser);
               }
             } catch (onboardingError) {
@@ -53,7 +50,6 @@ export const AuthProvider = ({ children }) => {
             // Wrapped in a try-catch to handle potential quota errors
             try {
               await upsertUserProfile(authUser);
-              console.log('User profile upserted after auth state change.');
             } catch (upsertError) {
               if (upsertError.code === 'resource-exhausted') {
                 console.warn('Firestore quota exceeded during profile upsert. User data might be stale.');
@@ -71,7 +67,6 @@ export const AuthProvider = ({ children }) => {
             let firestoreProfile = null;
             try {
               firestoreProfile = await getUserProfile(authUser.uid);
-              console.log('Fetched Firestore profile:', firestoreProfile);
             } catch (fetchError) {
               if (fetchError.code === 'resource-exhausted') {
                 console.warn('Firestore quota exceeded during profile fetch. Using basic auth data.');
@@ -114,13 +109,11 @@ export const AuthProvider = ({ children }) => {
     );
 
     return () => {
-      console.log('Cleaning up auth state listener...');
       unsubscribe();
     };
   }, []);
 
   const signInWithGoogle = async () => {
-    console.log('Attempting Google sign in...');
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
       prompt: 'select_account',
@@ -134,7 +127,6 @@ export const AuthProvider = ({ children }) => {
       // Track successful Google sign-in
       analytics.userLogin('google');
       // onAuthStateChanged will handle user profile creation/fetching
-      console.log('Google sign in successful, onAuthStateChanged will process profile.');
       return result.user; // Still return the auth user for immediate use if needed by caller
     } catch (error) {
       console.error('Error signing in with Google:', error);
@@ -144,13 +136,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signInWithEmail = async (email, password) => {
-    console.log('Attempting email sign in...');
     try {
       const result = await signInWithEmailAndPassword(auth, email, password);
       // Track successful email sign-in
       analytics.userLogin('email');
       // onAuthStateChanged will handle user profile creation/fetching
-      console.log('Email sign in successful, onAuthStateChanged will process profile.');
       return result.user;
     } catch (error) {
       console.error('Error signing in with email:', error);
@@ -160,13 +150,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const signUpWithEmail = async (email, password) => {
-    console.log('Attempting email sign up...');
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
       // Track successful email sign-up
       analytics.userSignUp('email');
       // onAuthStateChanged will handle user profile creation/fetching
-      console.log('Email sign up successful, onAuthStateChanged will process profile.');
       return result.user;
     } catch (error) {
       console.error('Error signing up with email:', error);
@@ -176,10 +164,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    console.log('Attempting logout...');
     try {
       await firebaseSignOut(auth);
-      console.log('Logout successful');
     } catch (error) {
       console.error('Error signing out:', error);
       analytics.apiError('logout_error', error.message);
@@ -188,7 +174,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   const switchAccount = async () => {
-    console.log('Attempting account switch...');
     try {
       // First, sign out completely
       await firebaseSignOut(auth);
@@ -221,7 +206,6 @@ export const AuthProvider = ({ children }) => {
       // Sign in with the fresh provider
       const result = await signInWithPopup(auth, provider);
       analytics.userLogin('google_switch');
-      console.log('Account switch successful');
       return result.user;
     } catch (error) {
       console.error('Error switching accounts:', error);

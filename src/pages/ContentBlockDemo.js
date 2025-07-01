@@ -107,7 +107,7 @@ Try clicking on this block to jump to the corresponding audio section!`
         title: "Try the Interactive Sandbox",
         instructions: "Test the sandbox component by running some JavaScript code:",
         code: `// Welcome to the secure sandbox!
-console.log("Hello from the Content Block System!");
+alert("Hello from the Content Block System!");
 
 // Try creating a simple function
 function generateBlocks(count) {
@@ -120,7 +120,7 @@ function generateBlocks(count) {
 }
 
 const demoBlocks = generateBlocks(5);
-console.log("Generated blocks:", demoBlocks);
+// You can inspect the generated blocks in the browser's developer console
 
 // Return a message
 "Successfully demonstrated the sandbox block! 🎉"`
