@@ -250,7 +250,7 @@ const LandingPage = () => {
       {/* Hero Section with Solid Blue Background & Adjusted Content */}
       <section 
         className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-12"
-        style={{ backgroundColor: '#2061a6' }}
+        style={{ backgroundColor: '#3b82f6' }}
       >
         {/* Animated Moving Stars */}
         <div className="absolute inset-0 z-0 overflow-hidden">
@@ -1455,7 +1455,7 @@ const LandingPage = () => {
       </section>
 
       {/* Enhanced Final CTA Section */}
-      <section className="py-32 relative overflow-hidden" style={{ backgroundColor: '#2061a6' }}>
+      <section className="py-32 relative overflow-hidden" style={{ backgroundColor: '#3b82f6' }}>
         {/* Moving Stars Background */}
         <div className="absolute inset-0 z-0">
           {[...Array(150)].map((_, i) => (

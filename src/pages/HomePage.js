@@ -501,11 +501,7 @@ const HomePage = () => {
     }
   };
 
-  const calculateWeeklyProgress = () => {
-    const lessonsThisWeek = userStats.lessonsCompletedThisWeek || 0;
-    const goal = 5; // Weekly goal
-    return Math.min((lessonsThisWeek / goal) * 100, 100);
-  };
+
 
   // Quick Access Lessons (Example)
   const quickAccessLessons = [
@@ -531,53 +527,80 @@ const HomePage = () => {
   return (
     <div 
       className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#2061a6' }}
+      style={{ backgroundColor: '#3b82f6' }}
     >
       <LoggedInNavbar />
 
-      {/* Star Animation Container for HomePage - High Performance GPU Accelerated */}
+      {/* Enhanced Star Animation Container - 200 Stars */}
       <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
         {[...Array(200)].map((_, i) => {
-
           const screenH = typeof window !== 'undefined' ? window.innerHeight : 800;
           const screenW = typeof window !== 'undefined' ? window.innerWidth : 1200;
+          
           const initialY = Math.random() * screenH;
           const targetY = Math.random() * screenH;
           const initialX = Math.random() * screenW;
           const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25; // 30-55 seconds (subtle)
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
+          
+          // Slower, more relaxed animations (15-30 seconds)
+          const starDuration = 15 + Math.random() * 15;
+          
+          // Enhanced star varieties
+          const starSize = Math.random() * 3 + 1; // 1-4px
+          const isLargeStar = i % 12 === 0;
+          const isMediumStar = i % 6 === 0;
+          const isPulsingStar = i % 8 === 0;
+          
+          const starOpacity = isLargeStar ? [0, 1, 0.8, 0] : 
+                            isMediumStar ? [0, 0.9, 0.7, 0] : 
+                            [0, 0.7, 0.5, 0];
 
           return (
             <motion.div
               key={`homepage-star-${i}`}
-              className="star-element absolute rounded-full bg-white/80"
+              className={`star-element absolute rounded-full ${
+                isLargeStar ? 'bg-white' : 
+                isMediumStar ? 'bg-blue-100' : 
+                'bg-white'
+              } ${isPulsingStar ? 'star-pulse-optimized' : ''}`}
               style={{
                 width: starSize,
                 height: starSize,
+                filter: isLargeStar ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 
+                       isMediumStar ? 'drop-shadow(0 0 3px rgba(255,255,255,0.6))' : 
+                       'drop-shadow(0 0 2px rgba(255,255,255,0.4))',
               }}
               initial={{
                 x: initialX,
                 y: initialY,
                 opacity: 0,
+                scale: 0.3,
               }}
               animate={{
                 x: targetX,
                 y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
+                opacity: starOpacity,
+                scale: isLargeStar ? [0.3, 1.2, 1, 0.3] : [0.3, 1, 1, 0.3],
               }}
               transition={{
                 duration: starDuration,
                 repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
+                repeatDelay: Math.random() * 2 + 1,
                 ease: "linear",
-                type: "tween", // More performant than spring
+                type: "tween",
                 opacity: {
                   duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
+                  ease: "easeInOut",
+                  times: [0, 0.2, 0.8, 1],
                   repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
+                  repeatDelay: Math.random() * 2 + 1,
+                },
+                scale: {
+                  duration: starDuration,
+                  ease: "easeInOut",
+                  times: [0, 0.3, 0.7, 1],
+                  repeat: Infinity,
+                  repeatDelay: Math.random() * 2 + 1,
                 }
               }}
             />
@@ -590,7 +613,7 @@ const HomePage = () => {
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Welcome Section */}
             <section className="mb-6">
-              <div className="bg-blue-500/30 backdrop-blur-xl rounded-2xl p-6 border border-blue-400/40 relative transition-all duration-500" style={{boxShadow: '0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.2), 0 0 45px rgba(59, 130, 246, 0.15)'}}>
+              <div className="glass-hero p-6 relative transition-all duration-500">
                 
                 {/* Greeting and Quote */}
                 <div className="text-center mb-4">
@@ -602,21 +625,21 @@ const HomePage = () => {
                   </p>
                 </div>
 
-                {/* Real User Stats - Updated with correct property names */}
+                {/* Real User Stats - Updated with enhanced glassmorphism */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="glass-warning rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-orange-300">{userStats.currentStreak || 0}</div>
                     <div className="text-xs text-blue-200">Day Streak 🔥</div>
                   </div>
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="glass-success rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-green-300">{userStats.completedLessons || 0}</div>
                     <div className="text-xs text-blue-200">Lessons Done ✅</div>
                   </div>
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="glass-card rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-yellow-300">{userStats.xp || 0}</div>
                     <div className="text-xs text-blue-200">Total XP ⭐</div>
                   </div>
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-2 border border-white/20 text-center">
+                  <div className="glass-secondary rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-purple-300">Lv.{userStats.level || 1}</div>
                     <div className="text-xs text-blue-200">Current Level 🏆</div>
                   </div>
@@ -663,139 +686,66 @@ const HomePage = () => {
               </div>
             </section>
 
-            {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Optimized Layout - Minimal Scrolling */}
+            
+            {/* Primary Content - 3 Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
               
-              {/* Left Column - Main Content */}
-              <div className="lg:col-span-2 space-y-8">
-                
-                {/* Next Lesson Recommendation */}
-                {nextLesson && (
-                  <div className="bg-gradient-to-br from-cyan-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-cyan-400/50 shadow-md">
-                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                      🎯 Up Next
-                    </h2>
-                    <div className="bg-white/20 rounded-2xl p-6 border border-white/30">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="px-3 py-1 bg-blue-400/30 text-blue-100 rounded-full text-sm font-medium">
-                          {nextLesson.moduleName}
-                        </span>
-                        <span className="text-sm text-cyan-200">15 min</span>
-                      </div>
-                      <h3 className="text-xl font-semibold text-white mb-2">{nextLesson.title}</h3>
-                      <p className="text-cyan-100 mb-4">{nextLesson.coreConcept}</p>
-                      <button
-                        onClick={() => handleQuickLessonClick(nextLesson)}
-                        className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300"
-                      >
-                        Start Lesson →
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Available Learning Paths Section */}
+              {/* Left Column - Learning Paths */}
+              <section className="lg:col-span-2">
                 {availablePaths.length > 0 && (
-                  <div className="bg-white/20 backdrop-blur-xl rounded-3xl p-8 border border-white/30 shadow-md mb-8">
-                    <h2 className="text-2xl font-bold text-white mb-6 text-center">🗺️ Explore Learning Paths</h2>
-                    <div className="grid md:grid-cols-2 gap-6">
+                  <div className="glass-liquid rounded-3xl p-6 shadow-lg overflow-visible">
+                    <h2 className="text-2xl font-bold text-white mb-4 text-center">🗺️ Explore Learning Paths</h2>
+                    <div className="grid gap-4">
                       {availablePaths.map((path) => (
                         <div
                           key={path.id}
                           className={`relative group cursor-pointer ${
                             path.id === 'vibe-coding' 
-                              ? 'bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900' 
-                              : 'bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900'
-                          } backdrop-blur-sm p-8 rounded-2xl border ${
-                            path.id === 'vibe-coding'
-                              ? 'border-purple-500/30 hover:border-purple-400/50'
-                              : 'border-cyan-500/30 hover:border-cyan-400/50'
-                          } transition-all duration-300 transform hover:scale-105 ${
-                            path.id === 'vibe-coding'
-                              ? 'shadow-[0_0_10px_rgba(168,85,247,0.3),0_0_20px_rgba(168,85,247,0.15)] hover:shadow-[0_0_15px_rgba(168,85,247,0.4),0_0_30px_rgba(168,85,247,0.2)]'
-                              : 'shadow-[0_0_10px_rgba(6,182,212,0.3),0_0_20px_rgba(6,182,212,0.15)] hover:shadow-[0_0_15px_rgba(6,182,212,0.4),0_0_30px_rgba(6,182,212,0.2)]'
-                          } h-80 flex flex-col`}
+                              ? 'glass-secondary' 
+                              : 'glass-accent'
+                          } p-4 rounded-2xl transition-all duration-300 hover:scale-102 flex items-center gap-4 overflow-visible m-2`}
                           onClick={() => handleLearningPathClick(path)}
                         >
                           {/* Premium Badge */}
                           {path.isPremium && (
-                            <div className="absolute -top-2 -right-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-md">
-                              ✨ PREMIUM
+                            <div className="absolute -top-3 -right-3 z-10">
+                              <div className="bg-gradient-to-r from-amber-500 to-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                                ✨ PREMIUM
+                              </div>
                             </div>
                           )}
                           
-                          {/* Header Section - Fixed Height */}
-                          <div className="flex items-start gap-4 mb-4">
-                            <div className={`text-4xl filter flex-shrink-0 ${
-                              path.id === 'vibe-coding' 
-                                ? 'drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]'
-                                : 'drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]'
-                            }`}>
-                              {path.icon}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h3 className="text-xl font-bold text-white mb-2 drop-shadow-lg leading-tight">{path.title}</h3>
-                              <p className="text-gray-300 text-sm leading-relaxed h-12 overflow-hidden">{path.description}</p>
+                          {/* Icon */}
+                          <div className={`text-3xl filter flex-shrink-0 ${
+                            path.id === 'vibe-coding' 
+                              ? 'drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]'
+                              : 'drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]'
+                          }`}>
+                            {path.icon}
+                          </div>
+                          
+                          {/* Content */}
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-white mb-1">{path.title}</h3>
+                            <p className="text-gray-300 text-sm mb-2">{path.description}</p>
+                            <div className="flex items-center gap-2 text-xs">
+                              <span className="glass-surface px-2 py-1 rounded-full text-cyan-200">{path.difficulty}</span>
+                              <span className="glass-surface px-2 py-1 rounded-full text-cyan-200">{path.estimatedHours}h</span>
                             </div>
                           </div>
                           
-                          {/* Tags Section - Fixed Position */}
-                          <div className="flex flex-wrap gap-2 mb-6">
-                            <span className={`px-2 py-0.5 ${
-                              path.id === 'vibe-coding'
-                                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30'
-                                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
-                            } text-xs rounded-full backdrop-blur-sm font-medium`}>
-                              {path.category}
-                            </span>
-                            <span className={`px-2 py-0.5 ${
-                              path.id === 'vibe-coding'
-                                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30'
-                                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
-                            } text-xs rounded-full backdrop-blur-sm font-medium`}>
-                              {path.difficulty}
-                            </span>
-                            <span className={`px-2 py-0.5 ${
-                              path.id === 'vibe-coding'
-                                ? 'bg-purple-500/20 text-purple-200 border border-purple-500/30'
-                                : 'bg-cyan-500/20 text-cyan-200 border border-cyan-500/30'
-                            } text-xs rounded-full backdrop-blur-sm font-medium`}>
-                              {path.estimatedHours}h • {path.totalLessons} lessons
-                            </span>
-                          </div>
-                          
-                          {/* Spacer to push bottom content down */}
-                          <div className="flex-grow"></div>
-                          
-                          {/* Bottom Section - Always at bottom */}
-                          <div className="space-y-3">
-                            {/* Access Status */}
-                            <div className="text-center">
-                              {path.isPremium ? (
-                                <div className="text-amber-300 text-sm font-medium drop-shadow-sm">
-                                  🔒 Premium Required
-                                </div>
-                              ) : (
-                                <div className="text-emerald-300 text-sm font-medium drop-shadow-sm">
-                                  ✅ Free Access
-                                </div>
-                              )}
-                            </div>
-                            
-                            {/* Big Button - Always at bottom */}
-                            <button className={`w-full py-4 px-6 text-white font-bold text-lg rounded-xl transition-all duration-300 shadow-md hover:shadow-lg transform hover:translate-y-[-1px] ${
-                              path.id === 'vibe-coding' 
-                                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-purple-500/25 hover:shadow-purple-500/40' 
-                                : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 shadow-cyan-500/25 hover:shadow-cyan-500/40'
-                            }`}>
-                              Start Learning Journey →
-                            </button>
+                          {/* Arrow */}
+                          <div className="text-white">
+                            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
                           </div>
                         </div>
                       ))}
                     </div>
                     
-                    <div className="text-center mt-6">
+                    <div className="text-center mt-4">
                       <button
                         onClick={() => navigate('/lessons')}
                         className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-300 border border-white/20"
@@ -805,67 +755,55 @@ const HomePage = () => {
                     </div>
                   </div>
                 )}
-
-                {/* Weekly Goal Progress */}
-                <div className="bg-gradient-to-br from-emerald-500/40 to-green-600/40 backdrop-blur-xl rounded-3xl p-6 border border-emerald-400/50 shadow-md">
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    🎯 Weekly Learning Goal
-                  </h2>
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm text-emerald-200 mb-2">
-                      <span>Progress this week</span>
-                      <span>{Math.round(calculateWeeklyProgress())}%</span>
-                    </div>
-                    <div className="w-full bg-white/30 rounded-full h-3 border border-white/40">
-                      <div 
-                        className="bg-gradient-to-r from-green-400 to-emerald-400 h-3 rounded-full transition-all duration-1000"
-                        style={{ width: `${calculateWeeklyProgress()}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                  <p className="text-emerald-100">
-                    {calculateWeeklyProgress() >= 100 
-                      ? "🎉 Amazing! You've crushed this week's goal!" 
-                      : `Just ${Math.max(0, 5 - (userStats.lessonsCompletedThisWeek || 0))} more lessons to hit your weekly goal!`
-                    }
-                  </p>
-                </div>
-
-                {/* AI Insight */}
-                <div className="bg-gradient-to-br from-sky-500/40 to-cyan-600/40 backdrop-blur-xl rounded-3xl p-6 border border-sky-400/50 shadow-md">
-                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
-                    💡 AI Insight of the Day
-                  </h2>
-                  <p className="text-xl text-sky-100 leading-relaxed">
-                    {currentFact}
-                  </p>
-                </div>
-              </div>
+              </section>
 
               {/* Right Column - Sidebar */}
-              <div className="space-y-8">
+              <section className="space-y-6">
                 
+                {/* Next Lesson */}
+                {nextLesson && (
+                  <div className="glass-accent rounded-3xl p-4 shadow-lg">
+                    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                      🎯 Up Next
+                    </h3>
+                    <div className="glass-surface rounded-2xl p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="glass-primary px-2 py-1 text-blue-100 rounded-full text-xs font-medium">
+                          {nextLesson.moduleName}
+                        </span>
+                        <span className="text-xs text-cyan-200">15 min</span>
+                      </div>
+                      <h4 className="text-sm font-semibold text-white mb-2">{nextLesson.title}</h4>
+                      <button
+                        onClick={() => handleQuickLessonClick(nextLesson)}
+                        className="w-full glass-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 text-sm"
+                      >
+                        Start Lesson →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 {/* Today's Challenge */}
                 {todaysChallenge && (
-                  <div className="bg-gradient-to-br from-orange-600/20 to-red-600/20 backdrop-blur-xl rounded-3xl p-6 border border-orange-500/30">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <div className="glass-warning rounded-3xl p-4 shadow-lg">
+                    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
                       ⚡ Today's Challenge
-                    </h2>
+                    </h3>
                     <div className="text-center">
-                      <div className="text-4xl mb-3">{todaysChallenge.icon}</div>
-                      <h3 className="text-lg font-semibold text-white mb-2">{todaysChallenge.title}</h3>
-                      <p className="text-orange-200 mb-4 text-sm">{todaysChallenge.description}</p>
-                      <div className="flex items-center justify-center space-x-2 mb-4">
-                        <span className="px-2 py-1 bg-yellow-500/20 text-yellow-300 rounded-full text-xs font-medium">+{todaysChallenge.xp} XP</span>
+                      <div className="text-3xl mb-2">{todaysChallenge.icon}</div>
+                      <h4 className="text-sm font-semibold text-white mb-2">{todaysChallenge.title}</h4>
+                      <div className="flex items-center justify-center space-x-2 mb-3">
+                        <span className="glass-surface px-2 py-1 text-yellow-300 rounded-full text-xs font-medium">+{todaysChallenge.xp} XP</span>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          todaysChallenge.difficulty === 'Easy' ? 'bg-green-500/20 text-green-300' :
-                          todaysChallenge.difficulty === 'Medium' ? 'bg-orange-500/20 text-orange-300' :
-                          'bg-red-500/20 text-red-300'
+                          todaysChallenge.difficulty === 'Easy' ? 'glass-success text-green-300' :
+                          todaysChallenge.difficulty === 'Medium' ? 'glass-warning text-orange-300' :
+                          'glass-card text-red-300'
                         }`}>{todaysChallenge.difficulty}</span>
                       </div>
                       <button 
                         onClick={handleCompleteChallenge}
-                        className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300"
+                        className="w-full glass-button bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 text-sm"
                       >
                         Accept Challenge 💪
                       </button>
@@ -874,55 +812,53 @@ const HomePage = () => {
                 )}
 
                 {/* Quick Actions */}
-                <div className="bg-gradient-to-br from-indigo-500/40 to-blue-600/40 backdrop-blur-xl rounded-3xl p-6 border border-indigo-400/50 shadow-md">
-                  <h2 className="text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
-                  <div className="space-y-3">
+                <div className="glass-primary rounded-3xl p-4 shadow-lg">
+                  <h3 className="text-lg font-bold text-white mb-3">⚡ Quick Actions</h3>
+                  <div className="space-y-2">
                     {!isQuizCompleted && (
                       <button
                         onClick={() => navigate('/learning-path/adaptive-quiz')}
-                        className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-left flex items-center gap-2"
+                        className="w-full glass-button bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
                       >
-                        <span className="text-lg">🎯</span> Take AI Assessment
+                        <span className="text-base">🎯</span> Take AI Assessment
                       </button>
                     )}
-                    <div
+                    <button
                       onClick={() => navigate('/lessons')}
-                      className="
-                        group relative bg-gradient-to-br from-blue-400/30 to-indigo-500/30 backdrop-blur-xl 
-                        rounded-3xl p-8 border border-blue-400/40 hover:border-blue-300/60 
-                        transition-all duration-300 cursor-pointer hover:scale-105 
-                        shadow-md hover:shadow-lg
-                      "
+                      className="w-full glass-button bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-2 rounded-xl hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
                     >
-                      <div className="text-6xl mb-4">🔍</div>
-                      <h3 className="text-2xl font-bold mb-3 text-white">Explore All Lessons</h3>
-                      <p className="text-blue-100 mb-6 leading-relaxed">
-                        Browse through our adaptive lessons with our discovery interface. Each lesson adjusts to your skill level!
-                      </p>
-                      <div className="flex items-center space-x-2 text-blue-200 font-medium">
-                        <span>Start Exploring</span>
-                        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
-                      </div>
-                    </div>
+                      <span className="text-base">🔍</span> Explore All Lessons
+                    </button>
                     <button
                       onClick={() => navigate('/dashboard')}
-                      className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white p-3 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2"
+                      className="w-full glass-button bg-gradient-to-r from-green-600 to-emerald-600 text-white p-2 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
                     >
-                      <span className="text-lg">📊</span> View Progress
+                      <span className="text-base">📊</span> View Progress
                     </button>
                   </div>
                 </div>
+              </section>
+            </div>
 
-                {/* Motivational Quote */}
-                <div className="bg-gradient-to-r from-pink-500/40 to-rose-600/40 backdrop-blur-xl rounded-3xl p-6 border border-pink-400/50 text-center shadow-md">
-                  <div className="text-4xl mb-3">🌟</div>
-                  <p className="text-lg font-medium text-pink-100 italic">
-                    "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
-                  </p>
-                  <p className="text-sm text-pink-200 mt-2">- Your AI Coach</p>
-                </div>
+            {/* Bottom Content - Consolidated Single Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+              {/* AI Insight */}
+              <div className="glass-primary rounded-3xl p-6 shadow-lg">
+                <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                  💡 AI Insight of the Day
+                </h2>
+                <p className="text-lg text-sky-100 leading-relaxed">
+                  {currentFact}
+                </p>
+              </div>
+
+              {/* Motivational Quote */}
+              <div className="glass-secondary rounded-3xl p-6 text-center shadow-lg">
+                <div className="text-3xl mb-3">🌟</div>
+                <p className="text-base font-medium text-pink-100 italic">
+                  "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
+                </p>
+                <p className="text-sm text-pink-200 mt-2">- Your AI Coach</p>
               </div>
             </div>
 
@@ -942,25 +878,25 @@ const HomePage = () => {
         defaultDifficulty="Beginner"
       />
 
-      {/* Paywall Modal */}
+      {/* Paywall Modal - Enhanced Glass Design */}
       {showPaywallModal && (
         <div className="fixed inset-0 bg-black/70 backdrop-blur-lg flex items-center justify-center z-[100] p-4">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9, y: 20 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
             transition={{ duration: 0.3, ease: 'easeOut'}}
-            className="bg-gradient-to-br from-slate-800/90 via-blue-900/90 to-indigo-900/90 backdrop-blur-xl rounded-3xl p-8 shadow-xl w-full max-w-md border border-blue-400/30 text-white relative overflow-hidden"
+            className="glass-primary rounded-3xl p-6 md:p-8 shadow-xl w-full max-w-md text-white relative overflow-hidden"
           >
             {/* Background decoration */}
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-400/20 to-purple-500/20 rounded-full blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-gradient-to-br from-yellow-400/20 to-orange-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 w-16 h-16 md:w-24 md:h-24 bg-gradient-to-tr from-blue-400/20 to-purple-500/20 rounded-full blur-2xl"></div>
             
             <div className="relative z-10">
               {/* Header */}
               <div className="text-center mb-6">
-                <div className="text-4xl mb-3">👑</div>
-                <h3 className="text-2xl font-bold text-white mb-2">Unlock Premium Content</h3>
-                <p className="text-blue-200 text-lg leading-relaxed">
+                <div className="text-3xl md:text-4xl mb-3">👑</div>
+                <h3 className="text-xl md:text-2xl font-bold text-white mb-2">Unlock Premium Content</h3>
+                <p className="text-blue-200 text-base md:text-lg leading-relaxed">
                   Access Intermediate & Advanced lessons with your Premium subscription
                 </p>
               </div>
@@ -968,37 +904,37 @@ const HomePage = () => {
               {/* Benefits */}
               <div className="space-y-3 mb-6">
                 <div className="flex items-center gap-3 text-emerald-300">
-                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="font-medium">All difficulty levels unlocked</span>
+                  <span className="font-medium text-sm md:text-base">All difficulty levels unlocked</span>
                 </div>
                 <div className="flex items-center gap-3 text-emerald-300">
-                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="font-medium">Advanced AI techniques & strategies</span>
+                  <span className="font-medium text-sm md:text-base">Advanced AI techniques & strategies</span>
                 </div>
                 <div className="flex items-center gap-3 text-emerald-300">
-                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+                  <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </div>
-                  <span className="font-medium">Priority support & feedback</span>
+                  <span className="font-medium text-sm md:text-base">Priority support & feedback</span>
                 </div>
               </div>
 
-              {/* Pricing */}
-              <div className="bg-gradient-to-r from-blue-600/40 to-purple-600/40 rounded-2xl p-4 mb-6 border border-blue-400/30">
+              {/* Pricing - Enhanced Glass Design */}
+              <div className="glass-accent rounded-2xl p-4 mb-6">
                 <div className="text-center">
                   <div className="text-sm text-blue-200 mb-1">Premium Plan</div>
-                  <div className="text-3xl font-bold text-white mb-1">
-                    $10<span className="text-lg text-blue-200">/month</span>
+                  <div className="text-2xl md:text-3xl font-bold text-white mb-1">
+                    $10<span className="text-base md:text-lg text-blue-200">/month</span>
                   </div>
                   <div className="text-xs text-blue-300">Cancel anytime</div>
                 </div>
@@ -1010,7 +946,7 @@ const HomePage = () => {
                   onClick={handleUpgradeToPremium}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg text-lg relative overflow-hidden group"
+                  className="w-full bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-3 md:py-4 px-4 md:px-6 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg text-base md:text-lg relative overflow-hidden group"
                 >
                   <span className="relative z-10">💳 Upgrade Now</span>
                   <div className="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-400 opacity-0 group-hover:opacity-20 transition-opacity duration-200"></div>

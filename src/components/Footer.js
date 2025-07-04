@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer 
       className="py-8 relative overflow-hidden"
-      style={{ backgroundColor: '#2061a6' }}
+      style={{ backgroundColor: '#3b82f6' }}
     >
       {/* Moving Stars Background */}
       <div className="absolute inset-0 z-0">

@@ -19,7 +19,7 @@ const Navbar = ({ openAuthModal }) => {
   return (
     <nav 
       className="sticky top-0 z-50"
-      style={{ backgroundColor: '#2061a6' }}
+      style={{ backgroundColor: '#3b82f6' }}
     >
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         {[...Array(30)].map((_, i) => (
@@ -125,7 +125,7 @@ const Navbar = ({ openAuthModal }) => {
 
       <div 
         className={`${isMenuOpen ? 'block' : 'hidden'} md:hidden`}
-        style={{ backgroundColor: '#2061a6' }}
+        style={{ backgroundColor: '#3b82f6' }}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link

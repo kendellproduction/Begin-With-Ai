@@ -57,7 +57,7 @@ const LoggedInNavbar = () => {
           ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
           : ''
       }`}
-      style={!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}}
+      style={!isDarkSpacePage ? { backgroundColor: '#3b82f6' } : {}}
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(numStars)].map((_, i) => {
@@ -260,7 +260,7 @@ const LoggedInNavbar = () => {
             ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
             : ''
         }`}
-        style={!isDarkSpacePage ? { backgroundColor: '#2061a6' } : {}}
+        style={!isDarkSpacePage ? { backgroundColor: '#3b82f6' } : {}}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>

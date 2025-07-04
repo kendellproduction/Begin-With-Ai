@@ -374,29 +374,376 @@ code {
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-800;
   }
   
-  .glass-effect {
-    backdrop-filter: blur(12px);
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+  /* ULTRA-TRANSPARENT GLASS SYSTEM - True See-Through Effect */
+  
+  /* Main sections with uniform shadows on all 4 sides */
+  .glass-card, .glass-primary, .glass-secondary, .glass-accent, 
+  .glass-success, .glass-warning, .glass-container, .glass-liquid {
+    backdrop-filter: blur(2px) saturate(1.02);
+    background: transparent;
+    border: none;
+    border-radius: 24px;
+    /* Uniform shadows on all 4 sides - visible but not too dark */
+    box-shadow: 
+      0 0 25px rgba(0, 0, 0, 0.18),
+      0 0 12px rgba(0, 0, 0, 0.15),
+      0 0 6px rgba(0, 0, 0, 0.12) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
   }
   
-  .glass-button {
-    @apply glass-effect hover:bg-white/10 transition-all duration-200 rounded-lg;
+  /* Interior cards with colorful shadows */
+  .glass-surface {
+    backdrop-filter: blur(2px) saturate(1.02);
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    /* Colorful shadows for interior cards */
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.12),
+      0 0 10px rgba(139, 92, 246, 0.1),
+      0 0 5px rgba(6, 182, 212, 0.08) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
   }
+  
+  /* Glass buttons and crystal - same as main sections */
+  .glass-button, .glass-crystal {
+    backdrop-filter: blur(2px) saturate(1.02);
+    background: transparent;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 
+      0 0 20px rgba(0, 0, 0, 0.15),
+      0 0 10px rgba(0, 0, 0, 0.12),
+      0 0 5px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Remove all glass highlights for flat design */
+  .glass-card::before {
+    display: none;
+  }
+  
+  /* Remove all glass highlights for flat design */
+  .glass-primary::before,
+  .glass-secondary::before,
+  .glass-accent::before,
+  .glass-success::before,
+  .glass-warning::before {
+    display: none;
+  }
+  
+  /* Remove all glass highlights for flat design */
+  .glass-surface::before,
+  .glass-crystal::before,
+  .glass-hero::before,
+  .glass-button::before,
+  .glass-liquid::before {
+    display: none;
+  }
+  
+  /* Container glass - no highlight */
+  .glass-container::before {
+    display: none;
+  }
+  
+  /* Remove all inner curve effects for flat design */
+  .glass-card::after, .glass-primary::after, .glass-secondary::after,
+  .glass-accent::after, .glass-success::after, .glass-warning::after,
+  .glass-surface::after, .glass-crystal::after, .glass-liquid::after,
+  .glass-hero::after, .glass-button::after, .glass-container::after {
+    display: none;
+  }
+  
+  /* Enhanced hover states with uniform shadows */
+  .glass-card:hover, .glass-primary:hover, .glass-secondary:hover,
+  .glass-accent:hover, .glass-success:hover, .glass-warning:hover,
+  .glass-container:hover, .glass-liquid:hover {
+    backdrop-filter: blur(3px) saturate(1.03);
+    background: transparent;
+    border: none;
+    /* Enhanced uniform shadows on hover */
+    box-shadow: 
+      0 0 35px rgba(0, 0, 0, 0.22),
+      0 0 18px rgba(0, 0, 0, 0.18),
+      0 0 8px rgba(0, 0, 0, 0.15) !important;
+    transform: none;
+  }
+  
+  /* Interior cards hover with enhanced colorful shadows */
+  .glass-surface:hover {
+    backdrop-filter: blur(3px) saturate(1.03);
+    background: transparent;
+    border: none;
+    box-shadow: 
+      0 0 30px rgba(59, 130, 246, 0.18),
+      0 0 15px rgba(139, 92, 246, 0.15),
+      0 0 8px rgba(6, 182, 212, 0.12) !important;
+    transform: none;
+  }
+  
+  /* Glass buttons and crystal hover */
+  .glass-button:hover, .glass-crystal:hover {
+    backdrop-filter: blur(3px) saturate(1.03);
+    background: transparent;
+    border: none;
+    box-shadow: 
+      0 0 30px rgba(0, 0, 0, 0.2),
+      0 0 15px rgba(0, 0, 0, 0.15),
+      0 0 8px rgba(0, 0, 0, 0.12) !important;
+    transform: none;
+  }
+  
+  /* Color variants with minimal opacity - no borders */
+  .glass-primary,
+  .glass-secondary,
+  .glass-accent,
+  .glass-success,
+  .glass-warning {
+    background: transparent;
+  }
+  
 
-  /* Text truncation utilities */
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+  
+  /* 3D Glass Container with better perspective */
+  .glass-container {
+    perspective: 1500px;
+    perspective-origin: center center;
+    transform-style: preserve-3d;
+  }
+  
+  /* Liquid glass with subtle wave effect - no dominant gradients */
+  .glass-liquid {
+    position: relative;
     overflow: hidden;
   }
   
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
+  /* Mobile optimizations */
+  @media (max-width: 768px) {
+    .glass-card, .glass-primary, .glass-secondary, .glass-accent, 
+    .glass-success, .glass-warning, .glass-container, .glass-liquid {
+      backdrop-filter: blur(2px) saturate(1.02);
+      background: transparent;
+      border: none;
+      /* Uniform shadows on mobile */
+      box-shadow: 
+        0 0 20px rgba(0, 0, 0, 0.15),
+        0 0 10px rgba(0, 0, 0, 0.12),
+        0 0 5px rgba(0, 0, 0, 0.1);
+      border-radius: 20px;
+      margin: 0.5rem 0;
+      padding: 1rem;
+    }
+    
+    .glass-surface {
+      backdrop-filter: blur(2px) saturate(1.02);
+      background: transparent;
+      border: none;
+      /* Colorful shadows for interior cards on mobile */
+      box-shadow: 
+        0 0 15px rgba(59, 130, 246, 0.1),
+        0 0 8px rgba(139, 92, 246, 0.08),
+        0 0 4px rgba(6, 182, 212, 0.06);
+      border-radius: 16px;
+      margin: 0.5rem 0;
+      padding: 1rem;
+    }
+    
+    .glass-button, .glass-crystal {
+      backdrop-filter: blur(2px) saturate(1.02);
+      background: transparent;
+      border: none;
+      box-shadow: 
+        0 0 15px rgba(0, 0, 0, 0.12),
+        0 0 8px rgba(0, 0, 0, 0.1),
+        0 0 4px rgba(0, 0, 0, 0.08);
+      border-radius: 16px;
+      margin: 0.5rem 0;
+      padding: 1rem;
+    }
+    
+    .glass-card:hover, .glass-primary:hover, .glass-secondary:hover, 
+    .glass-accent:hover, .glass-success:hover, .glass-warning:hover,
+    .glass-container:hover, .glass-liquid:hover {
+      backdrop-filter: blur(3px) saturate(1.03);
+      background: transparent;
+      border: none;
+      /* Enhanced uniform shadows on hover for mobile */
+      box-shadow: 
+        0 0 25px rgba(0, 0, 0, 0.18),
+        0 0 12px rgba(0, 0, 0, 0.15),
+        0 0 6px rgba(0, 0, 0, 0.12);
+      transform: none;
+    }
+    
+    .glass-surface:hover {
+      backdrop-filter: blur(3px) saturate(1.03);
+      background: transparent;
+      border: none;
+      box-shadow: 
+        0 0 20px rgba(59, 130, 246, 0.15),
+        0 0 10px rgba(139, 92, 246, 0.12),
+        0 0 5px rgba(6, 182, 212, 0.1);
+      transform: none;
+    }
+    
+    .glass-button:hover, .glass-crystal:hover {
+      backdrop-filter: blur(3px) saturate(1.03);
+      background: transparent;
+      border: none;
+      box-shadow: 
+        0 0 20px rgba(0, 0, 0, 0.15),
+        0 0 10px rgba(0, 0, 0, 0.12),
+        0 0 5px rgba(0, 0, 0, 0.1);
+      transform: none;
+    }
+    
+    /* Smaller highlights on mobile */
+    .glass-card::before, .glass-primary::before, .glass-secondary::before,
+    .glass-accent::before, .glass-success::before, .glass-warning::before,
+    .glass-surface::before, .glass-crystal::before, .glass-liquid::before,
+    .glass-hero::before, .glass-button::before {
+      width: 30px;
+      height: 30px;
+    }
+    
+    .glass-liquid {
+      padding: 1rem !important;
+    }
+    
+    /* Prevent badge cutoff on mobile */
+    .glass-card, .glass-primary, .glass-secondary, .glass-accent,
+    .glass-success, .glass-warning, .glass-surface, .glass-crystal,
+    .glass-liquid, .glass-hero, .glass-button, .glass-container {
+      overflow: visible;
+      margin-top: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .fixed.inset-0 {
+      padding: 1rem;
+    }
+    
+    button {
+      min-height: 44px;
+      min-width: 44px;
+      padding: 0.75rem 1rem;
+    }
+    
+    .text-xs {
+      font-size: 0.75rem;
+      line-height: 1rem;
+    }
+    
+    .text-sm {
+      font-size: 0.875rem;
+      line-height: 1.25rem;
+    }
+    
+    .absolute.-top-1 {
+      top: -0.25rem;
+    }
+    
+    .absolute.-right-1 {
+      right: -0.25rem;
+    }
+  }
+  
+  /* Extra small screens */
+  @media (max-width: 480px) {
+    .glass-card, .glass-primary, .glass-secondary, .glass-accent,
+    .glass-success, .glass-warning, .glass-surface, .glass-crystal,
+    .glass-liquid, .glass-hero, .glass-button, .glass-container {
+      background: transparent;
+      /* Dark shadows for depth and layering - consistent on extra small screens */
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 16px;
+      margin: 0.5rem 0;
+      padding: 0.75rem;
+    }
+    
+    .absolute.-top-1 {
+      top: 0;
+    }
+    
+    .absolute.-right-1 {
+      right: 0;
+    }
+    
+    .text-3xl {
+      font-size: 1.5rem;
+      line-height: 2rem;
+    }
+    
+    .text-2xl {
+      font-size: 1.25rem;
+      line-height: 1.75rem;
+    }
+    
+    .text-xl {
+      font-size: 1.125rem;
+      line-height: 1.5rem;
+    }
+  }
+  
+  /* Hero section with prominent pulsating gold shadows */
+  .glass-hero {
+    backdrop-filter: blur(2px) saturate(1.02);
+    background: transparent;
+    border: none;
+    border-radius: 24px;
+    /* Prominent gold shadows with pulsating animation */
+    box-shadow: 
+      0 0 40px rgba(255, 215, 0, 0.3),
+      0 0 20px rgba(255, 193, 7, 0.25),
+      0 0 10px rgba(255, 235, 59, 0.2) !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
     overflow: hidden;
+    /* Pulsating animation */
+    animation: heroGoldPulse 3s ease-in-out infinite;
+  }
+  
+  .glass-hero:hover {
+    box-shadow: 
+      0 0 50px rgba(255, 215, 0, 0.4),
+      0 0 25px rgba(255, 193, 7, 0.35),
+      0 0 12px rgba(255, 235, 59, 0.3) !important;
+    animation-duration: 2s; /* Faster pulse on hover */
+  }
+  
+  /* Hero gold pulsating animation */
+  @keyframes heroGoldPulse {
+    0%, 100% {
+      box-shadow: 
+        0 0 40px rgba(255, 215, 0, 0.3),
+        0 0 20px rgba(255, 193, 7, 0.25),
+        0 0 10px rgba(255, 235, 59, 0.2);
+    }
+    50% {
+      box-shadow: 
+        0 0 55px rgba(255, 215, 0, 0.4),
+        0 0 28px rgba(255, 193, 7, 0.35),
+        0 0 14px rgba(255, 235, 59, 0.3);
+    }
+  }
+  
+  /* Fallback for browsers without backdrop-filter */
+  @supports not (backdrop-filter: blur(1px)) {
+    .glass-card, .glass-primary, .glass-secondary, .glass-accent, 
+    .glass-success, .glass-warning, .glass-surface, .glass-crystal,
+    .glass-liquid, .glass-hero, .glass-button, .glass-container {
+      background: transparent;
+      border: none;
+    }
   }
 }
 
@@ -428,5 +775,55 @@ code {
       opacity: 1;
       transform: translateY(0);
     }
+  }
+}
+
+/* Interior cards utility class with enhanced colorful shadows */
+.glass-inner {
+  backdrop-filter: blur(2px) saturate(1.02);
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  /* More colorful shadows for inner cards/divs */
+  box-shadow: 
+    0 0 18px rgba(59, 130, 246, 0.14),
+    0 0 9px rgba(139, 92, 246, 0.12),
+    0 0 5px rgba(6, 182, 212, 0.1),
+    0 0 3px rgba(16, 185, 129, 0.08) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-inner:hover {
+  backdrop-filter: blur(3px) saturate(1.03);
+  background: transparent;
+  border: none;
+  box-shadow: 
+    0 0 25px rgba(59, 130, 246, 0.18),
+    0 0 12px rgba(139, 92, 246, 0.15),
+    0 0 8px rgba(6, 182, 212, 0.12),
+    0 0 4px rgba(16, 185, 129, 0.1) !important;
+  transform: none;
+}
+
+@media (max-width: 768px) {
+  .glass-inner {
+    box-shadow: 
+      0 0 15px rgba(59, 130, 246, 0.12),
+      0 0 8px rgba(139, 92, 246, 0.1),
+      0 0 4px rgba(6, 182, 212, 0.08),
+      0 0 2px rgba(16, 185, 129, 0.06);
+    border-radius: 14px;
+    margin: 0.5rem 0;
+    padding: 0.75rem;
+  }
+  
+  .glass-inner:hover {
+    box-shadow: 
+      0 0 20px rgba(59, 130, 246, 0.15),
+      0 0 10px rgba(139, 92, 246, 0.12),
+      0 0 6px rgba(6, 182, 212, 0.1),
+      0 0 3px rgba(16, 185, 129, 0.08);
   }
 }

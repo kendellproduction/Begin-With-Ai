@@ -66,7 +66,7 @@ const Pricing = () => {
   return (
     <div 
       className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#2061a6' }}
+      style={{ backgroundColor: '#3b82f6' }}
     >
       <LoggedInNavbar />
 

@@ -21,7 +21,7 @@ const LessonDetail = () => {
   return (
     <div 
       className="fixed inset-0 flex items-center justify-center text-white overflow-hidden"
-      style={{ backgroundColor: '#2061a6' }}
+      style={{ backgroundColor: '#3b82f6' }}
     >
       {/* Star Animation Container for LessonDetail - High Performance GPU Accelerated */}
       <div className="star-container absolute inset-0 z-0 pointer-events-none">
