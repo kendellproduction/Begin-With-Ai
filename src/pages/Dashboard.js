@@ -112,12 +112,12 @@ const Dashboard = () => {
           const initialX = Math.random() * screenW;
           const targetX = Math.random() * screenW;
           const starDuration = 30 + Math.random() * 25; 
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
+          const starSize = Math.random() * 2 + 0.5;
 
           return (
             <motion.div
               key={`dashboard-star-${i}`}
-              className="star-element absolute rounded-full bg-white/80"
+              className="star-element absolute rounded-full bg-white"
               style={{
                 width: starSize,
                 height: starSize,
@@ -130,20 +130,20 @@ const Dashboard = () => {
               animate={{
                 x: targetX,
                 y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
+                opacity: [0, 0.6, 0.6, 0],
               }}
               transition={{
                 duration: starDuration,
                 repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
+                repeatDelay: Math.random() * 3 + 1,
                 ease: "linear",
-                type: "tween", // More performant than spring
+                type: "tween",
                 opacity: {
                   duration: starDuration,
                   ease: "linear",
                   times: [0, 0.1, 0.85, 1],
                   repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
+                  repeatDelay: Math.random() * 3 + 1,
                 }
               }}
             />
@@ -200,9 +200,16 @@ const Dashboard = () => {
           .card-glow:hover {
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 10px 30px rgba(99, 102, 241, 0.3);
           }
+
+          @media (max-width: 768px) {
+            .card-glow {
+              margin: 0.5rem 0;
+              padding: 1rem !important;
+            }
+          }
         `}</style>
       
-        <main className="container mx-auto px-4 py-8">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
           {/* Error Message Display */}
           {errorMessage && (
             <div className="mb-8 max-w-2xl mx-auto">
@@ -219,274 +226,238 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Hero Welcome Section */}
-          <div className="text-center mb-12">
-            <div className="mb-6">
-              <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent leading-tight py-2">
-                Welcome back!
+          {/* Header Section with Glass Effect */}
+          <section className="glass-hero rounded-3xl p-6 sm:p-8 mb-8 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4">
+                Welcome back, {user?.displayName || user?.email?.split('@')[0] || 'Learner'}! 🎯
               </h1>
-              <p className="text-xl text-gray-300 mb-6">
-                Ready to continue your AI learning journey?
+              <p className="text-lg sm:text-xl text-blue-100 mb-6 max-w-3xl mx-auto">
+                Track your AI learning journey and celebrate your progress
               </p>
-            </div>
-            
-            {/* User Level Badge */}
-            <div className="inline-flex items-center space-x-4 bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10 mb-8">
-              <div className="relative">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center text-2xl font-bold">
-                  L{userStats.level}
-                </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center text-sm">
-                  ��
-                </div>
-              </div>
-              <div className="text-left">
-                <h3 className="text-xl font-bold text-white">Level {userStats.level} Learner</h3>
-                <p className="text-gray-300">{userStats.nextLevelPoints} XP to next level</p>
-                <div className="w-32 h-2 bg-gray-700 rounded-full mt-2">
-                  <div 
-                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full transition-all duration-1000"
-                    style={{ width: `${(userStats.totalPoints % 1000) / 10}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+            </motion.div>
+          </section>
 
-          {/* Enhanced Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-            {/* Lessons Completed */}
-            <div className="card-glow group bg-gradient-to-br from-blue-600/20 to-cyan-600/20 backdrop-blur-sm rounded-3xl p-6 border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 cursor-pointer hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-300">Lessons Completed</h3>
-                <div className="text-3xl group-hover:scale-110 transition-transform duration-300">📚</div>
+          {/* Stats Grid with Glass Effects */}
+          <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+            <motion.div
+              className="glass-warning rounded-2xl p-4 sm:p-6 text-center pulse-shadow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-orange-300 mb-2">
+                {userStats.streak || 0}
               </div>
-              <p className="text-3xl font-bold text-blue-400 mb-2">{userStats.lessonsCompleted}</p>
-              <p className="text-sm text-gray-400">{userStats.lessonsCompleted === 0 ? 'Ready to start!' : 'Great progress!'}</p>
-            </div>
+              <div className="text-sm sm:text-base text-orange-200">Day Streak 🔥</div>
+            </motion.div>
 
-            {/* Current Streak */}
-            <div className="card-glow group bg-gradient-to-br from-orange-600/20 to-red-600/20 backdrop-blur-sm rounded-3xl p-6 border border-orange-500/30 hover:border-orange-400/50 transition-all duration-300 cursor-pointer hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-300">Current Streak</h3>
-                <div className="text-3xl group-hover:scale-110 transition-transform duration-300">🔥</div>
+            <motion.div
+              className="glass-success rounded-2xl p-4 sm:p-6 text-center pulse-shadow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-green-300 mb-2">
+                {userStats.lessonsCompleted || 0}
               </div>
-              <p className="text-3xl font-bold text-orange-400 mb-2">{userStats.streak} day{userStats.streak !== 1 ? 's' : ''}</p>
-              <p className="text-sm text-gray-400">{userStats.streak === 0 ? 'Start your streak!' : 'Keep it going!'}</p>
-            </div>
+              <div className="text-sm sm:text-base text-green-200">Lessons Completed ✅</div>
+            </motion.div>
 
-            {/* Total Points */}
-            <div className="card-glow group bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-sm rounded-3xl p-6 border border-green-500/30 hover:border-green-400/50 transition-all duration-300 cursor-pointer hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-300">Total Points</h3>
-                <div className="text-3xl group-hover:scale-110 transition-transform duration-300">⭐</div>
+            <motion.div
+              className="glass-primary rounded-2xl p-4 sm:p-6 text-center pulse-shadow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-blue-300 mb-2">
+                {userStats.totalPoints.toLocaleString() || 0}
               </div>
-              <p className="text-3xl font-bold text-green-400 mb-2">{userStats.totalPoints.toLocaleString()}</p>
-              <p className="text-sm text-gray-400">{userStats.totalPoints === 0 ? 'Earn your first points!' : 'Amazing score!'}</p>
-            </div>
+              <div className="text-sm sm:text-base text-blue-200">Total XP ⭐</div>
+            </motion.div>
 
-            {/* Progress Percentage */}
-            <div className="card-glow group bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-3xl p-6 border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 cursor-pointer hover:scale-105">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-300">Overall Progress</h3>
-                <div className="text-3xl group-hover:scale-110 transition-transform duration-300">📈</div>
+            <motion.div
+              className="glass-secondary rounded-2xl p-4 sm:p-6 text-center pulse-shadow"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-purple-300 mb-2">
+                Lv.{userStats.level || 1}
               </div>
-              <p className="text-3xl font-bold text-purple-400 mb-2">{userStats.completionPercentage}%</p>
-              <p className="text-sm text-gray-400">{userStats.completionPercentage === 0 ? 'Your journey begins!' : 'Almost there!'}</p>
-            </div>
-          </div>
-
-          {/* Category Progress Section */}
-          <section className="mb-12">
-            <h2 className="text-3xl font-bold mb-8 text-center">
-              <span className="bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
-                Learning Progress by Category
-              </span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {Object.entries(categoryProgress).map(([category, data]) => (
-                <div
-                  key={category}
-                  className="card-glow group bg-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer hover:scale-105"
-                >
-                  <div className="text-center">
-                    <h3 className="text-lg font-semibold mb-4 text-white">{category}</h3>
-                    
-                    {/* Circular Progress */}
-                    <div className="relative w-24 h-24 mx-auto mb-4">
-                      <svg className="w-24 h-24 transform -rotate-90" viewBox="0 0 100 100">
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          stroke="rgba(75, 85, 99, 0.3)"
-                          strokeWidth="8"
-                          fill="none"
-                        />
-                        <circle
-                          cx="50"
-                          cy="50"
-                          r="40"
-                          stroke={`url(#gradient-${category.replace(' ', '')})`}
-                          strokeWidth="8"
-                          fill="none"
-                          strokeLinecap="round"
-                          strokeDasharray={`${2 * Math.PI * 40 * (data.percentage / 100)} ${2 * Math.PI * 40}`}
-                          className="transition-all duration-1000 ease-out"
-                        />
-                        <defs>
-                          <linearGradient id={`gradient-${category.replace(' ', '')}`} x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor={data.color.end} />
-                            <stop offset="100%" stopColor={data.color.start} />
-                          </linearGradient>
-                        </defs>
-                      </svg>
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="text-center">
-                          <div className="text-lg font-bold text-white">{data.percentage}%</div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-gray-400">{data.lessons} lessons completed</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+              <div className="text-sm sm:text-base text-purple-200">Current Level 🏆</div>
+            </motion.div>
           </section>
 
           {/* Main Content Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-            {/* Enhanced Achievements Section */}
-            <div className="card-glow bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:border-white/30 transition-all duration-300">
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <span className="text-2xl mr-3">🏆</span>
-                Your Achievements
-              </h2>
-              <div className="space-y-4">
-                {achievements.map((achievement) => (
-                  <div
-                    key={achievement.id}
-                    className={`group relative p-6 rounded-2xl transition-all duration-300 cursor-pointer hover:scale-105 ${
-                      achievement.unlocked
-                        ? 'bg-gradient-to-r from-indigo-600/20 to-purple-600/20 border border-indigo-500/30 hover:border-indigo-400/50'
-                        : 'bg-gray-700/30 border border-gray-600/30 hover:bg-gray-700/50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className={`text-3xl p-3 rounded-2xl ${
-                          achievement.unlocked 
-                            ? `bg-gradient-to-br ${achievement.color} opacity-90` 
-                            : 'bg-gray-600/50'
-                        } group-hover:scale-110 transition-transform duration-300`}>
-                          {achievement.icon}
+          <div className="grid lg:grid-cols-3 gap-6 sm:gap-8">
+            {/* Left Column - Recent Activity */}
+            <div className="lg:col-span-2 space-y-6 sm:space-y-8">
+              {/* Recent Progress with Glass Effect */}
+              <motion.section
+                className="glass-card rounded-3xl p-6 sm:p-8 dashboard-shadow"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5 }}
+              >
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  📈 Recent Progress
+                </h2>
+                <div className="space-y-4">
+                  {recentActivity.length > 0 ? (
+                    recentActivity.map((activity, index) => (
+                      <motion.div
+                        key={index}
+                        className="glass-surface rounded-2xl p-4 flex items-center gap-4"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.6 + index * 0.1 }}
+                      >
+                        <div className="text-2xl">{activity.icon}</div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-white">{activity.title}</div>
+                          <div className="text-sm text-blue-200">{activity.description}</div>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-white text-lg">{achievement.name}</h3>
-                          <p className="text-sm text-gray-400">{achievement.description}</p>
-                        </div>
-                      </div>
-                      {achievement.unlocked ? (
-                        <div className="text-2xl text-green-400 group-hover:scale-110 transition-transform duration-300">✓</div>
-                      ) : (
-                        <div className="text-2xl text-gray-500">🔒</div>
-                      )}
+                        <div className="text-xs text-cyan-300">{activity.time}</div>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="glass-surface rounded-2xl p-8 text-center">
+                      <div className="text-4xl mb-4">🚀</div>
+                      <h3 className="text-lg font-semibold text-white mb-2">Ready to start learning?</h3>
+                      <p className="text-blue-200 mb-4">Complete your first lesson to see your progress here!</p>
+                      <button
+                        onClick={handleLessonNavigation}
+                        className="glass-button bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
+                      >
+                        Start Learning Now
+                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+                </div>
+              </motion.section>
+
+              {/* Learning Milestones with Glass Effect */}
+              <motion.section
+                className="glass-accent rounded-3xl p-6 sm:p-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.7 }}
+              >
+                <h2 className="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                  🏅 Learning Milestones
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {achievements.map((achievement, index) => (
+                    <motion.div
+                      key={index}
+                      className={`glass-surface rounded-2xl p-4 text-center ${
+                        achievement.unlocked ? 'ring-2 ring-green-400/50' : 'opacity-75'
+                      }`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.4, delay: 0.8 + index * 0.1 }}
+                    >
+                      <div className={`text-3xl mb-2 ${achievement.unlocked ? '' : 'grayscale'}`}>
+                        {achievement.icon}
+                      </div>
+                      <div className="text-sm font-semibold text-white mb-1">{achievement.name}</div>
+                      <div className="text-xs text-blue-200">{achievement.description}</div>
+                      {achievement.unlocked && (
+                        <div className="text-xs text-green-300 mt-2 font-semibold">✨ Achieved!</div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.section>
             </div>
 
-            {/* Enhanced Recent Activity Section */}
-            <div className="card-glow bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:border-white/30 transition-all duration-300">
-              <h2 className="text-2xl font-bold mb-6 flex items-center">
-                <span className="text-2xl mr-3">📈</span>
-                Recent Activity
-              </h2>
-              <div className="space-y-4">
-                {recentActivity.length > 0 ? (
-                  recentActivity.map((activity) => (
-                    <div
-                      key={activity.id}
-                      className="group flex items-center justify-between p-4 rounded-2xl bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer hover:scale-105 border border-white/10 hover:border-white/20"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className="text-2xl p-2 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-500/20 group-hover:scale-110 transition-transform duration-300">
-                          {activity.type === 'lesson' ? '📚' : 
-                           activity.type === 'achievement' ? '🏆' : 
-                           activity.type === 'streak' ? '🔥' : '⭐'}
-                        </div>
-                        <div>
-                          <h3 className="font-medium text-white">{activity.title}</h3>
-                          <div className="flex items-center space-x-2 text-sm text-gray-400">
-                            <span>{activity.date}</span>
-                            <span className="text-yellow-400">+{activity.points} XP</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {activity.type === 'lesson' ? (
-                          <span className="text-green-400 text-xl">✓</span>
-                        ) : activity.type === 'achievement' ? (
-                          <span className="text-yellow-400 text-xl">🏆</span>
-                        ) : (
-                          <span className="text-orange-400 text-xl">🔥</span>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <div className="text-6xl mb-4">🚀</div>
-                    <h3 className="text-xl font-semibold text-white mb-2">Ready to Start Learning?</h3>
-                    <p className="text-gray-400 mb-6">Complete your first lesson to see your activity here!</p>
-                    <button
-                      onClick={handleLessonNavigation}
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-400 hover:to-purple-500 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 hover:scale-105"
-                    >
-                      Browse Lessons
-                    </button>
+            {/* Right Column - Sidebar */}
+            <div className="space-y-6">
+              {/* Quick Actions with Glass Effect */}
+              <motion.section
+                className="glass-primary rounded-3xl p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
+                <h2 className="text-lg sm:text-xl font-bold text-white mb-4">⚡ Quick Actions</h2>
+                <div className="space-y-3">
+                  <button
+                    onClick={handleLessonNavigation}
+                    className="w-full glass-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white p-3 rounded-xl transition-all duration-300 text-left flex items-center gap-2"
+                  >
+                    <span className="text-lg">🔍</span>
+                    <span className="text-sm font-medium">Explore Lessons</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/profile')}
+                    className="w-full glass-button bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white p-3 rounded-xl transition-all duration-300 text-left flex items-center gap-2"
+                  >
+                    <span className="text-lg">👤</span>
+                    <span className="text-sm font-medium">View Profile</span>
+                  </button>
+                  <button
+                    onClick={() => navigate('/ai-news')}
+                    className="w-full glass-button bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white p-3 rounded-xl transition-all duration-300 text-left flex items-center gap-2"
+                  >
+                    <span className="text-lg">📰</span>
+                    <span className="text-sm font-medium">AI News</span>
+                  </button>
+                </div>
+              </motion.section>
+
+              {/* Learning Goals with Glass Effect */}
+              <motion.section
+                className="glass-secondary rounded-3xl p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+              >
+                <h2 className="text-lg sm:text-xl font-bold text-white mb-4">🎯 This Week's Goal</h2>
+                <div className="glass-surface rounded-2xl p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-medium text-white">Complete 3 lessons</span>
+                    <span className="text-sm text-purple-200">{Math.min(userStats.lessonsCompleted || 0, 3)}/3</span>
                   </div>
-                )}
-              </div>
+                  <div className="w-full glass-surface rounded-full h-3 mb-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-400 to-pink-400 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((userStats.lessonsCompleted || 0) / 3 * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-purple-200">
+                    {(userStats.lessonsCompleted || 0) >= 3 
+                      ? "🎉 Goal achieved! You're crushing it!" 
+                      : `${Math.max(0, 3 - (userStats.lessonsCompleted || 0))} more to reach your goal!`
+                    }
+                  </p>
+                </div>
+              </motion.section>
+
+              {/* AI Learning Tip with Glass Effect */}
+              <motion.section
+                className="glass-accent rounded-3xl p-6"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 1.0 }}
+              >
+                <h2 className="text-lg sm:text-xl font-bold text-white mb-4">💡 Daily AI Tip</h2>
+                <div className="glass-surface rounded-2xl p-4">
+                  <p className="text-sm text-cyan-100 leading-relaxed">
+                    "When working with AI models, specificity in your prompts leads to better results. 
+                    Instead of asking 'Tell me about dogs,' try 'Explain the key differences between 
+                    training a Golden Retriever versus a Border Collie for agility competitions.'"
+                  </p>
+                  <div className="text-xs text-cyan-300 mt-3 text-right">— AI Training Wisdom</div>
+                </div>
+              </motion.section>
             </div>
           </div>
-
-          {/* Enhanced Continue Learning Section */}
-          <section className="text-center">
-            <div className="max-w-2xl mx-auto">
-              <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-500 to-cyan-400 bg-clip-text text-transparent">
-                Ready for More?
-              </h2>
-              <p className="text-gray-300 mb-8 text-lg leading-relaxed">
-                Continue your AI learning journey with personalized lessons and engaging content
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <button
-                  onClick={handleLessonNavigation}
-                  className="dashboard-shadow group bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-bold py-4 px-8 rounded-2xl transition-all duration-300 hover:scale-105 text-lg"
-                >
-                  <div className="flex items-center justify-center space-x-2">
-                    <span>Continue Learning</span>
-                    <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </button>
-                
-                <button
-                  onClick={() => navigate('/learning-path/adaptive-quiz')}
-                  className="pulse-shadow group bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-white font-semibold py-4 px-8 rounded-2xl transition-all duration-300 hover:scale-105 text-lg"
-                >
-                  <div className="flex items-center justify-center space-x-2">
-                    <span>Create Learning Path</span>
-                    <span className="text-xl">🎯</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </section>
         </main>
       </div>
     </div>

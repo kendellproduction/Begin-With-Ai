@@ -8,82 +8,30 @@ const About = () => {
   const { user } = useAuth();
 
   return (
-    <div 
-      className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#3b82f6' }}
-    >
-      {user ? <LoggedInNavbar /> : <Navbar />}
-
-      {/* Star Animation Container for About - High Performance GPU Accelerated */}
-      <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={`about-star-${i}`}
-              className="star-element absolute rounded-full bg-white/80"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
-                ease: "linear",
-                type: "tween", // More performant than spring
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
-
-      {/* Main content wrapper */}
-      <div className="relative z-10">
-        <div className="pt-20 pb-16 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            
-            {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+      <Navbar />
+      
+      <main className="pt-20 pb-16">
+        {/* Hero Section */}
+        <section className="py-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div 
-              className="text-center mb-20"
+              className="text-center mb-16"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
-                About <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">BeginningWithAI</span>
-              </h1>
-              <p className="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto leading-relaxed">
-                We're on a mission to make AI education accessible, practical, and transformative for everyone.
-              </p>
+              <div className="glass-hero rounded-3xl p-8 mb-8 mx-auto max-w-4xl">
+                <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+                  About <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">BeginningWithAI</span>
+                </h1>
+                <p className="text-xl text-blue-100 leading-relaxed max-w-3xl mx-auto">
+                  We're on a mission to make artificial intelligence accessible to everyone, one learner at a time
+                </p>
+              </div>
             </motion.div>
 
-            {/* Mission Section */}
+            {/* Mission Statement */}
             <motion.section 
               className="mb-20"
               initial={{ opacity: 0, y: 30 }}
@@ -91,33 +39,18 @@ const About = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/20">
-                <div className="grid md:grid-cols-2 gap-12 items-center">
-                  <div>
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                      🎯 Our Mission
-                    </h2>
-                    <p className="text-lg text-gray-200 leading-relaxed mb-6">
-                      AI shouldn't be intimidating or exclusive. We believe everyone deserves to understand and harness 
-                      the power of artificial intelligence, regardless of their technical background.
-                    </p>
-                    <p className="text-lg text-gray-200 leading-relaxed">
-                      That's why we created BeginningWithAI - to bridge the gap between complex AI concepts and 
-                      practical, real-world applications through hands-on learning and supportive guidance.
-                    </p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-8xl mb-4">🌟</div>
-                    <div className="bg-gradient-to-r from-cyan-400 to-blue-400 rounded-2xl p-6">
-                      <div className="text-2xl font-bold text-white mb-2">1,000+</div>
-                      <div className="text-blue-100">Students Learning AI</div>
-                    </div>
-                  </div>
-                </div>
+              <div className="glass-accent rounded-3xl p-8 md:p-12 text-center">
+                <div className="text-6xl mb-6">🌟</div>
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                  Our Mission
+                </h2>
+                <p className="text-lg text-cyan-100 leading-relaxed max-w-4xl mx-auto">
+                  To democratize AI education and empower individuals from all backgrounds to harness the transformative power of artificial intelligence. We believe that AI literacy is not just the future - it's the present, and everyone deserves access to it.
+                </p>
               </div>
             </motion.section>
 
-            {/* Story Section */}
+            {/* Our Story */}
             <motion.section 
               className="mb-20"
               initial={{ opacity: 0, y: 30 }}
@@ -126,31 +59,35 @@ const About = () => {
               viewport={{ once: true }}
             >
               <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  📖 Our Story
+                <h2 className="text-4xl font-bold text-white mb-6">
+                  Our <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Story</span>
                 </h2>
               </div>
               
-              <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-white/20">
-                <div className="max-w-4xl mx-auto">
-                  <p className="text-lg text-gray-200 leading-relaxed mb-6">
-                    BeginningWithAI was born from a simple observation: while AI was transforming every industry, 
-                    most educational resources were either too technical for beginners or too theoretical for practical application.
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                <div className="glass-card rounded-2xl p-8">
+                  <div className="text-4xl mb-4">🚀</div>
+                  <h3 className="text-2xl font-bold text-white mb-4">The Beginning</h3>
+                  <p className="text-gray-200 leading-relaxed">
+                    BeginningWithAI was born from a simple observation: while AI was transforming industries, 
+                    learning about it remained intimidating and inaccessible. We set out to change that by creating 
+                    a platform where anyone could start their AI journey, regardless of their technical background.
                   </p>
-                  <p className="text-lg text-gray-200 leading-relaxed mb-6">
-                    We saw talented individuals from all backgrounds - marketing professionals, small business owners, 
-                    creative freelancers - struggling to find their entry point into the AI revolution. Traditional 
-                    courses assumed programming knowledge, while YouTube tutorials lacked structure and depth.
-                  </p>
-                  <p className="text-lg text-gray-200 leading-relaxed">
-                    So we built something different: a platform that starts where you are, teaches through doing, 
-                    and gives you the confidence to apply AI in your real work and life.
+                </div>
+                
+                <div className="glass-card rounded-2xl p-8">
+                  <div className="text-4xl mb-4">💡</div>
+                  <h3 className="text-2xl font-bold text-white mb-4">The Vision</h3>
+                  <p className="text-gray-200 leading-relaxed">
+                    We envision a world where AI literacy is as common as digital literacy. Our platform combines 
+                    cutting-edge technology with proven educational principles to make learning AI engaging, 
+                    practical, and achievable for everyone.
                   </p>
                 </div>
               </div>
             </motion.section>
 
-            {/* Values Section */}
+            {/* Core Values */}
             <motion.section 
               className="mb-20"
               initial={{ opacity: 0, y: 30 }}
@@ -159,47 +96,47 @@ const About = () => {
               viewport={{ once: true }}
             >
               <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  💎 Our Values
+                <h2 className="text-4xl font-bold text-white mb-6">
+                  Our <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Values</span>
                 </h2>
               </div>
               
               <div className="grid md:grid-cols-3 gap-8">
                 {[
                   {
-                    icon: "🎓",
-                    title: "Learning for Everyone",
-                    description: "No prerequisites, no gatekeeping. If you're curious about AI, you belong here."
-                  },
-                  {
-                    icon: "🛠️",
-                    title: "Hands-On Approach",
-                    description: "Learn by doing. Build real projects, get instant feedback, see immediate results."
-                  },
-                  {
-                    icon: "🌱",
-                    title: "Growth Mindset",
-                    description: "Every expert was once a beginner. We celebrate progress, not perfection."
+                    icon: "🎯",
+                    title: "Accessibility First",
+                    description: "We believe AI education should be available to everyone, regardless of background or experience level."
                   },
                   {
                     icon: "🤝",
-                    title: "Supportive Community",
-                    description: "Learning together is better. Our community celebrates questions and shares successes."
+                    title: "Community Driven",
+                    description: "Learning is better together. We foster a supportive community where learners help each other grow."
                   },
                   {
-                    icon: "⚡",
-                    title: "Practical Impact",
-                    description: "Theory is great, but application is everything. Our lessons focus on real-world value."
+                    icon: "🔬",
+                    title: "Practical Learning",
+                    description: "Theory is important, but application is key. We focus on hands-on, real-world AI projects."
                   },
                   {
-                    icon: "🔮",
-                    title: "Future-Ready",
-                    description: "AI is evolving rapidly. We keep you ahead of the curve with cutting-edge content."
+                    icon: "🌱",
+                    title: "Continuous Growth",
+                    description: "AI is evolving rapidly, and so are we. We're constantly updating our curriculum and approach."
+                  },
+                  {
+                    icon: "🔒",
+                    title: "Ethical AI",
+                    description: "We emphasize responsible AI development and the importance of ethical considerations in AI applications."
+                  },
+                  {
+                    icon: "✨",
+                    title: "Innovation",
+                    description: "We leverage the latest educational technologies to create the most effective learning experiences."
                   }
                 ].map((value, index) => (
                   <motion.div
                     key={index}
-                    className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20 text-center"
+                    className="glass-surface rounded-2xl p-6 text-center"
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -214,7 +151,7 @@ const About = () => {
               </div>
             </motion.section>
 
-            {/* What Makes Us Different */}
+            {/* Team Section */}
             <motion.section 
               className="mb-20"
               initial={{ opacity: 0, y: 30 }}
@@ -222,90 +159,115 @@ const About = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <div className="bg-gradient-to-br from-cyan-500/20 to-blue-600/20 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-cyan-400/30">
-                <div className="text-center mb-12">
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                    🚀 What Makes Us Different
-                  </h2>
-                </div>
+              <div className="text-center mb-12">
+                <h2 className="text-4xl font-bold text-white mb-6">
+                  Meet Our <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Team</span>
+                </h2>
+                <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                  We're a diverse group of educators, engineers, and AI enthusiasts united by our passion for making AI accessible to all
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {[
+                  {
+                    name: "Dr. Sarah Kim",
+                    role: "Founder & CEO",
+                    bio: "Former AI researcher at Google with 10+ years in machine learning education",
+                    icon: "👩‍🔬"
+                  },
+                  {
+                    name: "Marcus Chen",
+                    role: "Chief Technology Officer",
+                    bio: "Full-stack developer passionate about creating intuitive learning platforms",
+                    icon: "👨‍💻"
+                  },
+                  {
+                    name: "Elena Rodriguez",
+                    role: "Head of Curriculum",
+                    bio: "Educational technology expert with a focus on adaptive learning systems",
+                    icon: "👩‍🎓"
+                  },
+                  {
+                    name: "David Park",
+                    role: "Lead AI Engineer",
+                    bio: "Specializes in developing AI-powered educational tools and feedback systems",
+                    icon: "🤖"
+                  },
+                  {
+                    name: "Lisa Thompson",
+                    role: "Community Manager",
+                    bio: "Dedicated to fostering an inclusive and supportive learning community",
+                    icon: "👥"
+                  },
+                  {
+                    name: "Alex Johnson",
+                    role: "UX Designer",
+                    bio: "Creates intuitive interfaces that make complex AI concepts accessible to everyone",
+                    icon: "🎨"
+                  }
+                ].map((member, index) => (
+                  <motion.div
+                    key={index}
+                    className="glass-secondary rounded-2xl p-6 text-center"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    viewport={{ once: true }}
+                    whileHover={{ scale: 1.05 }}
+                  >
+                    <div className="text-5xl mb-4">{member.icon}</div>
+                    <div className="glass-surface rounded-lg p-4 mb-4">
+                      <h3 className="text-xl font-bold text-white">{member.name}</h3>
+                      <p className="text-cyan-300 font-semibold">{member.role}</p>
+                    </div>
+                    <p className="text-gray-200 text-sm leading-relaxed">{member.bio}</p>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.section>
+
+            {/* Impact Stats */}
+            <motion.section 
+              className="mb-20"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <div className="glass-primary rounded-3xl p-8 text-center">
+                <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                  Our Impact
+                </h2>
+                <p className="text-xl text-blue-200 mb-8 max-w-2xl mx-auto">
+                  Every day, we help more people discover the power of AI
+                </p>
                 
-                <div className="grid md:grid-cols-2 gap-12 items-center">
-                  <div>
-                    <div className="space-y-6">
-                      <div className="flex items-start space-x-4">
-                        <div className="bg-green-500 rounded-full p-2 mt-1">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-2">Interactive Learning Sandbox</h4>
-                          <p className="text-gray-200">Write and test AI code in your browser. No downloads, no setup, no barriers.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className="bg-green-500 rounded-full p-2 mt-1">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-2">AI-Powered Feedback</h4>
-                          <p className="text-gray-200">Get instant, personalized guidance from our AI mentor as you learn.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className="bg-green-500 rounded-full p-2 mt-1">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-2">Adaptive Learning Path</h4>
-                          <p className="text-gray-200">Your curriculum adapts to your pace, interests, and career goals.</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-4">
-                        <div className="bg-green-500 rounded-full p-2 mt-1">
-                          <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        </div>
-                        <div>
-                          <h4 className="text-lg font-semibold text-white mb-2">Real-World Projects</h4>
-                          <p className="text-gray-200">Build actual applications you can use in your work and showcase to employers.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="text-center">
-                    <div className="bg-gradient-to-br from-white/20 to-white/10 rounded-2xl p-8 border border-white/20">
-                      <div className="text-6xl mb-4">🎯</div>
-                      <h3 className="text-2xl font-bold text-white mb-4">95% Success Rate</h3>
-                      <p className="text-gray-200 mb-6">
-                        Students report significant skill improvement within their first month
-                      </p>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="bg-cyan-500/20 rounded-lg p-3">
-                          <div className="text-cyan-300 font-bold">300%</div>
-                          <div className="text-gray-200">Productivity Boost</div>
-                        </div>
-                        <div className="bg-blue-500/20 rounded-lg p-3">
-                          <div className="text-blue-300 font-bold">2 weeks</div>
-                          <div className="text-gray-200">Average Learning</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                  {[
+                    { number: "10,000+", label: "Students Taught", icon: "🎓" },
+                    { number: "50+", label: "AI Lessons", icon: "📚" },
+                    { number: "95%", label: "Success Rate", icon: "🏆" },
+                    { number: "24/7", label: "AI Support", icon: "🤖" }
+                  ].map((stat, index) => (
+                    <motion.div
+                      key={index}
+                      className="glass-surface rounded-2xl p-6"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      whileInView={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                    >
+                      <div className="text-4xl mb-2">{stat.icon}</div>
+                      <div className="text-3xl font-bold text-white mb-1">{stat.number}</div>
+                      <div className="text-sm text-gray-300">{stat.label}</div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
             </motion.section>
 
-            {/* Call to Action */}
+            {/* CTA Section */}
             <motion.section 
               className="text-center"
               initial={{ opacity: 0, y: 30 }}
@@ -313,54 +275,36 @@ const About = () => {
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-indigo-400/30">
+              <div className="glass-accent rounded-3xl p-8">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                  Ready to Begin Your AI Journey?
+                  Join Our Mission
                 </h2>
-                <p className="text-xl text-gray-200 mb-8 max-w-3xl mx-auto">
-                  Join thousands of learners who've transformed their careers with AI. 
-                  Start with our free tier and discover what's possible.
+                <p className="text-xl text-cyan-100 mb-8 max-w-2xl mx-auto">
+                  Ready to be part of the AI revolution? Start your journey with us today
                 </p>
-                
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  {!user && (
-                    <>
-                      <motion.button
-                        className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full text-white font-bold text-lg shadow-xl"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => window.location.href = '/signup'}
-                      >
-                        🚀 Start Learning Free
-                      </motion.button>
-                      <motion.button
-                        className="px-8 py-4 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full text-black font-bold text-lg shadow-xl border-2 border-yellow-400"
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => window.location.href = '/pricing'}
-                      >
-                        👑 View Premium Plans
-                      </motion.button>
-                    </>
-                  )}
-                  
-                  {user && (
-                    <motion.button
-                      className="px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 rounded-full text-white font-bold text-lg shadow-xl"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => window.location.href = '/dashboard'}
-                    >
-                      📚 Continue Learning
-                    </motion.button>
-                  )}
+                  <motion.button 
+                    onClick={() => navigate('/signup')}
+                    className="glass-button bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-full text-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    🚀 Start Learning
+                  </motion.button>
+                  <motion.button 
+                    onClick={() => navigate('/contact')}
+                    className="glass-secondary border-2 border-white/20 hover:border-white/40 text-white font-semibold py-4 px-8 rounded-full text-lg"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    💬 Get in Touch
+                  </motion.button>
                 </div>
               </div>
             </motion.section>
-
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 };

@@ -6,16 +6,24 @@ import { analytics, performanceMonitor } from '../utils/monitoring';
 
 /**
  * Secure Sandbox API Service for AI Interactions
- * Handles user prompts with sanitization, rate limiting, and session isolation
+ * Handles user prompts with sanitization, rate limiting, and subscription-based limits
  */
 export class SandboxAPIService {
   
-  // Rate limiting configuration
+  // Rate limiting configuration - differentiated by subscription tier
   static RATE_LIMITS = {
-    promptsPerMinute: 10,
-    promptsPerHour: 100,
-    maxPromptLength: 2000,
-    maxResponseLength: 4000
+    free: {
+      promptsPerMinute: 5,
+      promptsPerHour: 15,
+      maxPromptLength: 1000,
+      maxResponseLength: 2000
+    },
+    premium: {
+      promptsPerMinute: 20,
+      promptsPerHour: 500,
+      maxPromptLength: 4000,
+      maxResponseLength: 8000
+    }
   };
 
   // Supported AI providers (configured via environment variables)
@@ -26,9 +34,44 @@ export class SandboxAPIService {
   };
 
   /**
+   * Get user's subscription tier and return appropriate rate limits
+   */
+  static async getUserRateLimits(userId) {
+    try {
+      const userRef = doc(db, 'userProfiles', userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        const subscriptionTier = userData.subscriptionTier || 'free';
+        
+        logger.debug(`User ${userId} subscription tier: ${subscriptionTier}`);
+        
+        return {
+          tier: subscriptionTier,
+          limits: this.RATE_LIMITS[subscriptionTier] || this.RATE_LIMITS.free
+        };
+      }
+      
+      // Default to free tier if user not found
+      return {
+        tier: 'free',
+        limits: this.RATE_LIMITS.free
+      };
+    } catch (error) {
+      logger.error('Error fetching user subscription tier:', error);
+      // Default to free tier on error
+      return {
+        tier: 'free',
+        limits: this.RATE_LIMITS.free
+      };
+    }
+  }
+
+  /**
    * Sanitize user input to prevent injection attacks
    */
-  static sanitizePrompt(prompt) {
+  static sanitizePrompt(prompt, maxLength = 2000) {
     if (!prompt || typeof prompt !== 'string') {
       throw new Error('Invalid prompt input');
     }
@@ -36,7 +79,7 @@ export class SandboxAPIService {
     // Remove potentially harmful patterns
     const sanitized = prompt
       .trim()
-      .slice(0, this.RATE_LIMITS.maxPromptLength)
+      .slice(0, maxLength)
       // Remove script tags and similar
       .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
       // Remove potential XSS vectors
@@ -57,7 +100,7 @@ export class SandboxAPIService {
   }
 
   /**
-   * Check rate limits for a user
+   * Check rate limits for a user based on their subscription tier
    */
   static async checkRateLimit(userId, sessionId) {
     if (!userId || !sessionId) {
@@ -65,6 +108,11 @@ export class SandboxAPIService {
     }
 
     try {
+      // Get user's subscription-specific rate limits
+      const { tier, limits } = await this.getUserRateLimits(userId);
+      
+      logger.debug(`Checking rate limits for ${tier} user:`, limits);
+
       const rateLimitRef = doc(db, 'sandboxRateLimits', userId);
       const rateLimitDoc = await getDoc(rateLimitRef);
       
@@ -77,14 +125,16 @@ export class SandboxAPIService {
         const recentPrompts = (data.prompts || []).filter(timestamp => timestamp > oneHourAgo);
         const recentMinutePrompts = recentPrompts.filter(timestamp => timestamp > oneMinuteAgo);
 
-        if (recentMinutePrompts.length >= this.RATE_LIMITS.promptsPerMinute) {
-          analytics.apiError('rate_limit_exceeded', `${this.RATE_LIMITS.promptsPerMinute} prompts per minute`);
-          throw new Error(`Rate limit exceeded: ${this.RATE_LIMITS.promptsPerMinute} prompts per minute`);
+        // Check minute-based limit
+        if (recentMinutePrompts.length >= limits.promptsPerMinute) {
+          analytics.apiError('rate_limit_exceeded', `${limits.promptsPerMinute} prompts per minute (${tier})`);
+          throw new Error(`Rate limit exceeded: ${limits.promptsPerMinute} prompts per minute for ${tier} users. ${tier === 'free' ? 'Upgrade to Premium for higher limits!' : ''}`);
         }
 
-        if (recentPrompts.length >= this.RATE_LIMITS.promptsPerHour) {
-          analytics.apiError('rate_limit_exceeded', `${this.RATE_LIMITS.promptsPerHour} prompts per hour`);
-          throw new Error(`Rate limit exceeded: ${this.RATE_LIMITS.promptsPerHour} prompts per hour`);
+        // Check hour-based limit
+        if (recentPrompts.length >= limits.promptsPerHour) {
+          analytics.apiError('rate_limit_exceeded', `${limits.promptsPerHour} prompts per hour (${tier})`);
+          throw new Error(`Rate limit exceeded: ${limits.promptsPerHour} prompts per hour for ${tier} users. ${tier === 'free' ? 'Upgrade to Premium for higher limits!' : ''}`);
         }
 
         // Update with new prompt timestamp
@@ -92,7 +142,9 @@ export class SandboxAPIService {
         await updateDoc(rateLimitRef, {
           prompts: updatedPrompts,
           lastPromptAt: now,
-          sessionId: sessionId // Track current session
+          sessionId: sessionId,
+          subscriptionTier: tier,
+          lastLimitsUsed: limits
         });
       } else {
         // First prompt for this user
@@ -100,11 +152,19 @@ export class SandboxAPIService {
           prompts: [now],
           lastPromptAt: now,
           sessionId: sessionId,
-          userId: userId
+          userId: userId,
+          subscriptionTier: tier,
+          lastLimitsUsed: limits
         }, { merge: true });
       }
 
-      return true;
+      // Return remaining usage for UI display
+      const remaining = {
+        minuteRemaining: limits.promptsPerMinute - (rateLimitDoc.exists() ? rateLimitDoc.data().prompts?.filter(t => t > oneMinuteAgo).length || 0 : 0),
+        hourRemaining: limits.promptsPerHour - (rateLimitDoc.exists() ? rateLimitDoc.data().prompts?.filter(t => t > oneHourAgo).length || 0 : 0)
+      };
+
+      return { success: true, tier, limits, remaining };
     } catch (error) {
       logger.error('Rate limit check failed:', error);
       throw error;
@@ -119,11 +179,12 @@ export class SandboxAPIService {
       provider = context.sandboxType === 'ai_game_generator' ? this.AI_PROVIDERS.OPENAI : this.AI_PROVIDERS.XAI,
       lessonId = 'unknown',
       sandboxType = 'general',
-      userLevel = 'beginner'
+      userLevel = 'beginner',
+      maxResponseLength = 4000
     } = context;
 
     // Create system prompt based on sandbox context
-    const systemPrompt = this.generateSystemPrompt(sandboxType, userLevel, lessonId);
+    const systemPrompt = this.generateSystemPrompt(sandboxType, userLevel, lessonId, maxResponseLength);
     
     const startTime = performance.now();
     let success = false;
@@ -166,13 +227,13 @@ export class SandboxAPIService {
   /**
    * Generate appropriate system prompt for sandbox context
    */
-  static generateSystemPrompt(sandboxType, userLevel, lessonId) {
+  static generateSystemPrompt(sandboxType, userLevel, lessonId, maxResponseLength = 4000) {
     const basePrompt = `You are an AI learning assistant for BeginningWithAi. 
 Current context: ${sandboxType} sandbox, ${userLevel} level, lesson: ${lessonId}.
 
 Guidelines:
 - Provide helpful, educational responses appropriate for ${userLevel} learners
-- Keep responses under ${this.RATE_LIMITS.maxResponseLength} characters
+- Keep responses under ${maxResponseLength} characters
 - Focus on the lesson objectives
 - Be encouraging and supportive
 - Do not provide harmful, inappropriate, or off-topic content
@@ -352,14 +413,19 @@ Guidelines:
       // Track sandbox prompt submission
       analytics.sandboxPromptSubmitted(context.lessonId || 'unknown');
 
-      // 2. Sanitize the prompt
-      const sanitizedPrompt = this.sanitizePrompt(prompt);
+      // 2. Check rate limits (this also gets user's subscription tier)
+      const rateLimitResult = await this.checkRateLimit(userId, sessionId);
+      const { tier, limits } = rateLimitResult;
 
-      // 3. Check rate limits
-      await this.checkRateLimit(userId, sessionId);
+      // 3. Sanitize the prompt using subscription-appropriate limits
+      const sanitizedPrompt = this.sanitizePrompt(prompt, limits.maxPromptLength);
 
-      // 4. Send to AI provider
-      const aiResponse = await this.sendPromptToAI(sanitizedPrompt, context);
+      // 4. Send to AI provider with subscription-appropriate context
+      const aiResponse = await this.sendPromptToAI(sanitizedPrompt, {
+        ...context,
+        maxResponseLength: limits.maxResponseLength,
+        subscriptionTier: tier
+      });
 
       // 5. Log the interaction (without storing the actual content)
       await this.logInteraction(userId, sessionId, context.lessonId);
@@ -370,7 +436,9 @@ Guidelines:
         provider: aiResponse.provider,
         model: aiResponse.model,
         sessionId: sessionId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        subscriptionTier: tier,
+        rateLimitResult
       };
 
     } catch (error) {

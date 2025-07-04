@@ -21,9 +21,16 @@ const LandingPage = () => {
     }
   }, [user, navigate]);
 
+  // Use all available lessons for rotation
+  const featuredLessons = Object.values(lessonsData);
+
   // State management
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
-  const [currentLesson, setCurrentLesson] = useState(0);
+  const [currentLesson, setCurrentLesson] = useState(() => {
+    // Rotate lesson based on page load time for variety
+    const randomIndex = Math.floor(Math.random() * featuredLessons.length);
+    return randomIndex;
+  });
   const [isVisible, setIsVisible] = useState({});
   
   // Auth modal states
@@ -37,8 +44,13 @@ const LandingPage = () => {
   const [authSuccess, setAuthSuccess] = useState(false);
   const [redirectToPremiumAfterAuth, setRedirectToPremiumAfterAuth] = useState(false);
 
-  // Use first 6 lessons from real data for rotation
-  const featuredLessons = Object.values(lessonsData).slice(0, 6);
+  // Auto-rotate lessons every 6 seconds for better reading time
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentLesson((prev) => (prev + 1) % featuredLessons.length);
+    }, 6000);
+    return () => clearInterval(interval);
+  }, [featuredLessons.length]);
 
   // Data collections
   const testimonials = [
@@ -99,6 +111,45 @@ const LandingPage = () => {
       title: "Career Ready Skills",
       description: "Master the latest AI tools companies use",
       benefit: "Become immediately valuable to employers"
+    }
+  ];
+
+  const learningAreas = [
+    {
+      icon: "🤖",
+      title: "AI Fundamentals",
+      description: "Master the core concepts of artificial intelligence, machine learning, and deep learning through interactive lessons",
+      outcome: "Build your first AI model"
+    },
+    {
+      icon: "💬",
+      title: "Prompt Engineering",
+      description: "Learn to craft effective prompts for ChatGPT, Claude, and other AI assistants to maximize their potential",
+      outcome: "10x your AI productivity"
+    },
+    {
+      icon: "🔧",
+      title: "AI Tools Mastery",
+      description: "Hands-on experience with cutting-edge AI tools for content creation, automation, and problem-solving",
+      outcome: "Automate your workflows"
+    },
+    {
+      icon: "📊",
+      title: "Data Analysis",
+      description: "Transform raw data into actionable insights using AI-powered analytics and visualization tools",
+      outcome: "Make data-driven decisions"
+    },
+    {
+      icon: "🎨",
+      title: "Creative AI",
+      description: "Explore AI-powered content creation for images, videos, music, and written content",
+      outcome: "Create professional content"
+    },
+    {
+      icon: "🚀",
+      title: "AI in Business",
+      description: "Apply AI solutions to real business challenges and learn to implement AI strategies effectively",
+      outcome: "Lead AI transformation"
     }
   ];
 
@@ -253,317 +304,207 @@ const LandingPage = () => {
         style={{ backgroundColor: '#3b82f6' }}
       >
         {/* Animated Moving Stars */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          {[...Array(170)].map((_, i) => {
-            const screenH = window.innerHeight;
-            const screenW = window.innerWidth; // Define screenW for consistency
-            // Generate stars in a spatial band 2x the screen dimensions (width and height), centered on the screen.
-            // This allows stars to originate from well outside the viewport and travel across it.
-            const initialY = Math.random() * screenH * 2.0 - screenH * 0.5;
-            const targetY = Math.random() * screenH * 2.0 - screenH * 0.5;
+        <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
+          {[...Array(200)].map((_, i) => {
+            const screenH = typeof window !== 'undefined' ? window.innerHeight : 800;
+            const screenW = typeof window !== 'undefined' ? window.innerWidth : 1200;
             
-            const initialX = Math.random() * screenW * 2.0 - screenW * 0.5;
-            const targetX = Math.random() * screenW * 2.0 - screenW * 0.5;
-            const starDuration = 25 + Math.random() * 30; // Slightly longer average duration
+            const initialY = Math.random() * screenH;
+            const targetY = Math.random() * screenH;
+            const initialX = Math.random() * screenW;
+            const targetX = Math.random() * screenW;
+            
+            // Slower, more relaxed animations (15-30 seconds)
+            const starDuration = 15 + Math.random() * 15;
+            
+            // Enhanced star varieties
+            const starSize = Math.random() * 3 + 1; // 1-4px
+            const isLargeStar = i % 12 === 0;
+            const isMediumStar = i % 6 === 0;
+            const isPulsingStar = i % 8 === 0;
+            
+            const starOpacity = isLargeStar ? [0, 1, 0.8, 0] : 
+                              isMediumStar ? [0, 0.9, 0.7, 0] : 
+                              [0, 0.7, 0.5, 0];
 
             return (
               <motion.div
-                key={`hero-star-${i}`}
-                className="absolute"
+                key={`landing-star-${i}`}
+                className={`star-element absolute rounded-full ${
+                  isLargeStar ? 'bg-white' : 
+                  isMediumStar ? 'bg-blue-100' : 
+                  'bg-white'
+                } ${isPulsingStar ? 'star-pulse-optimized' : ''}`}
+                style={{
+                  width: starSize,
+                  height: starSize,
+                  filter: isLargeStar ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 
+                         isMediumStar ? 'drop-shadow(0 0 3px rgba(255,255,255,0.6))' : 
+                         'drop-shadow(0 0 2px rgba(255,255,255,0.4))',
+                }}
                 initial={{
                   x: initialX,
                   y: initialY,
-                  opacity: 0, 
+                  opacity: 0,
+                  scale: 0.3,
                 }}
                 animate={{
-                  x: targetX, 
-                  y: targetY, 
-                  opacity: [0, 0.7, 0.7, 0], 
+                  x: targetX,
+                  y: targetY,
+                  opacity: starOpacity,
+                  scale: isLargeStar ? [0.3, 1.2, 1, 0.3] : [0.3, 1, 1, 0.3],
                 }}
                 transition={{
                   duration: starDuration,
                   repeat: Infinity,
-                  repeatDelay: Math.random() * 3 + 1, // Adjusted repeatDelay
+                  repeatDelay: Math.random() * 2 + 1,
                   ease: "linear",
-                  opacity: { 
+                  type: "tween",
+                  opacity: {
                     duration: starDuration,
-                    ease: "linear",
-                    times: [0, 0.1, 0.85, 1], 
-                    repeat: Infinity, 
-                    repeatDelay: Math.random() * 3 + 1 // Match main repeatDelay
+                    ease: "easeInOut",
+                    times: [0, 0.2, 0.8, 1],
+                    repeat: Infinity,
+                    repeatDelay: Math.random() * 2 + 1,
+                  },
+                  scale: {
+                    duration: starDuration,
+                    ease: "easeInOut",
+                    times: [0, 0.3, 0.7, 1],
+                    repeat: Infinity,
+                    repeatDelay: Math.random() * 2 + 1,
                   }
                 }}
-              >
-                {/* Inner div for appearance (sizes, pulse, color tint) - REMAINS THE SAME */}
-                <div 
-                  className={`bg-white/40 rounded-full ${ 
-                    i % 18 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
-                    i % 9 === 0 ? 'w-2 h-2' :   
-                    i % 5 === 0 ? 'w-1.5 h-1.5' : 
-                    'w-1 h-1' 
-                  }`}
-                  style={{
-                    filter: `hue-rotate(${Math.random() * 45}deg)`,
-                    animationDelay: `${Math.random() * 4}s`,
-                  }}
-                ></div>
-              </motion.div>
+              />
             );
           })}
         </div>
 
-        {/* Floating Elements */}
-        <motion.div
-          className="absolute top-20 left-20 text-6xl"
-          animate={{ 
-            y: [0, -20, 0],
-            rotate: [0, 360, 0] 
-          }}
-          transition={{ 
-            duration: 6,
-            repeat: Infinity,
-            ease: "easeInOut" 
-          }}
-        >
-          ✨
-        </motion.div>
-        
-        <motion.div
-          className="absolute bottom-32 right-20 text-5xl"
-          animate={{ 
-            y: [0, -30, 0],
-            x: [0, 10, 0] 
-          }}
-          transition={{ 
-            duration: 4,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 1 
-          }}
-        >
-          🚀
-        </motion.div>
-
-        <motion.div
-          className="absolute top-1/3 right-32 text-4xl"
-          animate={{ 
-            scale: [1, 1.2, 1],
-            rotate: [0, -360, 0] 
-          }}
-          transition={{ 
-            duration: 8,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 2 
-          }}
-        >
-          🏆
-        </motion.div>
-
-        {/* Hero Content - Moved Up and Improved Colors */}
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Column - Text Content */}
+            {/* Left side - Main content */}
             <motion.div 
-              className="space-y-8 text-center lg:text-left"
+              className="text-center lg:text-left"
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, ease: "easeOut" }}
+              transition={{ duration: 1 }}
             >
-              <motion.h1 
-                className="text-5xl md:text-7xl lg:text-8xl font-bold leading-tight"
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.2 }}
-              >
-                <span className="block bg-gradient-to-r from-cyan-300 via-blue-300 to-indigo-300 bg-clip-text text-transparent">
-                  Master AI
-                </span>
-                <span className="block text-white mt-4">
-                  Build. Learn.
-                  <span className="bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent"> Succeed.</span>
-                </span>
-              </motion.h1>
-
-              <motion.p 
-                className="text-xl md:text-2xl text-white max-w-2xl leading-relaxed"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.4 }}
-              >
-                Transform your career with hands-on AI projects. Build real applications, get instant feedback, and become job-ready in weeks, not years.
-              </motion.p>
-
-              <motion.div 
-                className="flex flex-col sm:flex-row gap-4 lg:justify-start justify-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 1, delay: 0.6 }}
-              >
-                <motion.button
-                  onClick={() => openAuthModal('signup')}
-                  className="group relative px-8 py-4 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full text-white font-bold text-lg shadow-xl hover:shadow-2xl min-w-[280px]"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
+              <div className="mb-8">
+                <motion.h1 
+                  className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-blue-400 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
-                  <span className="relative flex items-center justify-center gap-2">
+                  Master <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI</span>
+                  <br />Build. Learn.
+                  <br /><span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Succeed.</span>
+                </motion.h1>
+
+                <motion.p 
+                  className="text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                >
+                  Transform your career with hands-on AI projects. Build real applications, get instant feedback, and become job-ready in weeks, not years.
+                </motion.p>
+
+                {/* CTA Buttons */}
+                <motion.div 
+                  className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                >
+                  <motion.button
+                    onClick={() => openAuthModal('signup')}
+                    className="bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-2xl transform transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
                     🚀 Start Building Today - FREE
-                  </span>
-                </motion.button>
-                
-                <motion.button
-                  onClick={handlePremiumCTA}
-                  className="group relative px-8 py-4 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 rounded-full text-black font-bold text-lg shadow-xl hover:shadow-2xl min-w-[280px] border-2 border-yellow-300"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
+                  </motion.button>
+                  <motion.button
+                    onClick={handlePremiumCTA}
+                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-4 px-8 rounded-2xl text-lg shadow-2xl transform transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    ⚠️ Go Premium Now - $10/mo
+                  </motion.button>
+                </motion.div>
+
+                {/* Feature bullets */}
+                <motion.div 
+                  className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start text-sm"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
                 >
-                  <span className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-amber-400 to-orange-400 rounded-full blur opacity-40 group-hover:opacity-70 transition-opacity"></span>
-                  <span className="relative flex items-center justify-center gap-2">
-                    👑 Go Premium Now - $10/mo
-                  </span>
-                </motion.button>
-              </motion.div>
-
-              <motion.div 
-                className="flex items-center gap-8 text-sm text-gray-100 lg:justify-start justify-center flex-wrap"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.8 }}
-              >
-                <span className="flex items-center gap-2">✅ No credit card for free tier</span>
-                <span className="flex items-center gap-2">⚡ Instant access</span>
-                <span className="flex items-center gap-2">👑 Premium: Full AI toolkit</span>
-              </motion.div>
-
-              {/* Replace "fastest growing" with "Join thousands" banner */}
-              <motion.div 
-                className="bg-gradient-to-r from-cyan-100/90 via-blue-100/90 to-indigo-100/90 rounded-xl p-4 border border-cyan-300/70 backdrop-blur-md shadow-lg hover:shadow-cyan-500/20 transition-shadow duration-300"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, delay: 1.0 }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {['👩‍💻', '👨‍🎓', '👩‍🔬', '👨‍💼'].map((emoji, i) => (
-                      <motion.div 
-                        key={i} 
-                        className="w-8 h-8 bg-gradient-to-tr from-cyan-500 via-blue-500 to-indigo-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-sm"
-                        initial={{ scale: 0, rotate: -45 }}
-                        animate={{ scale: 1, rotate: 0 }}
-                        transition={{ duration: 0.4, delay: 1.2 + (i * 0.1), type: "spring", stiffness: 150 }}
-                      >
-                        {emoji}
-                      </motion.div>
-                    ))}
-                    <motion.div 
-                      className="w-8 h-8 bg-gradient-to-tr from-yellow-400 via-orange-400 to-red-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-xs font-bold text-white"
-                      initial={{ scale: 0, rotate: -45 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      transition={{ duration: 0.4, delay: 1.6, type: "spring", stiffness: 150 }}
-                    >
-                      +
-                    </motion.div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-400">✓</span>
+                    <span className="text-blue-200">No credit card for free tier</span>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-sm text-gray-800 font-bold leading-tight">
-                      🎉 Join thousands of AI learners worldwide!
-                    </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-400">⚡</span>
+                    <span className="text-blue-200">Instant access</span>
                   </div>
-                </div>
-              </motion.div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-orange-400">⚠️</span>
+                    <span className="text-blue-200">Premium: Full AI toolkit</span>
+                  </div>
+                </motion.div>
+              </div>
             </motion.div>
 
-            {/* Right Column - Rotating Lesson Showcase */}
+            {/* Right side - Lesson preview */}
             <motion.div 
               className="relative"
               initial={{ opacity: 0, x: 50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, delay: 0.5 }}
             >
-              <div className="relative bg-gray-900/70 rounded-3xl p-8 border border-cyan-500/30 backdrop-blur-xl shadow-2xl">
-                <div className="aspect-video bg-black/50 rounded-xl flex items-center justify-center border border-cyan-600/40 overflow-hidden">
-                  <div className="text-center p-6">
-                    <motion.div 
-                      className="text-6xl mb-4"
-                      key={currentLesson}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      {featuredLessons[currentLesson]?.category === 'Language Models' ? '🤖' :
-                       featuredLessons[currentLesson]?.category === 'Computer Vision' ? '👁️' :
-                       featuredLessons[currentLesson]?.category === 'Deep Learning' ? '🧠' :
-                       featuredLessons[currentLesson]?.category === 'Ethics & Policy' ? '⚖️' :
-                       featuredLessons[currentLesson]?.category === 'Tools & Platforms' ? '🛠️' : '🎯'}
-                    </motion.div>
-                    <motion.h3 
-                      className="text-gray-200 text-lg font-semibold mb-2"
-                      key={`title-${currentLesson}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.1 }}
-                    >
-                      {featuredLessons[currentLesson]?.title}
-                    </motion.h3>
-                    <motion.p 
-                      className="text-sm text-gray-400 mb-4 line-clamp-2"
-                      key={`desc-${currentLesson}`}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: 0.2 }}
-                    >
-                      {featuredLessons[currentLesson]?.description}
-                    </motion.p>
-                    <motion.div 
-                      className="flex items-center justify-center gap-3 mb-4"
-                      key={`meta-${currentLesson}`}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.5, delay: 0.3 }}
-                    >
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                        featuredLessons[currentLesson]?.difficulty === 'Beginner' ? 'bg-green-500/20 text-green-400' :
-                        featuredLessons[currentLesson]?.difficulty === 'Intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                        'bg-red-500/20 text-red-400'
-                      }`}>
-                        {featuredLessons[currentLesson]?.difficulty}
-                      </span>
-                      <span className="text-gray-400 text-xs">⏱️ {featuredLessons[currentLesson]?.duration}</span>
-                    </motion.div>
-                    <motion.button 
-                      onClick={() => openAuthModal('signup')}
-                      className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-500 text-white rounded-full font-semibold shadow-lg hover:shadow-cyan-500/30"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      ▶ Start This Lesson
-                    </motion.button>
+              <div className="bg-gray-800/90 rounded-3xl p-6 border border-gray-600/50 shadow-2xl">
+                <div className="bg-gray-900/90 rounded-2xl p-6 border border-gray-700/50">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className="text-5xl">🎯</div>
+                  </div>
+                  <h3 className="text-white text-xl font-bold text-center mb-3">Introduction to AI</h3>
+                  <p className="text-gray-300 text-sm text-center mb-4 leading-relaxed">
+                    Master the fundamentals of artificial intelligence and machine learning. 
+                    Learn about neural networks, deep learning, and how AI is transformin...
+                  </p>
+                  <div className="flex items-center justify-between mb-4 text-xs">
+                    <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded-full font-semibold">Beginner</span>
+                    <span className="text-gray-400">⏱️ 45 min</span>
+                  </div>
+                  <motion.button
+                    onClick={() => openAuthModal('signup')}
+                    className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-3 px-6 rounded-xl text-sm shadow-xl transform transition-all duration-300"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    ▶ Start This Lesson
+                  </motion.button>
+                </div>
+                
+                {/* Features below lesson preview */}
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-green-400 text-lg">🌱</span>
+                    <span className="text-white text-sm font-medium">Live interactive lessons</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-yellow-400 text-lg">⚡</span>
+                    <span className="text-white text-sm font-medium">Real-time feedback</span>
                   </div>
                 </div>
-                <motion.div 
-                  className="mt-6 flex items-center justify-between"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
-                >
-                  <div className="flex items-center gap-3">
-                    <motion.div 
-                      className="w-3 h-3 bg-green-400 rounded-full"
-                      animate={{ scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
-                    />
-                    <span className="text-sm text-gray-300">Live interactive lessons</span>
-                  </div>
-                  <div className="text-sm text-gray-400">Real-time feedback ⚡</div>
-                </motion.div>
               </div>
 
-              {/* Enhanced Floating Elements */}
+              {/* Floating Elements */}
               <motion.div 
-                className="absolute -top-8 -right-8 bg-gradient-to-r from-pink-500 to-purple-500 rounded-2xl p-4 shadow-xl text-white"
+                className="absolute -top-4 -right-4 bg-purple-500 rounded-2xl p-3 shadow-xl text-white"
                 animate={{ 
                   y: [0, -10, 0],
                   rotate: [0, 5, -5, 0] 
@@ -574,11 +515,11 @@ const LandingPage = () => {
                   ease: "easeInOut" 
                 }}
               >
-                <div className="text-2xl">✨</div>
+                <div className="text-xl">✨</div>
               </motion.div>
               
               <motion.div 
-                className="absolute -bottom-8 -left-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-2xl p-4 shadow-xl text-white"
+                className="absolute -bottom-4 -left-4 bg-orange-500 rounded-2xl p-3 shadow-xl text-white"
                 animate={{ 
                   scale: [1, 1.1, 1],
                   rotate: [0, -5, 5, 0] 
@@ -590,25 +531,226 @@ const LandingPage = () => {
                   delay: 0.5 
                 }}
               >
-                <div className="text-2xl">🏆</div>
-              </motion.div>
-              
-              <motion.div 
-                className="absolute top-1/3 -left-16 bg-gradient-to-r from-teal-400 to-cyan-500 rounded-2xl p-3 shadow-xl text-white"
-                animate={{ 
-                  x: [0, 5, -5, 0],
-                  y: [0, -5, 5, 0] 
-                }}
-                transition={{ 
-                  duration: 4,
-                  repeat: Infinity,
-                  ease: "easeInOut",
-                  delay: 1 
-                }}
-              >
-                <div className="text-lg">🚀</div>
+                <div className="text-xl">🚀</div>
               </motion.div>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* What You'll Learn Section */}
+      <section className="py-20 bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              What You'll <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Master</span>
+            </h2>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+              From AI fundamentals to advanced applications, our comprehensive curriculum covers everything you need to succeed
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {learningAreas.map((area, index) => (
+              <motion.div
+                key={index}
+                className="glass-card rounded-2xl p-8 text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="text-5xl mb-6">{area.icon}</div>
+                <h3 className="text-xl font-bold text-white mb-4">{area.title}</h3>
+                <p className="text-gray-300 leading-relaxed mb-6">{area.description}</p>
+                <div className="glass-surface rounded-lg p-3">
+                  <p className="text-cyan-300 font-semibold text-sm">✨ {area.outcome}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-20 bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Join Thousands of <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI Learners</span>
+            </h2>
+          </motion.div>
+          
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, index) => (
+              <motion.div
+                key={index}
+                className="text-center group"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <div className="glass-card rounded-3xl p-8 h-full">
+                  <motion.div 
+                    className="text-6xl mb-6"
+                    animate={{ rotate: [0, 5, -5, 0] }}
+                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
+                  >
+                    {stat.icon}
+                  </motion.div>
+                  <div className="text-4xl md:text-5xl font-bold text-white mb-3 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    {stat.number}
+                  </div>
+                  <div className="text-xl font-semibold text-gray-300 mb-3">{stat.label}</div>
+                  <div className="text-sm text-gray-500">{stat.description}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Real Lessons Showcase Section - Redesigned for Maximum Visibility */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
+              Real <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI Lessons</span>
+            </h2>
+            <p className="text-xl text-gray-200 max-w-3xl mx-auto">
+              Master practical AI skills through our comprehensive curriculum. From fundamentals to advanced applications.
+            </p>
+          </motion.div>
+
+          {/* Featured lesson carousel - Redesigned for better visibility */}
+          <div className="mb-12">
+            <div className="relative">
+              {featuredLessons.map((lesson, index) => (
+                <motion.div
+                  key={index}
+                  className={`${index === currentLesson ? 'block' : 'hidden'}`}
+                  initial={{ opacity: 0, x: 100 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+                    <div className="grid lg:grid-cols-2 gap-12 items-center">
+                      {/* Left side - Lesson Content */}
+                      <div className="space-y-6">
+                        <div className="flex gap-4 text-sm">
+                          <span className={`px-4 py-2 rounded-full font-bold ${
+                            lesson.difficulty === 'Beginner' ? 'bg-green-500 text-white' :
+                            lesson.difficulty === 'Intermediate' ? 'bg-yellow-500 text-black' :
+                            'bg-red-500 text-white'
+                          }`}>
+                            {lesson.difficulty}
+                          </span>
+                          <span className="bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full font-semibold">⏱️ {lesson.duration}</span>
+                          <span className="bg-purple-500/20 text-purple-300 px-4 py-2 rounded-full font-semibold">🏢 {lesson.company}</span>
+                        </div>
+                        
+                        <h3 className="text-4xl font-bold text-white leading-tight">{lesson.title}</h3>
+                        <p className="text-xl text-gray-200 leading-relaxed">{lesson.description}</p>
+                        
+                        <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-600">
+                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <span className="text-2xl">🎯</span>
+                            What you'll learn:
+                          </h4>
+                          <ul className="space-y-3 text-gray-200">
+                            {lesson.learningObjectives?.slice(0, 3).map((objective, idx) => (
+                              <li key={idx} className="flex items-start gap-3">
+                                <span className="text-cyan-400 mt-1 text-lg">✓</span>
+                                <span className="text-base">{objective}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        
+                        <motion.button
+                          onClick={() => openAuthModal('signup')}
+                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-xl transition-all duration-300 transform hover:scale-105"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          🚀 Start This Lesson
+                        </motion.button>
+                      </div>
+                      
+                      {/* Right side - Lesson Preview */}
+                      <motion.div 
+                        className="relative"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
+                          <div className="text-center">
+                            <div className="text-6xl mb-4">{lesson.icon}</div>
+                            <div className="text-2xl font-bold text-white mb-6">{lesson.category}</div>
+                            
+                            {/* Feature highlights */}
+                            <div className="grid grid-cols-2 gap-4 mb-6">
+                              <div className="bg-cyan-500/20 rounded-xl p-4 border border-cyan-500/30">
+                                <div className="text-cyan-300 font-bold text-lg">Hands-on</div>
+                                <div className="text-gray-300">Projects</div>
+                              </div>
+                              <div className="bg-green-500/20 rounded-xl p-4 border border-green-500/30">
+                                <div className="text-green-300 font-bold text-lg">Real-time</div>
+                                <div className="text-gray-300">Feedback</div>
+                              </div>
+                            </div>
+                            
+                            {/* Skills badge */}
+                            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm">
+                              {lesson.tags?.length || 3}+ Skills You'll Master
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {/* Lesson navigation - Enhanced */}
+              <div className="flex justify-center mt-8 gap-3">
+                {featuredLessons.map((_, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => setCurrentLesson(index)}
+                    className={`h-4 rounded-full transition-all duration-300 ${
+                      index === currentLesson
+                        ? 'bg-cyan-500 w-12 shadow-lg shadow-cyan-500/50'
+                        : 'bg-gray-600 hover:bg-gray-500 w-4'
+                    }`}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -617,43 +759,42 @@ const LandingPage = () => {
       <section className="py-20 bg-gradient-to-br from-gray-900/80 via-blue-900/60 to-indigo-900/70 relative overflow-hidden">
         {/* Moving Stars Background */}
         <div className="absolute inset-0 z-0">
-          {[...Array(80)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-              }}
-              animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-                ],
-              }}
-              transition={{
-                duration: 12 + Math.random() * 8,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 6,
-              }}
-            >
-              <div 
-                className={`bg-white/20 rounded-full ${
-                  i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
-                  i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
+          {[...Array(80)].map((_, i) => {
+            const startX = (i * 137.5) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
+            const startY = (i * 73.7) % (typeof window !== 'undefined' ? window.innerHeight : 600);
+            return (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  x: startX,
+                  y: startY,
                 }}
-              ></div>
-            </motion.div>
-          ))}
+                animate={{
+                  x: [startX, startX + (Math.random() - 0.5) * 100],
+                  y: [startY, startY + (Math.random() - 0.5) * 100],
+                }}
+                transition={{
+                  duration: 12 + Math.random() * 8,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: Math.random() * 6,
+                }}
+              >
+                <div 
+                  className={`bg-white/20 rounded-full ${
+                    i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
+                    i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
+                  }`}
+                  style={{
+                    filter: `hue-rotate(${Math.random() * 60}deg)`,
+                    animationDelay: `${Math.random() * 3}s`,
+                  }}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -818,224 +959,48 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Your Perfect Starting Point - No Experience Needed Section */}
-      <section className="py-32 bg-gradient-to-br from-gray-700/30 via-blue-800/20 to-cyan-800/20 relative overflow-hidden">
-        {/* Enhanced Moving Stars Background */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(140)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-              }}
-              animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                ],
-              }}
-              transition={{
-                duration: 15 + Math.random() * 12,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 8,
-              }}
-            >
-              <div 
-                className={`bg-white/35 rounded-full ${
-                  i % 16 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
-                  i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
-                }}
-              ></div>
-            </motion.div>
-          ))}
-        </div>
 
-        {/* Additional floating particles */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(60)].map((_, i) => (
-            <motion.div
-              key={`particle-${i}`}
-              className="absolute w-1 h-1 bg-cyan-300/40 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                opacity: [0.4, 0.9, 0.4],
-                scale: [1, 1.3, 1],
-              }}
-              transition={{
-                duration: 4 + Math.random() * 3,
-                repeat: Infinity,
-                delay: Math.random() * 3,
-              }}
-            />
-          ))}
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Updated Header for Starting Point */}
-          <motion.div 
-            className="text-center mb-20"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              Your Perfect <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Starting Point</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
-              Don't know where to begin with AI? We've designed BeginningWithAI specifically for complete beginners. 
-              No technical background required - just curiosity and the desire to learn. Let us be your trusted guide 
-              into the world of artificial intelligence.
-            </p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
-            {[
-              {
-                icon: "🎯",
-                title: "Zero to Hero Path", 
-                description: "Start with zero AI knowledge and become confident in weeks",
-                benefit: "We know exactly where beginners struggle"
-              },
-              {
-                icon: "🤝", 
-                title: "Your Trusted Guide",
-                description: "Like having a patient AI mentor by your side 24/7",
-                benefit: "No question is too basic - we're here to help"
-              },
-              {
-                icon: "🎮",
-                title: "Learn Like Playing",
-                description: "Interactive projects that feel more like games than work", 
-                benefit: "Learning should be fun, not intimidating"
-              },
-              {
-                icon: "✨",
-                title: "Build Real Confidence",
-                description: "Create actual AI projects you can show friends and employers",
-                benefit: "See your progress with tangible results"
-              }
-            ].map((feature, index) => (
-              <motion.div 
-                key={index} 
-                className="bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl p-8 border border-white/10 text-center group"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05, rotateY: 5 }}
-              >
-                <motion.div 
-                  className="text-5xl mb-6"
-                  animate={{ 
-                    rotate: [0, 10, -10, 0],
-                    scale: [1, 1.1, 1] 
-                  }}
-                  transition={{ 
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: index * 0.5 
-                  }}
-                >
-                  {feature.icon}
-                </motion.div>
-                <h3 className="text-2xl font-bold text-white mb-4">{feature.title}</h3>
-                <p className="text-gray-300 mb-4 leading-relaxed">{feature.description}</p>
-                <div className="bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg p-4">
-                  <p className="text-cyan-300 font-semibold text-sm">{feature.benefit}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Trust Building Statement */}
-          <motion.div 
-            className="text-center bg-gradient-to-br from-cyan-900/30 to-blue-900/30 rounded-3xl p-12 border border-cyan-500/30 backdrop-blur-sm"
-            initial={{ opacity: 0, scale: 0.95 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <div className="text-6xl mb-6">🌟</div>
-            <h3 className="text-3xl font-bold text-white mb-6">
-              "Finally, AI education that <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">makes sense</span>"
-            </h3>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-              We believe everyone deserves to understand AI, regardless of their background. 
-              That's why we've carefully crafted every lesson to be approachable, engaging, and practical. 
-              Join thousands of learners who started just like you - curious but unsure where to begin.
-            </p>
-            <motion.div 
-              className="mt-8 inline-flex items-center gap-2 bg-gradient-to-r from-green-500/20 to-emerald-500/20 rounded-full px-6 py-3 border border-green-500/30"
-              animate={{ scale: [1, 1.02, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-            >
-              <span className="text-green-400 font-semibold">✓ Safe learning environment</span>
-            </motion.div>
-          </motion.div>
-        </div>
-      </section>
 
       {/* Enhanced Stats Section */}
       <section className="py-32 bg-gradient-to-br from-gray-800/60 via-blue-900/40 to-indigo-900/40 relative overflow-hidden">
         {/* Moving Stars Background */}
         <div className="absolute inset-0 z-0">
-          {[...Array(80)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-              }}
-              animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                ],
-              }}
-              transition={{
-                duration: 12 + Math.random() * 15,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 8,
-              }}
-            >
-              <div 
-                className={`bg-white/30 rounded-full ${
-                  i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
-                  i % 7 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
+          {[...Array(80)].map((_, i) => {
+            const startX = (i * 157.2) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
+            const startY = (i * 103.8) % (typeof window !== 'undefined' ? window.innerHeight : 800);
+            return (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  x: startX,
+                  y: startY,
                 }}
-              ></div>
-            </motion.div>
-          ))}
+                animate={{
+                  x: [startX, startX + (Math.random() - 0.5) * 90],
+                  y: [startY, startY + (Math.random() - 0.5) * 90],
+                }}
+                transition={{
+                  duration: 12 + Math.random() * 15,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: Math.random() * 8,
+                }}
+              >
+                <div 
+                  className={`bg-white/30 rounded-full ${
+                    i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
+                    i % 7 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
+                  }`}
+                  style={{
+                    filter: `hue-rotate(${Math.random() * 60}deg)`,
+                    animationDelay: `${Math.random() * 3}s`,
+                  }}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="absolute inset-0">
@@ -1085,7 +1050,7 @@ const LandingPage = () => {
                 viewport={{ once: true }}
                 whileHover={{ scale: 1.05 }}
               >
-                <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-3xl p-8 backdrop-blur-sm border border-white/10 group-hover:border-cyan-500/50 transition-all duration-300 h-full">
+                <div className="glass-card rounded-3xl p-8 h-full">
                   <motion.div 
                     className="text-6xl mb-6"
                     animate={{ rotate: [0, 5, -5, 0] }}
@@ -1109,191 +1074,42 @@ const LandingPage = () => {
       <section className="py-20 bg-gradient-to-br from-gray-900 via-blue-900/80 to-indigo-900/70 relative overflow-hidden">
         {/* Moving Stars Background */}
         <div className="absolute inset-0 z-0">
-          {[...Array(100)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-              }}
-              animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
-                ],
-              }}
-              transition={{
-                duration: 14 + Math.random() * 12,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 6,
-              }}
-            >
-              <div 
-                className={`bg-white/25 rounded-full ${
-                  i % 15 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
-                  i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
+          {[...Array(100)].map((_, i) => {
+            const startX = (i * 112.7) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
+            const startY = (i * 89.3) % (typeof window !== 'undefined' ? window.innerHeight : 800);
+            return (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  x: startX,
+                  y: startY,
                 }}
-              ></div>
-            </motion.div>
-          ))}
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
-            className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
-              Real <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI Lessons</span>
-            </h2>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Master practical AI skills through our comprehensive curriculum. From fundamentals to advanced applications.
-            </p>
-          </motion.div>
-
-          {/* Featured lesson carousel - using real data */}
-          <div className="mb-12">
-            <div className="relative">
-              {featuredLessons.map((lesson, index) => (
-                <motion.div
-                  key={index}
-                  className={`${index === currentLesson ? 'block' : 'hidden'}`}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="grid lg:grid-cols-2 gap-12 items-center">
-                    <div className="space-y-6">
-                      <div className="flex gap-4 text-sm">
-                        <span className={`px-3 py-1 rounded-full font-semibold ${
-                          lesson.difficulty === 'Beginner' ? 'bg-green-500/20 text-green-400' :
-                          lesson.difficulty === 'Intermediate' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-red-500/20 text-red-400'
-                        }`}>
-                          {lesson.difficulty}
-                        </span>
-                        <span className="text-gray-400">⏱️ {lesson.duration}</span>
-                        <span className="text-gray-400">🏢 {lesson.company}</span>
-                      </div>
-                      
-                      <h3 className="text-4xl font-bold text-white">{lesson.title}</h3>
-                      <p className="text-xl text-gray-300 leading-relaxed">{lesson.description}</p>
-                      
-                      <div className="space-y-4">
-                        <h4 className="text-lg font-semibold text-white">Key Topics:</h4>
-                        <div className="flex flex-wrap gap-3">
-                          {(lesson.models || ['AI Fundamentals', 'Interactive Learning', 'Practical Skills']).map((model, i) => (
-                            <motion.span 
-                              key={i} 
-                              className="px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full text-cyan-300 border border-cyan-500/30 text-sm font-medium"
-                              whileHover={{ scale: 1.05 }}
-                            >
-                              {model}
-                            </motion.span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex gap-4">
-                        <motion.button 
-                          onClick={() => openAuthModal('signup')} 
-                          className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full text-white font-semibold"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          Start Learning
-                        </motion.button>
-                        <motion.button 
-                          className="px-6 py-3 border border-white/20 rounded-full text-white hover:bg-white/10 transition-colors"
-                          whileHover={{ scale: 1.05 }}
-                        >
-                          View Details
-                        </motion.button>
-                      </div>
-                    </div>
-
-                    <motion.div 
-                      className="relative"
-                      whileHover={{ scale: 1.02 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <div className="aspect-square bg-gradient-to-br from-gray-800/80 to-gray-900/80 rounded-2xl border border-white/10 flex items-center justify-center backdrop-blur-sm">
-                        <div className="text-center">
-                          <motion.div 
-                            className="text-8xl mb-4"
-                            animate={{ 
-                              scale: [1, 1.1, 1],
-                              rotate: [0, 5, -5, 0] 
-                            }}
-                            transition={{ 
-                              duration: 3,
-                              repeat: Infinity,
-                              delay: index * 0.5 
-                            }}
-                          >
-                            {lesson.category === 'Language Models' ? '🤖' :
-                             lesson.category === 'Computer Vision' ? '👁️' :
-                             lesson.category === 'Deep Learning' ? '🧠' :
-                             lesson.category === 'Ethics & Policy' ? '⚖️' :
-                             lesson.category === 'Tools & Platforms' ? '🛠️' : '🎯'}
-                          </motion.div>
-                          <p className="text-gray-400 mb-4">{lesson.category}</p>
-                          <motion.button 
-                            className="px-6 py-2 bg-gradient-to-r from-cyan-400 to-blue-400 text-white rounded-full font-semibold"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            ▶ Explore Lesson
-                          </motion.button>
-                        </div>
-                      </div>
-                      
-                      <motion.div 
-                        className="absolute top-4 right-4 bg-black/70 rounded-xl p-3 backdrop-blur-sm"
-                        animate={{ y: [0, -5, 0] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      >
-                        <div className="text-cyan-400 font-semibold text-sm">{lesson.tags?.length || 3}+ Skills</div>
-                      </motion.div>
-                    </motion.div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Lesson navigation */}
-              <div className="flex justify-center mt-8 gap-3">
-                {featuredLessons.map((_, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => setCurrentLesson(index)}
-                    className={`w-4 h-4 rounded-full transition-all duration-300 ${
-                      index === currentLesson
-                        ? 'bg-cyan-500 w-12'
-                        : 'bg-gray-600 hover:bg-gray-500'
-                    }`}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
+                animate={{
+                  x: [startX, startX + (Math.random() - 0.5) * 80],
+                  y: [startY, startY + (Math.random() - 0.5) * 80],
+                }}
+                transition={{
+                  duration: 14 + Math.random() * 12,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: Math.random() * 6,
+                }}
+              >
+                <div 
+                  className={`bg-white/25 rounded-full ${
+                    i % 15 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
+                    i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
+                  }`}
+                  style={{
+                    filter: `hue-rotate(${Math.random() * 60}deg)`,
+                    animationDelay: `${Math.random() * 3}s`,
+                  }}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
@@ -1301,45 +1117,42 @@ const LandingPage = () => {
       <section className="py-32 bg-gradient-to-br from-gray-800/50 via-blue-800/30 to-cyan-800/30 relative overflow-hidden">
         {/* Enhanced Moving Stars Background for Success Stories */}
         <div className="absolute inset-0 z-0">
-          {[...Array(140)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-              }}
-              animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                ],
-              }}
-              transition={{
-                duration: 15 + Math.random() * 12,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 8,
-              }}
-            >
-              <div 
-                className={`bg-white/35 rounded-full ${
-                  i % 16 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
-                  i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
+          {[...Array(140)].map((_, i) => {
+            const startX = (i * 97.2) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
+            const startY = (i * 67.1) % (typeof window !== 'undefined' ? window.innerHeight : 1000);
+            return (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  x: startX,
+                  y: startY,
                 }}
-              ></div>
-            </motion.div>
-          ))}
+                animate={{
+                  x: [startX, startX + (Math.random() - 0.5) * 120],
+                  y: [startY, startY + (Math.random() - 0.5) * 120],
+                }}
+                transition={{
+                  duration: 15 + Math.random() * 12,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: Math.random() * 8,
+                }}
+              >
+                <div 
+                  className={`bg-white/35 rounded-full ${
+                    i % 16 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
+                    i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
+                  }`}
+                  style={{
+                    filter: `hue-rotate(${Math.random() * 60}deg)`,
+                    animationDelay: `${Math.random() * 3}s`,
+                  }}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
 
         {/* Additional floating particles for testimonials section */}
@@ -1458,45 +1271,42 @@ const LandingPage = () => {
       <section className="py-32 relative overflow-hidden" style={{ backgroundColor: '#3b82f6' }}>
         {/* Moving Stars Background */}
         <div className="absolute inset-0 z-0">
-          {[...Array(150)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute"
-              initial={{
-                x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-              }}
-              animate={{
-                x: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                ],
-                y: [
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                  Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 1000),
-                ],
-              }}
-              transition={{
-                duration: 18 + Math.random() * 12,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 12,
-              }}
-            >
-              <div 
-                className={`bg-white/15 rounded-full ${
-                  i % 20 === 0 ? 'w-3 h-3 animate-pulse' : 
-                  i % 10 === 0 ? 'w-2 h-2' : 'w-1 h-1'
-                }`}
-                style={{
-                  filter: `hue-rotate(${Math.random() * 60}deg)`,
-                  animationDelay: `${Math.random() * 3}s`,
+          {[...Array(150)].map((_, i) => {
+            const startX = (i * 83.4) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
+            const startY = (i * 51.9) % (typeof window !== 'undefined' ? window.innerHeight : 1000);
+            return (
+              <motion.div
+                key={i}
+                className="absolute"
+                initial={{
+                  x: startX,
+                  y: startY,
                 }}
-              ></div>
-            </motion.div>
-          ))}
+                animate={{
+                  x: [startX, startX + (Math.random() - 0.5) * 150],
+                  y: [startY, startY + (Math.random() - 0.5) * 150],
+                }}
+                transition={{
+                  duration: 18 + Math.random() * 12,
+                  repeat: Infinity,
+                  repeatType: "reverse",
+                  ease: "easeInOut",
+                  delay: Math.random() * 12,
+                }}
+              >
+                <div 
+                  className={`bg-white/15 rounded-full ${
+                    i % 20 === 0 ? 'w-3 h-3 animate-pulse' : 
+                    i % 10 === 0 ? 'w-2 h-2' : 'w-1 h-1'
+                  }`}
+                  style={{
+                    filter: `hue-rotate(${Math.random() * 60}deg)`,
+                    animationDelay: `${Math.random() * 3}s`,
+                  }}
+                ></div>
+              </motion.div>
+            );
+          })}
         </div>
 
         <div className="absolute inset-0">

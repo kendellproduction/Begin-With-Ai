@@ -3,7 +3,20 @@ export const localLessonsData = {
   'vibe-code-video-game': {
     id: 'vibe-code-video-game',
     title: 'Create a Video Game with AI',
+    description: 'Learn to use AI to help you build an interactive video game from scratch with real-time code preview',
     coreConcept: 'Learn to use AI to help you build an interactive video game step by step',
+    difficulty: 'Beginner',
+    duration: '30 min',
+    category: 'Game Development',
+    company: 'BeginningWithAI',
+    icon: '🎮',
+    tags: ['javascript', 'game-dev', 'ai-assisted', 'interactive'],
+    learningObjectives: [
+      'Use AI to brainstorm creative game concepts and mechanics',
+      'Get AI assistance for writing game code in JavaScript',
+      'Learn to debug and improve your game with AI feedback',
+      'Understand how to iterate and enhance your game design'
+    ],
     adaptedContent: {
       estimatedTime: 30,
       xpReward: 200,
@@ -51,7 +64,20 @@ export const localLessonsData = {
   'welcome-ai-revolution': {
     id: 'welcome-ai-revolution',
     title: 'AI History: How We Got Here & Where We\'re Going',
+    description: 'Understanding how AI evolved from 1950s research to today\'s tools like ChatGPT, and where we\'re headed next',
     coreConcept: 'Understanding how AI evolved from 1950s research to today\'s tools like ChatGPT, and where we\'re headed next',
+    difficulty: 'Beginner',
+    duration: '25 min',
+    category: 'AI Fundamentals',
+    company: 'BeginningWithAI',
+    icon: '🤖',
+    tags: ['history', 'fundamentals', 'overview', 'chatgpt'],
+    learningObjectives: [
+      'Understand AI\'s evolution from 1950s research to modern tools',
+      'Learn about key breakthroughs that shaped AI development',
+      'Discover how ChatGPT changed everything in 2022',
+      'Explore where AI is heading in the next decade'
+    ],
     adaptedContent: {
       estimatedTime: 25,
       xpReward: 150,
@@ -85,6 +111,114 @@ export const localLessonsData = {
         ]
       }
     }
+  },
+  'prompt-engineering-mastery': {
+    id: 'prompt-engineering-mastery',
+    title: 'Master the Art of Prompt Engineering',
+    description: 'Learn how to craft effective prompts that get exactly what you want from AI assistants like ChatGPT and Claude',
+    coreConcept: 'Master the techniques of prompt engineering to get better results from AI assistants',
+    difficulty: 'Intermediate',
+    duration: '40 min',
+    category: 'Prompt Engineering',
+    company: 'BeginningWithAI',
+    icon: '✍️',
+    tags: ['prompts', 'chatgpt', 'claude', 'techniques', 'advanced'],
+    learningObjectives: [
+      'Learn the fundamentals of effective prompt structure',
+      'Master advanced techniques like chain-of-thought prompting',
+      'Understand how to get consistent results from AI',
+      'Practice with real-world prompt examples'
+    ]
+  },
+  'ai-image-generation': {
+    id: 'ai-image-generation',
+    title: 'Create Stunning Images with AI',
+    description: 'Master tools like DALL-E, Midjourney, and Stable Diffusion to generate professional-quality images from text',
+    coreConcept: 'Learn to create professional images using AI image generation tools',
+    difficulty: 'Intermediate',
+    duration: '35 min',
+    category: 'Creative AI',
+    company: 'BeginningWithAI',
+    icon: '🎨',
+    tags: ['dall-e', 'midjourney', 'stable-diffusion', 'creative', 'images'],
+    learningObjectives: [
+      'Master different AI image generation platforms',
+      'Learn to write effective image prompts',
+      'Understand style guides and artistic techniques',
+      'Create consistent brand imagery with AI'
+    ]
+  },
+  'ai-data-analysis': {
+    id: 'ai-data-analysis',
+    title: 'Analyze Data Like a Pro with AI',
+    description: 'Transform raw data into actionable insights using AI-powered analytics tools and techniques',
+    coreConcept: 'Use AI to analyze data, create visualizations, and extract meaningful insights',
+    difficulty: 'Advanced',
+    duration: '50 min',
+    category: 'Data Analysis',
+    company: 'BeginningWithAI',
+    icon: '📊',
+    tags: ['data', 'analytics', 'python', 'visualization', 'insights'],
+    learningObjectives: [
+      'Use AI to clean and prepare datasets',
+      'Generate data visualizations with AI assistance',
+      'Extract insights from complex data patterns',
+      'Create automated data analysis workflows'
+    ]
+  },
+  'ai-coding-assistant': {
+    id: 'ai-coding-assistant',
+    title: 'Code Faster with AI Assistants',
+    description: 'Learn to use GitHub Copilot, Cursor AI, and other coding assistants to write better code faster',
+    coreConcept: 'Master AI-powered coding tools to accelerate your development workflow',
+    difficulty: 'Intermediate',
+    duration: '45 min',
+    category: 'Programming',
+    company: 'BeginningWithAI',
+    icon: '💻',
+    tags: ['github-copilot', 'cursor', 'coding', 'productivity', 'development'],
+    learningObjectives: [
+      'Set up and configure AI coding assistants',
+      'Learn best practices for AI-assisted coding',
+      'Debug and optimize code with AI help',
+      'Build full applications with AI assistance'
+    ]
+  },
+  'ai-business-automation': {
+    id: 'ai-business-automation',
+    title: 'Automate Your Business with AI',
+    description: 'Discover how to use AI to automate workflows, improve efficiency, and scale your business operations',
+    coreConcept: 'Learn to implement AI automation solutions for business processes',
+    difficulty: 'Advanced',
+    duration: '55 min',
+    category: 'Business AI',
+    company: 'BeginningWithAI',
+    icon: '🚀',
+    tags: ['automation', 'business', 'workflows', 'efficiency', 'scaling'],
+    learningObjectives: [
+      'Identify automation opportunities in your business',
+      'Set up AI-powered workflow automation',
+      'Integrate AI with existing business tools',
+      'Measure and optimize AI automation ROI'
+    ]
+  },
+  'ai-content-creation': {
+    id: 'ai-content-creation',
+    title: 'Create Compelling Content with AI',
+    description: 'Master AI tools for writing, video creation, and content marketing that engages your audience',
+    coreConcept: 'Use AI to create high-quality content across multiple formats and platforms',
+    difficulty: 'Beginner',
+    duration: '30 min',
+    category: 'Content Creation',
+    company: 'BeginningWithAI',
+    icon: '📝',
+    tags: ['content', 'writing', 'video', 'marketing', 'creativity'],
+    learningObjectives: [
+      'Write engaging copy with AI assistance',
+      'Create video content using AI tools',
+      'Develop content strategies with AI insights',
+      'Scale content production efficiently'
+    ]
   }
 };
 
