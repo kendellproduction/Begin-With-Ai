@@ -530,57 +530,8 @@ const HomePage = () => {
         className="relative min-h-screen text-white overflow-hidden"
         style={{backgroundColor: '#3b82f6'}}
       >
-        {/* Star Animation */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-
-          
-                      {[...Array(120)].map((_, i) => { // 120 homepage stars
-            // Create variety in star types like AI News page
-            const isLargeStar = i % 10 === 0; // 10% large stars
-            const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars (excluding large)
-            
-            // Use the same size range as AI News page
-            let size;
-            if (isLargeStar) {
-              size = 3 + Math.random() * 2; // 3-5px for large stars
-            } else if (isMediumStar) {
-              size = 2 + Math.random() * 1; // 2-3px for medium stars
-            } else {
-              size = 0.5 + Math.random() * 1.5; // 0.5-2px for small stars
-            }
-            
-            const opacity = isLargeStar ? 0.9 : isMediumStar ? 0.85 : 0.8;
-            const duration = Math.random() * 6 + 8; // 8-14 seconds normal speed
-            const delay = Math.random() * 3; // 0-3 seconds delay
-
-            const initialY = Math.random() * 100;
-            const targetY = Math.random() * 100;
-            
-            const initialX = Math.random() * 100;
-            const targetX = Math.random() * 100;
-
-            return (
-              <div
-                key={`home-star-${i}`}
-                className="absolute rounded-full bg-white shadow-lg star-floating"
-                                  style={{
-                  width: size,
-                  height: size,
-                  left: `${initialX}%`,
-                  top: `${initialY}%`,
-                  opacity: opacity,
-                  boxShadow: '0 0 4px rgba(255, 255, 255, 0.7)',
-                  animationDuration: `${duration}s`,
-                  animationDelay: `${delay}s`,
-                  animationIterationCount: 'infinite',
-                  animationDirection: 'alternate',
-                  '--drift-x': `${Math.random() * 80 - 40}px`,
-                  '--drift-y': `${Math.random() * 80 - 40}px`,
-                }}
-              />
-            );
-          })}
-        </div>
+        {/* Optimized Star Field */}
+        <OptimizedStarField starCount={180} opacity={0.9} speed={1} size={1.2} />
 
         <div className="relative z-20">
           <LoggedInNavbar />

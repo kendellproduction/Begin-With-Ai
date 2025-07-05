@@ -56,8 +56,8 @@ const OptimizedStarField = ({
       const baseDuration = 8 + Math.random() * 12; // 8-20 seconds
       const starDuration = baseDuration / speed;
       
-      // Slightly different opacity for larger stars
-      const baseOpacity = isLargeStar ? 0.9 : isMediumStar ? 0.85 : 0.8;
+      // Increased opacity for better visibility
+      const baseOpacity = isLargeStar ? 0.95 : isMediumStar ? 0.9 : 0.85;
       
       return {
         id: i,
@@ -67,7 +67,7 @@ const OptimizedStarField = ({
         targetY,
         size: starSize,
         duration: starDuration,
-        delay: Math.random() * 5 + 2, // 2-7 second delay
+        delay: Math.random() * 0.5, // 0-0.5 second delay (much faster start)
         baseOpacity,
         isLarge: isLargeStar,
         isMedium: isMediumStar
@@ -88,17 +88,17 @@ const OptimizedStarField = ({
         <motion.div
           key={star.id}
           className={`star-element absolute rounded-full ${
-            star.isLarge ? 'bg-white/90' : 
-            star.isMedium ? 'bg-white/85' : 
-            'bg-white/80'
+            star.isLarge ? 'bg-white/95' : 
+            star.isMedium ? 'bg-white/90' : 
+            'bg-white/85'
           }`}
           style={{
             width: star.size,
             height: star.size,
-            // Add subtle glow for larger stars
-            boxShadow: star.isLarge ? '0 0 4px rgba(255, 255, 255, 0.6)' : 
-                      star.isMedium ? '0 0 2px rgba(255, 255, 255, 0.4)' : 
-                      'none'
+            // Enhanced glow for better visibility
+            boxShadow: star.isLarge ? '0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.4)' : 
+                      star.isMedium ? '0 0 4px rgba(255, 255, 255, 0.6), 0 0 8px rgba(255, 255, 255, 0.3)' : 
+                      '0 0 2px rgba(255, 255, 255, 0.4)'
           }}
           initial={{
             x: star.initialX,
@@ -119,7 +119,7 @@ const OptimizedStarField = ({
             opacity: {
               duration: star.duration,
               ease: "linear",
-              times: [0, 0.1, 0.85, 1],
+              times: [0, 0.05, 0.95, 1], // Faster fade-in, longer visibility
               repeat: Infinity,
               repeatDelay: star.delay,
             }
