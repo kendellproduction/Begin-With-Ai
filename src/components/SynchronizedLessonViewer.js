@@ -7,6 +7,8 @@ import { useGamification } from '../contexts/GamificationContext';
 import ContentBlockRenderer from './ContentBlocks/ContentBlockRenderer';
 import { BLOCK_TYPES } from './ContentBlocks/constants';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
+import IntegratedPodcastPlayer from './IntegratedPodcastPlayer';
+import OptimizedStarField from './OptimizedStarField';
 import logger from '../utils/logger';
 
 const SynchronizedLessonViewer = () => {
@@ -115,6 +117,10 @@ const SynchronizedLessonViewer = () => {
         }
         
         // Create quiz section
+        const correctAnswerIndex = slide.content.options?.findIndex(opt => opt.correct === true) || 0;
+        
+
+        
         const quizSection = {
           id: `quiz-${sectionIndex}`,
           type: 'quiz',  
@@ -124,9 +130,9 @@ const SynchronizedLessonViewer = () => {
             type: BLOCK_TYPES.QUIZ,
             content: {
               question: slide.content.question,
-              options: slide.content.options,
-              correctAnswer: slide.content.options?.findIndex(opt => opt.correct === true) || 0,
-              correctFeedback: slide.content.explanation,
+              options: slide.content.options?.map(opt => opt.text) || slide.content.options,
+              correctAnswer: correctAnswerIndex,
+              correctFeedback: slide.content.explanation || "Correct! Well done.",
               incorrectFeedback: "Not quite right. Try again!"
             },
             config: {
@@ -335,108 +341,74 @@ const SynchronizedLessonViewer = () => {
     );
   }
 
+  // Podcast data with fixed audio source
+  const podcastData = {
+    audioUrl: "/HomePageHeroVideo.mp4", // Use the MP4 file that exists in public folder
+    title: lesson?.title || "The Incredible True Story of Artificial Intelligence",
+    chapters: [
+      { title: "The Codebreaker Who Started It All", time: 0 },
+      { title: "When the Internet Changed Everything", time: audioTimestamps.section2_start },
+      { title: "The Day AI Became Everyone's Assistant", time: audioTimestamps.section3_start }
+    ]
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
-      {/* Fixed Audio Player */}
-      <div className="fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-sm border-b border-gray-700">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          {/* Audio Element */}
-          <audio
-            ref={audioRef}
-            src="/The Incredible Story of AI_ From Turing to Today.wav"
-            preload="metadata"
-            onError={() => {
-              console.warn('Audio file not found - running in demo mode');
-              // Component will still work without audio
-            }}
-          />
-          
-          {/* Player Header */}
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-lg font-bold text-white">{lesson?.title}</h2>
-              <p className="text-sm text-gray-400">Synchronized Audio Experience</p>
-            </div>
-            
-            {/* Pause Status */}
-            {isPaused && pauseReason === 'quiz' && (
-              <div className="flex items-center space-x-2 text-orange-400">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <span className="text-sm font-medium">Paused for Quiz</span>
-              </div>
-            )}
-          </div>
-
-          {/* Progress Bar */}
-          <div className="mb-4">
-            <div 
-              className="w-full h-2 bg-gray-700 rounded-full cursor-pointer relative group"
-              onClick={(e) => {
-                const clickX = e.nativeEvent.offsetX;
-                const width = e.target.offsetWidth;
-                const newTime = (clickX / width) * duration;
-                seekAudio(newTime);
-              }}
-            >
-              <div 
-                className="h-full bg-gradient-to-r from-purple-500 to-blue-500 rounded-full transition-all duration-150"
-                style={{ width: `${progressPercentage}%` }}
-              />
-            </div>
-            <div className="flex justify-between text-gray-400 text-sm mt-1">
-              <span>{formatTime(currentTime)}</span>
-              <span>{formatTime(duration)}</span>
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="flex items-center justify-center space-x-4">
-            <button
-              onClick={() => seekAudio(Math.max(0, currentTime - 15))}
-              className="text-gray-400 hover:text-white transition-colors p-2"
-              title="Skip back 15s"
-            >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8z"/>
-                <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">15</text>
-              </svg>
-            </button>
-
-            <button
-              onClick={togglePlayPause}
-              disabled={pauseReason === 'quiz'}
-              className="bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-full p-3 transition-colors shadow-lg"
-            >
-              {isPlaying ? (
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
-                </svg>
-              ) : (
-                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              )}
-            </button>
-
-            <button
-              onClick={() => seekAudio(Math.min(duration, currentTime + 30))}
-              className="text-gray-400 hover:text-white transition-colors p-2"
-              title="Skip forward 30s"
-            >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 5V1l5 5-5 5V7c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6h2c0 4.42-3.58 8-8 8s-8-3.58-8-8 3.58-8 8-8z"/>
-                <text x="12" y="16" textAnchor="middle" fontSize="8" fill="currentColor">30</text>
-              </svg>
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative overflow-hidden">
+      {/* Optimized Star Field Background */}
+      <OptimizedStarField starCount={180} opacity={0.8} speed={0.5} size={1.2} />
+      
+      {/* Quiz pause notification */}
+      {isPaused && pauseReason === 'quiz' && (
+        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 bg-orange-500/90 text-white px-4 py-2 rounded-lg shadow-lg">
+          <div className="flex items-center space-x-2">
+            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">Audio paused for quiz - answer to continue!</span>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Lesson Content */}
-      <div className="pt-40 pb-8">
-        <div className="max-w-4xl mx-auto px-4 space-y-8">
+      {/* Lesson Header with Integrated Player */}
+      <div className="relative z-10 py-8">
+        <div className="max-w-4xl mx-auto px-4 space-y-6">
+          {/* Lesson Title */}
+          <div className="text-center">
+            <button
+              onClick={() => navigate('/lessons')}
+              className="flex items-center text-gray-400 hover:text-white transition-colors mb-6 mx-auto"
+            >
+              <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M19 11H7.414l4.293-4.293a1 1 0 00-1.414-1.414l-6 6a1 1 0 000 1.414l6 6a1 1 0 001.414-1.414L7.414 13H19a1 1 0 100-2z"/>
+              </svg>
+              Back to Lessons
+            </button>
+            
+            <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4">
+              {lesson?.title || 'The Incredible Story of AI'}
+            </h1>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto mb-6">
+              {lesson?.description || 'Journey through the fascinating evolution of artificial intelligence'}
+            </p>
+          </div>
+
+          {/* Integrated Podcast Player */}
+          <div className="relative z-20 mb-16">
+            <IntegratedPodcastPlayer
+              audioUrl="/The Incredible Story of AI_ From Turing to Today.wav" // Your uploaded AI history audio
+              title={podcastData.title}
+              chapters={podcastData.chapters}
+              onTimeUpdate={(time) => setCurrentTime(time)}
+              className=""
+            />
+          </div>
+          
+          {/* Spacer for better separation */}
+          <div className="h-8"></div>
+        </div>
+
+        {/* Lesson Content */}
+        <div className="relative z-10 max-w-4xl mx-auto px-4 space-y-8">
           {contentSections.map((section, sectionIndex) => (
             <motion.div
               key={section.id}

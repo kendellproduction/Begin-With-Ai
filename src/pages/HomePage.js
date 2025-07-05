@@ -513,33 +513,85 @@ const HomePage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+      <div className="min-h-screen text-white" style={{backgroundColor: '#3b82f6'}}>
         <LoggedInNavbar />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
-            <p className="text-xl text-gray-300">Preparing your AI learning dashboard...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
+            <p className="text-xl text-blue-100">Preparing your AI learning dashboard...</p>
           </div>
         </div>
       </div>
     );
   }
 
-  return (
-    <div 
-      className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
-    >
-      <LoggedInNavbar />
+      return (
+      <div 
+        className="relative min-h-screen text-white overflow-hidden"
+        style={{backgroundColor: '#3b82f6'}}
+      >
+        {/* Star Animation */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
 
-      {/* Optimized Star Field */}
-      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
+          
+                      {[...Array(120)].map((_, i) => { // 120 homepage stars
+            // Create variety in star types like AI News page
+            const isLargeStar = i % 10 === 0; // 10% large stars
+            const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars (excluding large)
+            
+            // Use the same size range as AI News page
+            let size;
+            if (isLargeStar) {
+              size = 3 + Math.random() * 2; // 3-5px for large stars
+            } else if (isMediumStar) {
+              size = 2 + Math.random() * 1; // 2-3px for medium stars
+            } else {
+              size = 0.5 + Math.random() * 1.5; // 0.5-2px for small stars
+            }
+            
+            const opacity = isLargeStar ? 0.9 : isMediumStar ? 0.85 : 0.8;
+            const duration = Math.random() * 6 + 8; // 8-14 seconds normal speed
+            const delay = Math.random() * 3; // 0-3 seconds delay
+
+            const initialY = Math.random() * 100;
+            const targetY = Math.random() * 100;
+            
+            const initialX = Math.random() * 100;
+            const targetX = Math.random() * 100;
+
+            return (
+              <div
+                key={`home-star-${i}`}
+                className="absolute rounded-full bg-white shadow-lg star-floating"
+                                  style={{
+                  width: size,
+                  height: size,
+                  left: `${initialX}%`,
+                  top: `${initialY}%`,
+                  opacity: opacity,
+                  boxShadow: '0 0 4px rgba(255, 255, 255, 0.7)',
+                  animationDuration: `${duration}s`,
+                  animationDelay: `${delay}s`,
+                  animationIterationCount: 'infinite',
+                  animationDirection: 'alternate',
+                  '--drift-x': `${Math.random() * 80 - 40}px`,
+                  '--drift-y': `${Math.random() * 80 - 40}px`,
+                }}
+              />
+            );
+          })}
+        </div>
+
+        <div className="relative z-20">
+          <LoggedInNavbar />
+        </div>
 
       {/* Main content wrapper */}
       <div className="relative z-10">
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Welcome Section */}
             <section className="mb-6">
-              <div className="glass-card p-6 relative transition-all duration-500">
+              <div className="glass-card rounded-xl p-6 shadow-lg relative transition-all duration-500">
                 
                 {/* Greeting and Quote */}
                 <div className="text-center mb-4">
@@ -551,21 +603,21 @@ const HomePage = () => {
                   </p>
                 </div>
 
-                {/* Real User Stats - Updated with enhanced glassmorphism */}
+                {/* Real User Stats - Glass style */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                  <div className="glass-warning rounded-xl p-3 text-center transition-all duration-300">
+                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-orange-300">{userStats.currentStreak || 0}</div>
                     <div className="text-xs text-blue-200">Day Streak 🔥</div>
                   </div>
-                  <div className="glass-success rounded-xl p-3 text-center transition-all duration-300">
+                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-green-300">{userStats.completedLessons || 0}</div>
                     <div className="text-xs text-blue-200">Lessons Done ✅</div>
                   </div>
-                  <div className="glass-card rounded-xl p-3 text-center transition-all duration-300">
+                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-yellow-300">{userStats.xp || 0}</div>
                     <div className="text-xs text-blue-200">Total XP ⭐</div>
                   </div>
-                  <div className="glass-secondary rounded-xl p-3 text-center transition-all duration-300">
+                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-purple-300">Lv.{userStats.level || 1}</div>
                     <div className="text-xs text-blue-200">Current Level 🏆</div>
                   </div>

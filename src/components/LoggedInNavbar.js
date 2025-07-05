@@ -48,7 +48,7 @@ const LoggedInNavbar = () => {
     setIsProfileOpen(!isProfileOpen);
   };
 
-  const numStars = 50;
+  const numStars = 30; // 30 navbar stars
 
   return (
     <nav 
@@ -61,8 +61,21 @@ const LoggedInNavbar = () => {
     >
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[...Array(numStars)].map((_, i) => {
-          const size = Math.random() * 2.5 + 0.8;
-          const opacity = Math.random() * 0.4 + 0.2;
+          // Create variety in star types like AI News page
+          const isLargeStar = i % 10 === 0; // 10% large stars
+          const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars (excluding large)
+          
+          // Use the same size range as AI News page
+          let size;
+          if (isLargeStar) {
+            size = 3 + Math.random() * 2; // 3-5px for large stars
+          } else if (isMediumStar) {
+            size = 2 + Math.random() * 1; // 2-3px for medium stars
+          } else {
+            size = 0.5 + Math.random() * 1.5; // 0.5-2px for small stars
+          }
+          
+          const opacity = isLargeStar ? 0.9 : isMediumStar ? 0.85 : 0.8;
           const duration = Math.random() * 20 + 15;
           const delay = Math.random() * 10;
 
@@ -82,12 +95,12 @@ const LoggedInNavbar = () => {
                 left: initialX,
                 top: initialY,
               }}
-              initial={{ opacity: 0, scale: Math.random() * 0.5 + 0.5 }}
+              initial={{ opacity: 0, scale: 1 }}
               animate={{
                 x: targetX - initialX,
                 y: targetY - initialY,
                 opacity: [0, opacity, opacity, 0],
-                scale: [0.5, Math.random() * 0.8 + 0.6, 0.5],
+                scale: 1, // No scaling to keep consistent size
               }}
               transition={{
                 duration: duration,
@@ -102,13 +115,7 @@ const LoggedInNavbar = () => {
                   repeatType: 'loop',
                   ease: 'linear',
                 },
-                scale: {
-                    times: [0, 0.5, 1],
-                    duration: duration,
-                    repeat: Infinity,
-                    repeatType: 'loop',
-                    ease: 'easeInOut'
-                }
+
               }}
             />
           );

@@ -97,6 +97,24 @@ html, body, #root {
   66% { filter: brightness(0.8) hue-rotate(240deg); }
 }
 
+/* Star floating animation using CSS variables */
+.star-floating {
+  animation: starFloat infinite ease-in-out;
+  animation-play-state: running;
+  transform: translateZ(0); /* Force hardware acceleration */
+}
+
+@keyframes starFloat {
+  0% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 0.3;
+  }
+  100% { 
+    transform: translate(var(--drift-x), var(--drift-y)) scale(1);
+    opacity: 0.8;
+  }
+}
+
 /* Optimized pulse animation */
 .star-pulse-optimized {
   animation: star-twinkle 2s ease-in-out infinite, star-glow 6s linear infinite;
@@ -144,7 +162,7 @@ html, body, #root {
 @media screen and (max-width: 768px) {
   /* Prevent purple status bar issues */
   html {
-    background-color: #0f172a !important;
+    background-color: #3b82f6 !important;
   }
   
   /* Ensure proper viewport on mobile */
@@ -152,7 +170,7 @@ html, body, #root {
     position: relative;
     min-height: 100vh;
     min-height: -webkit-fill-available;
-    background-color: #0f172a;
+    background-color: #3b82f6;
   }
   
   /* Fix for mobile browser address bar issues */
@@ -188,6 +206,8 @@ body {
   transform: translateZ(0);
   /* Reduce paint complexity */
   will-change: auto;
+  /* Set default blue background to match navbar */
+  background-color: #3b82f6;
 }
 
 /* Remove default browser styles */
@@ -402,9 +422,9 @@ code {
   /* Main sections with uniform shadows on all 4 sides */
   .glass-card, .glass-primary, .glass-secondary, .glass-accent, 
   .glass-success, .glass-warning, .glass-container, .glass-liquid {
-    backdrop-filter: blur(2px) saturate(1.02);
-    background: transparent;
-    border: none;
+    backdrop-filter: blur(3px) saturate(1.05);
+    background: rgba(255, 255, 255, 0.01) !important;
+    border: 1px solid rgba(255, 255, 255, 0.05);
     border-radius: 24px;
     /* Uniform shadows on all 4 sides - visible but not too dark */
     box-shadow: 
@@ -418,9 +438,9 @@ code {
   
   /* Interior cards with colorful shadows */
   .glass-surface {
-    backdrop-filter: blur(2px) saturate(1.02);
-    background: transparent;
-    border: none;
+    backdrop-filter: blur(2px) saturate(1.03);
+    background: rgba(255, 255, 255, 0.005) !important;
+    border: 1px solid rgba(255, 255, 255, 0.03);
     border-radius: 16px;
     /* Colorful shadows for interior cards */
     box-shadow: 
@@ -487,9 +507,9 @@ code {
   .glass-card:hover, .glass-primary:hover, .glass-secondary:hover,
   .glass-accent:hover, .glass-success:hover, .glass-warning:hover,
   .glass-container:hover, .glass-liquid:hover {
-    backdrop-filter: blur(3px) saturate(1.03);
-    background: transparent;
-    border: none;
+    backdrop-filter: blur(5px) saturate(1.08);
+    background: rgba(255, 255, 255, 0.02) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08);
     /* Enhanced uniform shadows on hover */
     box-shadow: 
       0 0 35px rgba(0, 0, 0, 0.22),
@@ -500,9 +520,9 @@ code {
   
   /* Interior cards hover with enhanced colorful shadows */
   .glass-surface:hover {
-    backdrop-filter: blur(3px) saturate(1.03);
-    background: transparent;
-    border: none;
+    backdrop-filter: blur(4px) saturate(1.05);
+    background: rgba(255, 255, 255, 0.01) !important;
+    border: 1px solid rgba(255, 255, 255, 0.06);
     box-shadow: 
       0 0 30px rgba(59, 130, 246, 0.18),
       0 0 15px rgba(139, 92, 246, 0.15),
@@ -550,9 +570,9 @@ code {
   @media (max-width: 768px) {
     .glass-card, .glass-primary, .glass-secondary, .glass-accent, 
     .glass-success, .glass-warning, .glass-container, .glass-liquid {
-      backdrop-filter: blur(2px) saturate(1.02);
-      background: transparent;
-      border: none;
+      backdrop-filter: blur(6px) saturate(1.08);
+      background: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.08);
       /* Uniform shadows on mobile */
       box-shadow: 
         0 0 20px rgba(0, 0, 0, 0.15),
@@ -564,9 +584,9 @@ code {
     }
     
     .glass-surface {
-      backdrop-filter: blur(2px) saturate(1.02);
-      background: transparent;
-      border: none;
+      backdrop-filter: blur(4px) saturate(1.05);
+      background: rgba(255, 255, 255, 0.02) !important;
+      border: 1px solid rgba(255, 255, 255, 0.06);
       /* Colorful shadows for interior cards on mobile */
       box-shadow: 
         0 0 15px rgba(59, 130, 246, 0.1),
@@ -593,8 +613,8 @@ code {
     .glass-card:hover, .glass-primary:hover, .glass-secondary:hover, 
     .glass-accent:hover, .glass-success:hover, .glass-warning:hover,
     .glass-container:hover, .glass-liquid:hover {
-      backdrop-filter: blur(3px) saturate(1.03);
-      background: transparent;
+      backdrop-filter: blur(10px) saturate(1.12);
+      background: rgba(255, 255, 255, 0.04) !important;
       border: none;
       /* Enhanced uniform shadows on hover for mobile */
       box-shadow: 
@@ -605,8 +625,8 @@ code {
     }
     
     .glass-surface:hover {
-      backdrop-filter: blur(3px) saturate(1.03);
-      background: transparent;
+      backdrop-filter: blur(8px) saturate(1.1);
+      background: rgba(255, 255, 255, 0.03) !important;
       border: none;
       box-shadow: 
         0 0 20px rgba(59, 130, 246, 0.15),

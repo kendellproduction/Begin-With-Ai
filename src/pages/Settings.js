@@ -147,13 +147,13 @@ const Settings = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 to-blue-400">
       <LoggedInNavbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
             to="/home"
-            className="inline-flex items-center text-gray-300 hover:text-white"
+            className="inline-flex items-center text-gray-600 hover:text-gray-800"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -172,26 +172,26 @@ const Settings = () => {
           </Link>
         </div>
 
-        <h1 className="text-3xl font-bold text-white mb-8">Settings</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-8">Settings</h1>
 
         {/* Account Settings */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-6">Account Settings</h2>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">Account Settings</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-400 mb-2">Email</label>
+              <label className="block text-gray-700 mb-2">Email</label>
               <input
                 type="email"
                 value={currentUser?.email}
                 disabled
-                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg"
+                className="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg border border-gray-300"
               />
             </div>
             <div>
-              <label className="block text-gray-400 mb-2">Password</label>
+              <label className="block text-gray-700 mb-2">Password</label>
               <button 
                 onClick={() => setIsChangePasswordModalOpen(true)}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Change Password
               </button>
@@ -200,13 +200,13 @@ const Settings = () => {
         </div>
 
         {/* Notification Settings */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-6">Notification Settings</h2>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">Notification Settings</h2>
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-white">Email Notifications</h3>
-                <p className="text-gray-400 text-sm">Receive updates via email</p>
+                <h3 className="text-gray-800">Email Notifications</h3>
+                <p className="text-gray-600 text-sm">Receive updates via email</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -215,13 +215,13 @@ const Settings = () => {
                   onChange={() => handleNotificationChange('email')}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-white">Push Notifications</h3>
-                <p className="text-gray-400 text-sm">Receive push notifications</p>
+                <h3 className="text-gray-800">Push Notifications</h3>
+                <p className="text-gray-600 text-sm">Receive push notifications</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -230,13 +230,13 @@ const Settings = () => {
                   onChange={() => handleNotificationChange('push')}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-white">Study Reminders</h3>
-                <p className="text-gray-400 text-sm">Get reminded about your study schedule</p>
+                <h3 className="text-gray-800">Study Reminders</h3>
+                <p className="text-gray-600 text-sm">Get reminded about your study schedule</p>
               </div>
               <label className="relative inline-flex items-center cursor-pointer">
                 <input
@@ -245,22 +245,22 @@ const Settings = () => {
                   onChange={() => handleNotificationChange('reminders')}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
               </label>
             </div>
           </div>
         </div>
 
         {/* Appearance Settings */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-6">Appearance</h2>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">Appearance</h2>
           <div className="space-y-4">
             <div>
-              <label className="block text-gray-400 mb-2">Theme</label>
+              <label className="block text-gray-700 mb-2">Theme</label>
               <select
                 value={theme}
                 onChange={(e) => setTheme(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg"
+                className="w-full px-4 py-2 bg-white text-gray-800 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="dark">Dark</option>
                 <option value="light">Light</option>
@@ -268,11 +268,11 @@ const Settings = () => {
               </select>
             </div>
             <div>
-              <label className="block text-gray-400 mb-2">Language</label>
+              <label className="block text-gray-700 mb-2">Language</label>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg"
+                className="w-full px-4 py-2 bg-white text-gray-800 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
               >
                 <option value="en">English</option>
                 <option value="es">Spanish</option>
@@ -284,15 +284,15 @@ const Settings = () => {
         </div>
 
         {/* Help & Support */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
-          <h2 className="text-xl font-bold text-white mb-6">Help & Support</h2>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">Help & Support</h2>
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-400/30">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-200">
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">🐛</div>
                 <div>
-                  <h3 className="text-white font-semibold">Report a Bug</h3>
-                  <p className="text-gray-400 text-sm">Found an issue? Help us improve by reporting it!</p>
+                  <h3 className="text-gray-800 font-semibold">Report a Bug</h3>
+                  <p className="text-gray-600 text-sm">Found an issue? Help us improve by reporting it!</p>
                 </div>
               </div>
               <button 
@@ -303,12 +303,12 @@ const Settings = () => {
               </button>
             </div>
             
-            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-lg border border-green-400/30">
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
               <div className="flex items-center space-x-3">
                 <div className="text-2xl">💬</div>
                 <div>
-                  <h3 className="text-white font-semibold">General Support</h3>
-                  <p className="text-gray-400 text-sm">Need help or have questions? We're here for you!</p>
+                  <h3 className="text-gray-800 font-semibold">General Support</h3>
+                  <p className="text-gray-600 text-sm">Need help or have questions? We're here for you!</p>
                 </div>
               </div>
               <a 
@@ -322,8 +322,8 @@ const Settings = () => {
         </div>
 
         {/* Danger Zone */}
-        <div className="bg-gray-800 rounded-xl p-6">
-          <h2 className="text-xl font-bold text-red-500 mb-6">Danger Zone</h2>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-red-200">
+          <h2 className="text-xl font-bold text-red-600 mb-6">Danger Zone</h2>
           <div className="space-y-4">
             <button 
               onClick={() => setIsDeleteAccountModalOpen(true)}
@@ -342,29 +342,29 @@ const Settings = () => {
             initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -30 }}
-            className="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-700"
+            className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md border border-gray-300"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-white">Change Password</h2>
-              <button onClick={() => setIsChangePasswordModalOpen(false)} className="text-gray-400 hover:text-white">
+              <h2 className="text-2xl font-bold text-gray-800">Change Password</h2>
+              <button onClick={() => setIsChangePasswordModalOpen(false)} className="text-gray-600 hover:text-gray-800">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
 
             {passwordChangeError && (
-              <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm text-center">
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center">
                 {passwordChangeError}
               </div>
             )}
             {passwordChangeSuccess && (
-              <div className="mb-4 p-3 bg-green-500/20 border border-green-500/50 rounded-lg text-green-400 text-sm text-center">
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm text-center">
                 {passwordChangeSuccess}
               </div>
             )}
 
             <form onSubmit={handleChangePasswordSubmit} className="space-y-5">
               <div>
-                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-300 mb-1.5">Current Password</label>
+                <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1.5">Current Password</label>
                 <input
                   type="password"
                   name="currentPassword"
@@ -372,12 +372,12 @@ const Settings = () => {
                   required
                   value={passwordFormData.currentPassword}
                   onChange={handlePasswordFormChange}
-                  className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Enter your current password"
                 />
               </div>
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-300 mb-1.5">New Password</label>
+                <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1.5">New Password</label>
                 <input
                   type="password"
                   name="newPassword"
@@ -385,7 +385,7 @@ const Settings = () => {
                   required
                   value={passwordFormData.newPassword}
                   onChange={handlePasswordFormChange}
-                  className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Create a new password"
                 />
                 {(passwordFormData.newPassword !== '' || newPasswordStrengthDetails.strength > 0) && (
@@ -393,7 +393,7 @@ const Settings = () => {
                 )}
               </div>
               <div>
-                <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-300 mb-1.5">Confirm New Password</label>
+                <label htmlFor="confirmNewPassword" className="block text-sm font-medium text-gray-700 mb-1.5">Confirm New Password</label>
                 <input
                   type="password"
                   name="confirmNewPassword"
@@ -401,14 +401,14 @@ const Settings = () => {
                   required
                   value={passwordFormData.confirmNewPassword}
                   onChange={handlePasswordFormChange}
-                  className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Confirm your new password"
                 />
               </div>
               <button
                 type="submit"
                 disabled={isUpdatingPassword}
-                className="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-semibold shadow-md transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-700 rounded-lg text-white font-semibold shadow-md transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isUpdatingPassword ? (
                     <span className="flex items-center justify-center">
@@ -432,28 +432,28 @@ const Settings = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-gray-800 p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md border border-red-700/50"
+            className="bg-white p-6 sm:p-8 rounded-xl shadow-2xl w-full max-w-md border border-red-200"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-red-400">Delete Account</h2>
-              <button onClick={() => { setIsDeleteAccountModalOpen(false); setDeleteError(''); setDeleteConfirmationPassword(''); }} className="text-gray-400 hover:text-white">
+              <h2 className="text-2xl font-bold text-red-600">Delete Account</h2>
+              <button onClick={() => { setIsDeleteAccountModalOpen(false); setDeleteError(''); setDeleteConfirmationPassword(''); }} className="text-gray-600 hover:text-gray-800">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
               </button>
             </div>
-            <p className="text-gray-300 mb-4 text-sm">
+            <p className="text-gray-700 mb-4 text-sm">
               This action is irreversible. All your data, including progress and settings, will be permanently deleted. 
               To confirm, please enter your password.
             </p>
 
             {deleteError && (
-              <div className="mb-4 p-3 bg-red-500/30 border border-red-500/60 rounded-lg text-red-300 text-sm text-center">
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm text-center">
                 {deleteError}
               </div>
             )}
 
             <div className="space-y-4">
               <div>
-                <label htmlFor="deleteConfirmPassword" className="block text-sm font-medium text-gray-300 mb-1.5">Your Password</label>
+                <label htmlFor="deleteConfirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">Your Password</label>
                 <input
                   type="password"
                   name="deleteConfirmPassword"
@@ -461,7 +461,7 @@ const Settings = () => {
                   required
                   value={deleteConfirmationPassword}
                   onChange={(e) => { setDeleteConfirmationPassword(e.target.value); setDeleteError(''); }}
-                  className="w-full px-4 py-2.5 bg-gray-700/50 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
                   placeholder="Enter your password to confirm"
                 />
               </div>
@@ -483,7 +483,7 @@ const Settings = () => {
               <button
                 onClick={() => { setIsDeleteAccountModalOpen(false); setDeleteError(''); setDeleteConfirmationPassword(''); }}
                 disabled={isDeletingAccount}
-                className="w-full py-3 px-6 bg-gray-600 hover:bg-gray-500 rounded-lg text-white font-semibold shadow-sm transition-all duration-300 disabled:opacity-60"
+                className="w-full py-3 px-6 bg-gray-300 hover:bg-gray-400 rounded-lg text-gray-800 font-semibold shadow-sm transition-all duration-300 disabled:opacity-60"
               >
                 Cancel
               </button>

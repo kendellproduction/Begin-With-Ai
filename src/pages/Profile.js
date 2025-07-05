@@ -123,13 +123,13 @@ const Profile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className="min-h-screen bg-gradient-to-br from-blue-300 to-blue-400">
       <LoggedInNavbar />
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-6">
           <Link
             to="/home"
-            className="inline-flex items-center text-gray-300 hover:text-white"
+            className="inline-flex items-center text-gray-600 hover:text-gray-800"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -148,17 +148,17 @@ const Profile = () => {
           </Link>
         </div>
 
-        <div className="bg-gray-800 rounded-xl p-6">
-          <h1 className="text-3xl font-bold text-white mb-8">Profile Settings</h1>
+        <div className="bg-white/95 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-300">
+          <h1 className="text-3xl font-bold text-gray-800 mb-8">Profile Settings</h1>
           
           {/* Error and Success Messages */}
           {error && (
-            <div className="mb-4 p-4 bg-red-500/20 border border-red-500 rounded-lg text-red-400">
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
               {error}
             </div>
           )}
           {success && (
-            <div className="mb-4 p-4 bg-green-500/20 border border-green-500 rounded-lg text-green-400">
+            <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
               {success}
             </div>
           )}
@@ -166,7 +166,7 @@ const Profile = () => {
           <div className="space-y-6">
             {/* Profile Photo Section */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Profile Picture
               </label>
               <div className="flex items-center space-x-6">
@@ -174,7 +174,7 @@ const Profile = () => {
                   <img
                     src={photoPreview || photoURL}
                     alt="Profile"
-                    className="h-24 w-24 rounded-full object-cover border-2 border-gray-700 group-hover:border-indigo-500 transition-colors duration-300"
+                    className="h-24 w-24 rounded-full object-cover border-2 border-gray-300 group-hover:border-blue-500 transition-colors duration-300"
                   />
                   <div 
                     className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 cursor-pointer"
@@ -192,7 +192,7 @@ const Profile = () => {
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-indigo-600 px-4 py-2 rounded-lg hover:bg-indigo-700 text-white transition-colors duration-300"
+                  className="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700 text-white transition-colors duration-300"
                 >
                   Change Photo
                 </button>
@@ -201,16 +201,16 @@ const Profile = () => {
 
             {/* Subscription Tier Section */}
             <div>
-              <label className="block text-sm font-medium text-gray-400 mb-1">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subscription Tier
               </label>
-              <div className="flex items-center justify-between p-4 bg-gray-700/50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-blue-50/50 rounded-lg border border-blue-200">
                 <div className="flex items-center">
-                  <span className={`text-lg font-semibold capitalize ${currentUser?.subscriptionTier === 'premium' ? 'text-yellow-400' : 'text-gray-300'}`}>
+                  <span className={`text-lg font-semibold capitalize ${currentUser?.subscriptionTier === 'premium' ? 'text-yellow-600' : 'text-gray-700'}`}>
                     {currentUser?.subscriptionTier || 'Free'}
                   </span>
                   {currentUser?.subscriptionTier === 'premium' && (
-                    <span className="ml-2 px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs font-bold rounded-full">
+                    <span className="ml-2 px-2 py-0.5 bg-yellow-100 text-yellow-600 text-xs font-bold rounded-full">
                       👑 Premium
                     </span>
                   )}
@@ -229,7 +229,7 @@ const Profile = () => {
             {/* Profile Information */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Display Name
                 </label>
                 <input
@@ -237,22 +237,22 @@ const Profile = () => {
                   name="displayName"
                   value={formData.displayName}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email
                 </label>
                 <input
                   type="email"
                   value={currentUser?.email || ''}
                   disabled
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-gray-400 cursor-not-allowed"
+                  className="w-full bg-gray-100 border border-gray-300 rounded-lg px-4 py-2 text-gray-500 cursor-not-allowed"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Bio
                 </label>
                 <textarea
@@ -260,12 +260,12 @@ const Profile = () => {
                   value={formData.bio}
                   onChange={handleInputChange}
                   rows="3"
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="Tell us about yourself..."
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Location
                 </label>
                 <input
@@ -273,7 +273,7 @@ const Profile = () => {
                   name="location"
                   value={formData.location}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="Your location"
                 />
               </div>
@@ -282,7 +282,7 @@ const Profile = () => {
             {/* Social Links */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Website
                 </label>
                 <input
@@ -290,12 +290,12 @@ const Profile = () => {
                   name="website"
                   value={formData.website}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="https://yourwebsite.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Twitter
                 </label>
                 <input
@@ -303,12 +303,12 @@ const Profile = () => {
                   name="twitter"
                   value={formData.twitter}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="@username"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   LinkedIn
                 </label>
                 <input
@@ -316,7 +316,7 @@ const Profile = () => {
                   name="linkedin"
                   value={formData.linkedin}
                   onChange={handleInputChange}
-                  className="w-full bg-gray-700 rounded-lg px-4 py-2 text-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  className="w-full bg-white border border-gray-300 rounded-lg px-4 py-2 text-gray-900 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   placeholder="linkedin.com/in/username"
                 />
               </div>
@@ -327,7 +327,7 @@ const Profile = () => {
               <button
                 onClick={handleSaveProfile}
                 disabled={isLoading}
-                className="bg-indigo-600 px-6 py-2 rounded-lg hover:bg-indigo-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-600 px-6 py-2 rounded-lg hover:bg-blue-700 text-white transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center">
@@ -347,48 +347,48 @@ const Profile = () => {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-8">
-          <div className="bg-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-gray-400 mb-2">Total XP</h3>
-            <p className="text-3xl font-bold text-white">{userStats.totalXP}</p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-200">
+            <h3 className="text-lg font-medium text-gray-600 mb-2">Total XP</h3>
+            <p className="text-3xl font-bold text-gray-800">{userStats.totalXP}</p>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-gray-400 mb-2">Lessons Completed</h3>
-            <p className="text-3xl font-bold text-white">{userStats.lessonsCompleted}</p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-200">
+            <h3 className="text-lg font-medium text-gray-600 mb-2">Lessons Completed</h3>
+            <p className="text-3xl font-bold text-gray-800">{userStats.lessonsCompleted}</p>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-gray-400 mb-2">Badges Earned</h3>
-            <p className="text-3xl font-bold text-white">{userStats.badgesEarned}</p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-200">
+            <h3 className="text-lg font-medium text-gray-600 mb-2">Badges Earned</h3>
+            <p className="text-3xl font-bold text-gray-800">{userStats.badgesEarned}</p>
           </div>
-          <div className="bg-gray-800 rounded-xl p-6">
-            <h3 className="text-lg font-medium text-gray-400 mb-2">Current Streak</h3>
-            <p className="text-3xl font-bold text-white">{userStats.currentStreak} days</p>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-200">
+            <h3 className="text-lg font-medium text-gray-600 mb-2">Current Streak</h3>
+            <p className="text-3xl font-bold text-gray-800">{userStats.currentStreak} days</p>
           </div>
         </div>
 
         {/* Progress to Next Level */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xl font-bold text-white">Progress to Level {userStats.level + 1}</h3>
-            <span className="text-gray-400">{userStats.totalXP % userStats.xpToNextLevel}/{userStats.xpToNextLevel} XP</span>
+            <h3 className="text-xl font-bold text-gray-800">Progress to Level {userStats.level + 1}</h3>
+            <span className="text-gray-600">{userStats.totalXP % userStats.xpToNextLevel}/{userStats.xpToNextLevel} XP</span>
           </div>
-          <div className="h-4 bg-gray-700 rounded-full overflow-hidden">
+          <div className="h-4 bg-gray-200 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-500 rounded-full transition-all duration-500"
+              className="h-full bg-blue-500 rounded-full transition-all duration-500"
               style={{ width: `${(userStats.totalXP % userStats.xpToNextLevel) / userStats.xpToNextLevel * 100}%` }}
             />
           </div>
         </div>
 
         {/* Badges Section */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-white mb-6">Your Badges</h3>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Your Badges</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {badges.map((badge) => (
-              <div key={badge.id} className="bg-gray-700 rounded-lg p-4 flex items-center space-x-4">
+              <div key={badge.id} className="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center space-x-4">
                 <div className="text-4xl">{badge.icon}</div>
                 <div>
-                  <h4 className="text-lg font-medium text-white">{badge.name}</h4>
-                  <p className="text-gray-400 text-sm">{badge.description}</p>
+                  <h4 className="text-lg font-medium text-gray-800">{badge.name}</h4>
+                  <p className="text-gray-600 text-sm">{badge.description}</p>
                 </div>
               </div>
             ))}
@@ -396,16 +396,16 @@ const Profile = () => {
         </div>
 
         {/* Recent Lessons */}
-        <div className="bg-gray-800 rounded-xl p-6 mb-8">
-          <h3 className="text-xl font-bold text-white mb-6">Recent Lessons</h3>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 mb-8 shadow-lg border border-blue-200">
+          <h3 className="text-xl font-bold text-gray-800 mb-6">Recent Lessons</h3>
           <div className="space-y-4">
             {recentLessons.map((lesson) => (
-              <div key={lesson.id} className="flex items-center justify-between bg-gray-700 rounded-lg p-4">
-                <span className="text-white">{lesson.title}</span>
+              <div key={lesson.id} className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg p-4">
+                <span className="text-gray-800">{lesson.title}</span>
                 {lesson.completed ? (
-                  <span className="text-green-400">✓ Completed</span>
+                  <span className="text-green-600">✓ Completed</span>
                 ) : (
-                  <span className="text-yellow-400">In Progress</span>
+                  <span className="text-yellow-600">In Progress</span>
                 )}
               </div>
             ))}
@@ -413,8 +413,8 @@ const Profile = () => {
         </div>
 
         {/* Subscription Management */}
-        <div className="bg-gray-800 rounded-xl p-6">
-          <h3 className="text-xl font-bold text-white mb-4">Subscription Management</h3>
+        <div className="bg-white/90 backdrop-blur-sm rounded-xl p-6 shadow-lg border border-blue-200">
+          <h3 className="text-xl font-bold text-gray-800 mb-4">Subscription Management</h3>
           <button
             onClick={() => setIsCancelModalOpen(true)}
             className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
@@ -430,16 +430,16 @@ const Profile = () => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gray-800 rounded-xl p-6 max-w-lg w-full"
+            className="bg-white rounded-xl p-6 max-w-lg w-full"
           >
-            <h3 className="text-2xl font-bold text-white mb-4">Cancel Subscription</h3>
-            <p className="text-gray-300 mb-6">
+            <h3 className="text-2xl font-bold text-gray-800 mb-4">Cancel Subscription</h3>
+            <p className="text-gray-600 mb-6">
               Are you sure you want to cancel your subscription? You'll lose access to premium content and features.
             </p>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setIsCancelModalOpen(false)}
-                className="px-4 py-2 text-gray-300 hover:text-white"
+                className="px-4 py-2 text-gray-600 hover:text-gray-800"
               >
                 Keep Subscription
               </button>

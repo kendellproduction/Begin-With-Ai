@@ -8,6 +8,8 @@ import ContentBlockRenderer from './ContentBlocks/ContentBlockRenderer';
 import { BLOCK_TYPES } from './ContentBlocks/constants';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
+import IntegratedPodcastPlayer from './IntegratedPodcastPlayer';
+import OptimizedStarField from './OptimizedStarField';
 import logger from '../utils/logger';
 
 const ModernLessonViewer = () => {
@@ -38,6 +40,7 @@ const ModernLessonViewer = () => {
   // Navigation and UX
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [xpNotifications, setXpNotifications] = useState([]);
+  const [showPodcastPlayer, setShowPodcastPlayer] = useState(false);
   const containerRef = useRef(null);
   const progressBarRef = useRef(null);
 
@@ -193,12 +196,17 @@ const ModernLessonViewer = () => {
           let correctAnswer = slide.content.correctAnswer;
           let options = slide.content.options || slide.content.choices;
           
-          // If options are objects with correct property, find the correct index
+          // If options are objects with correct property, find the correct index and extract text
           if (Array.isArray(options) && options.length > 0 && typeof options[0] === 'object' && options[0].hasOwnProperty('correct')) {
             // Find the index of the correct option
             correctAnswer = options.findIndex(option => option.correct === true);
             if (correctAnswer === -1) correctAnswer = 0; // fallback
+            
+            // Extract text from option objects
+            options = options.map(opt => opt.text || opt);
           }
+          
+
           
           blocks.push({
             type: BLOCK_TYPES.QUIZ,
@@ -711,48 +719,9 @@ const ModernLessonViewer = () => {
   }
 
   return (
-    <div className="modern-lesson-viewer min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative">
-              {/* Moving Stars Background - High Performance GPU Accelerated */}
-        <div className="star-container fixed inset-0 z-0 overflow-hidden">
-        {[...Array(80)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="star-element absolute"
-            initial={{
-              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-              y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-            }}
-            animate={{
-              x: [
-                Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-              ],
-              y: [
-                Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-                Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 600),
-              ],
-            }}
-            transition={{
-              duration: 12 + Math.random() * 8,
-              repeat: Infinity,
-              ease: "linear",
-              type: "tween", // More performant than spring
-              delay: Math.random() * 6,
-            }}
-          >
-            <div 
-              className={`star-element bg-white/20 rounded-full ${
-                i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
-                i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-              }`}
-              style={{
-                filter: `hue-rotate(${Math.random() * 60}deg)`,
-                animationDelay: `${Math.random() * 3}s`,
-              }}
-            ></div>
-          </motion.div>
-        ))}
-      </div>
+    <div className="modern-lesson-viewer min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative overflow-hidden">
+      {/* Optimized Star Field Background */}
+      <OptimizedStarField starCount={180} opacity={0.8} speed={0.5} size={1.2} />
 
       {/* Fixed Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-50">
@@ -789,9 +758,13 @@ const ModernLessonViewer = () => {
         
         <div className="flex items-center gap-2">
           <button
-            onClick={() => navigate(`/lesson/${lessonId}/podcast`)}
-            className="bg-purple-500/20 hover:bg-purple-500/30 rounded-full px-3 py-1 text-purple-200 text-sm transition-colors"
-            title="View as podcast"
+            onClick={() => setShowPodcastPlayer(!showPodcastPlayer)}
+            className={`rounded-full px-3 py-1 text-sm transition-colors ${
+              showPodcastPlayer 
+                ? 'bg-purple-600/40 text-purple-100' 
+                : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-200'
+            }`}
+            title={showPodcastPlayer ? "Hide podcast player" : "Show podcast player"}
           >
             🎙️ Podcast
           </button>
@@ -817,6 +790,27 @@ const ModernLessonViewer = () => {
       {/* Main Content - Section-based with conditional visibility */}
       <div ref={containerRef} className="pt-16 pb-8 relative z-10">
         <div className="max-w-4xl mx-auto px-4 space-y-8">
+          {/* Integrated Podcast Player for AI History Lesson */}
+          {showPodcastPlayer && (lessonId === 'history-of-ai' || lessonId === 'welcome-ai-revolution') && (
+            <>
+              <div className="relative z-20 mb-16">
+                <IntegratedPodcastPlayer
+                  audioUrl="/The Incredible Story of AI_ From Turing to Today.wav" // Your uploaded AI history audio
+                  title={lesson?.title || "The Incredible True Story of Artificial Intelligence"}
+                  chapters={[
+                    { title: "The Codebreaker Who Started It All", time: 0 },
+                    { title: "When the Internet Changed Everything", time: 540 },
+                    { title: "The Day AI Became Everyone's Assistant", time: 1080 }
+                  ]}
+                  className=""
+                />
+              </div>
+              
+              {/* Spacer for better separation */}
+              <div className="h-8"></div>
+            </>
+          )}
+          
           {contentSections.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
               <p>Loading lesson content...</p>
@@ -963,6 +957,8 @@ const ModernLessonViewer = () => {
           </motion.div>
         ))}
       </AnimatePresence>
+
+
     </div>
   );
 };

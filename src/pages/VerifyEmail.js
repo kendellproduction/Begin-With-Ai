@@ -56,30 +56,30 @@ const VerifyEmail = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 p-4">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl max-w-md w-full">
-        <h1 className="text-2xl font-bold text-white mb-6">Verify Your Email</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-400 p-4">
+      <div className="bg-white/90 backdrop-blur-sm p-8 rounded-lg shadow-xl max-w-md w-full border border-blue-200">
+        <h1 className="text-2xl font-bold text-gray-800 mb-6">Verify Your Email</h1>
         
-        <div className="bg-gray-700 p-4 rounded-md mb-6">
-          <p className="text-gray-300 mb-2">
+        <div className="bg-blue-50 p-4 rounded-md mb-6 border border-blue-200">
+          <p className="text-gray-700 mb-2">
             We've sent a verification email to:
           </p>
-          <p className="text-white font-medium break-all">{user.email}</p>
+          <p className="text-gray-800 font-medium break-all">{user.email}</p>
         </div>
         
-        <p className="text-gray-300 mb-6">
+        <p className="text-gray-700 mb-6">
           Please check your inbox and click the verification link to activate your account.
           If you don't see the email, check your spam folder.
         </p>
         
         {error && (
-          <div className="bg-red-900/50 border border-red-500 text-red-200 p-3 rounded-md mb-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 p-3 rounded-md mb-4">
             {error}
           </div>
         )}
         
         {success && (
-          <div className="bg-green-900/50 border border-green-500 text-green-200 p-3 rounded-md mb-4">
+          <div className="bg-green-50 border border-green-200 text-green-700 p-3 rounded-md mb-4">
             Verification email sent! Please check your inbox.
           </div>
         )}
@@ -88,14 +88,14 @@ const VerifyEmail = () => {
           <button
             onClick={handleResendVerification}
             disabled={sending}
-            className="bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {sending ? 'Sending...' : 'Resend Verification Email'}
           </button>
           
           <button
             onClick={handleContinue}
-            className="bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 transition"
+            className="bg-gray-300 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-400 transition"
           >
             I've Verified My Email
           </button>

@@ -12,6 +12,8 @@ const QuizBlock = ({
   const [isCompleted, setIsCompleted] = useState(false);
   const blockRef = useRef(null);
 
+
+
   const defaultConfig = {
     showFeedback: true,
     allowRetry: true,
@@ -88,9 +90,32 @@ const QuizBlock = ({
     }
   }
   
-  const options = finalConfig.shuffleOptions 
-    ? [...content.options].sort(() => Math.random() - 0.5)
-    : content.options;
+  const options = content.options || [];
+  const shuffledOptions = finalConfig.shuffleOptions 
+    ? [...options].sort(() => Math.random() - 0.5)
+    : options;
+    
+
+
+  // Safety check for content
+  if (!content || !content.question) {
+    console.warn('QuizBlock missing content or question');
+    return (
+      <div className={`quiz-block ${className} bg-red-500/10 border border-red-500/20 rounded-lg p-4`}>
+        <p className="text-red-400">Quiz content not available. Please check the lesson data.</p>
+      </div>
+    );
+  }
+
+  if (!shuffledOptions || shuffledOptions.length === 0) {
+    console.warn('QuizBlock missing options');
+    return (
+      <div className={`quiz-block ${className} bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4`}>
+        <h3 className="text-xl font-semibold text-white mb-3">{content.question}</h3>
+        <p className="text-yellow-400">No answer options available for this quiz.</p>
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -114,7 +139,7 @@ const QuizBlock = ({
 
       {/* Options */}
       <div className="space-y-3 mb-6">
-        {options.map((option, index) => {
+        {shuffledOptions.map((option, index) => {
           const isSelected = selectedAnswer === index;
           
           // Determine if this option is the correct one
