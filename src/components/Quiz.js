@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import lessonsData from '../utils/lessonsData';
 import quizData from '../utils/quizData';
+import OptimizedStarField from './OptimizedStarField';
 
 const Quiz = () => {
   const { lessonId } = useParams();
@@ -21,8 +22,11 @@ const Quiz = () => {
 
   if (questions.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen text-white flex items-center justify-center" style={{ backgroundColor: '#3b82f6' }}>
+        {/* Optimized Star Field */}
+        <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
+        <div className="text-center relative z-10">
           <h1 className="text-2xl font-bold mb-4">Loading quiz...</h1>
         </div>
       </div>
@@ -52,8 +56,11 @@ const Quiz = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-gray-800 rounded-3xl p-8 shadow-2xl">
+    <div className="min-h-screen text-white flex items-center justify-center p-4" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
+      <div className="max-w-2xl w-full bg-gray-800 rounded-3xl p-8 shadow-2xl relative z-10">
         {/* Progress */}
         <div className="mb-8">
           <div className="flex justify-between text-sm text-gray-400 mb-2">

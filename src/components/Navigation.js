@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoginModal from './LoginModal';
+import OptimizedStarField from './OptimizedStarField';
 
 const Navigation = () => {
   const { user, logout } = useAuth();
@@ -61,9 +62,12 @@ const Navigation = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
       {/* Top Navigation Bar */}
-      <nav className="bg-gray-800 shadow-lg">
+      <nav className="bg-gray-800 shadow-lg relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -109,7 +113,7 @@ const Navigation = () => {
       </nav>
 
       {/* Main Navigation Cards */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {navItems.map((item) => (
             <button

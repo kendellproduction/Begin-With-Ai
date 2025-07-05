@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import { firstTimeUserWelcomeLesson } from '../lessons/firstTimeUserLesson';
 import { NewUserOnboardingService } from '../services/newUserOnboardingService';
+import OptimizedStarField from './OptimizedStarField';
 
 const WelcomeLessonViewer = () => {
   const navigate = useNavigate();
@@ -172,7 +173,10 @@ const WelcomeLessonViewer = () => {
   const progress = ((currentSection + 1) / sections.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-purple-50 text-gray-800">
+    <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-2 bg-gray-200 z-20">
         <motion.div 
@@ -189,7 +193,7 @@ const WelcomeLessonViewer = () => {
       </div>
 
       {/* Main Content */}
-      <div className="pt-12 pb-8 px-4">
+      <div className="pt-12 pb-8 px-4 relative z-10">
         <div className="max-w-2xl mx-auto">
           <AnimatePresence mode="wait">
             <motion.div

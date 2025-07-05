@@ -10,6 +10,7 @@ import {
   PencilSquareIcon,
   PlusIcon
 } from '@heroicons/react/24/outline';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const DraftBrowser = () => {
   const [drafts, setDrafts] = useState([]);
@@ -189,9 +190,12 @@ const DraftBrowser = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 border-b border-gray-700 relative z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -248,7 +252,7 @@ const DraftBrowser = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 relative z-10">
         {drafts.length === 0 ? (
           /* Empty State */
           <motion.div

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import LoggedInNavbar from '../components/LoggedInNavbar';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const LearningPathResults = () => {
   const navigate = useNavigate();
@@ -53,8 +54,11 @@ const LearningPathResults = () => {
   const { lessons, userProfile, estimatedDuration, pathTitle } = personalizedPath;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
       <LoggedInNavbar />
+      
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
       
       {/* Custom CSS for animations */}
       <style jsx>{`
@@ -111,7 +115,7 @@ const LearningPathResults = () => {
         `).join('') : ''}
       `}</style>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 relative z-10">
         <div className="path-container max-w-4xl mx-auto">
           {/* Success Header */}
           <div className="text-center mb-12">

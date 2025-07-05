@@ -49,6 +49,7 @@ import ContentProcessor from '../components/admin/YouTubeProcessor';
 import APIStatusIndicator from '../components/admin/APIStatusIndicator';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import DraftManager from '../components/admin/DraftManager';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 // Add a simple OpenAI API test function
 const testOpenAIConnection = async () => {
@@ -309,32 +310,16 @@ const AdminPanel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: '#3b82f6' }}>
       <LoggedInNavbar />
       
-      <div className="container mx-auto px-4 py-8">
-        {/* Floating Particles Background */}
-        <div className="fixed inset-0 pointer-events-none">
-          {[...Array(30)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-blue-400 rounded-full"
-              animate={{
-                x: [Math.random() * window.innerWidth, Math.random() * window.innerWidth],
-                y: [Math.random() * window.innerHeight, Math.random() * window.innerHeight],
-                opacity: [0.2, 0.8, 0.2]
-              }}
-              transition={{
-                duration: Math.random() * 20 + 10,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-          ))}
-        </div>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
 
         {/* Header */}
-        <div className="bg-gray-800 border-b border-gray-700">
+        <div className="bg-gray-800 border-b border-gray-700 relative z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-6">
               <div>

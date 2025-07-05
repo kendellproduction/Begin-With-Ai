@@ -98,12 +98,13 @@ const Dashboard = () => {
 
   return (
     <div 
-      className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
+      className="relative min-h-screen text-white overflow-hidden"
+      style={{ backgroundColor: '#3b82f6' }}
     >
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
       
       {/* Custom CSS for animated shadows - wrapped in relative div */}
       <div className="relative z-10"> 

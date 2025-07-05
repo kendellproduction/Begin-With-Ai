@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import OptimizedStarField from './OptimizedStarField';
 
 const QuizResults = () => {
   const location = useLocation();
@@ -22,8 +23,11 @@ const QuizResults = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
-      <div className="max-w-2xl w-full bg-gray-800 rounded-3xl p-8 shadow-2xl text-center">
+    <div className="min-h-screen text-white flex items-center justify-center p-4" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
+      <div className="max-w-2xl w-full bg-gray-800 rounded-3xl p-8 shadow-2xl text-center relative z-10">
         <h1 className="text-3xl font-bold mb-6">Quiz Complete!</h1>
         
         {/* Score Circle */}

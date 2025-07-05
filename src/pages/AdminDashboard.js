@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 import { useAuth } from '../contexts/AuthContext';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
@@ -256,9 +257,12 @@ const AdminDashboard = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 px-6 py-6">
+      <div className="bg-gray-800 border-b border-gray-700 px-6 py-6 relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -281,7 +285,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 relative z-10">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <StatCard

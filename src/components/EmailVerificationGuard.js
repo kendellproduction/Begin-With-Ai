@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { sendEmailVerification } from 'firebase/auth';
+import OptimizedStarField from './OptimizedStarField';
 
 /**
  * EmailVerificationGuard component
@@ -48,8 +49,11 @@ const EmailVerificationGuard = ({ children, requireVerification = true }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#3b82f6' }}>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+
+      <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center">
           {/* Email verification icon */}
           <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-yellow-100">
