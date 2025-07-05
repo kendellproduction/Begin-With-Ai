@@ -57,20 +57,32 @@ html, body, #root {
 
 /* High-Performance Star Animations - GPU Accelerated */
 .star-container {
+  /* Improve rendering performance */
+  contain: strict;
+  /* Prevent layout thrashing */
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 0;
+  /* Optimize for GPU */
   transform: translateZ(0);
-  will-change: transform;
-  contain: layout style paint;
-  /* Force GPU layer */
+  /* Improve compositing */
   isolation: isolate;
 }
 
 .star-element {
-  will-change: transform, opacity;
-  transform: translateZ(0);
+  /* Optimize individual star rendering */
+  contain: layout style paint;
+  /* Reduce composite layers */
+  will-change: transform;
+  /* Improve animation performance */
   backface-visibility: hidden;
-  perspective: 1000px;
-  /* Optimize for animations */
-  animation-fill-mode: both;
+  /* Reduce memory usage */
+  transform-style: preserve-3d;
+  /* GPU acceleration */
+  transform: translateZ(0);
 }
 
 /* CSS-based star twinkle animation for better performance */
@@ -101,17 +113,17 @@ html, body, #root {
   
   /* Optimized star animations for mobile - keep all stars but make them more efficient */
   .star-container {
-    /* Use CPU-efficient transforms */
-    animation-timing-function: linear;
-    /* Force GPU layer for better performance */
+    /* Reduce star complexity on mobile */
+    contain: strict;
+    /* Improve mobile performance */
     transform: translate3d(0, 0, 0);
   }
   
   .star-element {
-    /* Optimize individual star performance */
-    animation-fill-mode: both;
-    /* Use hardware acceleration */
-    transform: translate3d(0, 0, 0);
+    /* Simpler animations on mobile */
+    will-change: transform;
+    /* Reduce memory usage */
+    backface-visibility: hidden;
   }
   
   /* Improve touch targets */
@@ -172,6 +184,10 @@ html, body, #root {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Improve rendering performance */
+  transform: translateZ(0);
+  /* Reduce paint complexity */
+  will-change: auto;
 }
 
 /* Remove default browser styles */
@@ -826,4 +842,49 @@ code {
       0 0 6px rgba(6, 182, 212, 0.1),
       0 0 3px rgba(16, 185, 129, 0.08);
   }
+}
+
+/* Prevent layout shifts and improve rendering */
+*, *::before, *::after {
+  /* Improve font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Optimize animations for better performance */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .star-element {
+    animation: none !important;
+  }
+}
+
+/* Improve overall page performance */
+html {
+  /* Improve scroll performance */
+  scroll-behavior: smooth;
+  /* Reduce layout thrashing */
+  overflow-x: hidden;
+}
+
+body {
+  /* Improve rendering performance */
+  transform: translateZ(0);
+  /* Reduce paint complexity */
+  will-change: auto;
+}
+
+/* Optimize landing page performance */
+.landing-page-optimized {
+  /* Reduce paint complexity */
+  contain: layout style paint;
+  /* Improve compositing */
+  isolation: isolate;
+  /* GPU acceleration */
+  transform: translateZ(0);
 }

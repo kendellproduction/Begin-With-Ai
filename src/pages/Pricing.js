@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import { motion } from 'framer-motion';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -70,53 +71,8 @@ const Pricing = () => {
     >
       <LoggedInNavbar />
 
-      {/* Star Animation Container for Pricing */}
-      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={`pricing-star-${i}`}
-              className="absolute rounded-full bg-white/80"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
-                ease: "linear",
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
 
       {/* Main content wrapper */}
       <div className="relative z-10">

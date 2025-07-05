@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import { motion } from 'framer-motion';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -102,54 +103,8 @@ const Dashboard = () => {
     >
       <LoggedInNavbar />
 
-      {/* Star Animation Container for Dashboard - High Performance GPU Accelerated */}
-      <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25; 
-          const starSize = Math.random() * 2 + 0.5;
-
-          return (
-            <motion.div
-              key={`dashboard-star-${i}`}
-              className="star-element absolute rounded-full bg-white"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.6, 0.6, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 3 + 1,
-                ease: "linear",
-                type: "tween",
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 3 + 1,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
       
       {/* Custom CSS for animated shadows - wrapped in relative div */}
       <div className="relative z-10"> 

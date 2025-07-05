@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
@@ -11,9 +11,10 @@ import FloatingHelpButton from '../components/FloatingHelpButton';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { NewUserOnboardingService } from '../services/newUserOnboardingService';
-import { motion } from 'framer-motion'; // Direct import for debugging
+import { motion, AnimatePresence } from 'framer-motion';
 import { animations } from '../utils/framerMotion';
 import logger from '../utils/logger';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 
 const HomePage = () => {
@@ -531,82 +532,8 @@ const HomePage = () => {
     >
       <LoggedInNavbar />
 
-      {/* Enhanced Star Animation Container - 200 Stars */}
-      <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = typeof window !== 'undefined' ? window.innerHeight : 800;
-          const screenW = typeof window !== 'undefined' ? window.innerWidth : 1200;
-          
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          
-          // Slower, more relaxed animations (15-30 seconds)
-          const starDuration = 15 + Math.random() * 15;
-          
-          // Enhanced star varieties
-          const starSize = Math.random() * 3 + 1; // 1-4px
-          const isLargeStar = i % 12 === 0;
-          const isMediumStar = i % 6 === 0;
-          const isPulsingStar = i % 8 === 0;
-          
-          const starOpacity = isLargeStar ? [0, 1, 0.8, 0] : 
-                            isMediumStar ? [0, 0.9, 0.7, 0] : 
-                            [0, 0.7, 0.5, 0];
-
-          return (
-            <motion.div
-              key={`homepage-star-${i}`}
-              className={`star-element absolute rounded-full ${
-                isLargeStar ? 'bg-white' : 
-                isMediumStar ? 'bg-blue-100' : 
-                'bg-white'
-              } ${isPulsingStar ? 'star-pulse-optimized' : ''}`}
-              style={{
-                width: starSize,
-                height: starSize,
-                filter: isLargeStar ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 
-                       isMediumStar ? 'drop-shadow(0 0 3px rgba(255,255,255,0.6))' : 
-                       'drop-shadow(0 0 2px rgba(255,255,255,0.4))',
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-                scale: 0.3,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: starOpacity,
-                scale: isLargeStar ? [0.3, 1.2, 1, 0.3] : [0.3, 1, 1, 0.3],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 2 + 1,
-                ease: "linear",
-                type: "tween",
-                opacity: {
-                  duration: starDuration,
-                  ease: "easeInOut",
-                  times: [0, 0.2, 0.8, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 2 + 1,
-                },
-                scale: {
-                  duration: starDuration,
-                  ease: "easeInOut",
-                  times: [0, 0.3, 0.7, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 2 + 1,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
 
       {/* Main content wrapper */}
       <div className="relative z-10">

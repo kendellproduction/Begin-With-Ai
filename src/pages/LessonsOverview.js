@@ -7,8 +7,9 @@ import LearningPathVisual from '../components/LearningPathVisual';
 import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import logger from '../utils/logger';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const LessonsOverview = React.memo(() => {
   const navigate = useNavigate();
@@ -509,57 +510,14 @@ const LessonsOverview = React.memo(() => {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
+    <div 
+      className="relative min-h-screen text-white overflow-hidden"
+      style={{ backgroundColor: '#3b82f6' }}
+    >
       <LoggedInNavbar />
 
-              {/* Star Animation Container - High Performance GPU Accelerated */}
-        <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={`lessons-star-${i}`}
-              className="star-element absolute rounded-full bg-white/80"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
-                ease: "linear",
-                type: "tween", // More performant than spring
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
       
       {/* Main content wrapper */}
       <div className="relative z-10">

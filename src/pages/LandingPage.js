@@ -7,6 +7,7 @@ import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 import lessonsData from '../data/lessonsData';
 import { navigateAfterAuth } from '../utils/navigationUtils';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const LandingPage = () => {
   // Removed excessive logging to prevent console spam
@@ -199,15 +200,10 @@ const LandingPage = () => {
         navigate('/pricing');
         setRedirectToPremiumAfterAuth(false);
       } else {
-        navigateAfterAuth(navigate, false);
+        navigate('/dashboard');
       }
-      
-      setTimeout(() => {
-        setShowAuthModal(false);
-        setAuthSuccess(false);
-      }, 2000);
     } catch (error) {
-      setError(error.message);
+      setError(error.message || 'An error occurred during authentication');
     } finally {
       setIsLoading(false);
     }
@@ -216,6 +212,12 @@ const LandingPage = () => {
   const handleGoogleAuth = async () => {
     setError('');
     setIsLoading(true);
+
+    if (!checkRateLimit('auth_google', 5, 300000).allowed) {
+      setError('Too many attempts. Please wait before trying again.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       await signInWithGoogle();
@@ -226,15 +228,10 @@ const LandingPage = () => {
         navigate('/pricing');
         setRedirectToPremiumAfterAuth(false);
       } else {
-        navigateAfterAuth(navigate, false);
+        navigate('/dashboard');
       }
-      
-      setTimeout(() => {
-        setShowAuthModal(false);
-        setAuthSuccess(false);
-      }, 2000);
     } catch (error) {
-      setError(error.message);
+      setError(error.message || 'An error occurred during Google authentication');
     } finally {
       setIsLoading(false);
     }
@@ -244,17 +241,12 @@ const LandingPage = () => {
     setAuthMode(mode);
     setShowAuthModal(true);
     setError('');
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
     setAuthSuccess(false);
     setRedirectToPremiumAfterAuth(shouldRedirectToPremium);
   };
 
-  // Handle Premium CTA - check if user is logged in
   const handlePremiumCTA = () => {
     if (user) {
-      // User is already authenticated, go directly to pricing/payment
       navigate('/pricing');
     } else {
       // User needs to sign up first, then redirect to premium
@@ -298,88 +290,14 @@ const LandingPage = () => {
     <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white overflow-x-hidden">
       <Navbar openAuthModal={openAuthModal} />
       
+      {/* Single Optimized Star Field for Entire Page */}
+      <OptimizedStarField starCount={180} opacity={0.8} speed={1} size={1.2} />
+      
       {/* Hero Section with Solid Blue Background & Adjusted Content */}
       <section 
         className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-8 sm:pt-12 md:pt-16 pb-12"
         style={{ backgroundColor: '#3b82f6' }}
       >
-        {/* Animated Moving Stars */}
-        <div className="star-container fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-          {[...Array(200)].map((_, i) => {
-            const screenH = typeof window !== 'undefined' ? window.innerHeight : 800;
-            const screenW = typeof window !== 'undefined' ? window.innerWidth : 1200;
-            
-            const initialY = Math.random() * screenH;
-            const targetY = Math.random() * screenH;
-            const initialX = Math.random() * screenW;
-            const targetX = Math.random() * screenW;
-            
-            // Slower, more relaxed animations (15-30 seconds)
-            const starDuration = 15 + Math.random() * 15;
-            
-            // Enhanced star varieties
-            const starSize = Math.random() * 3 + 1; // 1-4px
-            const isLargeStar = i % 12 === 0;
-            const isMediumStar = i % 6 === 0;
-            const isPulsingStar = i % 8 === 0;
-            
-            const starOpacity = isLargeStar ? [0, 1, 0.8, 0] : 
-                              isMediumStar ? [0, 0.9, 0.7, 0] : 
-                              [0, 0.7, 0.5, 0];
-
-            return (
-              <motion.div
-                key={`landing-star-${i}`}
-                className={`star-element absolute rounded-full ${
-                  isLargeStar ? 'bg-white' : 
-                  isMediumStar ? 'bg-blue-100' : 
-                  'bg-white'
-                } ${isPulsingStar ? 'star-pulse-optimized' : ''}`}
-                style={{
-                  width: starSize,
-                  height: starSize,
-                  filter: isLargeStar ? 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' : 
-                         isMediumStar ? 'drop-shadow(0 0 3px rgba(255,255,255,0.6))' : 
-                         'drop-shadow(0 0 2px rgba(255,255,255,0.4))',
-                }}
-                initial={{
-                  x: initialX,
-                  y: initialY,
-                  opacity: 0,
-                  scale: 0.3,
-                }}
-                animate={{
-                  x: targetX,
-                  y: targetY,
-                  opacity: starOpacity,
-                  scale: isLargeStar ? [0.3, 1.2, 1, 0.3] : [0.3, 1, 1, 0.3],
-                }}
-                transition={{
-                  duration: starDuration,
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 2 + 1,
-                  ease: "linear",
-                  type: "tween",
-                  opacity: {
-                    duration: starDuration,
-                    ease: "easeInOut",
-                    times: [0, 0.2, 0.8, 1],
-                    repeat: Infinity,
-                    repeatDelay: Math.random() * 2 + 1,
-                  },
-                  scale: {
-                    duration: starDuration,
-                    ease: "easeInOut",
-                    times: [0, 0.3, 0.7, 1],
-                    repeat: Infinity,
-                    repeatDelay: Math.random() * 2 + 1,
-                  }
-                }}
-              />
-            );
-          })}
-        </div>
-
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left side - Main content */}
@@ -757,45 +675,6 @@ const LandingPage = () => {
 
       {/* Free vs Premium Comparison Section */}
       <section className="py-20 bg-gradient-to-br from-gray-900/80 via-blue-900/60 to-indigo-900/70 relative overflow-hidden">
-        {/* Moving Stars Background */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(80)].map((_, i) => {
-            const startX = (i * 137.5) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
-            const startY = (i * 73.7) % (typeof window !== 'undefined' ? window.innerHeight : 600);
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  x: startX,
-                  y: startY,
-                }}
-                animate={{
-                  x: [startX, startX + (Math.random() - 0.5) * 100],
-                  y: [startY, startY + (Math.random() - 0.5) * 100],
-                }}
-                transition={{
-                  duration: 12 + Math.random() * 8,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                  delay: Math.random() * 6,
-                }}
-              >
-                <div 
-                  className={`bg-white/20 rounded-full ${
-                    i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
-                    i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                  }`}
-                  style={{
-                    filter: `hue-rotate(${Math.random() * 60}deg)`,
-                    animationDelay: `${Math.random() * 3}s`,
-                  }}
-                ></div>
-              </motion.div>
-            );
-          })}
-        </div>
 
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Compact Header */}
@@ -963,67 +842,8 @@ const LandingPage = () => {
 
       {/* Enhanced Stats Section */}
       <section className="py-32 bg-gradient-to-br from-gray-800/60 via-blue-900/40 to-indigo-900/40 relative overflow-hidden">
-        {/* Moving Stars Background */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(80)].map((_, i) => {
-            const startX = (i * 157.2) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
-            const startY = (i * 103.8) % (typeof window !== 'undefined' ? window.innerHeight : 800);
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  x: startX,
-                  y: startY,
-                }}
-                animate={{
-                  x: [startX, startX + (Math.random() - 0.5) * 90],
-                  y: [startY, startY + (Math.random() - 0.5) * 90],
-                }}
-                transition={{
-                  duration: 12 + Math.random() * 15,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                  delay: Math.random() * 8,
-                }}
-              >
-                <div 
-                  className={`bg-white/30 rounded-full ${
-                    i % 12 === 0 ? 'w-2 h-2 animate-pulse' : 
-                    i % 7 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                  }`}
-                  style={{
-                    filter: `hue-rotate(${Math.random() * 60}deg)`,
-                    animationDelay: `${Math.random() * 3}s`,
-                  }}
-                ></div>
-              </motion.div>
-            );
-          })}
-        </div>
 
-        <div className="absolute inset-0">
-          {[...Array(50)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-cyan-400/30 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -20, 0],
-                opacity: [0.3, 0.8, 0.3],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 2,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
-        </div>
+
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div 
@@ -1072,112 +892,13 @@ const LandingPage = () => {
 
       {/* Real Lessons Showcase Section */}
       <section className="py-20 bg-gradient-to-br from-gray-900 via-blue-900/80 to-indigo-900/70 relative overflow-hidden">
-        {/* Moving Stars Background */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(100)].map((_, i) => {
-            const startX = (i * 112.7) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
-            const startY = (i * 89.3) % (typeof window !== 'undefined' ? window.innerHeight : 800);
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  x: startX,
-                  y: startY,
-                }}
-                animate={{
-                  x: [startX, startX + (Math.random() - 0.5) * 80],
-                  y: [startY, startY + (Math.random() - 0.5) * 80],
-                }}
-                transition={{
-                  duration: 14 + Math.random() * 12,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                  delay: Math.random() * 6,
-                }}
-              >
-                <div 
-                  className={`bg-white/25 rounded-full ${
-                    i % 15 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
-                    i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                  }`}
-                  style={{
-                    filter: `hue-rotate(${Math.random() * 60}deg)`,
-                    animationDelay: `${Math.random() * 3}s`,
-                  }}
-                ></div>
-              </motion.div>
-            );
-          })}
-        </div>
       </section>
 
       {/* Combined Features + Testimonials Section */}
       <section className="py-32 bg-gradient-to-br from-gray-800/50 via-blue-800/30 to-cyan-800/30 relative overflow-hidden">
-        {/* Enhanced Moving Stars Background for Success Stories */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(140)].map((_, i) => {
-            const startX = (i * 97.2) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
-            const startY = (i * 67.1) % (typeof window !== 'undefined' ? window.innerHeight : 1000);
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  x: startX,
-                  y: startY,
-                }}
-                animate={{
-                  x: [startX, startX + (Math.random() - 0.5) * 120],
-                  y: [startY, startY + (Math.random() - 0.5) * 120],
-                }}
-                transition={{
-                  duration: 15 + Math.random() * 12,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                  delay: Math.random() * 8,
-                }}
-              >
-                <div 
-                  className={`bg-white/35 rounded-full ${
-                    i % 16 === 0 ? 'w-2.5 h-2.5 animate-pulse' : 
-                    i % 8 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-                  }`}
-                  style={{
-                    filter: `hue-rotate(${Math.random() * 60}deg)`,
-                    animationDelay: `${Math.random() * 3}s`,
-                  }}
-                ></div>
-              </motion.div>
-            );
-          })}
-        </div>
 
-        {/* Additional floating particles for testimonials section */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(60)].map((_, i) => (
-            <motion.div
-              key={`particle-${i}`}
-              className="absolute w-1 h-1 bg-cyan-300/40 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                opacity: [0.4, 0.9, 0.4],
-                scale: [1, 1.3, 1],
-              }}
-              transition={{
-                duration: 4 + Math.random() * 3,
-                repeat: Infinity,
-                delay: Math.random() * 3,
-              }}
-            />
-          ))}
-        </div>
+
+
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Testimonials */}
@@ -1269,68 +990,7 @@ const LandingPage = () => {
 
       {/* Enhanced Final CTA Section */}
       <section className="py-32 relative overflow-hidden" style={{ backgroundColor: '#3b82f6' }}>
-        {/* Moving Stars Background */}
-        <div className="absolute inset-0 z-0">
-          {[...Array(150)].map((_, i) => {
-            const startX = (i * 83.4) % (typeof window !== 'undefined' ? window.innerWidth : 1200);
-            const startY = (i * 51.9) % (typeof window !== 'undefined' ? window.innerHeight : 1000);
-            return (
-              <motion.div
-                key={i}
-                className="absolute"
-                initial={{
-                  x: startX,
-                  y: startY,
-                }}
-                animate={{
-                  x: [startX, startX + (Math.random() - 0.5) * 150],
-                  y: [startY, startY + (Math.random() - 0.5) * 150],
-                }}
-                transition={{
-                  duration: 18 + Math.random() * 12,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                  delay: Math.random() * 12,
-                }}
-              >
-                <div 
-                  className={`bg-white/15 rounded-full ${
-                    i % 20 === 0 ? 'w-3 h-3 animate-pulse' : 
-                    i % 10 === 0 ? 'w-2 h-2' : 'w-1 h-1'
-                  }`}
-                  style={{
-                    filter: `hue-rotate(${Math.random() * 60}deg)`,
-                    animationDelay: `${Math.random() * 3}s`,
-                  }}
-                ></div>
-              </motion.div>
-            );
-          })}
-        </div>
 
-        <div className="absolute inset-0">
-          {[...Array(100)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-white/20 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -50, 0],
-                opacity: [0.2, 0.8, 0.2],
-                scale: [1, 1.5, 1],
-              }}
-              transition={{
-                duration: 4 + Math.random() * 4,
-                repeat: Infinity,
-                delay: Math.random() * 4,
-              }}
-            />
-          ))}
-        </div>
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div 

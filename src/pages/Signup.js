@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import PasswordStrengthIndicator from '../components/PasswordStrengthIndicator';
 import { checkPasswordStrength } from '../utils/validation'; // Import from utils
 import { navigateAfterAuth } from '../utils/navigationUtils';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -93,44 +95,8 @@ const Signup = () => {
 
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#3b82f6' }}>
-      {/* Star Animation Container */}
-      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={i}
-              className="absolute bg-white/80 rounded-full"
-              style={{
-                left: initialX,
-                top: initialY,
-                width: starSize,
-                height: starSize,
-              }}
-              animate={{
-                x: [0, targetX - initialX, 0],
-                y: [0, targetY - initialY, 0],
-                opacity: [0, 0.8, 0.8, 0],
-                scale: [0.5, 1.2, 0.8, 0.5],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                ease: "linear",
-                delay: Math.random() * 10,
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Optimized Star Field */}
+      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
       
       <Navbar />
       
