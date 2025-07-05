@@ -92,223 +92,223 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
     }
   };
 
-  // 24 vibrant, energetic color palettes that are full of life!
+  // 24 rich, solid color palettes with warm and vibrant tones
   const colorPalettes = [
-    // Electric Ocean
+    // Warm Caramel
     {
-      gradient: 'from-blue-400/70 via-cyan-500/60 to-teal-500/70',
-      borderGlow: 'border-cyan-300/60',
-      shadowColor: 'shadow-cyan-500/40',
-      textAccent: 'text-cyan-100',
-      buttonStyle: 'from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500',
-      particles: ['✨', '💫', '🌟']
+      gradient: 'bg-amber-600/85',
+      borderGlow: 'border-amber-400/70',
+      shadowColor: 'shadow-amber-600/50',
+      textAccent: 'text-amber-100',
+      buttonStyle: 'from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600',
+      particles: ['✨', '🍯', '🌟']
     },
-    // Vibrant Forest
+    // Forest Green
     {
-      gradient: 'from-green-400/70 via-emerald-500/60 to-lime-500/70',
-      borderGlow: 'border-green-300/60',
-      shadowColor: 'shadow-emerald-500/40',
+      gradient: 'bg-green-600/85',
+      borderGlow: 'border-green-400/70',
+      shadowColor: 'shadow-green-600/50',
       textAccent: 'text-green-100',
-      buttonStyle: 'from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500',
+      buttonStyle: 'from-green-500 to-green-700 hover:from-green-400 hover:to-green-600',
       particles: ['🌿', '🍃', '🌱']
     },
-    // Neon Sunset
+    // Rich Terracotta
     {
-      gradient: 'from-orange-400/70 via-red-500/60 to-pink-500/70',
-      borderGlow: 'border-orange-300/60',
-      shadowColor: 'shadow-red-500/40',
+      gradient: 'bg-orange-700/85',
+      borderGlow: 'border-orange-500/70',
+      shadowColor: 'shadow-orange-700/50',
       textAccent: 'text-orange-100',
-      buttonStyle: 'from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500',
-      particles: ['🔥', '☀️', '🌅']
+      buttonStyle: 'from-orange-600 to-orange-800 hover:from-orange-500 hover:to-orange-700',
+      particles: ['🏺', '🍂', '🌅']
     },
-    // Electric Mint
+    // Ocean Blue
     {
-      gradient: 'from-emerald-300/70 via-cyan-400/60 to-blue-500/70',
-      borderGlow: 'border-emerald-300/60',
-      shadowColor: 'shadow-emerald-400/40',
-      textAccent: 'text-emerald-100',
-      buttonStyle: 'from-emerald-400 to-cyan-500 hover:from-emerald-300 hover:to-cyan-400',
-      particles: ['🔷', '💎', '✨']
-    },
-    // Cosmic Purple
-    {
-      gradient: 'from-purple-400/70 via-violet-500/60 to-indigo-600/70',
-      borderGlow: 'border-purple-300/60',
-      shadowColor: 'shadow-purple-500/40',
-      textAccent: 'text-purple-100',
-      buttonStyle: 'from-purple-500 to-violet-600 hover:from-purple-400 hover:to-violet-500',
-      particles: ['🌟', '🔮', '💜']
-    },
-    // Tropical Paradise
-    {
-      gradient: 'from-cyan-300/70 via-teal-400/60 to-emerald-500/70',
-      borderGlow: 'border-cyan-300/60',
-      shadowColor: 'shadow-teal-400/40',
-      textAccent: 'text-cyan-100',
-      buttonStyle: 'from-cyan-400 to-teal-500 hover:from-cyan-300 hover:to-teal-400',
-      particles: ['🐚', '🌊', '💫']
-    },
-    // Sunshine Sky
-    {
-      gradient: 'from-yellow-300/70 via-blue-400/60 to-indigo-500/70',
-      borderGlow: 'border-yellow-300/60',
-      shadowColor: 'shadow-blue-400/40',
-      textAccent: 'text-yellow-100',
-      buttonStyle: 'from-yellow-400 to-blue-500 hover:from-yellow-300 hover:to-blue-400',
-      particles: ['☁️', '🌤️', '⭐']
-    },
-    // Electric Lime
-    {
-      gradient: 'from-lime-300/70 via-green-400/60 to-emerald-500/70',
-      borderGlow: 'border-lime-300/60',
-      shadowColor: 'shadow-lime-400/40',
-      textAccent: 'text-lime-100',
-      buttonStyle: 'from-lime-400 to-green-500 hover:from-lime-300 hover:to-green-400',
-      particles: ['🌿', '🍀', '🌱']
-    },
-    // Galaxy Dream
-    {
-      gradient: 'from-indigo-500/70 via-purple-600/60 to-pink-600/70',
-      borderGlow: 'border-indigo-400/60',
-      shadowColor: 'shadow-indigo-600/40',
-      textAccent: 'text-indigo-100',
-      buttonStyle: 'from-indigo-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600',
-      particles: ['🌙', '⭐', '🌟']
-    },
-    // Ocean Breeze
-    {
-      gradient: 'from-teal-300/70 via-cyan-400/60 to-blue-400/70',
-      borderGlow: 'border-teal-300/60',
-      shadowColor: 'shadow-teal-400/40',
-      textAccent: 'text-teal-100',
-      buttonStyle: 'from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400',
-      particles: ['🌊', '🐠', '💧']
-    },
-    // Rose Gold Magic
-    {
-      gradient: 'from-rose-300/70 via-pink-400/60 to-red-500/70',
-      borderGlow: 'border-rose-300/60',
-      shadowColor: 'shadow-rose-400/40',
-      textAccent: 'text-rose-100',
-      buttonStyle: 'from-rose-400 to-pink-500 hover:from-rose-300 hover:to-pink-400',
-      particles: ['🌹', '💖', '💎']
-    },
-    // Emerald Energy
-    {
-      gradient: 'from-emerald-400/70 via-green-500/60 to-teal-600/70',
-      borderGlow: 'border-emerald-300/60',
-      shadowColor: 'shadow-emerald-500/40',
-      textAccent: 'text-emerald-100',
-      buttonStyle: 'from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500',
-      particles: ['💚', '🔮', '✨']
-    },
-    // Electric Blue
-    {
-      gradient: 'from-blue-500/70 via-cyan-600/60 to-sky-700/70',
-      borderGlow: 'border-blue-400/60',
-      shadowColor: 'shadow-blue-500/40',
+      gradient: 'bg-blue-600/85',
+      borderGlow: 'border-blue-400/70',
+      shadowColor: 'shadow-blue-600/50',
       textAccent: 'text-blue-100',
-      buttonStyle: 'from-blue-500 to-cyan-600 hover:from-blue-400 hover:to-cyan-500',
-      particles: ['🔵', '💙', '⚡']
+      buttonStyle: 'from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600',
+      particles: ['🌊', '💧', '🐟']
     },
-    // Solar Flare
+    // Warm Chocolate
     {
-      gradient: 'from-amber-400/70 via-orange-500/60 to-red-600/70',
-      borderGlow: 'border-amber-300/60',
-      shadowColor: 'shadow-amber-500/40',
+      gradient: 'bg-amber-800/85',
+      borderGlow: 'border-amber-600/70',
+      shadowColor: 'shadow-amber-800/50',
       textAccent: 'text-amber-100',
-      buttonStyle: 'from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500',
-      particles: ['🔥', '☄️', '💥']
+      buttonStyle: 'from-amber-700 to-amber-900 hover:from-amber-600 hover:to-amber-800',
+      particles: ['🍫', '☕', '🌰']
     },
-    // Jungle Vibe
+    // Sage Green
     {
-      gradient: 'from-green-500/70 via-emerald-600/60 to-teal-700/70',
-      borderGlow: 'border-green-400/60',
-      shadowColor: 'shadow-green-500/40',
-      textAccent: 'text-green-100',
-      buttonStyle: 'from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500',
-      particles: ['🌲', '🍃', '🌿']
-    },
-    // Crystal Clear
-    {
-      gradient: 'from-cyan-400/70 via-blue-500/60 to-sky-600/70',
-      borderGlow: 'border-cyan-300/60',
-      shadowColor: 'shadow-cyan-500/40',
-      textAccent: 'text-cyan-100',
-      buttonStyle: 'from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500',
-      particles: ['🌀', '💫', '🌊']
-    },
-    // Neon Jungle
-    {
-      gradient: 'from-teal-400/70 via-green-500/60 to-emerald-600/70',
-      borderGlow: 'border-teal-300/60',
-      shadowColor: 'shadow-teal-500/40',
-      textAccent: 'text-teal-100',
-      buttonStyle: 'from-teal-500 to-green-600 hover:from-teal-400 hover:to-green-500',
-      particles: ['🍀', '🌱', '💚']
-    },
-    // Midnight Storm
-    {
-      gradient: 'from-slate-400/70 via-blue-600/60 to-indigo-800/70',
-      borderGlow: 'border-slate-400/60',
-      shadowColor: 'shadow-blue-600/40',
-      textAccent: 'text-slate-100',
-      buttonStyle: 'from-slate-600 to-blue-700 hover:from-slate-500 hover:to-blue-600',
-      particles: ['🛡️', '⚔️', '🏰']
-    },
-    // Aqua Dream
-    {
-      gradient: 'from-cyan-300/70 via-teal-400/60 to-blue-500/70',
-      borderGlow: 'border-cyan-300/60',
-      shadowColor: 'shadow-cyan-400/40',
-      textAccent: 'text-cyan-100',
-      buttonStyle: 'from-cyan-400 to-teal-500 hover:from-cyan-300 hover:to-teal-400',
-      particles: ['🐚', '🌊', '💎']
-    },
-    // Forest Fire
-    {
-      gradient: 'from-green-600/70 via-orange-700/60 to-red-800/70',
-      borderGlow: 'border-green-400/60',
-      shadowColor: 'shadow-orange-600/40',
-      textAccent: 'text-green-100',
-      buttonStyle: 'from-green-600 to-orange-700 hover:from-green-500 hover:to-orange-600',
-      particles: ['🌲', '🔥', '🌿']
-    },
-    // Royal Blue
-    {
-      gradient: 'from-blue-500/70 via-indigo-600/60 to-purple-700/70',
-      borderGlow: 'border-blue-400/60',
-      shadowColor: 'shadow-blue-500/40',
-      textAccent: 'text-blue-100',
-      buttonStyle: 'from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500',
-      particles: ['💎', '👑', '✨']
-    },
-    // Electric Paradise
-    {
-      gradient: 'from-teal-300/70 via-cyan-400/60 to-emerald-500/70',
-      borderGlow: 'border-teal-300/60',
-      shadowColor: 'shadow-teal-400/40',
-      textAccent: 'text-teal-100',
-      buttonStyle: 'from-teal-400 to-cyan-500 hover:from-teal-300 hover:to-cyan-400',
-      particles: ['🌊', '🐟', '💧']
-    },
-    // Lightning Storm
-    {
-      gradient: 'from-yellow-500/70 via-blue-600/60 to-purple-700/70',
-      borderGlow: 'border-yellow-400/60',
-      shadowColor: 'shadow-blue-500/40',
-      textAccent: 'text-yellow-100',
-      buttonStyle: 'from-yellow-500 to-blue-600 hover:from-yellow-400 hover:to-blue-500',
-      particles: ['⚡', '🌩️', '☁️']
-    },
-    // Emerald Kingdom
-    {
-      gradient: 'from-emerald-400/70 via-green-500/60 to-cyan-600/70',
-      borderGlow: 'border-emerald-300/60',
-      shadowColor: 'shadow-emerald-500/40',
+      gradient: 'bg-emerald-600/85',
+      borderGlow: 'border-emerald-400/70',
+      shadowColor: 'shadow-emerald-600/50',
       textAccent: 'text-emerald-100',
-      buttonStyle: 'from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500',
-      particles: ['💚', '🏰', '✨']
+      buttonStyle: 'from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600',
+      particles: ['🌿', '🕊️', '💚']
+    },
+    // Sunset Orange
+    {
+      gradient: 'bg-orange-600/85',
+      borderGlow: 'border-orange-400/70',
+      shadowColor: 'shadow-orange-600/50',
+      textAccent: 'text-orange-100',
+      buttonStyle: 'from-orange-500 to-orange-700 hover:from-orange-400 hover:to-orange-600',
+      particles: ['🌅', '🔥', '☀️']
+    },
+    // Teal Waters
+    {
+      gradient: 'bg-teal-600/85',
+      borderGlow: 'border-teal-400/70',
+      shadowColor: 'shadow-teal-600/50',
+      textAccent: 'text-teal-100',
+      buttonStyle: 'from-teal-500 to-teal-700 hover:from-teal-400 hover:to-teal-600',
+      particles: ['🌊', '🐚', '💎']
+    },
+    // Warm Rust
+    {
+      gradient: 'bg-red-700/85',
+      borderGlow: 'border-red-500/70',
+      shadowColor: 'shadow-red-700/50',
+      textAccent: 'text-red-100',
+      buttonStyle: 'from-red-600 to-red-800 hover:from-red-500 hover:to-red-700',
+      particles: ['🍁', '🔥', '🌋']
+    },
+    // Deep Navy
+    {
+      gradient: 'bg-indigo-700/85',
+      borderGlow: 'border-indigo-500/70',
+      shadowColor: 'shadow-indigo-700/50',
+      textAccent: 'text-indigo-100',
+      buttonStyle: 'from-indigo-600 to-indigo-800 hover:from-indigo-500 hover:to-indigo-700',
+      particles: ['⭐', '🌙', '💫']
+    },
+    // Warm Sand
+    {
+      gradient: 'bg-yellow-700/85',
+      borderGlow: 'border-yellow-500/70',
+      shadowColor: 'shadow-yellow-700/50',
+      textAccent: 'text-yellow-100',
+      buttonStyle: 'from-yellow-600 to-yellow-800 hover:from-yellow-500 hover:to-yellow-700',
+      particles: ['🏖️', '☀️', '🌾']
+    },
+    // Pine Forest
+    {
+      gradient: 'bg-green-700/85',
+      borderGlow: 'border-green-500/70',
+      shadowColor: 'shadow-green-700/50',
+      textAccent: 'text-green-100',
+      buttonStyle: 'from-green-600 to-green-800 hover:from-green-500 hover:to-green-700',
+      particles: ['🌲', '🏔️', '🦌']
+    },
+    // Sky Blue
+    {
+      gradient: 'bg-sky-600/85',
+      borderGlow: 'border-sky-400/70',
+      shadowColor: 'shadow-sky-600/50',
+      textAccent: 'text-sky-100',
+      buttonStyle: 'from-sky-500 to-sky-700 hover:from-sky-400 hover:to-sky-600',
+      particles: ['☁️', '🌤️', '🕊️']
+    },
+    // Copper Glow
+    {
+      gradient: 'bg-orange-800/85',
+      borderGlow: 'border-orange-600/70',
+      shadowColor: 'shadow-orange-800/50',
+      textAccent: 'text-orange-100',
+      buttonStyle: 'from-orange-700 to-orange-900 hover:from-orange-600 hover:to-orange-800',
+      particles: ['🔶', '⚡', '🌟']
+    },
+    // Moss Green
+    {
+      gradient: 'bg-lime-700/85',
+      borderGlow: 'border-lime-500/70',
+      shadowColor: 'shadow-lime-700/50',
+      textAccent: 'text-lime-100',
+      buttonStyle: 'from-lime-600 to-lime-800 hover:from-lime-500 hover:to-lime-700',
+      particles: ['🍀', '🌱', '🦎']
+    },
+    // Denim Blue
+    {
+      gradient: 'bg-blue-700/85',
+      borderGlow: 'border-blue-500/70',
+      shadowColor: 'shadow-blue-700/50',
+      textAccent: 'text-blue-100',
+      buttonStyle: 'from-blue-600 to-blue-800 hover:from-blue-500 hover:to-blue-700',
+      particles: ['🌀', '💙', '🦋']
+    },
+    // Jade Stone
+    {
+      gradient: 'bg-emerald-700/85',
+      borderGlow: 'border-emerald-500/70',
+      shadowColor: 'shadow-emerald-700/50',
+      textAccent: 'text-emerald-100',
+      buttonStyle: 'from-emerald-600 to-emerald-800 hover:from-emerald-500 hover:to-emerald-700',
+      particles: ['💚', '🔮', '🏯']
+    },
+    // Warm Crimson
+    {
+      gradient: 'bg-red-600/85',
+      borderGlow: 'border-red-400/70',
+      shadowColor: 'shadow-red-600/50',
+      textAccent: 'text-red-100',
+      buttonStyle: 'from-red-500 to-red-700 hover:from-red-400 hover:to-red-600',
+      particles: ['🌹', '❤️', '🎈']
+    },
+    // Midnight Blue
+    {
+      gradient: 'bg-slate-700/85',
+      borderGlow: 'border-slate-500/70',
+      shadowColor: 'shadow-slate-700/50',
+      textAccent: 'text-slate-100',
+      buttonStyle: 'from-slate-600 to-slate-800 hover:from-slate-500 hover:to-slate-700',
+      particles: ['🌃', '🦇', '🌙']
+    },
+    // Warm Peach
+    {
+      gradient: 'bg-rose-600/85',
+      borderGlow: 'border-rose-400/70',
+      shadowColor: 'shadow-rose-600/50',
+      textAccent: 'text-rose-100',
+      buttonStyle: 'from-rose-500 to-rose-700 hover:from-rose-400 hover:to-rose-600',
+      particles: ['🍑', '🌸', '🦩']
+    },
+    // Coffee Brown
+    {
+      gradient: 'bg-stone-700/85',
+      borderGlow: 'border-stone-500/70',
+      shadowColor: 'shadow-stone-700/50',
+      textAccent: 'text-stone-100',
+      buttonStyle: 'from-stone-600 to-stone-800 hover:from-stone-500 hover:to-stone-700',
+      particles: ['☕', '🪨', '🏜️']
+    },
+    // Azure Blue
+    {
+      gradient: 'bg-cyan-600/85',
+      borderGlow: 'border-cyan-400/70',
+      shadowColor: 'shadow-cyan-600/50',
+      textAccent: 'text-cyan-100',
+      buttonStyle: 'from-cyan-500 to-cyan-700 hover:from-cyan-400 hover:to-cyan-600',
+      particles: ['🌊', '🐬', '💎']
+    },
+    // Golden Hour
+    {
+      gradient: 'bg-amber-700/85',
+      borderGlow: 'border-amber-500/70',
+      shadowColor: 'shadow-amber-700/50',
+      textAccent: 'text-amber-100',
+      buttonStyle: 'from-amber-600 to-amber-800 hover:from-amber-500 hover:to-amber-700',
+      particles: ['🌅', '✨', '🏆']
+    },
+    // Forest Canopy
+    {
+      gradient: 'bg-green-800/85',
+      borderGlow: 'border-green-600/70',
+      shadowColor: 'shadow-green-800/50',
+      textAccent: 'text-green-100',
+      buttonStyle: 'from-green-700 to-green-900 hover:from-green-600 hover:to-green-800',
+      particles: ['🌳', '🦋', '🍃']
     }
   ];
 
