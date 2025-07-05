@@ -511,13 +511,12 @@ const LessonsOverview = React.memo(() => {
 
   return (
     <div 
-      className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#3b82f6' }}
+      className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
     >
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
       
       {/* Main content wrapper */}
       <div className="relative z-10">
@@ -525,7 +524,7 @@ const LessonsOverview = React.memo(() => {
           {/* Header Section */}
           <div className="text-center mb-8">
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white via-indigo-200 to-purple-200 bg-clip-text text-transparent mb-4 leading-tight py-2">
-              Your AI Learning Journey
+              Lessons
             </h1>
             <p className="text-xl text-slate-300 max-w-2xl mx-auto">
               Master AI through adaptive lessons designed for your skill level
@@ -535,14 +534,20 @@ const LessonsOverview = React.memo(() => {
           {/* Progress Section (if user has active path) or CTA */}
           {userLearningPath && learningProgress ? (
             <div className="mb-8">
-              <div className="bg-gradient-to-br from-yellow-500/25 via-amber-400/20 to-orange-500/25 backdrop-blur-xl rounded-2xl p-4 border border-yellow-300/60 relative transition-all duration-500 breathing-shadow">
+              <div className="bg-gradient-to-br from-yellow-500/10 via-amber-400/8 to-orange-500/10 backdrop-blur-sm rounded-2xl p-4 relative transition-all duration-500 border border-yellow-200/30" style={{
+                boxShadow: '0 0 30px rgba(251, 191, 36, 0.3), 0 0 45px rgba(245, 158, 11, 0.2), 0 0 60px rgba(255, 215, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 215, 0, 0.15)'
+              }}>
                 
                 {/* Motivational Quote */}
                 <div className="relative z-10 text-center mb-4">
-                  <p className="text-yellow-100 text-lg font-medium italic drop-shadow-lg">
+                  <p className="text-white text-lg font-medium italic drop-shadow-lg" style={{
+                    textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 40px rgba(255, 215, 0, 0.5), 0 0 60px rgba(255, 215, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.3)'
+                  }}>
                     "{currentQuote.quote}"
                   </p>
-                  <p className="text-yellow-200/90 text-sm mt-1 drop-shadow-md">- {currentQuote.author}</p>
+                  <p className="text-yellow-50 text-sm mt-1 drop-shadow-md" style={{
+                    textShadow: '0 0 16px rgba(255, 255, 255, 0.6), 0 0 32px rgba(255, 215, 0, 0.4), 0 0 48px rgba(255, 215, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.2)'
+                  }}>- {currentQuote.author}</p>
                 </div>
                 
                 <LearningPathVisual 
@@ -561,11 +566,16 @@ const LessonsOverview = React.memo(() => {
                 <div className="text-center mt-3 relative z-10">
                   <button
                     onClick={handleContinueLearning}
-                    className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-900 font-bold rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg shadow-yellow-400/60 hover:shadow-xl hover:shadow-yellow-300/80 border-2 border-yellow-200/40"
+                    className="px-6 py-3 bg-gradient-to-r from-yellow-400 to-amber-500 hover:from-yellow-300 hover:to-amber-400 text-slate-900 font-bold rounded-lg transition-all duration-300 transform hover:scale-105"
+                    style={{
+                      boxShadow: '0 0 30px rgba(251, 191, 36, 0.8), 0 0 60px rgba(245, 158, 11, 0.6), 0 0 90px rgba(255, 215, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.3) inset'
+                    }}
                   >
                     🚀 Continue Learning Journey
                   </button>
-                  <p className="mt-2 text-yellow-100/90 text-xs drop-shadow-sm">
+                  <p className="mt-2 text-white text-xs drop-shadow-sm" style={{
+                    textShadow: '0 0 14px rgba(255, 255, 255, 0.8), 0 0 28px rgba(255, 215, 0, 0.5), 0 0 42px rgba(255, 215, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2)'
+                  }}>
                     Pick up where you left off in your personalized path
                   </p>
                 </div>

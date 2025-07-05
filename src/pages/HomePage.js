@@ -527,20 +527,19 @@ const HomePage = () => {
 
   return (
     <div 
-      className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#3b82f6' }}
+      className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
     >
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
 
       {/* Main content wrapper */}
       <div className="relative z-10">
         <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
             {/* Welcome Section */}
             <section className="mb-6">
-              <div className="glass-hero p-6 relative transition-all duration-500">
+              <div className="glass-card p-6 relative transition-all duration-500">
                 
                 {/* Greeting and Quote */}
                 <div className="text-center mb-4">

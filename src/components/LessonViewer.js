@@ -646,8 +646,7 @@ const LessonViewer = () => {
   if (isLoading) {
     return (
       <div 
-        className="fixed inset-0 flex items-center justify-center text-white overflow-hidden"
-        style={{ backgroundColor: '#3b82f6' }}
+        className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
       >
         {/* Star Animation Container for Loading */}
         <div className="absolute inset-0 z-0 pointer-events-none">

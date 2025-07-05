@@ -98,13 +98,12 @@ const Dashboard = () => {
 
   return (
     <div 
-      className="relative min-h-screen text-white overflow-hidden"
-      style={{ backgroundColor: '#3b82f6' }}
+      className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
     >
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
       
       {/* Custom CSS for animated shadows - wrapped in relative div */}
       <div className="relative z-10"> 
@@ -182,7 +181,7 @@ const Dashboard = () => {
           )}
 
           {/* Header Section with Glass Effect */}
-          <section className="glass-hero rounded-3xl p-6 sm:p-8 mb-8 text-center">
+          <section className="glass-card rounded-3xl p-6 sm:p-8 mb-8 text-center">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

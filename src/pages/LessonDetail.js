@@ -21,8 +21,7 @@ const LessonDetail = () => {
   // Show brief loading while redirecting
   return (
     <div 
-      className="fixed inset-0 flex items-center justify-center text-white overflow-hidden"
-      style={{ backgroundColor: '#3b82f6' }}
+      className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
     >
       {/* Optimized Star Field */}
       <OptimizedStarField starCount={80} opacity={0.6} speed={0.8} size={1} />
