@@ -5,6 +5,7 @@ import { useGamification } from '../contexts/GamificationContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoggedInNavbar from './LoggedInNavbar';
 import { adaptiveWelcomeLessons } from '../lessons/adaptiveWelcomeLessons';
+import OptimizedStarField from './OptimizedStarField';
 
 const AdaptiveWelcomeLesson = () => {
   const { user } = useAuth();
@@ -393,53 +394,7 @@ const AdaptiveWelcomeLesson = () => {
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-      {/* Star Animation Container */}
-      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={`welcome-star-${i}`}
-              className="absolute rounded-full bg-white/80"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
-                ease: "linear",
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      <OptimizedStarField starCount={200} opacity={0.8} speed={0.8} size={1} />
 
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-2 bg-gray-800 z-20">

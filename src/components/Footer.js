@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import OptimizedStarField from './OptimizedStarField';
 
 const Footer = () => {
   return (
@@ -8,48 +9,7 @@ const Footer = () => {
       className="py-8 relative overflow-hidden"
       style={{ backgroundColor: '#3b82f6' }}
     >
-      {/* Moving Stars Background */}
-      <div className="absolute inset-0 z-0">
-        {[...Array(100)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute"
-            initial={{
-              x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-              y: Math.random() * 200,
-            }}
-            animate={{
-              x: [
-                Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-                Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1200),
-              ],
-              y: [
-                Math.random() * 200,
-                Math.random() * 200,
-                Math.random() * 200,
-              ],
-            }}
-            transition={{
-              duration: 15 + Math.random() * 10,
-              repeat: Infinity,
-              ease: "linear",
-              delay: Math.random() * 5,
-            }}
-          >
-            <div 
-              className={`bg-white/80 rounded-full ${
-                i % 10 === 0 ? 'w-2 h-2 animate-pulse' : 
-                i % 6 === 0 ? 'w-1.5 h-1.5' : 'w-1 h-1'
-              }`}
-              style={{
-                filter: `hue-rotate(${Math.random() * 60}deg)`,
-                animationDelay: `${Math.random() * 3}s`,
-              }}
-            ></div>
-          </motion.div>
-        ))}
-      </div>
+      <OptimizedStarField starCount={100} opacity={0.8} speed={0.6} size={1} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import PodcastPlayer from '../components/PodcastPlayer';
+import OptimizedStarField from '../components/OptimizedStarField';
 
 const PodcastDemo = () => {
   // Demo podcast data
@@ -124,65 +125,7 @@ Example: "You are a financial advisor. A 25-year-old just got their first job. W
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
       
-      {/* Enhanced Star Animation Background */}
-      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(400)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 20 + Math.random() * 15;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-          const twinkleDelay = Math.random() * 2;
-
-          return (
-            <motion.div
-              key={`podcast-star-${i}`}
-              className="absolute rounded-full"
-              style={{
-                width: starSize,
-                height: starSize,
-                background: `radial-gradient(circle, rgba(${Math.random() > 0.5 ? '255, 255, 255' : '156, 163, 175'}, ${0.8 + Math.random() * 0.2}) 0%, transparent 70%)`,
-                boxShadow: `0 0 ${starSize * 3}px rgba(${Math.random() > 0.5 ? '255, 255, 255' : '156, 163, 175'}, 0.4)`,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-                scale: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 1, 1, 0],
-                scale: [0, 1, 1, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: twinkleDelay,
-                ease: "linear",
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.9, 1],
-                  repeat: Infinity,
-                  repeatDelay: twinkleDelay,
-                },
-                scale: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.9, 1],
-                  repeat: Infinity,
-                  repeatDelay: twinkleDelay,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      <OptimizedStarField starCount={400} opacity={1} speed={1.5} size={1} />
 
       {/* Floating Orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none">

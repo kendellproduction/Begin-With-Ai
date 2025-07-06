@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 import logger from '../utils/logger';
 import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
+import OptimizedStarField from './OptimizedStarField';
 
 // Import slide components
 import IntroSlide from './slides/IntroSlide';
@@ -648,53 +649,7 @@ const LessonViewer = () => {
       <div 
         className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
       >
-        {/* Star Animation Container for Loading */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {[...Array(100)].map((_, i) => {
-            const screenH = window.innerHeight;
-            const screenW = window.innerWidth;
-            const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
-            const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
-            const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
-            const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
-            const starDuration = 30 + Math.random() * 25;
-            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-            return (
-              <motion.div
-                key={`loading-star-${i}`}
-                className="absolute rounded-full bg-white/50"
-                style={{
-                  width: starSize,
-                  height: starSize,
-                }}
-                initial={{
-                  x: initialX,
-                  y: initialY,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: targetX,
-                  y: targetY,
-                  opacity: [0, 0.6, 0.6, 0],
-                }}
-                transition={{
-                  duration: starDuration,
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                  ease: "linear",
-                  opacity: {
-                    duration: starDuration,
-                    ease: "linear",
-                    times: [0, 0.1, 0.85, 1],
-                    repeat: Infinity,
-                    repeatDelay: Math.random() * 5 + 2,
-                  }
-                }}
-              />
-            );
-          })}
-        </div>
+        <OptimizedStarField starCount={100} opacity={0.6} speed={0.8} size={1} />
         <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-xl text-white">Loading lesson...</p>
@@ -709,53 +664,7 @@ const LessonViewer = () => {
         className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black flex items-center justify-center text-center"
         onClick={() => !showCompletionButtons && setShowCompletionButtons(true)}
       >
-        {/* Star Animation Container for Completion */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {[...Array(100)].map((_, i) => {
-            const screenH = window.innerHeight;
-            const screenW = window.innerWidth;
-            const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
-            const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
-            const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
-            const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
-            const starDuration = 25 + Math.random() * 20;
-            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-            return (
-              <motion.div
-                key={`completion-star-${i}`}
-                className="absolute rounded-full bg-white/50"
-                style={{
-                  width: starSize,
-                  height: starSize,
-                }}
-                initial={{
-                  x: initialX,
-                  y: initialY,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: targetX,
-                  y: targetY,
-                  opacity: [0, 0.7, 0.7, 0],
-                }}
-                transition={{
-                  duration: starDuration,
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 4 + 1,
-                  ease: "linear",
-                  opacity: {
-                    duration: starDuration,
-                    ease: "linear",
-                    times: [0, 0.1, 0.85, 1],
-                    repeat: Infinity,
-                    repeatDelay: Math.random() * 4 + 1,
-                  }
-                }}
-              />
-            );
-          })}
-        </div>
+        <OptimizedStarField starCount={100} opacity={0.7} speed={1.2} size={1} />
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -830,54 +739,7 @@ const LessonViewer = () => {
       ref={containerRef}
       className="lesson-viewer fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black z-50 overflow-hidden"
     >
-      {/* Star Animation Container for LessonViewer - High Performance GPU Accelerated */}
-      <div className="star-container absolute inset-0 z-0 pointer-events-none">
-        {[...Array(120)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
-          const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
-          const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
-          const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={`lesson-viewer-star-${i}`}
-              className="star-element absolute rounded-full bg-white/50"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.6, 0.6, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
-                ease: "linear",
-                type: "tween", // More performant than spring
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      <OptimizedStarField starCount={120} opacity={0.6} speed={0.8} size={1} />
       {/* Progress Bar */}
       <div className="lesson-progress-bar-container absolute top-0 left-0 right-0 h-auto bg-gray-800 z-10">
         <div className="h-1">

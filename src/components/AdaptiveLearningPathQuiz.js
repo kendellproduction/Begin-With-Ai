@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
 import LoggedInNavbar from './LoggedInNavbar';
+import OptimizedStarField from './OptimizedStarField';
 
 const AdaptiveLearningPathQuiz = () => {
   const { user } = useAuth();
@@ -881,53 +882,7 @@ const AdaptiveLearningPathQuiz = () => {
       <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
         <LoggedInNavbar />
         
-        {/* Black Space Background with Stars Animation */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {[...Array(80)].map((_, i) => {
-            const screenH = window.innerHeight;
-            const screenW = window.innerWidth;
-            const initialY = Math.random() * screenH * 1.5 - screenH * 0.25;
-            const targetY = Math.random() * screenH * 1.5 - screenH * 0.25;
-            const initialX = Math.random() * screenW * 1.5 - screenW * 0.25;
-            const targetX = Math.random() * screenW * 1.5 - screenW * 0.25;
-            const starDuration = 30 + Math.random() * 25;
-            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-            return (
-              <motion.div
-                key={`loading-star-${i}`}
-                className="absolute rounded-full bg-white/40"
-                style={{
-                  width: starSize,
-                  height: starSize,
-                }}
-                initial={{
-                  x: initialX,
-                  y: initialY,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: targetX,
-                  y: targetY,
-                  opacity: [0, 0.5, 0.5, 0],
-                }}
-                transition={{
-                  duration: starDuration,
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                  ease: "linear",
-                  opacity: {
-                    duration: starDuration,
-                    ease: "linear",
-                    times: [0, 0.1, 0.85, 1],
-                    repeat: Infinity,
-                    repeatDelay: Math.random() * 5 + 2,
-                  }
-                }}
-              />
-            );
-          })}
-        </div>
+        <OptimizedStarField starCount={80} opacity={0.5} speed={0.8} size={1} />
         
         <div className="relative z-10 flex items-center justify-center min-h-[70vh]">
           <div className="text-center">
@@ -948,53 +903,7 @@ const AdaptiveLearningPathQuiz = () => {
       <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
         <LoggedInNavbar />
 
-        {/* Black Space Background with Stars Animation */}
-        <div className="fixed inset-0 w-full h-full z-0 pointer-events-none" style={{ height: '200vh' }}>
-          {[...Array(150)].map((_, i) => {
-            const screenH = Math.max(window.innerHeight * 2, 1600); // Ensure coverage for tall pages
-            const screenW = window.innerWidth;
-            const initialY = Math.random() * screenH - screenH * 0.1;
-            const targetY = Math.random() * screenH - screenH * 0.1;
-            const initialX = Math.random() * screenW * 1.2 - screenW * 0.1;
-            const targetX = Math.random() * screenW * 1.2 - screenW * 0.1;
-            const starDuration = 30 + Math.random() * 25;
-            const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-            return (
-              <motion.div
-                key={`results-star-${i}`}
-                className="absolute rounded-full bg-white/40"
-                style={{
-                  width: starSize,
-                  height: starSize,
-                }}
-                initial={{
-                  x: initialX,
-                  y: initialY,
-                  opacity: 0,
-                }}
-                animate={{
-                  x: targetX,
-                  y: targetY,
-                  opacity: [0, 0.5, 0.5, 0],
-                }}
-                transition={{
-                  duration: starDuration,
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                  ease: "linear",
-                  opacity: {
-                    duration: starDuration,
-                    ease: "linear",
-                    times: [0, 0.1, 0.85, 1],
-                    repeat: Infinity,
-                    repeatDelay: Math.random() * 5 + 2,
-                  }
-                }}
-              />
-            );
-          })}
-        </div>
+        <OptimizedStarField starCount={150} opacity={0.5} speed={0.8} size={1} />
         
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Check if this is a return visit */}
@@ -1302,53 +1211,7 @@ const AdaptiveLearningPathQuiz = () => {
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-      {/* Black Space Background with Stars Animation */}
-      <div className="fixed inset-0 z-0 pointer-events-none" style={{ height: '100vh', width: '100vw' }}>
-        {[...Array(200)].map((_, i) => {
-          const screenH = window.innerHeight;
-          const screenW = window.innerWidth;
-          const initialY = Math.random() * screenH;
-          const targetY = Math.random() * screenH;
-          const initialX = Math.random() * screenW;
-          const targetX = Math.random() * screenW;
-          const starDuration = 30 + Math.random() * 25;
-          const starSize = Math.random() * 2 + 0.5; // 0.5px to 2.5px (smaller, less distracting)
-
-          return (
-            <motion.div
-              key={`quiz-star-${i}`}
-              className="absolute rounded-full bg-white/80"
-              style={{
-                width: starSize,
-                height: starSize,
-              }}
-              initial={{
-                x: initialX,
-                y: initialY,
-                opacity: 0,
-              }}
-              animate={{
-                x: targetX,
-                y: targetY,
-                opacity: [0, 0.8, 0.8, 0],
-              }}
-              transition={{
-                duration: starDuration,
-                repeat: Infinity,
-                repeatDelay: Math.random() * 5 + 2,
-                ease: "linear",
-                opacity: {
-                  duration: starDuration,
-                  ease: "linear",
-                  times: [0, 0.1, 0.85, 1],
-                  repeat: Infinity,
-                  repeatDelay: Math.random() * 5 + 2,
-                }
-              }}
-            />
-          );
-        })}
-      </div>
+      <OptimizedStarField starCount={200} opacity={0.8} speed={0.8} size={1} />
       
       {/* Main content wrapper */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
