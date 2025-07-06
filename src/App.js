@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { GamificationProvider } from './contexts/GamificationContext';
@@ -6,9 +6,11 @@ import { AdminProvider } from './contexts/AdminContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
-
-import OfflineStatus from './components/OfflineStatus';
 import ErrorBoundary from './components/ErrorBoundary';
+import ServiceWorkerRegistration from './utils/serviceWorkerRegistration';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+import OfflineStatus from './components/OfflineStatus';
+import { analytics } from './utils/monitoring';
 
 // Import gamification components (keep these as they're small and used globally)
 import GamificationNotifications from './components/GamificationNotifications';

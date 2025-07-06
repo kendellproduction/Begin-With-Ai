@@ -19,6 +19,8 @@ import {
 
 import { useAuth } from '../contexts/AuthContext';
 import OptimizedStarField from '../components/OptimizedStarField';
+import draftService from '../services/draftService';
+import { getLearningPaths } from '../services/firestoreService';
 
 const AdminDashboard = () => {
   const { currentUser } = useAuth();
@@ -29,6 +31,8 @@ const AdminDashboard = () => {
     completionRate: 0,
     recentActivity: []
   });
+  const [recentItems, setRecentItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Quick action cards configuration
   const quickActions = [
@@ -90,45 +94,71 @@ const AdminDashboard = () => {
     }
   ];
 
-  // Recent templates and lessons
-  const recentItems = [
-    {
-      type: 'lesson',
-      title: 'JavaScript Fundamentals',
-      updated: '2 hours ago',
-      status: 'published',
-      students: 24
-    },
-    {
-      type: 'lesson',
-      title: 'React Components',
-      updated: '5 hours ago',
-      status: 'draft',
-      students: 0
-    },
-    {
-      type: 'template',
-      title: 'Coding Challenge Template',
-      updated: '1 day ago',
-      status: 'active',
-      uses: 12
-    }
-  ];
-
   useEffect(() => {
-    // Load dashboard stats
-    // TODO: Replace with actual API calls
-    setStats({
-      totalLessons: 24,
-      totalStudents: 142,
-      completionRate: 78,
-      recentActivity: [
-        'New student enrolled in JavaScript course',
-        'Lesson "React Hooks" published',
-        'Template "Quiz Layout" created'
-      ]
-    });
-  }, []);
+    loadDashboardData();
+  }, [currentUser]);
+
+  const loadDashboardData = async () => {
+    if (!currentUser?.uid) return;
+    
+    setLoading(true);
+    try {
+      // Load real data from services
+      const [drafts, learningPaths] = await Promise.all([
+        draftService.loadDrafts(currentUser.uid).catch(() => []),
+        getLearningPaths().catch(() => [])
+      ]);
+
+      // Calculate real statistics
+      const totalLessons = learningPaths.reduce((acc, path) => 
+        acc + (path.modules?.reduce((modAcc, mod) => modAcc + (mod.lessons?.length || 0), 0) || 0), 0
+      );
+      
+      const totalModules = learningPaths.reduce((acc, path) => acc + (path.modules?.length || 0), 0);
+
+      setStats({
+        totalLessons,
+        totalStudents: 0, // This would come from user analytics when implemented
+        completionRate: 0, // This would come from analytics when implemented
+        recentActivity: [
+          `${drafts.length} lesson drafts available`,
+          `${learningPaths.length} learning paths configured`,
+          `${totalModules} modules organized`
+        ]
+      });
+
+      // Convert drafts to recent items format
+      const recentDrafts = drafts.slice(0, 3).map(draft => ({
+        type: 'lesson',
+        title: draft.title || 'Untitled Lesson',
+        updated: formatLastModified(draft.lastModified),
+        status: draft.status || 'draft',
+        students: 0 // Drafts don't have students
+      }));
+
+      setRecentItems(recentDrafts);
+      
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatLastModified = (timestamp) => {
+    if (!timestamp) return 'Just now';
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
 
   const QuickActionCard = ({ action, index }) => (
     <motion.div
@@ -288,34 +318,53 @@ const AdminDashboard = () => {
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-8 relative z-10">
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <StatCard
-            title="Total Lessons"
-            value={stats.totalLessons}
-            subtitle="Active lessons"
-            icon={BookOpenIcon}
-            color="bg-blue-600"
-          />
-          <StatCard
-            title="Total Students"
-            value={stats.totalStudents}
-            subtitle="Registered users"
-            icon={UsersIcon}
-            color="bg-green-600"
-          />
-          <StatCard
-            title="Completion Rate"
-            value={`${stats.completionRate}%`}
-            subtitle="Average completion"
-            icon={ChartBarIcon}
-            color="bg-purple-600"
-          />
-          <StatCard
-            title="Active Now"
-            value="12"
-            subtitle="Students online"
-            icon={SparklesIcon}
-            color="bg-orange-600"
-          />
+          {loading ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-gray-800 rounded-lg p-6 border border-gray-700"
+              >
+                <div className="animate-pulse">
+                  <div className="h-4 bg-gray-700 rounded w-24 mb-2"></div>
+                  <div className="h-8 bg-gray-700 rounded w-16 mb-2"></div>
+                  <div className="h-3 bg-gray-700 rounded w-20"></div>
+                </div>
+              </motion.div>
+            ))
+          ) : (
+            <>
+              <StatCard
+                title="Total Lessons"
+                value={stats.totalLessons}
+                subtitle="Published lessons"
+                icon={BookOpenIcon}
+                color="bg-blue-600"
+              />
+              <StatCard
+                title="Draft Lessons"
+                value={recentItems.length}
+                subtitle="Work in progress"
+                icon={DocumentIcon}
+                color="bg-amber-600"
+              />
+              <StatCard
+                title="Total Students"
+                value={stats.totalStudents}
+                subtitle="Coming soon"
+                icon={UsersIcon}
+                color="bg-green-600"
+              />
+              <StatCard
+                title="Active Now"
+                value="—"
+                subtitle="Analytics coming soon"
+                icon={SparklesIcon}
+                color="bg-purple-600"
+              />
+            </>
+          )}
         </div>
 
         {/* Quick Actions */}
@@ -332,29 +381,56 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
             <h2 className="text-2xl font-bold text-white mb-6">Recent Lessons & Templates</h2>
-            <div className="space-y-4">
-              {recentItems.map((item, index) => (
-                <RecentItemCard key={index} item={item} index={index} />
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-400">Loading recent items...</p>
+              </div>
+            ) : recentItems.length > 0 ? (
+              <div className="space-y-4">
+                {recentItems.map((item, index) => (
+                  <RecentItemCard key={index} item={item} index={index} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <DocumentIcon className="w-12 h-12 mx-auto text-gray-500 mb-4" />
+                <h3 className="text-lg font-medium text-gray-400 mb-2">No Recent Items</h3>
+                <p className="text-gray-500 mb-4">Start creating lessons to see your recent work here.</p>
+                <Link
+                  to="/unified-lesson-builder"
+                  className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <DocumentPlusIcon className="w-4 h-4" />
+                  <span>Create Your First Lesson</span>
+                </Link>
+              </div>
+            )}
           </div>
           
           <div>
             <h2 className="text-2xl font-bold text-white mb-6">Activity Feed</h2>
-            <div className="space-y-4">
-              {stats.recentActivity.map((activity, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="p-4 bg-gray-800 rounded-lg border border-gray-700"
-                >
-                  <p className="text-gray-300">{activity}</p>
-                  <p className="text-gray-500 text-sm mt-1">{Math.floor(Math.random() * 60)} minutes ago</p>
-                </motion.div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-400">Loading activity...</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {stats.recentActivity.map((activity, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="p-4 bg-gray-800 rounded-lg border border-gray-700"
+                  >
+                    <p className="text-gray-300">{activity}</p>
+                    <p className="text-gray-500 text-sm mt-1">System status</p>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

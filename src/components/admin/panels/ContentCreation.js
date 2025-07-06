@@ -13,12 +13,21 @@ import {
   AcademicCapIcon,
   ClockIcon,
   UserGroupIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  PlusIcon,
+  DocumentTextIcon,
+  WrenchScrewdriverIcon,
+  FolderIcon,
+  ChevronRightIcon,
+  PencilIcon,
+  EyeIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../../../contexts/AuthContext';
+import draftService from '../../../services/draftService';
+import { getLearningPaths } from '../../../services/firestoreService';
 
 // Import admin services for lesson management
 import { 
-  getAllLearningPaths, 
   createLearningPath, 
   createModule,
   createLesson
@@ -26,25 +35,54 @@ import {
 
 const ContentCreation = () => {
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
   const [learningPaths, setLearningPaths] = useState([]);
+  const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadLearningPaths();
-  }, []);
+    loadContentData();
+  }, [currentUser]);
 
-  const loadLearningPaths = async () => {
+  const loadContentData = async () => {
+    if (!currentUser?.uid) return;
+    
+    setLoading(true);
     try {
-      const paths = await getAllLearningPaths();
-      setLearningPaths(paths);
-    } catch (error) {
-      console.error('Error loading learning paths:', error);
-      showNotification('error', 'Error loading learning paths');
+      const [pathsData, draftsData] = await Promise.all([
+        getLearningPaths().catch(() => []),
+        draftService.loadDrafts(currentUser.uid).catch(() => [])
+      ]);
+      
+      setLearningPaths(pathsData);
+      setDrafts(draftsData);
+    } catch (err) {
+      console.error('Error loading content data:', err);
+      setError('Failed to load content data');
     } finally {
       setLoading(false);
     }
   };
+
+  const formatLastModified = (timestamp) => {
+    if (!timestamp) return 'Unknown';
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
+  const activeDrafts = drafts.filter(draft => draft.status === 'draft');
+  const recentDrafts = drafts.slice(0, 5);
 
   const showNotification = (type, message) => {
     setNotification({ type, message });
@@ -233,10 +271,23 @@ const ContentCreation = () => {
             Recent Drafts
           </h3>
           <div className="space-y-3">
-            {/* Placeholder for recent drafts */}
-            <div className="text-sm text-gray-400">
-              Your recent drafts will appear here
-            </div>
+            {recentDrafts.length > 0 ? (
+              recentDrafts.map((draft) => (
+                <div key={draft.id} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                  <div className="flex items-center">
+                    <DocumentTextIcon className="w-4 h-4 mr-2 text-gray-400" />
+                    <span className="text-white">{draft.title || 'Untitled Lesson'}</span>
+                  </div>
+                  <div className="text-sm text-gray-400">{formatLastModified(draft.lastModified)}</div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-500 mb-3" />
+                <p className="text-gray-400 text-sm">No drafts yet</p>
+                <p className="text-gray-500 text-xs">Your lesson drafts will appear here</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -252,7 +303,7 @@ const ContentCreation = () => {
               <div className="text-sm text-gray-400">Learning Paths</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold text-green-400">0</div>
+              <div className="text-2xl font-bold text-green-400">{activeDrafts.length}</div>
               <div className="text-sm text-gray-400">Active Drafts</div>
             </div>
           </div>

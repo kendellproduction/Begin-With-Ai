@@ -13,30 +13,181 @@ import {
   FolderIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../../../contexts/AuthContext';
+import draftService from '../../../services/draftService';
+import { getLearningPaths } from '../../../services/firestoreService';
 
 const DashboardOverview = () => {
+  const { currentUser } = useAuth();
   const [quickStats, setQuickStats] = useState({
     totalLessons: 0,
     drafts: 0,
     modules: 0
   });
-
   const [recentDrafts, setRecentDrafts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Load actual data - removing fake stats
-    setQuickStats({
-      totalLessons: 0,
-      drafts: 0,
-      modules: 0
+    console.log('🔍 DashboardOverview: useEffect triggered, currentUser:', currentUser);
+    
+    // Add a timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log('⏰ DashboardOverview: Loading timeout reached, setting loading to false');
+      setLoading(false);
+      setError('Loading timeout - please refresh the page');
+    }, 10000); // 10 second timeout
+
+    loadDashboardData().finally(() => {
+      clearTimeout(timeout);
     });
 
-    setRecentDrafts([
-      // This would come from actual draft service
-      { id: 1, title: 'Untitled Lesson', lastModified: '2 hours ago', pages: 3 },
-      { id: 2, title: 'JavaScript Basics', lastModified: '1 day ago', pages: 5 }
-    ]);
-  }, []);
+    return () => {
+      clearTimeout(timeout);
+    };
+  }, [currentUser]);
+
+  const loadDashboardData = async () => {
+    console.log('🔍 DashboardOverview: Starting to load data...');
+    console.log('🔍 DashboardOverview: currentUser:', currentUser);
+    
+    setLoading(true);
+    
+    // If no user, show empty dashboard
+    if (!currentUser?.uid) {
+      console.log('⚠️ DashboardOverview: No currentUser.uid found, showing empty dashboard');
+      setQuickStats({
+        totalLessons: 0,
+        drafts: 0,
+        modules: 0
+      });
+      setRecentDrafts([]);
+      setLoading(false);
+      return;
+    }
+    
+    try {
+      console.log('🔍 DashboardOverview: Loading data for user:', currentUser.uid);
+      console.log('🔍 DashboardOverview: User role:', currentUser?.role);
+      
+      // Skip admin check in development mode
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 DashboardOverview: Development mode - bypassing admin check');
+      } else {
+        // Check if user has admin permissions (production only)
+        const isAdmin = currentUser?.role === 'admin';
+        
+        if (!isAdmin) {
+          console.log('⚠️ DashboardOverview: User is not admin, showing limited access');
+          setQuickStats({
+            totalLessons: 0,
+            drafts: 0,
+            modules: 0
+          });
+          setRecentDrafts([]);
+          setError('Admin access required');
+          setLoading(false);
+          return;
+        }
+      }
+      
+      let drafts = [];
+      let learningPaths = [];
+      
+      // Only try to load drafts if user is admin
+      if (isAdmin) {
+        console.log('🔍 DashboardOverview: User is admin, loading drafts...');
+        const draftsPromise = Promise.race([
+          draftService.loadDrafts(currentUser.uid),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Drafts loading timeout')), 5000))
+        ]);
+        
+        drafts = await draftsPromise.catch((error) => {
+          console.error('❌ DashboardOverview: Error loading drafts:', error);
+          return [];
+        });
+        console.log('✅ DashboardOverview: Loaded drafts:', drafts);
+      } else {
+        console.log('⚠️ DashboardOverview: User is not admin, skipping drafts loading');
+      }
+
+      // Load learning paths (all authenticated users can read these)
+      console.log('🔍 DashboardOverview: Calling getLearningPaths...');
+      const pathsPromise = Promise.race([
+        getLearningPaths(),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Learning paths loading timeout')), 5000))
+      ]);
+      
+      learningPaths = await pathsPromise.catch((error) => {
+        console.error('❌ DashboardOverview: Error loading learning paths:', error);
+        return [];
+      });
+      console.log('✅ DashboardOverview: Loaded learning paths:', learningPaths);
+
+      // Calculate real statistics
+      const totalLessons = learningPaths.reduce((acc, path) => 
+        acc + (path.modules?.reduce((modAcc, mod) => modAcc + (mod.lessons?.length || 0), 0) || 0), 0
+      );
+      
+      const totalModules = learningPaths.reduce((acc, path) => acc + (path.modules?.length || 0), 0);
+
+      console.log('📊 DashboardOverview: Calculated stats:', { 
+        totalLessons, 
+        totalModules, 
+        draftsCount: drafts.length,
+        isAdmin
+      });
+
+      setQuickStats({
+        totalLessons,
+        drafts: drafts.length,
+        modules: totalModules
+      });
+
+      // Show recent drafts (last 3)
+      setRecentDrafts(drafts.slice(0, 3));
+      
+      console.log('✅ DashboardOverview: Data loading completed successfully');
+      
+    } catch (err) {
+      console.error('❌ DashboardOverview: Error loading dashboard data:', err);
+      setError('Failed to load dashboard data: ' + err.message);
+      
+      // Show empty dashboard even on error
+      setQuickStats({
+        totalLessons: 0,
+        drafts: 0,
+        modules: 0
+      });
+      setRecentDrafts([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatLastModified = (timestamp) => {
+    if (!timestamp) return 'Unknown';
+    
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
+  const countContentBlocks = (contentVersions) => {
+    if (!contentVersions) return 0;
+    
+    const freeContent = contentVersions.free || [];
+    const premiumContent = contentVersions.premium || [];
+    
+    return freeContent.length + premiumContent.length;
+  };
 
   const primaryActions = [
     {
@@ -167,15 +318,52 @@ const DashboardOverview = () => {
     <div className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors cursor-pointer">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h4 className="font-medium text-white mb-1">{draft.title}</h4>
-          <p className="text-sm text-gray-400">{draft.pages} pages</p>
+          <h4 className="font-medium text-white mb-1">{draft.title || 'Untitled Lesson'}</h4>
+          <p className="text-sm text-gray-400">{countContentBlocks(draft.contentVersions)} content blocks</p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-gray-400">{draft.lastModified}</p>
+          <p className="text-xs text-gray-400">{formatLastModified(draft.lastModified)}</p>
+          <div className="flex items-center space-x-1 mt-1">
+            <span className={`px-2 py-1 text-xs rounded-full ${
+              draft.status === 'published' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'
+            }`}>
+              {draft.status || 'draft'}
+            </span>
+          </div>
         </div>
       </div>
     </div>
   );
+
+  if (loading) {
+    return (
+      <div className="max-w-7xl mx-auto p-8 space-y-8">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="text-gray-400 mt-2">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-7xl mx-auto p-8 space-y-8">
+        <div className="text-center">
+          <div className="bg-red-900 bg-opacity-50 rounded-lg p-6">
+            <p className="text-red-400 mb-2">Error loading dashboard</p>
+            <p className="text-gray-400 text-sm">{error}</p>
+            <button 
+              onClick={loadDashboardData}
+              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-8">
@@ -196,7 +384,7 @@ const DashboardOverview = () => {
         ))}
       </div>
 
-      {/* Quick Stats - Only Real Data */}
+      {/* Quick Stats - Now with Real Data */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <QuickStatsCard 
           title="Published Lessons" 
@@ -215,7 +403,7 @@ const DashboardOverview = () => {
         />
       </div>
 
-      {/* Recent Drafts */}
+      {/* Recent Drafts - Now with Real Data */}
       {recentDrafts.length > 0 && (
         <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
           <div className="flex items-center justify-between mb-4">
@@ -234,6 +422,41 @@ const DashboardOverview = () => {
             {recentDrafts.map((draft) => (
               <RecentDraftCard key={draft.id} draft={draft} />
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Show message if no drafts */}
+      {recentDrafts.length === 0 && (
+        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+          <div className="text-center py-8">
+            <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-500 mb-4" />
+            {currentUser?.role === 'admin' ? (
+              <>
+                <h3 className="text-lg font-medium text-gray-400 mb-2">No Drafts Yet</h3>
+                <p className="text-gray-500 mb-4">Start creating lessons to see your recent drafts here.</p>
+                <Link
+                  to="/unified-lesson-builder"
+                  className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                  <span>Create Your First Lesson</span>
+                </Link>
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-medium text-yellow-400 mb-2">Admin Access Required</h3>
+                <p className="text-gray-500 mb-4">You need admin permissions to create and manage lesson drafts.</p>
+                <div className="bg-yellow-900 bg-opacity-50 rounded-lg p-4 text-left">
+                  <h4 className="text-yellow-400 font-medium mb-2">To get admin access:</h4>
+                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
+                    <li>Open your browser's Developer Console (F12)</li>
+                    <li>Run: <code className="bg-gray-700 px-2 py-1 rounded text-yellow-300">setAdminRole('{currentUser?.uid}')</code></li>
+                    <li>Refresh this page</li>
+                  </ol>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

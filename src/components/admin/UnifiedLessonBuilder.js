@@ -40,6 +40,7 @@ const UnifiedLessonBuilder = () => {
   const videoInputRef = useRef(null);
   const podcastInputRef = useRef(null);
   const backgroundImageRef = useRef(null);
+  const lessonTitleInputRef = useRef(null);
   
   // Core state
   const [lessonPages, setLessonPages] = useState([]);
@@ -124,6 +125,20 @@ const UnifiedLessonBuilder = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [checkScreenSize]);
+
+  // Add optimized handlers to prevent focus loss
+  const handleTitleChange = useCallback((e) => {
+    setLessonTitle(e.target.value);
+    triggerUnsavedState();
+  }, []);
+
+  const handleTitleFocus = useCallback(() => {
+    setIsEditingTitle(true);
+  }, []);
+
+  const handleTitleBlur = useCallback(() => {
+    setIsEditingTitle(false);
+  }, []);
 
   // Utility functions
   const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -1372,13 +1387,43 @@ const UnifiedLessonBuilder = () => {
         {/* Content */}
         {!sidebarCollapsed && (
           <div className="flex-1 overflow-y-auto">
+            {/* Always Visible Lesson Title */}
+            <div className="p-4 border-b border-gray-700">
+              <div>
+                <label 
+                  htmlFor="lesson-title-input"
+                  className="block text-sm font-medium mb-1 text-gray-300"
+                >
+                  Lesson Title
+                </label>
+                <input
+                  ref={lessonTitleInputRef}
+                  id="lesson-title-input"
+                  type="text"
+                  value={lessonTitle}
+                  onChange={handleTitleChange}
+                  onFocus={handleTitleFocus}
+                  onBlur={handleTitleBlur}
+                  onClick={(e) => {
+                    console.log('🔍 Title input clicked, focusing...');
+                    e.stopPropagation();
+                    lessonTitleInputRef.current?.focus();
+                  }}
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-text"
+                  placeholder="Enter lesson title..."
+                  tabIndex={0}
+                  autoComplete="off"
+                />
+              </div>
+            </div>
+            
             {/* Lesson Settings */}
             <div className="p-4 border-b border-gray-700">
               <button
                 onClick={() => setShowLessonSettings(!showLessonSettings)}
                 className="w-full flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
               >
-                <span className="font-medium">Lesson Settings</span>
+                <span className="font-medium">More Settings</span>
                 <Cog6ToothIcon className="w-5 h-5" />
               </button>
               
@@ -1387,62 +1432,61 @@ const UnifiedLessonBuilder = () => {
                   {/* Background Options - Enhanced with animations */}
                   <div>
                     <label className="block text-sm font-medium mb-2">Lesson Background</label>
-                    <div className="grid grid-cols-2 gap-2 mb-4">
-                      {backgroundOptions.map((bg) => (
+                    <div className="grid grid-cols-2 gap-2">
+                      {backgroundOptions.map(option => (
                         <button
-                          key={bg.id}
-                          onClick={() => {
-                            if (bg.id === 'custom-image') {
-                              backgroundImageRef.current?.click();
-                            } else {
-                              setLessonBackground(bg.id);
-                              triggerUnsavedState();
-                            }
-                          }}
-                          className={`p-3 rounded-lg border-2 transition-all text-left ${
-                            lessonBackground === bg.id
-                              ? 'border-blue-500 bg-blue-500/10'
+                          key={option.id}
+                          onClick={() => setLessonBackground(option.id)}
+                          className={`p-2 rounded-lg border-2 transition-all ${
+                            lessonBackground === option.id
+                              ? 'border-blue-500 bg-blue-900'
                               : 'border-gray-600 hover:border-gray-500'
                           }`}
+                          title={option.description}
                         >
-                          <div className={`w-full h-6 rounded mb-2 ${bg.preview} ${bg.id === 'custom-image' ? 'border-2 border-dashed border-gray-400 flex items-center justify-center' : ''}`}>
-                            {bg.id === 'custom-image' && (
-                              <span className="text-xs text-gray-600">📁</span>
-                            )}
-                          </div>
-                          <div className="text-xs font-medium">{bg.name}</div>
-                          <div className="text-xs text-gray-400 truncate">{bg.description}</div>
+                          <div className={`w-full h-4 rounded mb-1 ${option.preview}`}></div>
+                          <span className="text-xs">{option.name}</span>
                         </button>
                       ))}
                     </div>
+                  </div>
 
-                    {/* Background Animation Options */}
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium mb-2">Background Animation</label>
-                      <select
-                        value={backgroundAnimation}
+                  {/* Background Animation */}
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Animation</label>
+                    <select
+                      value={backgroundAnimation}
+                      onChange={(e) => setBackgroundAnimation(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                    >
+                      {animationOptions.map(option => (
+                        <option key={option.id} value={option.id}>
+                          {option.name} - {option.description}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Custom Background Image Upload */}
+                  {lessonBackground === 'custom-image' && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2">Background Image</label>
+                      <input
+                        ref={backgroundImageRef}
+                        type="file"
+                        accept="image/*"
                         onChange={(e) => {
-                          setBackgroundAnimation(e.target.value);
-                          triggerUnsavedState();
+                          if (e.target.files[0]) {
+                            handleBackgroundImageUpload(e.target.files[0]);
+                          }
                         }}
                         className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                      >
-                        {animationOptions.map((animation) => (
-                          <option key={animation.id} value={animation.id}>
-                            {animation.name} - {animation.description}
-                          </option>
-                        ))}
-                      </select>
+                      />
                     </div>
+                  )}
 
-                    {/* Hidden file inputs */}
-                    <input
-                      ref={backgroundImageRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBackgroundImageUpload}
-                      className="hidden"
-                    />
+                  {/* File Upload Inputs */}
+                  <div className="hidden">
                     <input
                       ref={fileInputRef}
                       type="file"
@@ -1479,23 +1523,6 @@ const UnifiedLessonBuilder = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium mb-1">Title</label>
-                    <input
-                      key="lesson-title-input"
-                      type="text"
-                      value={lessonTitle}
-                      onChange={(e) => {
-                        setLessonTitle(e.target.value);
-                        triggerUnsavedState();
-                      }}
-                      onFocus={() => setIsEditingTitle(true)}
-                      onBlur={() => setIsEditingTitle(false)}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm"
-                      placeholder="Enter lesson title..."
-                    />
-                  </div>
-                  
-                  <div>
                     <label className="block text-sm font-medium mb-1">Description</label>
                     <textarea
                       key="lesson-description-input"
@@ -1504,7 +1531,7 @@ const UnifiedLessonBuilder = () => {
                         setLessonDescription(e.target.value);
                         triggerUnsavedState();
                       }}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm h-20 resize-none"
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm h-20 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="Describe your lesson..."
                     />
                   </div>
@@ -1517,7 +1544,7 @@ const UnifiedLessonBuilder = () => {
                         setSelectedModule(e.target.value);
                         triggerUnsavedState();
                       }}
-                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm"
+                      className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select a module...</option>
                       {availableModules.map(module => (

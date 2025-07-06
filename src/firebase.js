@@ -67,6 +67,8 @@ if (process.env.NODE_ENV === 'development') {
   window.db = db;
   window.doc = doc;
   window.setDoc = setDoc;
+  window.auth = auth;
+  window.firebaseAuth = auth;
 }
 
 export { auth, googleProvider, analytics, db }; 

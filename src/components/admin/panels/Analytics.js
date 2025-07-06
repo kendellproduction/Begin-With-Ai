@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ChartBarIcon,
@@ -10,25 +10,75 @@ import {
   ClockIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import { useAuth } from '../../../contexts/AuthContext';
+import draftService from '../../../services/draftService';
+import { getLearningPaths } from '../../../services/firestoreService';
 
 const Analytics = () => {
+  const { currentUser } = useAuth();
   const [timeRange, setTimeRange] = useState('30d');
   const [selectedMetric, setSelectedMetric] = useState('overview');
-
-  const analyticsData = {
+  const [loading, setLoading] = useState(true);
+  const [analyticsData, setAnalyticsData] = useState({
     overview: {
-      totalStudents: 1,
-      activeStudents: 1,
-      completedLessons: 23,
-      totalLessons: 47,
-      avgCompletionTime: '12 minutes',
-      engagementRate: 78
+      totalStudents: 0,
+      activeStudents: 0,
+      completedLessons: 0,
+      totalLessons: 0,
+      avgCompletionTime: 'N/A',
+      engagementRate: 0
     },
     trends: {
-      studentGrowth: 15,
-      lessonCompletions: 23,
-      engagement: 5,
-      retention: -2
+      studentGrowth: 0,
+      lessonCompletions: 0,
+      engagement: 0,
+      retention: 0
+    }
+  });
+
+  useEffect(() => {
+    loadAnalyticsData();
+  }, [currentUser, timeRange]);
+
+  const loadAnalyticsData = async () => {
+    if (!currentUser?.uid) return;
+    
+    setLoading(true);
+    try {
+      // Load real data from services
+      const [drafts, learningPaths] = await Promise.all([
+        draftService.loadDrafts(currentUser.uid).catch(() => []),
+        getLearningPaths().catch(() => [])
+      ]);
+
+      // Calculate real statistics
+      const totalLessons = learningPaths.reduce((acc, path) => 
+        acc + (path.modules?.reduce((modAcc, mod) => modAcc + (mod.lessons?.length || 0), 0) || 0), 0
+      );
+
+      const totalModules = learningPaths.reduce((acc, path) => acc + (path.modules?.length || 0), 0);
+
+      setAnalyticsData({
+        overview: {
+          totalStudents: 0, // This would come from user analytics when implemented
+          activeStudents: 0, // This would come from user analytics when implemented
+          completedLessons: 0, // This would come from completion analytics when implemented
+          totalLessons,
+          avgCompletionTime: 'N/A',
+          engagementRate: 0
+        },
+        trends: {
+          studentGrowth: 0,
+          lessonCompletions: 0,
+          engagement: 0,
+          retention: 0
+        }
+      });
+
+    } catch (error) {
+      console.error('Error loading analytics data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -207,101 +257,109 @@ const Analytics = () => {
         </div>
       </div>
 
-      {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <MetricCard
-          title="Total Students"
-          value={analyticsData.overview.totalStudents.toLocaleString()}
-          subtitle="Enrolled learners"
-          icon={UsersIcon}
-          color="bg-blue-600"
-          trend={analyticsData.trends.studentGrowth}
-        />
-        <MetricCard
-          title="Active Students"
-          value={analyticsData.overview.activeStudents.toLocaleString()}
-          subtitle="Recent activity"
-          icon={EyeIcon}
-          color="bg-green-600"
-          trend={analyticsData.trends.engagement}
-        />
-        <MetricCard
-          title="Completed Lessons"
-          value={analyticsData.overview.completedLessons}
-          subtitle="Total completions"
-          icon={CheckCircleIcon}
-          color="bg-purple-600"
-          trend={analyticsData.trends.lessonCompletions}
-        />
-        <MetricCard
-          title="Avg. Completion Time"
-          value={analyticsData.overview.avgCompletionTime}
-          subtitle="Per lesson"
-          icon={ClockIcon}
-          color="bg-amber-600"
-        />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPlaceholder title="Student Engagement Over Time" />
-        <ChartPlaceholder title="Lesson Completion Rates" />
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ChartPlaceholder title="Learning Path Progress" />
-        <ChartPlaceholder title="Content Performance" />
-      </div>
-
-      {/* Detailed Analytics */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <StudentProgress />
-        <TopLessons />
-      </div>
-
-      {/* Additional Insights */}
-      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-bold text-white mb-4">📊 Key Insights</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="bg-green-900 bg-opacity-50 rounded-lg p-4 mb-2">
-              <ArrowTrendingUpIcon className="w-8 h-8 text-green-400 mx-auto" />
-            </div>
-            <h4 className="font-medium text-white mb-1">High Engagement</h4>
-            <p className="text-sm text-gray-300">Students are highly engaged with your content</p>
-          </div>
-          <div className="text-center">
-            <div className="bg-blue-900 bg-opacity-50 rounded-lg p-4 mb-2">
-              <AcademicCapIcon className="w-8 h-8 text-blue-400 mx-auto" />
-            </div>
-            <h4 className="font-medium text-white mb-1">Consistent Learning</h4>
-            <p className="text-sm text-gray-300">Regular lesson completion patterns</p>
-          </div>
-          <div className="text-center">
-            <div className="bg-purple-900 bg-opacity-50 rounded-lg p-4 mb-2">
-              <ChartBarIcon className="w-8 h-8 text-purple-400 mx-auto" />
-            </div>
-            <h4 className="font-medium text-white mb-1">Growing Platform</h4>
-            <p className="text-sm text-gray-300">Steady growth in user engagement</p>
-          </div>
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-400">Loading analytics data...</p>
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Key Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <MetricCard
+              title="Total Students"
+              value={analyticsData.overview.totalStudents.toLocaleString()}
+              subtitle="Coming soon"
+              icon={UsersIcon}
+              color="bg-blue-600"
+              trend={analyticsData.trends.studentGrowth}
+            />
+            <MetricCard
+              title="Active Students"
+              value={analyticsData.overview.activeStudents.toLocaleString()}
+              subtitle="Coming soon"
+              icon={EyeIcon}
+              color="bg-green-600"
+              trend={analyticsData.trends.engagement}
+            />
+            <MetricCard
+              title="Total Lessons"
+              value={analyticsData.overview.totalLessons}
+              subtitle="Published lessons"
+              icon={CheckCircleIcon}
+              color="bg-purple-600"
+            />
+            <MetricCard
+              title="Avg. Completion Time"
+              value={analyticsData.overview.avgCompletionTime}
+              subtitle="Coming soon"
+              icon={ClockIcon}
+              color="bg-amber-600"
+            />
+          </div>
+
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ChartPlaceholder title="Student Engagement Over Time" />
+            <ChartPlaceholder title="Lesson Completion Rates" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ChartPlaceholder title="Learning Path Progress" />
+            <ChartPlaceholder title="Content Performance" />
+          </div>
+
+          {/* Detailed Analytics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <StudentProgress />
+            <TopLessons />
+          </div>
+
+          {/* Additional Insights */}
+          <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+            <h3 className="text-lg font-bold text-white mb-4">📊 Key Insights</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="bg-blue-900 bg-opacity-50 rounded-lg p-4 mb-2">
+                  <AcademicCapIcon className="w-8 h-8 text-blue-400 mx-auto" />
+                </div>
+                <h4 className="font-medium text-white mb-1">Platform Setup</h4>
+                <p className="text-sm text-gray-300">Your learning platform is ready for students</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-green-900 bg-opacity-50 rounded-lg p-4 mb-2">
+                  <ChartBarIcon className="w-8 h-8 text-green-400 mx-auto" />
+                </div>
+                <h4 className="font-medium text-white mb-1">Analytics Ready</h4>
+                <p className="text-sm text-gray-300">Data collection will begin with first students</p>
+              </div>
+              <div className="text-center">
+                <div className="bg-purple-900 bg-opacity-50 rounded-lg p-4 mb-2">
+                  <UsersIcon className="w-8 h-8 text-purple-400 mx-auto" />
+                </div>
+                <h4 className="font-medium text-white mb-1">Ready to Launch</h4>
+                <p className="text-sm text-gray-300">Create more content and invite students</p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Export Options */}
-      <div className="bg-gradient-to-r from-gray-800 to-gray-700 rounded-xl p-6 border border-gray-700">
-        <h3 className="text-lg font-bold text-white mb-4">📈 Export Reports</h3>
-        <div className="flex flex-wrap gap-4">
-          <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
-            Export Student Progress
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h3 className="text-lg font-bold text-white mb-4">📊 Export & Reports</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button className="p-4 bg-blue-900 bg-opacity-50 rounded-lg text-left hover:bg-opacity-75 transition-colors">
+            <h4 className="font-medium text-white mb-1">Student Progress Report</h4>
+            <p className="text-sm text-blue-300">Coming soon</p>
           </button>
-          <button className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
-            Export Lesson Analytics
+          <button className="p-4 bg-green-900 bg-opacity-50 rounded-lg text-left hover:bg-opacity-75 transition-colors">
+            <h4 className="font-medium text-white mb-1">Engagement Analytics</h4>
+            <p className="text-sm text-green-300">Coming soon</p>
           </button>
-          <button className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
-            Export Engagement Report
-          </button>
-          <button className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-colors">
-            Export Full Report
+          <button className="p-4 bg-purple-900 bg-opacity-50 rounded-lg text-left hover:bg-opacity-75 transition-colors">
+            <h4 className="font-medium text-white mb-1">Content Performance</h4>
+            <p className="text-sm text-purple-300">Coming soon</p>
           </button>
         </div>
       </div>
