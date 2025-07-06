@@ -9,9 +9,7 @@ import {
   DocumentTextIcon,
   AcademicCapIcon,
   CubeTransparentIcon,
-  ChartBarIcon,
-  UsersIcon,
-  Cog6ToothIcon,
+
   SparklesIcon,
   VideoCameraIcon,
   DocumentDuplicateIcon,
@@ -33,9 +31,9 @@ const DashboardOverview = React.lazy(() => import('./panels/DashboardOverview'))
 const ContentCreation = React.lazy(() => import('./panels/ContentCreation'));
 const ContentManagement = React.lazy(() => import('./panels/ContentManagement'));
 const AIFeatures = React.lazy(() => import('./panels/AIFeatures'));
-const Analytics = React.lazy(() => import('./panels/Analytics'));
-const UserManagement = React.lazy(() => import('./panels/UserManagement'));
-const SystemSettings = React.lazy(() => import('./panels/SystemSettings'));
+// Import LessonMigrationInterface directly to avoid hot reload issues
+import LessonMigrationInterface from './LessonMigrationInterface';
+// Removed unnecessary Analytics, UserManagement, and SystemSettings imports
 
 const UnifiedAdminPanel = () => {
   const { currentUser } = useAuth();
@@ -60,23 +58,23 @@ const UnifiedAdminPanel = () => {
   const [showSavePrompt, setShowSavePrompt] = useState(false);
   const [pendingAction, setPendingAction] = useState(null);
 
-  // Admin panel configuration with improved structure
+  // Simplified admin panel focused on lesson management
   const adminSections = [
     {
       id: 'dashboard',
       name: 'Dashboard',
       icon: HomeIcon,
-      description: 'Overview and quick actions',
+      description: 'Lesson overview and management',
       component: DashboardOverview,
-      searchTerms: ['overview', 'stats', 'summary', 'home']
+      searchTerms: ['overview', 'lessons', 'summary', 'home']
     },
     {
       id: 'content-creation',
       name: 'Create Content',
       icon: DocumentTextIcon,
-      description: 'Build lessons and courses',
+      description: 'Build new lessons',
       component: ContentCreation,
-      searchTerms: ['lesson', 'module', 'course', 'create', 'build'],
+      searchTerms: ['lesson', 'create', 'build', 'new'],
       subItems: [
         { 
           id: 'unified-lesson-builder', 
@@ -89,12 +87,6 @@ const UnifiedAdminPanel = () => {
           name: 'AI Generator', 
           description: 'AI-powered lessons',
           action: () => actions.setActivePanel('ai-features')
-        },
-        { 
-          id: 'youtube-import', 
-          name: 'YouTube Import', 
-          description: 'Convert videos to lessons',
-          action: () => actions.setActivePanel('ai-features')
         }
       ]
     },
@@ -102,26 +94,20 @@ const UnifiedAdminPanel = () => {
       id: 'content-management',
       name: 'Manage Content',
       icon: AcademicCapIcon,
-      description: 'Organize existing content',
+      description: 'Organize and edit lessons',
       component: ContentManagement,
-      searchTerms: ['manage', 'organize', 'edit', 'delete', 'modules'],
+      searchTerms: ['manage', 'organize', 'edit', 'drafts'],
       subItems: [
         { 
-          id: 'modules-lessons', 
-          name: 'Modules & Lessons', 
-          description: 'View and edit content',
+          id: 'published-lessons', 
+          name: 'Published Lessons', 
+          description: 'View and edit published content',
           action: () => actions.setActivePanel('content-management')
         },
         { 
           id: 'drafts', 
           name: 'Drafts', 
           description: 'Work in progress',
-          action: () => actions.setActivePanel('content-management')
-        },
-        { 
-          id: 'templates', 
-          name: 'Templates', 
-          description: 'Reusable templates',
           action: () => actions.setActivePanel('content-management')
         }
       ]
@@ -130,16 +116,10 @@ const UnifiedAdminPanel = () => {
       id: 'ai-features',
       name: 'AI Tools',
       icon: SparklesIcon,
-      description: 'AI-powered features',
+      description: 'AI-powered lesson features',
       component: AIFeatures,
       searchTerms: ['ai', 'artificial intelligence', 'generate'],
       subItems: [
-        { 
-          id: 'youtube-processor', 
-          name: 'YouTube Processor', 
-          description: 'Video to lesson converter',
-          action: () => actions.setActivePanel('ai-features')
-        },
         { 
           id: 'content-generator', 
           name: 'Content Generator', 
@@ -147,76 +127,32 @@ const UnifiedAdminPanel = () => {
           action: () => actions.setActivePanel('ai-features')
         },
         { 
-          id: 'smart-feedback', 
-          name: 'Smart Feedback', 
-          description: 'AI student assistance',
+          id: 'youtube-processor', 
+          name: 'YouTube Processor', 
+          description: 'Video to lesson converter',
           action: () => actions.setActivePanel('ai-features')
         }
       ]
     },
     {
-      id: 'analytics',
-      name: 'Analytics',
-      icon: ChartBarIcon,
-      description: 'Performance metrics',
-      component: Analytics,
-      searchTerms: ['analytics', 'stats', 'metrics', 'performance'],
+      id: 'lesson-migration',
+      name: 'Migration Center',
+      icon: CubeTransparentIcon,
+      description: 'Migrate lessons to new format',
+      component: LessonMigrationInterface,
+      searchTerms: ['migration', 'convert', 'format', 'update', 'legacy'],
       subItems: [
         { 
-          id: 'student-progress', 
-          name: 'Student Progress', 
-          description: 'Learning analytics',
-          action: () => actions.setActivePanel('analytics')
+          id: 'analyze-lessons', 
+          name: 'Analyze Lessons', 
+          description: 'Check lesson formats',
+          action: () => actions.setActivePanel('lesson-migration')
         },
         { 
-          id: 'content-metrics', 
-          name: 'Content Metrics', 
-          description: 'Lesson performance',
-          action: () => actions.setActivePanel('analytics')
-        }
-      ]
-    },
-    {
-      id: 'users',
-      name: 'Users',
-      icon: UsersIcon,
-      description: 'User management',
-      component: UserManagement,
-      searchTerms: ['users', 'students', 'accounts', 'permissions'],
-      subItems: [
-        { 
-          id: 'student-accounts', 
-          name: 'Student Accounts', 
-          description: 'Manage students',
-          action: () => actions.setActivePanel('users')
-        },
-        { 
-          id: 'admin-roles', 
-          name: 'Admin Roles', 
-          description: 'Permissions',
-          action: () => actions.setActivePanel('users')
-        }
-      ]
-    },
-    {
-      id: 'settings',
-      name: 'Settings',
-      icon: Cog6ToothIcon,
-      description: 'System configuration',
-      component: SystemSettings,
-      searchTerms: ['settings', 'config', 'preferences', 'api'],
-      subItems: [
-        { 
-          id: 'api-config', 
-          name: 'API Configuration', 
-          description: 'External services',
-          action: () => actions.setActivePanel('settings')
-        },
-        { 
-          id: 'system-prefs', 
-          name: 'System Preferences', 
-          description: 'Platform settings',
-          action: () => actions.setActivePanel('settings')
+          id: 'bulk-migrate', 
+          name: 'Bulk Migration', 
+          description: 'Migrate multiple lessons',
+          action: () => actions.setActivePanel('lesson-migration')
         }
       ]
     }

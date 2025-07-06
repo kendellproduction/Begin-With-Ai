@@ -174,7 +174,7 @@ const BugReportModal = ({ isOpen, onClose }) => {
         timestamp: new Date().toISOString()
       };
 
-      console.log('Submitting bug report:', reportData);
+      // Submitting bug report
 
       // Submit to Firebase Function
       const response = await fetch('https://us-central1-beginai1.cloudfunctions.net/sendBugReport', {
@@ -185,12 +185,7 @@ const BugReportModal = ({ isOpen, onClose }) => {
         body: JSON.stringify(reportData)
       });
 
-      console.log('Response received:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok,
-        headers: Object.fromEntries(response.headers.entries())
-      });
+      // Response received from server
 
       let result;
       try {
@@ -214,12 +209,7 @@ const BugReportModal = ({ isOpen, onClose }) => {
 
     } catch (error) {
       console.error('Error submitting bug report:', error);
-      console.log('Error details:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        cause: error.cause
-      });
+      // Error occurred during submission
       setSubmitStatus('error');
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         setErrorMessage('Network error: Unable to connect to the server. Please check your internet connection and try again.');

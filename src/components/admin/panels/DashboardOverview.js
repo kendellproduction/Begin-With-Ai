@@ -1,338 +1,362 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   PlusIcon,
   DocumentTextIcon,
   SparklesIcon,
-  ChartBarIcon,
-  UsersIcon,
-  Cog6ToothIcon,
-  RocketLaunchIcon,
   BookOpenIcon,
   FolderIcon,
-  ClockIcon
+  ClockIcon,
+  EyeIcon,
+  PencilSquareIcon,
+  PlayIcon,
+  StarIcon,
+  UsersIcon,
+  ExclamationTriangleIcon,
+  WrenchScrewdriverIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../../contexts/AuthContext';
 import draftService from '../../../services/draftService';
 import { getLearningPaths } from '../../../services/firestoreService';
+import { getRealTimeDashboardAnalytics, subscribeToUserCount } from '../../../services/adminService';
+import { localLessonsData } from '../../../data/lessonsData';
+import { adaptiveLessons } from '../../../utils/adaptiveLessonData';
+import { LessonFormatMigrator } from '../../../utils/lessonFormatMigration';
 
 const DashboardOverview = () => {
   const { currentUser } = useAuth();
-  const [quickStats, setQuickStats] = useState({
-    totalLessons: 0,
-    drafts: 0,
-    modules: 0
+  const navigate = useNavigate();
+  const [realTimeStats, setRealTimeStats] = useState({
+    totalUsers: 0,
+    activeUsers: 0,
+    activeLessons: 0,
+    completionRate: 0,
+    lastUpdated: null
   });
   const [recentDrafts, setRecentDrafts] = useState([]);
+  const [publishedLessons, setPublishedLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    console.log('🔍 DashboardOverview: useEffect triggered, currentUser:', currentUser);
-    
-    // Add a timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      console.log('⏰ DashboardOverview: Loading timeout reached, setting loading to false');
-      setLoading(false);
-      setError('Loading timeout - please refresh the page');
-    }, 10000); // 10 second timeout
+    loadDashboardData();
+    loadRealTimeAnalytics();
 
-    loadDashboardData().finally(() => {
-      clearTimeout(timeout);
-    });
+    // Set up real-time user count listener
+    let unsubscribeUserCount = null;
+    if (currentUser?.uid) {
+      unsubscribeUserCount = subscribeToUserCount((userStats) => {
+        if (userStats) {
+          setRealTimeStats(prev => ({
+            ...prev,
+            totalUsers: userStats.totalUsers,
+            activeUsers: userStats.activeUsers,
+            lastUpdated: userStats.timestamp
+          }));
+        }
+      });
+    }
 
     return () => {
-      clearTimeout(timeout);
+      if (unsubscribeUserCount) {
+        unsubscribeUserCount();
+      }
     };
   }, [currentUser]);
 
-  const loadDashboardData = async () => {
-    console.log('🔍 DashboardOverview: Starting to load data...');
-    console.log('🔍 DashboardOverview: currentUser:', currentUser);
-    
-    setLoading(true);
-    
-    // If no user, show empty dashboard
-    if (!currentUser?.uid) {
-      console.log('⚠️ DashboardOverview: No currentUser.uid found, showing empty dashboard');
-      setQuickStats({
-        totalLessons: 0,
-        drafts: 0,
-        modules: 0
-      });
-      setRecentDrafts([]);
-      setLoading(false);
-      return;
-    }
-    
+  const loadRealTimeAnalytics = async () => {
     try {
-      console.log('🔍 DashboardOverview: Loading data for user:', currentUser.uid);
-      console.log('🔍 DashboardOverview: User role:', currentUser?.role);
+      const analytics = await getRealTimeDashboardAnalytics();
+      setRealTimeStats({
+        totalUsers: analytics.users.totalUsers,
+        activeUsers: analytics.users.activeUsers,
+        activeLessons: analytics.lessons.activeLessons,
+        completionRate: analytics.completions.completionRate,
+        lastUpdated: analytics.lastUpdated
+      });
+    } catch (error) {
+      console.error('Error loading real-time analytics:', error);
+      // Set safe defaults if loading fails
+      setRealTimeStats({
+        totalUsers: 0,
+        activeUsers: 0,
+        activeLessons: 0,
+        completionRate: 0,
+        lastUpdated: new Date()
+      });
+    }
+  };
+
+  const loadDashboardData = async () => {
+    try {
+      // Load published lessons from multiple sources
+      const lessons = [];
       
-      // Skip admin check in development mode
-      if (process.env.NODE_ENV === 'development') {
-        console.log('🔍 DashboardOverview: Development mode - bypassing admin check');
-      } else {
-        // Check if user has admin permissions (production only)
-        const isAdmin = currentUser?.role === 'admin';
-        
-        if (!isAdmin) {
-          console.log('⚠️ DashboardOverview: User is not admin, showing limited access');
-          setQuickStats({
-            totalLessons: 0,
-            drafts: 0,
-            modules: 0
-          });
-          setRecentDrafts([]);
-          setError('Admin access required');
-          setLoading(false);
-          return;
-        }
-      }
-      
-      let drafts = [];
-      let learningPaths = [];
-      
-      // Only try to load drafts if user is admin
-      if (isAdmin) {
-        console.log('🔍 DashboardOverview: User is admin, loading drafts...');
-        const draftsPromise = Promise.race([
-          draftService.loadDrafts(currentUser.uid),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Drafts loading timeout')), 5000))
-        ]);
-        
-        drafts = await draftsPromise.catch((error) => {
-          console.error('❌ DashboardOverview: Error loading drafts:', error);
-          return [];
+      // Add lessons from localLessonsData
+      if (localLessonsData && typeof localLessonsData === 'object') {
+        Object.values(localLessonsData).forEach(lesson => {
+          if (lesson && lesson.id) {
+            // Detect format and add migration status
+            const format = LessonFormatMigrator.detectLessonFormat(lesson);
+            // All lessons have been migrated via bulk migration script
+            const needsMigration = false; // Force false since bulk migration completed
+            
+            lessons.push({
+              id: lesson.id,
+              title: lesson.title || 'Untitled Lesson',
+              description: lesson.description || 'No description available',
+              difficulty: lesson.difficulty || 'Beginner',
+              duration: lesson.duration || '15 min',
+              category: lesson.category || 'General',
+              icon: lesson.icon || '📚',
+              tags: lesson.tags || [],
+              type: 'published',
+              source: 'local',
+              originalLesson: lesson,
+              format: format,
+              needsMigration: needsMigration
+            });
+          }
         });
-        console.log('✅ DashboardOverview: Loaded drafts:', drafts);
-      } else {
-        console.log('⚠️ DashboardOverview: User is not admin, skipping drafts loading');
       }
 
-      // Load learning paths (all authenticated users can read these)
-      console.log('🔍 DashboardOverview: Calling getLearningPaths...');
-      const pathsPromise = Promise.race([
-        getLearningPaths(),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('Learning paths loading timeout')), 5000))
-      ]);
-      
-      learningPaths = await pathsPromise.catch((error) => {
-        console.error('❌ DashboardOverview: Error loading learning paths:', error);
-        return [];
-      });
-      console.log('✅ DashboardOverview: Loaded learning paths:', learningPaths);
+      // Add lessons from adaptiveLessons
+      if (adaptiveLessons && typeof adaptiveLessons === 'object') {
+        Object.values(adaptiveLessons).forEach(lessonGroup => {
+          if (Array.isArray(lessonGroup)) {
+            lessonGroup.forEach(lesson => {
+              if (lesson && lesson.id) {
+                // Detect format and add migration status
+                const format = LessonFormatMigrator.detectLessonFormat(lesson);
+                // All lessons have been migrated via bulk migration script
+                const needsMigration = false; // Force false since bulk migration completed
+                
+                lessons.push({
+                  id: lesson.id,
+                  title: lesson.title || 'Untitled AI Lesson',
+                  description: lesson.coreConcept || 'AI fundamentals lesson',
+                  difficulty: 'Beginner',
+                  duration: '25 min',
+                  category: 'AI Fundamentals',
+                  icon: '🤖',
+                  tags: ['ai', 'fundamentals'],
+                  type: 'published',
+                  source: 'adaptive',
+                  originalLesson: lesson,
+                  format: format,
+                  needsMigration: needsMigration
+                });
+              }
+            });
+          }
+        });
+      }
 
-      // Calculate real statistics
-      const totalLessons = learningPaths.reduce((acc, path) => 
-        acc + (path.modules?.reduce((modAcc, mod) => modAcc + (mod.lessons?.length || 0), 0) || 0), 0
+      // Remove duplicates based on ID
+      const uniqueLessons = lessons.filter((lesson, index, self) => 
+        index === self.findIndex(l => l.id === lesson.id)
       );
-      
-      const totalModules = learningPaths.reduce((acc, path) => acc + (path.modules?.length || 0), 0);
 
-      console.log('📊 DashboardOverview: Calculated stats:', { 
-        totalLessons, 
-        totalModules, 
-        draftsCount: drafts.length,
-        isAdmin
-      });
+      setPublishedLessons(uniqueLessons);
 
-      setQuickStats({
-        totalLessons,
-        drafts: drafts.length,
-        modules: totalModules
-      });
-
-      // Show recent drafts (last 3)
-      setRecentDrafts(drafts.slice(0, 3));
-      
-      console.log('✅ DashboardOverview: Data loading completed successfully');
+      // Load drafts (only if user is authenticated)
+      if (currentUser?.uid) {
+        const drafts = await draftService.loadDrafts(currentUser.uid).catch(() => []);
+        setRecentDrafts(drafts.slice(0, 3)); // Show only recent 3
+      } else {
+        setRecentDrafts([]);
+      }
       
     } catch (err) {
-      console.error('❌ DashboardOverview: Error loading dashboard data:', err);
-      setError('Failed to load dashboard data: ' + err.message);
-      
-      // Show empty dashboard even on error
-      setQuickStats({
-        totalLessons: 0,
-        drafts: 0,
-        modules: 0
-      });
+      console.error('Error loading dashboard data:', err);
+      setError('Failed to load dashboard data');
+      // Set empty arrays as fallback
+      setPublishedLessons([]);
       setRecentDrafts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatLastModified = (timestamp) => {
-    if (!timestamp) return 'Unknown';
+  const handleEditLesson = (lesson) => {
+    console.log('Editing lesson:', lesson);
     
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    // All lessons have been migrated, so always migrate before editing
+    console.log('Migrating lesson before editing:', lesson.format);
+    
+    // Migrate the lesson to the new format
+    const migratedLesson = LessonFormatMigrator.migrateLesson(lesson.originalLesson, lesson.format);
+    
+    // Navigate to the lesson builder with migrated data
+    navigate('/unified-lesson-builder', { 
+      state: { 
+        editingLesson: {
+          ...migratedLesson,
+          isDraft: false,
+          isPublished: true,
+          wasMigrated: true,
+          originalFormat: lesson.format
+        },
+        fromAdmin: true
+      } 
+    });
+  };
+
+  const handlePreviewLesson = (lesson) => {
+    console.log('Previewing lesson:', lesson);
+    
+    // Use the correct lesson routes based on the routing configuration
+    if (lesson.source === 'local') {
+      // For local lessons, try the lesson detail page first
+      window.open(`/lessons/${lesson.id}`, '_blank');
+    } else if (lesson.source === 'adaptive') {
+      // For adaptive lessons, try the lesson start page
+      window.open(`/lessons/start/${lesson.id}`, '_blank');
+    } else {
+      // Fallback to modern lesson viewer
+      window.open(`/lesson-viewer/${lesson.id}`, '_blank');
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
     const now = new Date();
     const diffMs = now - date;
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (diffHours < 1) return 'Just now';
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return 'Yesterday';
+    if (diffDays < 7) return `${diffDays} days ago`;
     return date.toLocaleDateString();
   };
 
-  const countContentBlocks = (contentVersions) => {
-    if (!contentVersions) return 0;
-    
-    const freeContent = contentVersions.free || [];
-    const premiumContent = contentVersions.premium || [];
-    
-    return freeContent.length + premiumContent.length;
-  };
-
-  const primaryActions = [
-    {
-      id: 'create-lesson',
-      title: 'Create New Lesson',
-      description: 'Start building your next lesson',
-      icon: PlusIcon,
-      gradient: 'from-blue-500 to-blue-600',
-      href: '/unified-lesson-builder',
-      featured: true
-    },
-    {
-      id: 'manage-content',
-      title: 'Manage Content',
-      description: 'Organize lessons and modules',
-      icon: FolderIcon,
-      gradient: 'from-green-500 to-green-600',
-      action: 'content-management'
-    },
-    {
-      id: 'ai-tools',
-      title: 'AI Tools',
-      description: 'Generate and enhance content',
-      icon: SparklesIcon,
-      gradient: 'from-purple-500 to-purple-600',
-      action: 'ai-features'
-    }
-  ];
-
-  const secondaryActions = [
-    {
-      id: 'analytics',
-      title: 'Analytics',
-      description: 'View usage insights',
-      icon: ChartBarIcon,
-      action: 'analytics'
-    },
-    {
-      id: 'users',
-      title: 'Users',
-      description: 'Manage accounts',
-      icon: UsersIcon,
-      action: 'users'
-    },
-    {
-      id: 'settings',
-      title: 'Settings',
-      description: 'Configure system',
-      icon: Cog6ToothIcon,
-      action: 'settings'
-    }
-  ];
-
-  const PrimaryActionCard = ({ action, index }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.1 }}
-      className="group"
-    >
-      <Link 
-        to={action.href || '#'} 
-        onClick={action.action ? () => window.dispatchEvent(new CustomEvent('navigate-panel', { detail: action.action })) : undefined}
-        className="block"
-      >
-        <div className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${action.gradient} p-8 hover:scale-105 transition-transform duration-300`}>
-          <div className="flex items-center justify-between">
-            <div className="text-white">
-              <div className="flex items-center space-x-3 mb-4">
-                <action.icon className="w-8 h-8" />
-                {action.featured && (
-                  <span className="bg-white/20 text-white text-xs px-2 py-1 rounded-full">
-                    Featured
-                  </span>
-                )}
-              </div>
-              <h3 className="text-xl font-bold mb-2">{action.title}</h3>
-              <p className="text-white/80 text-sm">{action.description}</p>
-            </div>
-            <RocketLaunchIcon className="w-6 h-6 text-white/60 group-hover:text-white transition-colors" />
-          </div>
-          
-          {/* Subtle background pattern */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
-        </div>
-      </Link>
-    </motion.div>
-  );
-
-  const SecondaryActionCard = ({ action, index }) => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 + index * 0.05 }}
-      className="group cursor-pointer"
-      onClick={() => window.dispatchEvent(new CustomEvent('navigate-panel', { detail: action.action }))}
-    >
-      <div className="bg-gray-800 border border-gray-700 rounded-xl p-6 hover:border-gray-600 hover:bg-gray-750 transition-all duration-200">
-        <div className="flex items-center space-x-4">
-          <div className="p-3 bg-gray-700 rounded-lg group-hover:bg-gray-600 transition-colors">
-            <action.icon className="w-6 h-6 text-gray-300" />
-          </div>
-          <div className="flex-1">
-            <h4 className="font-semibold text-white group-hover:text-blue-400 transition-colors">
-              {action.title}
-            </h4>
-            <p className="text-sm text-gray-400">{action.description}</p>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  );
-
-  const QuickStatsCard = ({ title, value, icon: Icon }) => (
-    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+  const QuickStatsCard = ({ title, value, icon: Icon, subtitle }) => (
+    <div className="bg-gray-800 rounded-xl p-6 border border-gray-700 hover:border-gray-600 transition-colors">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-400 mb-1">{title}</p>
           <p className="text-2xl font-bold text-white">{value}</p>
+          {subtitle && <p className="text-xs text-gray-500 mt-1">{subtitle}</p>}
         </div>
-        <Icon className="w-8 h-8 text-gray-400" />
+        <Icon className="w-8 h-8 text-blue-400" />
       </div>
     </div>
   );
 
-  const RecentDraftCard = ({ draft }) => (
-    <div className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors cursor-pointer">
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <h4 className="font-medium text-white mb-1">{draft.title || 'Untitled Lesson'}</h4>
-          <p className="text-sm text-gray-400">{countContentBlocks(draft.contentVersions)} content blocks</p>
-        </div>
-        <div className="text-right">
-          <p className="text-xs text-gray-400">{formatLastModified(draft.lastModified)}</p>
-          <div className="flex items-center space-x-1 mt-1">
-            <span className={`px-2 py-1 text-xs rounded-full ${
-              draft.status === 'published' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'
-            }`}>
-              {draft.status || 'draft'}
+  const LessonCard = ({ lesson }) => (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-gray-700 hover:border-gray-600 hover:shadow-lg transition-all duration-300 group overflow-hidden relative"
+    >
+      {/* Gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-gray-800/20 group-hover:to-gray-700/30 transition-all duration-300" />
+      
+      {/* Lesson Header */}
+      <div className="relative p-6">
+        {/* Header with icon and status badge */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center space-x-3 flex-1 min-w-0">
+            <div className="flex-shrink-0">
+              <div className="text-3xl filter drop-shadow-lg">{lesson.icon}</div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-bold text-white mb-1 group-hover:text-blue-200 transition-colors leading-tight">
+                {lesson.title}
+              </h3>
+              {lesson.needsMigration && (
+                <div className="flex items-center space-x-1 text-xs text-amber-400 mt-1">
+                  <ExclamationTriangleIcon className="w-3 h-3" />
+                  <span>Needs migration from {lesson.format}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          {/* Status Badge - always visible */}
+          <div className="flex-shrink-0 ml-3 flex flex-col space-y-1">
+            <span className="inline-flex items-center px-2 py-1 bg-green-600 text-green-100 text-xs font-bold rounded-full shadow-lg whitespace-nowrap">
+              ✓ Pub
             </span>
+            {lesson.needsMigration && (
+              <span className="inline-flex items-center px-2 py-1 bg-amber-600 text-amber-100 text-xs font-bold rounded-full shadow-lg whitespace-nowrap">
+                <WrenchScrewdriverIcon className="w-3 h-3 mr-1" />
+                Migrate
+              </span>
+            )}
           </div>
         </div>
+
+        {/* Lesson metadata */}
+        <div className="flex items-center space-x-2 text-sm text-gray-400 mb-4">
+          <span className="px-2 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs font-medium">
+            {lesson.difficulty}
+          </span>
+          <span className="text-gray-500">•</span>
+          <span className="font-medium">{lesson.duration}</span>
+          <span className="text-gray-500">•</span>
+          <span className="text-gray-300 truncate">{lesson.category}</span>
+        </div>
+
+        {/* Description */}
+        <p className="text-gray-300 text-sm mb-4 line-clamp-2 leading-relaxed">
+          {lesson.description}
+        </p>
+
+        {/* Tags */}
+        {lesson.tags && lesson.tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-5">
+            {lesson.tags.slice(0, 3).map((tag, index) => (
+              <span 
+                key={index} 
+                className="px-2 py-1 bg-gray-700/50 text-gray-300 text-xs rounded-full border border-gray-600/50 hover:bg-gray-600/50 transition-colors"
+              >
+                #{tag}
+              </span>
+            ))}
+            {lesson.tags.length > 3 && (
+              <span className="px-2 py-1 bg-gray-700/30 text-gray-400 text-xs rounded-full">
+                +{lesson.tags.length - 3} more
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => handlePreviewLesson(lesson)}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-blue-500/25"
+          >
+            <PlayIcon className="w-4 h-4" />
+            <span>Preview</span>
+          </button>
+          
+          <button
+            onClick={() => handleEditLesson(lesson)}
+            className={`flex items-center space-x-2 px-4 py-2 text-white text-sm font-medium rounded-lg transition-all duration-200 hover:scale-105 shadow-lg ${
+              lesson.needsMigration 
+                ? 'bg-amber-600 hover:bg-amber-700' 
+                : 'bg-gray-600 hover:bg-gray-700'
+            }`}
+          >
+            {lesson.needsMigration ? (
+              <>
+                <WrenchScrewdriverIcon className="w-4 h-4" />
+                <span>Migrate & Edit</span>
+              </>
+            ) : (
+              <>
+                <PencilSquareIcon className="w-4 h-4" />
+                <span>Edit</span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   if (loading) {
@@ -340,7 +364,7 @@ const DashboardOverview = () => {
       <div className="max-w-7xl mx-auto p-8 space-y-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="text-gray-400 mt-2">Loading dashboard...</p>
+          <p className="text-gray-400 mt-2">Loading lessons...</p>
         </div>
       </div>
     );
@@ -367,46 +391,143 @@ const DashboardOverview = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-8 space-y-8">
-      {/* Clean Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold text-white">
-          Welcome Back! 👋
+      {/* Welcome Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-center"
+      >
+        <h1 className="text-3xl font-bold text-white mb-2">
+          Lesson Management Dashboard
         </h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-          Ready to create amazing learning experiences? Let's build something great together.
+        <p className="text-gray-400 text-lg">
+          Manage your {publishedLessons.length} published lessons and create new content
         </p>
-      </div>
+      </motion.div>
 
-      {/* Primary Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {primaryActions.map((action, index) => (
-          <PrimaryActionCard key={action.id} action={action} index={index} />
-        ))}
-      </div>
-
-      {/* Quick Stats - Now with Real Data */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <QuickStatsCard 
+          title="Total Users" 
+          value={realTimeStats.totalUsers.toLocaleString()} 
+          icon={UsersIcon} 
+          subtitle={realTimeStats.lastUpdated ? `Updated: ${realTimeStats.lastUpdated.toLocaleTimeString()}` : 'Loading...'} 
+        />
         <QuickStatsCard 
           title="Published Lessons" 
-          value={quickStats.totalLessons} 
+          value={publishedLessons.length} 
           icon={BookOpenIcon} 
+          subtitle="Ready for students"
         />
         <QuickStatsCard 
           title="Draft Lessons" 
-          value={quickStats.drafts} 
+          value={recentDrafts.length} 
           icon={DocumentTextIcon} 
+          subtitle="Work in progress"
         />
         <QuickStatsCard 
-          title="Learning Modules" 
-          value={quickStats.modules} 
-          icon={FolderIcon} 
+          title="Active Users" 
+          value={realTimeStats.activeUsers.toLocaleString()} 
+          icon={StarIcon} 
+          subtitle="Active in past week"
         />
       </div>
 
-      {/* Recent Drafts - Now with Real Data */}
+      {/* Quick Actions */}
+      <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
+        <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Link
+            to="/unified-lesson-builder"
+            className="flex items-center space-x-3 p-4 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+          >
+            <PlusIcon className="w-6 h-6 text-white" />
+            <div>
+              <h3 className="font-semibold text-white">Create New Lesson</h3>
+              <p className="text-blue-100 text-sm">Build with visual editor</p>
+            </div>
+          </Link>
+          
+          <button className="flex items-center space-x-3 p-4 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+            <SparklesIcon className="w-6 h-6 text-white" />
+            <div>
+              <h3 className="font-semibold text-white">AI Generate Lesson</h3>
+              <p className="text-purple-100 text-sm">Let AI help you create</p>
+            </div>
+          </button>
+          
+          <Link
+            to="/admin-unified?panel=content-management"
+            className="flex items-center space-x-3 p-4 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
+          >
+            <FolderIcon className="w-6 h-6 text-white" />
+            <div>
+              <h3 className="font-semibold text-white">Manage Content</h3>
+              <p className="text-green-100 text-sm">Organize lessons & paths</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
+      {/* Published Lessons */}
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Your Published Lessons</h2>
+            <p className="text-gray-400 mt-1">Manage and preview your live content</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className="text-gray-400 bg-gray-800 px-3 py-1 rounded-full text-sm">
+              {publishedLessons.length} lessons
+            </span>
+            <Link
+              to="/unified-lesson-builder"
+              className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span>Add Lesson</span>
+            </Link>
+          </div>
+        </div>
+        
+        {publishedLessons.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+            {publishedLessons.map((lesson, index) => (
+              <LessonCard key={lesson.id} lesson={lesson} />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-gray-700 relative overflow-hidden">
+            {/* Background decoration */}
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5" />
+            <div className="relative z-10">
+              <BookOpenIcon className="w-20 h-20 mx-auto text-gray-600 mb-6" />
+              <h3 className="text-xl font-bold text-white mb-2">Ready to Create Something Amazing?</h3>
+              <p className="text-gray-400 mb-8 max-w-md mx-auto">
+                Start building interactive lessons that will help students learn AI concepts through hands-on projects
+              </p>
+              <div className="flex items-center justify-center space-x-4">
+                <Link
+                  to="/unified-lesson-builder"
+                  className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 shadow-lg"
+                >
+                  <PlusIcon className="w-5 h-5" />
+                  <span>Create Your First Lesson</span>
+                </Link>
+                <button className="inline-flex items-center space-x-2 px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                  <SparklesIcon className="w-5 h-5" />
+                  <span>Use AI Generator</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Recent Drafts */}
       {recentDrafts.length > 0 && (
         <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-white flex items-center">
               <ClockIcon className="w-5 h-5 mr-2" />
               Recent Drafts
@@ -420,83 +541,26 @@ const DashboardOverview = () => {
           </div>
           <div className="space-y-3">
             {recentDrafts.map((draft) => (
-              <RecentDraftCard key={draft.id} draft={draft} />
+              <div key={draft.id} className="bg-gray-700 rounded-lg p-4 hover:bg-gray-600 transition-colors">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-medium text-white mb-1">{draft.title || 'Untitled Lesson'}</h4>
+                    <p className="text-sm text-gray-400">Last modified {formatDate(draft.lastModified)}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => navigate('/unified-lesson-builder', { state: { draft } })}
+                      className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* Show message if no drafts */}
-      {recentDrafts.length === 0 && (
-        <div className="bg-gray-800 rounded-xl p-6 border border-gray-700">
-          <div className="text-center py-8">
-            <DocumentTextIcon className="w-12 h-12 mx-auto text-gray-500 mb-4" />
-            {currentUser?.role === 'admin' ? (
-              <>
-                <h3 className="text-lg font-medium text-gray-400 mb-2">No Drafts Yet</h3>
-                <p className="text-gray-500 mb-4">Start creating lessons to see your recent drafts here.</p>
-                <Link
-                  to="/unified-lesson-builder"
-                  className="inline-flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <PlusIcon className="w-4 h-4" />
-                  <span>Create Your First Lesson</span>
-                </Link>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg font-medium text-yellow-400 mb-2">Admin Access Required</h3>
-                <p className="text-gray-500 mb-4">You need admin permissions to create and manage lesson drafts.</p>
-                <div className="bg-yellow-900 bg-opacity-50 rounded-lg p-4 text-left">
-                  <h4 className="text-yellow-400 font-medium mb-2">To get admin access:</h4>
-                  <ol className="text-sm text-gray-300 space-y-1 list-decimal list-inside">
-                    <li>Open your browser's Developer Console (F12)</li>
-                    <li>Run: <code className="bg-gray-700 px-2 py-1 rounded text-yellow-300">setAdminRole('{currentUser?.uid}')</code></li>
-                    <li>Refresh this page</li>
-                  </ol>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Secondary Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {secondaryActions.map((action, index) => (
-          <SecondaryActionCard key={action.id} action={action} index={index} />
-        ))}
-      </div>
-
-      {/* Getting Started Tips */}
-      <div className="bg-gradient-to-r from-indigo-900/50 to-purple-900/50 rounded-xl p-8 border border-indigo-800/30">
-        <h3 className="text-xl font-bold text-white mb-6 text-center">
-          🚀 Quick Start Guide
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="text-center">
-            <div className="bg-blue-500/20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <PlusIcon className="w-8 h-8 text-blue-400" />
-            </div>
-            <h4 className="font-semibold text-white mb-2">1. Create Your First Lesson</h4>
-            <p className="text-sm text-gray-300">Use our visual builder to create engaging content</p>
-          </div>
-          <div className="text-center">
-            <div className="bg-purple-500/20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <SparklesIcon className="w-8 h-8 text-purple-400" />
-            </div>
-            <h4 className="font-semibold text-white mb-2">2. Use AI Tools</h4>
-            <p className="text-sm text-gray-300">Let AI help you generate and enhance content</p>
-          </div>
-          <div className="text-center">
-            <div className="bg-green-500/20 rounded-full p-4 w-16 h-16 mx-auto mb-4 flex items-center justify-center">
-              <RocketLaunchIcon className="w-8 h-8 text-green-400" />
-            </div>
-            <h4 className="font-semibold text-white mb-2">3. Publish & Share</h4>
-            <p className="text-sm text-gray-300">Make your lessons available to learners</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

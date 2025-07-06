@@ -373,8 +373,8 @@ const SystemSettings = () => {
             <p className="text-green-400 font-medium">Connected</p>
           </div>
           <div>
-            <p className="text-gray-400">Uptime</p>
-            <p className="text-white font-medium">7 days</p>
+            <p className="text-gray-400">Last Updated</p>
+            <p className="text-white font-medium">{new Date().toLocaleDateString()}</p>
           </div>
         </div>
       </div>

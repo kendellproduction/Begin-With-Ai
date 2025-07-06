@@ -198,18 +198,80 @@ const UnifiedLessonBuilder = () => {
     }
   }, [lessonBlocks, lessonPages]);
 
-  // Initialize with default page
+  // Initialize with draft data from navigation state or default page
   useEffect(() => {
-    if (lessonPages.length === 0) {
-      const defaultPage = {
-        id: generateId(),
-        title: 'Introduction',
-        blocks: [],
-        created: new Date().toISOString()
-      };
-      setLessonPages([defaultPage]);
-    }
-  }, [lessonPages.length]);
+    const initializeLesson = () => {
+      // Check if we're editing an existing draft
+      if (location.state?.draft) {
+        const draft = location.state.draft;
+        console.log('Loading draft for editing:', draft);
+        
+        // Set lesson metadata
+        setLessonTitle(draft.title || 'Untitled Lesson');
+        setLessonDescription(draft.description || '');
+        setCurrentDraftId(draft.id);
+        
+        // Load lesson pages from draft
+        if (draft.contentVersions?.free?.pages && draft.contentVersions.free.pages.length > 0) {
+          setLessonPages(draft.contentVersions.free.pages);
+        } else if (draft.pages && draft.pages.length > 0) {
+          setLessonPages(draft.pages);
+        } else {
+          // Draft exists but has no pages, create default page
+          const defaultPage = {
+            id: generateId(),
+            title: 'Introduction',
+            blocks: [],
+            created: new Date().toISOString()
+          };
+          setLessonPages([defaultPage]);
+        }
+        
+        showNotification('info', `Loaded draft: ${draft.title || 'Untitled Lesson'}`);
+      } else if (location.state?.editingLesson) {
+        const lesson = location.state.editingLesson;
+        console.log('Loading published lesson for editing:', lesson);
+        
+        // Set lesson metadata
+        setLessonTitle(lesson.title || 'Untitled Lesson');
+        setLessonDescription(lesson.description || '');
+        
+        // Load lesson pages from published lesson
+        if (lesson.contentVersions?.free?.pages && lesson.contentVersions.free.pages.length > 0) {
+          setLessonPages(lesson.contentVersions.free.pages);
+        } else if (lesson.pages && lesson.pages.length > 0) {
+          setLessonPages(lesson.pages);
+        } else {
+          // Create default page if no content
+          const defaultPage = {
+            id: generateId(),
+            title: 'Introduction',
+            blocks: [],
+            created: new Date().toISOString()
+          };
+          setLessonPages([defaultPage]);
+        }
+        
+        showNotification('info', `Loaded lesson: ${lesson.title || 'Untitled Lesson'}`);
+        
+        // Show migration info if lesson was migrated
+        if (lesson.wasMigrated) {
+          showNotification('warning', `This lesson was migrated from ${lesson.originalFormat} format. Please review content blocks carefully.`, 8000);
+        }
+      } else if (lessonPages.length === 0) {
+        // No draft or lesson data, create default page
+        const defaultPage = {
+          id: generateId(),
+          title: 'Introduction',
+          blocks: [],
+          created: new Date().toISOString()
+        };
+        setLessonPages([defaultPage]);
+      }
+    };
+
+    initializeLesson();
+  }, [location.state]);
 
   // Browser navigation guard
   useEffect(() => {

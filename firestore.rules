@@ -9,9 +9,11 @@ service cloud.firestore {
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    // User-specific data - users can only access their own
+    // User-specific data - users can only access their own, admins can read all for analytics
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Allow admins to read user data for analytics and user management
+      allow read: if isAdmin();
     }
     
     match /userStats/{userId} {
@@ -27,6 +29,8 @@ service cloud.firestore {
                           request.auth.uid == resource.data.userId;
       allow create: if request.auth != null && 
                      request.resource.data.userId == request.auth.uid;
+      // Allow admins to read progress data for analytics
+      allow read: if isAdmin();
     }
     
     // Code submissions for lessons

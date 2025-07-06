@@ -60,7 +60,7 @@ const LessonViewer = () => {
   useEffect(() => {
     if (location.state?.fromAdmin && location.state?.lesson) {
       const adminLesson = location.state.lesson;
-      console.log('Loading admin-generated lesson:', adminLesson);
+      // Loading admin-generated lesson
       
       // Convert admin lesson format to slide format
       const convertedLesson = convertAdminLessonToSlides(adminLesson);

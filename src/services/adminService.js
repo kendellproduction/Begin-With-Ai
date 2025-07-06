@@ -8,7 +8,8 @@ import {
   deleteDoc, 
   query, 
   orderBy, 
-  writeBatch 
+  writeBatch,
+  onSnapshot 
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getUserProfile } from './firestoreService';
@@ -784,4 +785,252 @@ export const cleanupFakeData = async (userId) => {
     console.error('Error cleaning up fake data:', error);
     throw error;
   }
+};
+
+// Real-time Analytics Functions
+
+/**
+ * Gets real-time user statistics
+ * @returns {Promise<object>} User statistics object
+ */
+export const getRealTimeUserStats = async () => {
+  try {
+    const usersRef = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersRef);
+    
+    const totalUsers = usersSnapshot.size;
+    let activeUsers = 0;
+    let premiumUsers = 0;
+    const now = new Date();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    
+    // Count active users (logged in within last week)
+    usersSnapshot.forEach(doc => {
+      const userData = doc.data();
+      
+      if (userData.lastLoginAt) {
+        const lastLoginDate = userData.lastLoginAt.toDate ? userData.lastLoginAt.toDate() : new Date(userData.lastLoginAt);
+        if (lastLoginDate >= oneWeekAgo) {
+          activeUsers++;
+        }
+      }
+      if (userData.subscriptionTier && userData.subscriptionTier !== 'free') {
+        premiumUsers++;
+      }
+    });
+    
+    return {
+      totalUsers,
+      activeUsers,
+      premiumUsers,
+      newUsersThisWeek: activeUsers, // Simplified - could be more precise
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Error getting real-time user stats:', error);
+    
+    // Return safe defaults when database is empty or errors occur
+    return {
+      totalUsers: 0,
+      activeUsers: 0,
+      premiumUsers: 0,
+      newUsersThisWeek: 0,
+      timestamp: new Date()
+    };
+  }
+};
+
+/**
+ * Gets real-time lesson statistics
+ * @returns {Promise<object>} Lesson statistics object
+ */
+export const getRealTimeLessonStats = async () => {
+  try {
+    // Get published lessons from learning paths
+    const pathsRef = collection(db, 'learningPaths');
+    const pathsSnapshot = await getDocs(pathsRef);
+    
+    let totalLessons = 0;
+    let activeLessons = 0;
+    let totalModules = 0;
+    
+    for (const pathDoc of pathsSnapshot.docs) {
+      const pathData = pathDoc.data();
+      
+      if (pathData.modules && Array.isArray(pathData.modules)) {
+        totalModules += pathData.modules.length;
+        
+        // Count lessons in each module
+        pathData.modules.forEach(module => {
+          if (module.lessons && Array.isArray(module.lessons)) {
+            totalLessons += module.lessons.length;
+            // Count active lessons (those with recent activity)
+            activeLessons += module.lessons.filter(lesson => 
+              lesson.published !== false && lesson.status !== 'draft'
+            ).length;
+          }
+        });
+      }
+    }
+    
+    return {
+      totalLessons,
+      activeLessons,
+      totalModules,
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Error getting real-time lesson stats:', error);
+    // Return safe defaults when database is empty or errors occur
+    return {
+      totalLessons: 0,
+      activeLessons: 0,
+      totalModules: 0,
+      timestamp: new Date()
+    };
+  }
+};
+
+/**
+ * Gets real-time completion statistics
+ * @returns {Promise<object>} Completion statistics object
+ */
+export const getRealTimeCompletionStats = async () => {
+  try {
+    const progressRef = collection(db, 'userProgress');
+    const progressSnapshot = await getDocs(progressRef);
+    
+    let totalCompletions = 0;
+    let uniqueUsers = new Set();
+    
+    progressSnapshot.forEach(doc => {
+      const progressData = doc.data();
+      if (progressData.status === 'completed') {
+        totalCompletions++;
+        uniqueUsers.add(progressData.userId);
+      }
+    });
+    
+    // Get total number of users for completion rate calculation
+    const usersRef = collection(db, 'users');
+    const usersSnapshot = await getDocs(usersRef);
+    const totalUsers = usersSnapshot.size;
+    
+    const completionRate = totalUsers > 0 ? Math.round((uniqueUsers.size / totalUsers) * 100) : 0;
+    
+    return {
+      totalCompletions,
+      usersWithCompletions: uniqueUsers.size,
+      completionRate,
+      avgCompletionsPerUser: uniqueUsers.size > 0 ? Math.round(totalCompletions / uniqueUsers.size) : 0,
+      timestamp: new Date()
+    };
+  } catch (error) {
+    console.error('Error getting real-time completion stats:', error);
+    // Return safe defaults when database is empty or errors occur
+    return {
+      totalCompletions: 0,
+      usersWithCompletions: 0,
+      completionRate: 0,
+      avgCompletionsPerUser: 0,
+      timestamp: new Date()
+    };
+  }
+};
+
+/**
+ * Gets comprehensive real-time dashboard analytics
+ * @returns {Promise<object>} Complete dashboard analytics object
+ */
+export const getRealTimeDashboardAnalytics = async () => {
+  try {
+    const [userStats, lessonStats, completionStats] = await Promise.all([
+      getRealTimeUserStats(),
+      getRealTimeLessonStats(),
+      getRealTimeCompletionStats()
+    ]);
+    
+    return {
+      users: userStats,
+      lessons: lessonStats,
+      completions: completionStats,
+      lastUpdated: new Date()
+    };
+  } catch (error) {
+    console.error('Error getting real-time dashboard analytics:', error);
+    // Return safe defaults when database is empty or errors occur
+    return {
+      users: {
+        totalUsers: 0,
+        activeUsers: 0,
+        premiumUsers: 0,
+        newUsersThisWeek: 0,
+        timestamp: new Date()
+      },
+      lessons: {
+        totalLessons: 0,
+        activeLessons: 0,
+        totalModules: 0,
+        timestamp: new Date()
+      },
+      completions: {
+        totalCompletions: 0,
+        usersWithCompletions: 0,
+        completionRate: 0,
+        avgCompletionsPerUser: 0,
+        timestamp: new Date()
+      },
+      lastUpdated: new Date()
+    };
+  }
+};
+
+/**
+ * Subscribe to real-time user count changes
+ * @param {Function} callback - Callback function to handle updates
+ * @returns {Function} Unsubscribe function
+ */
+export const subscribeToUserCount = (callback) => {
+  const usersRef = collection(db, 'users');
+  
+  return onSnapshot(usersRef, (snapshot) => {
+    try {
+      const totalUsers = snapshot.size;
+      let activeUsers = 0;
+      const now = new Date();
+      const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      
+      snapshot.forEach(doc => {
+        const userData = doc.data();
+        if (userData.lastLoginAt) {
+          const lastLoginDate = userData.lastLoginAt.toDate ? userData.lastLoginAt.toDate() : new Date(userData.lastLoginAt);
+          if (lastLoginDate >= oneWeekAgo) {
+            activeUsers++;
+          }
+        }
+      });
+      
+      callback({
+        totalUsers,
+        activeUsers,
+        timestamp: new Date()
+      });
+    } catch (error) {
+      console.error('Error processing user count snapshot:', error);
+      // Return safe defaults when processing fails
+      callback({
+        totalUsers: 0,
+        activeUsers: 0,
+        timestamp: new Date()
+      });
+    }
+  }, (error) => {
+    console.error('Error in user count subscription:', error);
+    // Return safe defaults when subscription fails
+    callback({
+      totalUsers: 0,
+      activeUsers: 0,
+      timestamp: new Date()
+    });
+  });
 }; 

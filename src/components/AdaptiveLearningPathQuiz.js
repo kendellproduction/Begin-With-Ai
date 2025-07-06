@@ -676,7 +676,7 @@ const AdaptiveLearningPathQuiz = () => {
       try {
         awardXP(50, 'Completed AI Learning Path Assessment');
       } catch (error) {
-        console.log('XP award not available:', error);
+        // XP award not available
       }
     }
 

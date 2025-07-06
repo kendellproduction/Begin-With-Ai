@@ -115,7 +115,7 @@ class DraftService {
       // Update localStorage buffer
       this.updateLocalStorageBuffer(userId, result);
       
-      console.log('✅ Draft saved to Firestore:', result.id);
+      // Draft saved successfully
       return result;
 
     } catch (error) {
@@ -154,7 +154,7 @@ class DraftService {
       // Update cache
       this.cache.set(`drafts_all`, drafts);
       
-      console.log(`📁 Loaded ${drafts.length} drafts from Firestore`);
+      // Drafts loaded from Firestore
       return drafts;
 
     } catch (error) {
@@ -203,7 +203,7 @@ class DraftService {
       // Remove from localStorage buffer
       this.removeFromLocalStorageBuffer(userId, draftId);
       
-      console.log('✅ Draft deleted:', draftId);
+      // Draft deleted successfully
       return true;
     } catch (error) {
       console.error('❌ Error deleting draft:', error);

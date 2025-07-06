@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
-const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = false }) => {
+const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = false, showEditButton = true }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isHovered, setIsHovered] = useState(false);
@@ -15,52 +16,42 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   const [showDifficultyOptions, setShowDifficultyOptions] = useState(false);
   const [showPaywallModal, setShowPaywallModal] = useState(false);
 
+  // Check if user has admin permissions
+  const isAdmin = user?.role === 'admin' || user?.role === 'developer';
+
   // TEMPORARILY DISABLED: Check if lesson requires premium access
   // const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
-  const isPremiumLesson = false; // Always false for testing
-  
-  // Activate paywall: Check user's subscription tier from AuthContext
-  // const hasAccess = user?.subscriptionTier === 'premium' || !isPremiumLesson; // Old logic
+  const isPremiumLesson = false;
 
-  const handleClick = () => {
-    // TEMPORARILY DISABLED: Premium paywall for testing
-    // What difficulty is the user attempting to start?
-    // const attemptingPremiumDifficulty = selectedDifficulty === 'Intermediate' || selectedDifficulty === 'Advanced';
-    // Does the user have a premium subscription?
-    // const userIsActuallyPremium = user?.subscriptionTier === 'premium';
-
-    // TEMPORARILY DISABLED: Premium access check
-    // If the user is trying to access premium-tier difficulty (Inter/Adv) 
-    // AND they are NOT actually premium:
-    // if (attemptingPremiumDifficulty && !userIsActuallyPremium) {
-    //   setShowPaywallModal(true); // Show the modal
-    //   return; // And stop further action
-    // }
-
-    // If we've reached this point, it means either:
-    // 1. The user selected 'Beginner' (attemptingPremiumDifficulty is false). Access is allowed.
-    // OR
-    // 2. The user IS premium (userIsActuallyPremium is true). Access is allowed for any selected difficulty.
+  const handleEditLesson = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Proceed to call the onClick handler (likely navigates to the lesson)
-    if (onClick) {
-      onClick(selectedDifficulty); // Pass the difficulty level the user selected/attempted
-    } else {
-      // Fallback navigation if no onClick prop is given (e.g. card used standalone)
-      // Ensure difficulty is passed in navigation state
-      navigate(`/lessons/${lesson.id}`, { state: { difficulty: selectedDifficulty } });
-    }
+    // Navigate to lesson builder with lesson data for editing
+    navigate('/unified-lesson-builder', { 
+      state: { 
+        editingLesson: {
+          ...lesson,
+          isDraft: false,
+          isPublished: true
+        }
+      } 
+    });
   };
 
-  const handleUpgradeClick = () => {
-    setShowPaywallModal(false);
-    // Navigate to pricing/subscription page
-    navigate('/pricing');
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick(lesson);
+    }
   };
 
   const handleDifficultyChange = (difficulty) => {
     setSelectedDifficulty(difficulty);
     setShowDifficultyOptions(false);
+    
+    if (onClick) {
+      onClick({ ...lesson, selectedDifficulty: difficulty });
+    }
   };
 
   const getDifficultyColor = (difficulty) => {
@@ -358,7 +349,25 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
   const thematicBg = getThematicBackground(lesson);
 
   return (
-    <div className={`group relative ${className}`}>
+    <div 
+      className={`relative group cursor-pointer transition-all duration-300 ${className}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={handleCardClick}
+    >
+      {/* Edit Button - Shows on hover for admin users */}
+      {isAdmin && showEditButton && (
+        <button
+          onClick={handleEditLesson}
+          className={`absolute top-2 right-2 z-10 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all duration-200 ${
+            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
+          }`}
+          title="Edit this lesson"
+        >
+          <PencilSquareIcon className="w-4 h-4" />
+        </button>
+      )}
+
       {/* Main Card */}
       <div
         className={`
@@ -371,9 +380,6 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
           hover:border-opacity-60 hover:shadow-xl ${thematicBg.shadowColor}
           ${isHovered ? 'ring-2 ring-white/20' : ''}
         `}
-        onClick={handleClick}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Vibrant Background Gradient */}
         <div className={`absolute inset-0 bg-gradient-to-br ${thematicBg.gradient} opacity-80`} />
@@ -466,7 +472,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleClick();
+                handleCardClick();
               }}
               className={`
                 w-full py-3 px-4 rounded-xl font-bold text-sm text-white

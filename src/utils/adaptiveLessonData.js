@@ -1,5 +1,5 @@
 import { serverTimestamp } from 'firebase/firestore';
-import { conditionalTestLesson } from './testConditionalLesson';
+import { conditionalTestLesson } from './testConditionalLesson.js';
 
 /**
  * Complete Adaptive Lesson System for Prompt Engineering Mastery
