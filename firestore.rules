@@ -5,8 +5,8 @@ service cloud.firestore {
     // Helper function to check if user is admin
     function isAdmin() {
       return request.auth != null && 
-             exists(/databases/$(database)/documents/userProfiles/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/userProfiles/$(request.auth.uid)).data.role == 'admin';
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
     // User-specific data - users can only access their own
@@ -86,6 +86,14 @@ service cloud.firestore {
     match /lessons/{lessonId} {
       allow read: if request.auth != null;
       allow write: if isAdmin();
+    }
+    
+    // Drafts - admin-only access for lesson creation
+    match /drafts/{draftId} {
+      allow read, write: if isAdmin();
+      allow create: if isAdmin() &&
+                     request.resource.data.title is string &&
+                     request.resource.data.status is string;
     }
     
     // Quiz content - read-only for users, writable by admins

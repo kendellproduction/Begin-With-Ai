@@ -12,8 +12,10 @@ export const BLOCK_TYPES = {
   SANDBOX: 'sandbox',
   SECTION_BREAK: 'section_break',
   FILL_BLANK: 'fill_blank',
+  CHECKLIST: 'checklist',
   PROGRESS_CHECKPOINT: 'progress_checkpoint',
-  CALL_TO_ACTION: 'call_to_action'
+  CALL_TO_ACTION: 'call_to_action',
+  API_CALL: 'api_call'
 };
 
 // Default block configurations
@@ -63,5 +65,18 @@ export const DEFAULT_BLOCK_CONFIG = {
     isolationLevel: 'strict',
     timeout: 30000,
     allowedModules: []
+  },
+  [BLOCK_TYPES.CHECKLIST]: {
+    allowAdd: false,
+    allowDelete: false,
+    showProgress: true,
+    completionThreshold: 1.0
+  },
+  [BLOCK_TYPES.API_CALL]: {
+    enableAPI: false,
+    showSystemPrompt: false,
+    allowEdit: true,
+    maxLength: 500,
+    rateLimitMs: 2000
   }
 }; 

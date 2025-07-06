@@ -16,6 +16,7 @@ export const SectionBreak = lazy(() => import('./SectionBreak'));
 export const FillBlankBlock = lazy(() => import('./FillBlankBlock'));
 export const ProgressCheckpoint = lazy(() => import('./ProgressCheckpoint'));
 export const CallToActionBlock = lazy(() => import('./CallToActionBlock'));
+export const APICallBlock = lazy(() => import('./APICallBlock'));
 
 // Block rendering utilities - Always loaded (needed for error boundaries)
 export { default as ContentBlockRenderer } from './ContentBlockRenderer';

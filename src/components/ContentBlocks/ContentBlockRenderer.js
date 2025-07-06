@@ -12,8 +12,10 @@ const QuizBlock = lazy(() => import('./QuizBlock'));
 const SandboxBlock = lazy(() => import('./SandboxBlock'));
 const SectionBreak = lazy(() => import('./SectionBreak'));
 const FillBlankBlock = lazy(() => import('./FillBlankBlock'));
+const ChecklistBlock = lazy(() => import('./ChecklistBlock'));
 const ProgressCheckpoint = lazy(() => import('./ProgressCheckpoint'));
 const CallToActionBlock = lazy(() => import('./CallToActionBlock'));
+const APICallBlock = lazy(() => import('./APICallBlock'));
 
 const ContentBlockRenderer = ({
   blocks = [],
@@ -111,8 +113,10 @@ const ContentBlockRenderer = ({
       [BLOCK_TYPES.SANDBOX]: SandboxBlock,
       [BLOCK_TYPES.SECTION_BREAK]: SectionBreak,
       [BLOCK_TYPES.FILL_BLANK]: FillBlankBlock,
+      [BLOCK_TYPES.CHECKLIST]: ChecklistBlock,
       [BLOCK_TYPES.PROGRESS_CHECKPOINT]: ProgressCheckpoint,
-      [BLOCK_TYPES.CALL_TO_ACTION]: CallToActionBlock
+      [BLOCK_TYPES.CALL_TO_ACTION]: CallToActionBlock,
+      [BLOCK_TYPES.API_CALL]: APICallBlock
     };
 
     return componentMap[blockType] || TextBlock;

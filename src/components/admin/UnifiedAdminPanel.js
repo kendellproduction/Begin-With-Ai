@@ -1,7 +1,9 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
+import { useAdmin } from '../../contexts/AdminContext';
 import { useNavigate } from 'react-router-dom';
+import draftService from '../../services/draftService';
 import { 
   HomeIcon,
   DocumentTextIcon,
@@ -19,7 +21,11 @@ import {
   ArrowLeftIcon,
   ChevronRightIcon,
   ChevronDownIcon,
-  PlusIcon
+  PlusIcon,
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon,
+  CurrencyDollarIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
 
 // Lazy load admin components to improve performance
@@ -33,12 +39,26 @@ const SystemSettings = React.lazy(() => import('./panels/SystemSettings'));
 
 const UnifiedAdminPanel = () => {
   const { currentUser } = useAuth();
+  const { state, actions } = useAdmin();
   const navigate = useNavigate();
-  const [activePanel, setActivePanel] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [expandedSections, setExpandedSections] = useState(new Set());
   const [notifications, setNotifications] = useState([]);
+  
+  // Extract state from AdminContext
+  const { 
+    isPremiumMode, 
+    isMobileView, 
+    unsavedChanges, 
+    sidebarCollapsed, 
+    activePanel,
+    currentLesson,
+    contentVersions
+  } = state;
+
+  // Save prompt modal state
+  const [showSavePrompt, setShowSavePrompt] = useState(false);
+  const [pendingAction, setPendingAction] = useState(null);
 
   // Admin panel configuration with improved structure
   const adminSections = [
@@ -68,13 +88,13 @@ const UnifiedAdminPanel = () => {
           id: 'ai-content-gen', 
           name: 'AI Generator', 
           description: 'AI-powered lessons',
-          action: () => setActivePanel('ai-features')
+          action: () => actions.setActivePanel('ai-features')
         },
         { 
           id: 'youtube-import', 
           name: 'YouTube Import', 
           description: 'Convert videos to lessons',
-          action: () => setActivePanel('ai-features')
+          action: () => actions.setActivePanel('ai-features')
         }
       ]
     },
@@ -90,19 +110,19 @@ const UnifiedAdminPanel = () => {
           id: 'modules-lessons', 
           name: 'Modules & Lessons', 
           description: 'View and edit content',
-          action: () => setActivePanel('content-management')
+          action: () => actions.setActivePanel('content-management')
         },
         { 
           id: 'drafts', 
           name: 'Drafts', 
           description: 'Work in progress',
-          action: () => navigate('/drafts')
+          action: () => actions.setActivePanel('content-management')
         },
         { 
           id: 'templates', 
           name: 'Templates', 
           description: 'Reusable templates',
-          action: () => setActivePanel('content-management')
+          action: () => actions.setActivePanel('content-management')
         }
       ]
     },
@@ -118,19 +138,19 @@ const UnifiedAdminPanel = () => {
           id: 'youtube-processor', 
           name: 'YouTube Processor', 
           description: 'Video to lesson converter',
-          action: () => setActivePanel('ai-features')
+          action: () => actions.setActivePanel('ai-features')
         },
         { 
           id: 'content-generator', 
           name: 'Content Generator', 
           description: 'AI lesson creation',
-          action: () => setActivePanel('ai-features')
+          action: () => actions.setActivePanel('ai-features')
         },
         { 
           id: 'smart-feedback', 
           name: 'Smart Feedback', 
           description: 'AI student assistance',
-          action: () => setActivePanel('ai-features')
+          action: () => actions.setActivePanel('ai-features')
         }
       ]
     },
@@ -146,13 +166,13 @@ const UnifiedAdminPanel = () => {
           id: 'student-progress', 
           name: 'Student Progress', 
           description: 'Learning analytics',
-          action: () => setActivePanel('analytics')
+          action: () => actions.setActivePanel('analytics')
         },
         { 
           id: 'content-metrics', 
           name: 'Content Metrics', 
           description: 'Lesson performance',
-          action: () => setActivePanel('analytics')
+          action: () => actions.setActivePanel('analytics')
         }
       ]
     },
@@ -168,13 +188,13 @@ const UnifiedAdminPanel = () => {
           id: 'student-accounts', 
           name: 'Student Accounts', 
           description: 'Manage students',
-          action: () => setActivePanel('users')
+          action: () => actions.setActivePanel('users')
         },
         { 
           id: 'admin-roles', 
           name: 'Admin Roles', 
           description: 'Permissions',
-          action: () => setActivePanel('users')
+          action: () => actions.setActivePanel('users')
         }
       ]
     },
@@ -190,13 +210,13 @@ const UnifiedAdminPanel = () => {
           id: 'api-config', 
           name: 'API Configuration', 
           description: 'External services',
-          action: () => setActivePanel('settings')
+          action: () => actions.setActivePanel('settings')
         },
         { 
           id: 'system-prefs', 
           name: 'System Preferences', 
           description: 'Platform settings',
-          action: () => setActivePanel('settings')
+          action: () => actions.setActivePanel('settings')
         }
       ]
     }
@@ -235,6 +255,148 @@ const UnifiedAdminPanel = () => {
     );
   });
 
+  // Load drafts from Firestore when user is authenticated
+  useEffect(() => {
+    if (currentUser?.uid) {
+      const loadDrafts = async () => {
+        try {
+          const drafts = await draftService.loadDrafts(currentUser.uid);
+          actions.setDrafts(drafts);
+        } catch (error) {
+          console.error('Error loading drafts:', error);
+          // Show notification
+          setNotifications(prev => [...prev, {
+            id: Date.now(),
+            type: 'error',
+            message: 'Failed to load drafts',
+            duration: 5000
+          }]);
+        }
+      };
+
+      loadDrafts();
+
+      // Subscribe to real-time draft updates
+      const unsubscribe = draftService.subscribeToDrafts(currentUser.uid, (drafts, error) => {
+        if (error) {
+          console.error('Draft subscription error:', error);
+          return;
+        }
+        if (drafts) {
+          actions.setDrafts(drafts);
+        }
+      });
+
+      return () => {
+        if (unsubscribe) {
+          unsubscribe();
+        }
+      };
+    }
+  }, [currentUser?.uid, actions]);
+
+  // REMOVED: Auto-save on every change (too aggressive)
+  // Now using manual save system with prompts only
+
+  // Manual save function
+  const handleManualSave = async () => {
+    if (!currentUser?.uid || !unsavedChanges) return;
+
+    try {
+      const draftData = {
+        id: currentLesson?.id,
+        title: currentLesson?.title || contentVersions.free?.title || contentVersions.premium?.title || 'Untitled Draft',
+        contentVersions,
+        lessonType: currentLesson?.lessonType || 'concept_explanation'
+      };
+
+      await draftService.saveDraft(currentUser.uid, draftData);
+      actions.setUnsavedChanges(false);
+      
+      setNotifications(prev => [...prev, {
+        id: Date.now(),
+        type: 'success',
+        message: 'Draft saved successfully!',
+        duration: 3000
+      }]);
+    } catch (error) {
+      console.error('Error saving draft:', error);
+      setNotifications(prev => [...prev, {
+        id: Date.now(),
+        type: 'error',
+        message: 'Failed to save draft',
+        duration: 5000
+      }]);
+    }
+  };
+
+  // Handle navigation attempts when there are unsaved changes
+  const handleNavigationAttempt = (targetPanel) => {
+    if (unsavedChanges) {
+      setPendingAction(() => () => actions.setActivePanel(targetPanel));
+      setShowSavePrompt(true);
+      return false;
+    }
+    return true; // No unsaved changes, allow navigation
+  };
+
+  // Save prompt modal handlers
+  const handleSavePromptCancel = () => {
+    setShowSavePrompt(false);
+    setPendingAction(null);
+  };
+
+  const handleSavePromptDontSave = () => {
+    setShowSavePrompt(false);
+    actions.setUnsavedChanges(false);
+    if (pendingAction) {
+      pendingAction();
+    }
+    setPendingAction(null);
+  };
+
+  const handleSavePromptSave = async () => {
+    setShowSavePrompt(false);
+    try {
+      await handleManualSave();
+      if (pendingAction) {
+        pendingAction();
+      }
+    } catch (error) {
+      console.error('Error saving:', error);
+    }
+    setPendingAction(null);
+  };
+
+  // Browser navigation guard (prevent accidental browser back/close)
+  useEffect(() => {
+    const handleBeforeUnload = (event) => {
+      if (unsavedChanges) {
+        event.preventDefault();
+        event.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+        return 'You have unsaved changes. Are you sure you want to leave?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [unsavedChanges]);
+
+  // Auto-remove notifications after duration
+  useEffect(() => {
+    notifications.forEach((notification) => {
+      if (notification.duration && notification.duration > 0) {
+        const timer = setTimeout(() => {
+          setNotifications(prev => prev.filter(n => n.id !== notification.id));
+        }, notification.duration);
+
+        return () => clearTimeout(timer);
+      }
+    });
+  }, [notifications]);
+
   const currentSection = adminSections.find(section => section.id === activePanel);
   const CurrentComponent = currentSection?.component;
 
@@ -254,7 +416,7 @@ const UnifiedAdminPanel = () => {
               </div>
             )}
             <button
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              onClick={() => actions.setSidebarCollapsed(!sidebarCollapsed)}
               className="p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
               title={sidebarCollapsed ? 'Expand' : 'Collapse'}
             >
@@ -290,14 +452,18 @@ const UnifiedAdminPanel = () => {
                 <div key={section.id} className="px-2">
                   {/* Main Section Button */}
                   <div className="flex items-center">
-                    <button
-                      onClick={() => setActivePanel(section.id)}
-                      className={`flex-1 flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 text-left ${
-                        activePanel === section.id
-                          ? 'bg-blue-600/90 text-white shadow-md'
-                          : 'hover:bg-gray-700/50 text-gray-300 hover:text-white'
-                      }`}
-                    >
+                                      <button
+                    onClick={() => {
+                      if (handleNavigationAttempt(section.id)) {
+                        actions.setActivePanel(section.id);
+                      }
+                    }}
+                    className={`flex-1 flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 text-left ${
+                      activePanel === section.id
+                        ? 'bg-blue-600/90 text-white shadow-md'
+                        : 'hover:bg-gray-700/50 text-gray-300 hover:text-white'
+                    }`}
+                  >
                       <section.icon className={`${sidebarCollapsed ? 'w-5 h-5' : 'w-4 h-4 mr-3'} flex-shrink-0`} />
                       {!sidebarCollapsed && (
                         <div className="flex-1 min-w-0">
@@ -376,9 +542,73 @@ const UnifiedAdminPanel = () => {
             </div>
             
             <div className="flex items-center space-x-3">
+              {/* Free/Premium Toggle */}
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-400">Free</span>
+                <button
+                  onClick={() => actions.setPremiumMode(!isPremiumMode)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    isPremiumMode ? 'bg-yellow-600' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      isPremiumMode ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+                <span className="text-sm text-gray-400">Premium</span>
+                {isPremiumMode && <StarIcon className="w-4 h-4 text-yellow-500" />}
+              </div>
+
+              {/* Mobile View Toggle */}
+              <div className="flex items-center space-x-1 bg-gray-800 rounded-lg p-1">
+                <button
+                  onClick={() => actions.setMobileView(false)}
+                  className={`p-2 rounded-md transition-colors ${
+                    !isMobileView ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Desktop View"
+                >
+                  <ComputerDesktopIcon className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => actions.setMobileView(true)}
+                  className={`p-2 rounded-md transition-colors ${
+                    isMobileView ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                  }`}
+                  title="Mobile View"
+                >
+                  <DevicePhoneMobileIcon className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Unsaved Changes Indicator */}
+              {unsavedChanges && (
+                <div className="flex items-center space-x-2 px-3 py-1 bg-orange-600/20 border border-orange-600/50 rounded-lg">
+                  <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-orange-300">Unsaved</span>
+                </div>
+              )}
+
+              {/* Save Button */}
+              <button
+                onClick={handleManualSave}
+                disabled={!unsavedChanges}
+                className={`inline-flex items-center px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
+                  unsavedChanges
+                    ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg'
+                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                }`}
+                title={unsavedChanges ? 'Save draft' : 'No changes to save'}
+              >
+                <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
+                {unsavedChanges ? 'Save Draft' : 'Saved'}
+              </button>
+              
               {/* Quick Actions */}
               <button
-                onClick={() => navigate('/unified-lesson-builder', { state: { fromAdmin: true } })}
+                onClick={() => navigate('/unified-lesson-builder', { state: { fromAdmin: true, isPremiumMode, isMobileView } })}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
                 <PlusIcon className="w-4 h-4 mr-2" />
@@ -406,10 +636,84 @@ const UnifiedAdminPanel = () => {
               </div>
             </div>
           }>
-            {CurrentComponent && <CurrentComponent />}
+            {CurrentComponent && (
+              <CurrentComponent 
+                isPremiumMode={isPremiumMode}
+                isMobileView={isMobileView}
+                unsavedChanges={unsavedChanges}
+                currentLesson={currentLesson}
+                contentVersions={contentVersions}
+                adminActions={actions}
+                currentUser={currentUser}
+                draftService={draftService}
+              />
+            )}
           </Suspense>
         </div>
       </div>
+
+      {/* Notifications */}
+      <AnimatePresence>
+        {notifications.map((notification) => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -50, scale: 0.9 }}
+            className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg ${
+              notification.type === 'error' 
+                ? 'bg-red-600 text-white' 
+                : notification.type === 'success'
+                ? 'bg-green-600 text-white'
+                : 'bg-blue-600 text-white'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="text-sm font-medium">{notification.message}</div>
+              </div>
+              <button
+                onClick={() => setNotifications(prev => prev.filter(n => n.id !== notification.id))}
+                className="ml-3 text-white/80 hover:text-white"
+              >
+                ×
+              </button>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+
+      {/* Save Prompt Modal */}
+      {showSavePrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4 border border-gray-700">
+            <h3 className="text-xl font-semibold text-white mb-4">Save Changes?</h3>
+            <p className="text-gray-300 mb-6">
+              You have unsaved changes. Would you like to save them before continuing?
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleSavePromptCancel}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSavePromptDontSave}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Don't Save
+              </button>
+              <button
+                onClick={handleSavePromptSave}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

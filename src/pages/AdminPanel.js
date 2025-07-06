@@ -42,7 +42,7 @@ import {
 } from '../services/adminService';
 import { generateLessonsFromYouTube } from '../services/youtubeTranscriptService';
 import { getUserProfile } from '../services/firestoreService';
-import LessonEditor from '../components/admin/LessonEditor';
+// LessonEditor removed - consolidated into UnifiedLessonBuilder
 import ModuleEditor from '../components/admin/ModuleEditor';
 import ModuleManager from '../components/admin/ModuleManager';
 import ContentProcessor from '../components/admin/YouTubeProcessor';
@@ -304,6 +304,14 @@ const AdminPanel = () => {
           <FiAlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Access Denied</h2>
           <p className="text-gray-400">You don't have permission to access this page.</p>
+          <div className="mt-4">
+            <a 
+              href="/admin" 
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go to Unified Admin Panel
+            </a>
+          </div>
         </div>
       </div>
     );

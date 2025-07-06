@@ -1,0 +1,213 @@
+/* Background Animations - Lightweight and Smooth */
+
+.background-animation {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Floating Stars Animation */
+.stars-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  animation: float 8s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateY(-20px) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+/* Rain Drops Animation */
+.rain-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.raindrop {
+  position: absolute;
+  width: 2px;
+  height: 25px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.6));
+  border-radius: 50%;
+  animation: rain 3s linear infinite;
+}
+
+@keyframes rain {
+  0% {
+    transform: translateY(-100vh);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(100vh);
+    opacity: 0;
+  }
+}
+
+/* Snow Animation */
+.snow-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.snowflake {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: snow 8s linear infinite;
+}
+
+@keyframes snow {
+  0% {
+    transform: translateY(-100vh) translateX(0px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.9;
+  }
+  90% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(100vh) translateX(100px);
+    opacity: 0;
+  }
+}
+
+/* Bubbles Animation */
+.bubbles-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.bubble {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  animation: bubble 10s ease-in-out infinite;
+}
+
+/* Slower, Less Visible Bubbles */
+.bubble-slow {
+  position: absolute;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  animation: bubble-slow 20s ease-in-out infinite;
+}
+
+.bubble:nth-child(1), .bubble-slow:nth-child(1) { width: 10px; height: 10px; }
+.bubble:nth-child(2), .bubble-slow:nth-child(2) { width: 15px; height: 15px; }
+.bubble:nth-child(3), .bubble-slow:nth-child(3) { width: 8px; height: 8px; }
+.bubble:nth-child(4), .bubble-slow:nth-child(4) { width: 12px; height: 12px; }
+.bubble:nth-child(5), .bubble-slow:nth-child(5) { width: 18px; height: 18px; }
+.bubble:nth-child(6), .bubble-slow:nth-child(6) { width: 25px; height: 25px; }
+.bubble:nth-child(7), .bubble-slow:nth-child(7) { width: 14px; height: 14px; }
+.bubble:nth-child(8), .bubble-slow:nth-child(8) { width: 30px; height: 30px; }
+.bubble:nth-child(9), .bubble-slow:nth-child(9) { width: 16px; height: 16px; }
+.bubble:nth-child(10), .bubble-slow:nth-child(10) { width: 22px; height: 22px; }
+.bubble:nth-child(11), .bubble-slow:nth-child(11) { width: 13px; height: 13px; }
+.bubble:nth-child(12), .bubble-slow:nth-child(12) { width: 7px; height: 7px; }
+.bubble:nth-child(13), .bubble-slow:nth-child(13) { width: 28px; height: 28px; }
+.bubble:nth-child(14), .bubble-slow:nth-child(14) { width: 20px; height: 20px; }
+.bubble:nth-child(15), .bubble-slow:nth-child(15) { width: 35px; height: 35px; }
+
+@keyframes bubble {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  20% {
+    transform: translateY(80vh) scale(1);
+    opacity: 0.8;
+  }
+  80% {
+    transform: translateY(20vh) scale(1);
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translateY(-20vh) scale(0);
+    opacity: 0;
+  }
+}
+
+@keyframes bubble-slow {
+  0% {
+    transform: translateY(100vh) scale(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.4;
+  }
+  15% {
+    transform: translateY(85vh) scale(1);
+    opacity: 0.4;
+  }
+  85% {
+    transform: translateY(15vh) scale(1);
+    opacity: 0.4;
+  }
+  95% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-20vh) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Performance optimizations */
+.background-animation * {
+  will-change: transform, opacity;
+  transform-origin: center;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .star,
+  .raindrop,
+  .snowflake,
+  .bubble,
+  .bubble-slow {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    opacity: 0.2 !important;
+  }
+} 

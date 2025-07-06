@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { GamificationProvider } from './contexts/GamificationContext';
+import { AdminProvider } from './contexts/AdminContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -63,9 +64,11 @@ const QuizResults = React.lazy(() => import('./pages/QuizResults'));
 
 import LessonBuilder from './components/LessonBuilder';
 import ContentBlockDemo from './pages/ContentBlockDemo';
-import EnterpriseBuilder from './components/admin/EnterpriseBuilder';
 import EnterpriseBuilderTest from './components/admin/EnterpriseBuilderTest';
 import UnifiedLessonBuilder from './components/admin/UnifiedLessonBuilder';
+
+// Import admin utilities for development
+import './utils/setAdminRole';
 
 function App() {
   return (
@@ -179,7 +182,11 @@ function App() {
                   {/* ===== CONSOLIDATED ADMIN INTERFACE ===== */}
                   {/* PRIMARY: Unified Admin Panel - Modern consolidated interface */}
                   <Route path="/admin" element={<ProtectedRoute requireAdminRole={true} />}>
-                    <Route index element={<UnifiedAdminPanel />} />
+                    <Route index element={
+                      <AdminProvider>
+                        <UnifiedAdminPanel />
+                      </AdminProvider>
+                    } />
                   </Route>
 
                   {/* LEGACY: Legacy admin interfaces - redirecting to unified panel */}
@@ -207,14 +214,16 @@ function App() {
                   {/* Legacy lesson builders - keeping for compatibility */}
                   <Route path="/lesson-builder" element={<LessonBuilder />} />
                   <Route path="/enterprise-builder-test" element={<EnterpriseBuilderTest />} />
-                  <Route path="/enterprise-builder" element={<EnterpriseBuilder />} />
-                  <Route path="/enterprise-builder-full" element={<ProtectedRoute requireAdminRole={true} />}>
-                    <Route index element={<EnterpriseBuilder />} />
-                  </Route>
+                  <Route path="/enterprise-builder" element={<Navigate to="/unified-lesson-builder" replace />} />
+                  <Route path="/enterprise-builder-full" element={<Navigate to="/unified-lesson-builder" replace />} />
 
                   {/* NEW: Unified Lesson Builder - Combines best of both builders */}
                   <Route path="/unified-lesson-builder" element={<ProtectedRoute requireAdminRole={true} />}>
-                    <Route index element={<UnifiedLessonBuilder />} />
+                    <Route index element={
+                      <AdminProvider>
+                        <UnifiedLessonBuilder />
+                      </AdminProvider>
+                    } />
                   </Route>
 
                 </Routes>
