@@ -1,1 +1,0 @@
-REACT_APP_FIREBASE_AUTH_DOMAIN=beginai1.firebaseapp.com
