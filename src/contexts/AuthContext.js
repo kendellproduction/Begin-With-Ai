@@ -4,6 +4,8 @@ import {
   signOut as firebaseSignOut,
   GoogleAuthProvider,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   EmailAuthProvider,
@@ -25,6 +27,19 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // Handle potential redirect result
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          analytics.userLogin('google_redirect');
+        }
+      })
+      .catch((error) => {
+        console.error('Redirect sign-in error:', error);
+        analytics.apiError('google_redirect_error', error.message);
+        setError(error.message);
+      });
+
     const unsubscribe = onAuthStateChanged(auth, 
       async (authUser) => {
         if (authUser) {
@@ -129,9 +144,13 @@ export const AuthProvider = ({ children }) => {
       // onAuthStateChanged will handle user profile creation/fetching
       return result.user; // Still return the auth user for immediate use if needed by caller
     } catch (error) {
-      console.error('Error signing in with Google:', error);
-      analytics.apiError('google_signin_error', error.message);
-      throw error;
+      if (error.code === 'auth/popup-blocked') {
+        await signInWithRedirect(auth, provider);
+      } else {
+        console.error('Error signing in with Google:', error);
+        analytics.apiError('google_signin_error', error.message);
+        throw error;
+      }
     }
   };
 
@@ -203,12 +222,20 @@ export const AuthProvider = ({ children }) => {
         hd: '' // Clear any domain hints
       });
       
-      // Sign in with the fresh provider
-      const result = await signInWithPopup(auth, provider);
-      analytics.userLogin('google_switch');
-      return result.user;
+      // Try popup first
+      try {
+        const result = await signInWithPopup(auth, provider);
+        analytics.userLogin('google_switch');
+        return result.user;
+      } catch (popupError) {
+        if (popupError.code === 'auth/popup-blocked') {
+          await signInWithRedirect(auth, provider);
+        } else {
+          throw popupError;
+        }
+      }
     } catch (error) {
-      console.error('Error switching accounts:', error);
+      console.error('Error switching account:', error);
       analytics.apiError('account_switch_error', error.message);
       throw error;
     }
