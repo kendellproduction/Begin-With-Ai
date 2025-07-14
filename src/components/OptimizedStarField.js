@@ -32,32 +32,28 @@ const OptimizedStarField = ({
       const screenH = dimensions.height;
       const screenW = dimensions.width;
       
-      // Initial and target positions - simple straight line movement
+      // Create variety in star types like AI News page LoggedInNavbar
+      const isLargeStar = i % 10 === 0; // 10% large stars
+      const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars (excluding large)
+      
+      // Use the same size range as AI News page
+      let starSize;
+      if (isLargeStar) {
+        starSize = (3 + Math.random() * 2) * size; // 3-5px for large stars
+      } else if (isMediumStar) {
+        starSize = (2 + Math.random() * 1) * size; // 2-3px for medium stars
+      } else {
+        starSize = (0.5 + Math.random() * 1.5) * size; // 0.5-2px for small stars
+      }
+      
+      const starOpacity = isLargeStar ? 0.9 : isMediumStar ? 0.85 : 0.8;
+      const duration = (Math.random() * 20 + 15) / speed; // 15-35 seconds adjusted by speed
+      const delay = Math.random() * 10; // 0-10 seconds delay
+
       const initialY = Math.random() * screenH;
       const targetY = Math.random() * screenH;
       const initialX = Math.random() * screenW;
       const targetX = Math.random() * screenW;
-      
-      // Create variety in star types
-      const isLargeStar = i % 10 === 0; // 10% large stars
-      const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars (excluding large)
-      
-      // Star size with variety - some bigger stars
-      let starSize;
-      if (isLargeStar) {
-        starSize = (Math.random() * 2 + 3) * size; // 3-5px for large stars
-      } else if (isMediumStar) {
-        starSize = (Math.random() * 1 + 2) * size; // 2-3px for medium stars
-      } else {
-        starSize = (Math.random() * 1.5 + 0.5) * size; // 0.5-2px for small stars
-      }
-      
-      // Duration between 8-20 seconds, adjusted by speed
-      const baseDuration = 8 + Math.random() * 12; // 8-20 seconds
-      const starDuration = baseDuration / speed;
-      
-      // Increased opacity for better visibility
-      const baseOpacity = isLargeStar ? 0.95 : isMediumStar ? 0.9 : 0.85;
       
       return {
         id: i,
@@ -66,14 +62,14 @@ const OptimizedStarField = ({
         targetX,
         targetY,
         size: starSize,
-        duration: starDuration,
-        delay: Math.random() * 0.5, // 0-0.5 second delay (much faster start)
-        baseOpacity,
+        opacity: starOpacity * opacity,
+        duration,
+        delay,
         isLarge: isLargeStar,
         isMedium: isMediumStar
       };
     });
-  }, [starCount, dimensions.width, dimensions.height, speed, size]);
+  }, [starCount, dimensions.width, dimensions.height, speed, size, opacity]);
 
   return (
     <div 
@@ -96,30 +92,41 @@ const OptimizedStarField = ({
             width: star.size,
             height: star.size,
             // Enhanced glow for better visibility
-            boxShadow: star.isLarge ? '0 0 6px rgba(255, 255, 255, 0.8), 0 0 12px rgba(255, 255, 255, 0.4)' : 
-                      star.isMedium ? '0 0 4px rgba(255, 255, 255, 0.6), 0 0 8px rgba(255, 255, 255, 0.3)' : 
-                      '0 0 2px rgba(255, 255, 255, 0.4)'
+            boxShadow: star.isLarge 
+              ? '0 0 10px rgba(255, 255, 255, 0.9), 0 0 20px rgba(255, 255, 255, 0.6)' 
+              : star.isMedium 
+                ? '0 0 8px rgba(255, 255, 255, 0.8), 0 0 16px rgba(255, 255, 255, 0.5)' 
+                : '0 0 6px rgba(255, 255, 255, 0.6)'
           }}
           initial={{
             x: star.initialX,
             y: star.initialY,
             opacity: 0,
+            scale: 0.5
           }}
           animate={{
-            x: star.targetX,
-            y: star.targetY,
-            opacity: [0, star.baseOpacity * opacity, star.baseOpacity * opacity, 0],
+            x: [star.initialX, star.targetX, star.initialX],
+            y: [star.initialY, star.targetY, star.initialY],
+            opacity: [0, star.opacity, star.opacity, 0],
+            scale: [0.5, 1, 1.1, 1, 0.5]
           }}
           transition={{
             duration: star.duration,
             repeat: Infinity,
             repeatDelay: star.delay,
-            ease: "linear",
-            type: "tween", // More performant than spring
+            ease: "easeInOut",
+            type: "tween",
             opacity: {
               duration: star.duration,
-              ease: "linear",
-              times: [0, 0.05, 0.95, 1], // Faster fade-in, longer visibility
+              ease: "easeInOut",
+              times: [0, 0.1, 0.8, 1],
+              repeat: Infinity,
+              repeatDelay: star.delay,
+            },
+            scale: {
+              duration: star.duration,
+              ease: "easeInOut",  
+              times: [0, 0.2, 0.5, 0.8, 1],
               repeat: Infinity,
               repeatDelay: star.delay,
             }

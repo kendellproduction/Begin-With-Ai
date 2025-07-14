@@ -109,15 +109,19 @@ html, body, #root {
     transform: translate(0, 0) scale(1);
     opacity: 0.3;
   }
+  50% {
+    transform: translate(calc(var(--drift-x) * 0.5), calc(var(--drift-y) * 0.5)) scale(1.1);
+    opacity: 0.9;
+  }
   100% { 
     transform: translate(var(--drift-x), var(--drift-y)) scale(1);
-    opacity: 0.8;
+    opacity: 0.3;
   }
 }
 
 /* Optimized pulse animation */
 .star-pulse-optimized {
-  animation: star-twinkle 2s ease-in-out infinite, star-glow 6s linear infinite;
+  animation: star-twinkle 3s ease-in-out infinite, star-glow 8s linear infinite;
   animation-delay: var(--star-delay, 0s);
 }
 
