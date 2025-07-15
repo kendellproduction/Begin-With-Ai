@@ -89,6 +89,7 @@ The individual, bite-sized learning units.
   "lessonModuleId": "parent_module_id_string", // Foreign key to LessonModules
   "title": "What is a Prompt?",
   "lessonType": "concept_explanation", // "concept_explanation", "prompt_input_challenge", "code_generation_interaction", "quiz", "project_step"
+  "tier": "free", // "free", "premium"
   "content": [ // Array of content blocks to build the lesson screen by screen (like Duolingo/Mimo cards)
     {
       "type": "text",

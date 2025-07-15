@@ -19,6 +19,7 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import logger from '../utils/logger';
 
 class DraftService {
   constructor() {
@@ -54,14 +55,14 @@ class DraftService {
         // Notify subscribers
         callback(drafts);
       }, (error) => {
-        console.error('Error subscribing to drafts:', error);
+        logger.error('Error subscribing to drafts:', error);
         callback(null, error);
       });
 
       this.subscribers.add(unsubscribe);
       return unsubscribe;
     } catch (error) {
-      console.error('Error setting up draft subscription:', error);
+      logger.error('Error setting up draft subscription:', error);
       callback(null, error);
       return null;
     }
@@ -119,7 +120,7 @@ class DraftService {
       return result;
 
     } catch (error) {
-      console.error('❌ Error saving draft:', error);
+      logger.error('❌ Error saving draft:', error);
       
       // Fallback to localStorage if Firestore fails
       this.saveToLocalStorageBuffer(userId, draftData);
@@ -158,7 +159,7 @@ class DraftService {
       return drafts;
 
     } catch (error) {
-      console.error('❌ Error loading drafts from Firestore:', error);
+      logger.error('❌ Error loading drafts from Firestore:', error);
       
       // Fallback to localStorage
       return this.loadFromLocalStorageBuffer(userId);
@@ -183,7 +184,7 @@ class DraftService {
         throw new Error('Draft not found');
       }
     } catch (error) {
-      console.error('❌ Error loading draft:', error);
+      logger.error('❌ Error loading draft:', error);
       throw error;
     }
   }
@@ -206,7 +207,7 @@ class DraftService {
       // Draft deleted successfully
       return true;
     } catch (error) {
-      console.error('❌ Error deleting draft:', error);
+      logger.error('❌ Error deleting draft:', error);
       throw error;
     }
   }
@@ -269,7 +270,7 @@ class DraftService {
         publishedModule: moduleId
       }, { merge: true });
 
-      console.log('✅ Draft published successfully:', lessonDocRef.id);
+      logger.log('✅ Draft published successfully:', lessonDocRef.id);
       return {
         lessonId: lessonDocRef.id,
         pathId,
@@ -278,7 +279,7 @@ class DraftService {
       };
 
     } catch (error) {
-      console.error('❌ Error publishing draft:', error);
+      logger.error('❌ Error publishing draft:', error);
       throw new Error(`Failed to publish draft: ${error.message}`);
     }
   }
@@ -302,12 +303,12 @@ class DraftService {
         try {
           await this.saveDraft(userId, draftData);
         } catch (error) {
-          console.warn('Auto-save to Firestore failed, keeping in localStorage:', error);
+          logger.warn('Auto-save to Firestore failed, keeping in localStorage:', error);
         }
       }, 2000); // 2 second delay
       
     } catch (error) {
-      console.error('Auto-save error:', error);
+      logger.error('Auto-save error:', error);
     }
   }
 
@@ -334,7 +335,7 @@ class DraftService {
       localStorage.setItem(key, JSON.stringify(updated.slice(0, 5)));
       
     } catch (error) {
-      console.error('Error saving to localStorage buffer:', error);
+      logger.error('Error saving to localStorage buffer:', error);
     }
   }
 
@@ -348,7 +349,7 @@ class DraftService {
       
       localStorage.setItem(key, JSON.stringify(updated.slice(0, 5)));
     } catch (error) {
-      console.error('Error updating localStorage buffer:', error);
+      logger.error('Error updating localStorage buffer:', error);
     }
   }
 
@@ -359,7 +360,7 @@ class DraftService {
       const updated = existing.filter(d => d.id !== draftId);
       localStorage.setItem(key, JSON.stringify(updated));
     } catch (error) {
-      console.error('Error removing from localStorage buffer:', error);
+      logger.error('Error removing from localStorage buffer:', error);
     }
   }
 
@@ -367,10 +368,10 @@ class DraftService {
     try {
       const key = `draft_buffer_${userId}`;
       const drafts = JSON.parse(localStorage.getItem(key) || '[]');
-      console.log(`📦 Loaded ${drafts.length} drafts from localStorage buffer`);
+      logger.log(`📦 Loaded ${drafts.length} drafts from localStorage buffer`);
       return drafts;
     } catch (error) {
-      console.error('Error loading from localStorage buffer:', error);
+      logger.error('Error loading from localStorage buffer:', error);
       return [];
     }
   }

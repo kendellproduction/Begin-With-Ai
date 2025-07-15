@@ -1,16 +1,11 @@
 import * as Sentry from "@sentry/react";
-import { Integrations } from "@sentry/tracing";
 
 // Initialize Sentry Error Tracking
 export const initSentry = () => {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' && process.env.REACT_APP_SENTRY_DSN) {
     Sentry.init({
       dsn: process.env.REACT_APP_SENTRY_DSN, // Add this to your .env.local
       environment: process.env.NODE_ENV,
-      integrations: [
-        new Integrations.BrowserTracing(),
-      ],
-      tracesSampleRate: 0.1, // Capture 10% of transactions for performance monitoring
       beforeSend(event, hint) {
         // Filter out development-related errors
         if (event.exception) {

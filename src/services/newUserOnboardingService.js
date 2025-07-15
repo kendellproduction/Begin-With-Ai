@@ -115,7 +115,8 @@ export class NewUserOnboardingService {
         onboardingCompleted: true,
         onboardingCompletedAt: new Date(),
         hasCompletedFirstLesson: true,
-        isFirstTimeUser: false
+        isFirstTimeUser: false,
+        quizCompleted: true,
       });
       
       // Clear localStorage flags

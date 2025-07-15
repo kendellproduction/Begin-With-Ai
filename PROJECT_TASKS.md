@@ -13,14 +13,59 @@ This section provides a high-level overview of all tasks, categorized by priorit
   - [x] Perform a clean install of all `node_modules`.
 - **Admin Panel Overhaul:**
   - [ ] Consolidate multiple admin builders into a single `UnifiedLessonBuilder.js`.
-  - [ ] Implement a manual save system with unsaved changes detection.
+  - [x] Implement a manual save system with unsaved changes detection.
   - [ ] Update the lesson data model to support Free/Premium tiers.
 - **Core Functionality:**
   - [ ] Re-enable all disabled core features (Admin Panel, AI News, Pricing pages).
   - [ ] Fix and re-enable Firebase Analytics integration.
   - [ ] Remove all `console.log` statements from production code.
 
-### 🟠 Priority 2: High Priority Tasks (Next Up)
+**Pause here for review, testing, and potential GitHub push before proceeding to Priority 2.**
+
+### 🟠 Priority 2: Merge Dashboard into Home Page
+- **[CRITICAL] Eliminate Dashboard Page by Integrating Selected Features into Home Page:**
+  - Review features in `src/pages/Dashboard.js` (e.g., personalized stats, recent activity, achievements, quick actions, daily tip) and identify which to keep (focus on essentials; skip redundancies or unimplemented mocks as they may not be needed).
+  - Audit `src/pages/HomePage.js` for overlaps (e.g., existing stats, quick actions) and determine integration points.
+  - Integrate selected dashboard features into `src/pages/HomePage.js`, using conditional rendering for logged-in users and maintaining a clean, dynamic layout.
+  - Update routes in `src/App.js`: Remove the /dashboard route and add a redirect from /dashboard to /home.
+  - Delete `src/pages/Dashboard.js` after verifying the merge is successful.
+  - Test the combined home page for functionality, performance, user experience, and mobile responsiveness.
+
+**Pause here for review, testing, and potential GitHub push before proceeding to Priority 3.**
+
+### 🟠 Priority 3: Fix Quizzes in History of AI Lesson
+- **[HIGH] Resolve Blank Quiz Display:**
+  - Review quiz implementation in src/utils/historyOfAiLesson.js and src/components/ModernLessonViewer.js.
+  - Ensure quiz sections are properly rendered with questions and options.
+  - Fix any issues with isLastInGroup or section organization logic.
+  - Test rendering of all quiz slides in the lesson.
+  - Add fallback content if quiz data is missing.
+
+**Pause here for review, testing, and potential GitHub push before proceeding to Priority 4.**
+
+### 🟠 Priority 4: Fix Custom Learning Journey
+- **[HIGH] Ensure New Users Take Questionnaire:**
+  - Verify src/services/newUserOnboardingService.js redirect logic for new users to '/learning-path/adaptive-quiz'.
+  - Fix any triggers that prevent pushing new users to the questionnaire.
+- **[HIGH] Implement User-Specific Learning Paths:**
+  - Audit database storage in user docs for activeLearningPath.
+  - Ensure each user sees only their own path, not shared ones.
+  - Update retrieval logic in components like HomePage.js to fetch user-specific data.
+
+**Pause here for review, testing, and potential GitHub push before proceeding to Priority 5.**
+
+### 🟠 Priority 5: Complete Lesson Review and Enhancements
+- **[MEDIUM] Audit All Lessons:**
+  - Review structure, content, and interactive elements in all lessons (e.g., src/utils/historyOfAiLesson.js, src/lessons/*).
+  - Ensure quizzes, sandboxes, and adaptive content work across difficulties.
+  - Add missing quizzes or fix rendering in other lessons if needed.
+- **[MEDIUM] Add Useful Lesson Features:**
+  - Implement progress checkpoints in long lessons.
+  - Add more interactive elements like fill-in-blanks or checklists.
+
+**Pause here for review, testing, and potential GitHub push before proceeding to Priority 6.**
+
+### 🟠 Priority 6: High Priority Tasks (Existing + New)
 - **Project Optimization:**
   - [ ] Migrate from Create React App (CRA) to Vite for better performance.
   - [ ] Implement route-based code splitting (`React.lazy()`) in `src/App.js`.
@@ -34,8 +79,13 @@ This section provides a high-level overview of all tasks, categorized by priorit
   - [ ] Implement comprehensive error fallbacks for all API services.
   - [ ] Fix the bug reporting system (Gmail authentication).
   - [ ] Verify Firebase Security Rules are production-ready.
+- **New Additions:**
+  - [ ] Add comprehensive testing suite for core features.
+  - [ ] Optimize for mobile devices and test PWA functionality.
 
-### 🟡 Priority 3: Medium Priority Tasks (Future Work)
+**Pause here for review, testing, and potential GitHub push before proceeding to Priority 7.**
+
+### 🟡 Priority 7: Medium Priority Tasks (Future Work)
 - **Advanced Admin Features:**
   - [ ] Implement advanced content blocks (Podcast, Interactive Elements).
   - [ ] Build out all Settings Panel tabs (SEO, Analytics, Access Control).
@@ -44,6 +94,11 @@ This section provides a high-level overview of all tasks, categorized by priorit
   - [ ] Complete comprehensive mobile experience testing.
   - [ ] Set up AI API cost monitoring and rate limiting.
   - [ ] Fully configure and enable Sentry error reporting and Google Analytics.
+- **New Additions:**
+  - [ ] Integrate GitHub push after major changes.
+  - [ ] Add offline support enhancements for lessons.
+
+**Pause here for review, testing, and potential GitHub push.**
 
 ---
 
@@ -102,4 +157,12 @@ This section provides a high-level overview of all tasks, categorized by priorit
 #### 3.3. Security & Monitoring (High)
 - **[HIGH] Firebase Security Rules:** Perform a full audit of your Firestore rules to ensure they are secure for production.
 - **[MEDIUM] Sentry & Google Analytics:** Properly configure Sentry with a production DSN and set up detailed event tracking in Google Analytics.
-- **[MEDIUM] Cost Monitoring:** Implement rate limiting and cost monitoring for all third-party AI services. 
+- **[MEDIUM] Cost Monitoring:** Implement rate limiting and cost monitoring for all third-party AI services.
+
+### Updated TODO List
+
+- [ ] Implement leaderboards for gamification
+- [ ] Add AR/VR integration for immersive lessons
+- [ ] Optimize Firestore with composite indexes for queries
+- [ ] Set up cost monitoring and alerts in Firebase
+- [ ] Create 10+ more complete lessons to enable full paths

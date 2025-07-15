@@ -64,7 +64,8 @@ const LearningPathResults = React.lazy(() => import('./pages/LearningPathResults
 const Quiz = React.lazy(() => import('./pages/Quiz'));
 const QuizResults = React.lazy(() => import('./pages/QuizResults'));
 
-import LessonBuilder from './components/LessonBuilder';
+// import LessonBuilder from './components/LessonBuilder'; // Removed due to file not existing
+
 import ContentBlockDemo from './pages/ContentBlockDemo';
 import EnterpriseBuilderTest from './components/admin/EnterpriseBuilderTest';
 import UnifiedLessonBuilder from './components/admin/UnifiedLessonBuilder';
@@ -214,7 +215,7 @@ function App() {
                   </Route>
 
                   {/* Legacy lesson builders - keeping for compatibility */}
-                  <Route path="/lesson-builder" element={<LessonBuilder />} />
+                  {/* <Route path="/lesson-builder" element={<LessonBuilder />} /> */}
                   <Route path="/enterprise-builder-test" element={<EnterpriseBuilderTest />} />
                   <Route path="/enterprise-builder" element={<Navigate to="/unified-lesson-builder" replace />} />
                   <Route path="/enterprise-builder-full" element={<Navigate to="/unified-lesson-builder" replace />} />

@@ -18,6 +18,7 @@ const AdaptiveLearningPathQuiz = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedAnswers, setSelectedAnswers] = useState([]);
   const [motivationalQuote, setMotivationalQuote] = useState('');
+  const [allowRetake, setAllowRetake] = useState(false);
 
   // Motivational AI quotes that rotate on each page load
   const aiQuotes = [
@@ -898,7 +899,7 @@ const AdaptiveLearningPathQuiz = () => {
     );
   }
 
-  if (isComplete && results) {
+  if (isComplete && !allowRetake) {
     return (
       <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
         <LoggedInNavbar />
@@ -915,7 +916,7 @@ const AdaptiveLearningPathQuiz = () => {
                   <p className="text-blue-200">You've already completed your AI assessment. Here are your results:</p>
                 </div>
                 <button
-                  onClick={handleRetakeQuiz}
+                  onClick={() => setAllowRetake(true)}
                   className="px-4 py-2 bg-blue-600/20 border border-blue-400/30 text-blue-300 rounded-lg hover:bg-blue-600/30 transition-all duration-300 text-sm"
                 >
                   Retake Quiz

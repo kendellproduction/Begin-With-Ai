@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import DOMPurify from 'dompurify';
+import { useProgressTracking } from '../../hooks/useProgressTracking';
 
 const FillBlankBlock = ({ 
   content,
@@ -12,6 +13,7 @@ const FillBlankBlock = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const blockRef = useRef(null);
+  const { awardXP } = useProgressTracking();
 
   const defaultConfig = {
     caseSensitive: false,
@@ -111,7 +113,10 @@ const FillBlankBlock = ({
   };
 
   const handleSubmit = () => {
-    checkAnswers();
+    const { correct } = checkAnswers();
+    if (correct && !isCompleted) {
+      awardXP(10, 'fill_blank');
+    }
   };
 
   const handleReset = () => {

@@ -41,17 +41,12 @@ googleProvider.setCustomParameters({
 // Initialize Analytics with proper error handling
 let analytics = null;
 try {
-  // Only initialize analytics if we have the required configuration
-  if (firebaseConfig.measurementId && process.env.NODE_ENV === 'production') {
+  // Initialize if we have the required configuration
+  if (firebaseConfig.measurementId) {
     analytics = getAnalytics(app);
-  } else if (process.env.NODE_ENV === 'development') {
-    // In development, we can still initialize but with warnings
-    if (firebaseConfig.measurementId) {
-      analytics = getAnalytics(app);
-    }
   }
 } catch (error) {
-  // Silent fail in production, only warn in development
+  // Silent fail in production, warn in development
   if (process.env.NODE_ENV === 'development') {
     console.warn('⚠️ Firebase Analytics initialization failed:', error.message);
     console.warn('Analytics will be disabled but app will continue to work');

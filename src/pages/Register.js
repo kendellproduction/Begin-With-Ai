@@ -12,7 +12,6 @@ function Register() {
       return;
     }
     // TODO: Implement Firebase authentication
-    console.log('Registration attempt:', { email, password });
   };
 
   return (

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
+import logger from '../utils/logger';
 
 const AdaptiveDatabaseSeeder = () => {
   const [seedingStatus, setSeedingStatus] = useState('');
@@ -37,7 +38,7 @@ const AdaptiveDatabaseSeeder = () => {
         'beginner'
       );
       
-      console.log('Test lesson retrieved:', lesson);
+      logger.log('Test lesson retrieved:', lesson);
       setSeedingStatus('✅ Adaptive lesson test successful! Check console for details.');
       setSeedingResults({ success: true, lesson: lesson.title });
     } catch (error) {
@@ -59,7 +60,7 @@ const AdaptiveDatabaseSeeder = () => {
         { skillLevel: 'intermediate' }
       );
       
-      console.log('Test learning path retrieved:', path);
+      logger.log('Test learning path retrieved:', path);
       setSeedingStatus(`✅ Learning path test successful! Found ${path.totalLessons} lessons across ${path.modules.length} modules.`);
       setSeedingResults({ 
         success: true, 

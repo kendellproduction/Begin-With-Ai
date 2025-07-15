@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, animations } from '../../utils/framerMotion';
+import { useProgressTracking } from '../../hooks/useProgressTracking';
 
 const QuizBlock = ({ 
   content,
@@ -11,6 +12,7 @@ const QuizBlock = ({
   const [showFeedback, setShowFeedback] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const blockRef = useRef(null);
+  const { awardXP } = useProgressTracking();
 
 
 
@@ -56,6 +58,7 @@ const QuizBlock = ({
     // Always complete the quiz regardless of correct/incorrect answer
     if (!isCompleted) {
       setIsCompleted(true);
+      awardXP(5, 'quiz_question');
       onComplete({ 
         type: 'quiz', 
         completed: true, 

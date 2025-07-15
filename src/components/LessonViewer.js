@@ -285,8 +285,6 @@ const LessonViewer = () => {
   const convertAdminLessonToSlides = (adminLesson) => {
     const slides = [];
     
-    console.log('Converting admin lesson:', adminLesson);
-    
     // Intro slide with key points if available
     const introSlide = {
       id: `${adminLesson.id}-intro`,
@@ -310,10 +308,8 @@ const LessonViewer = () => {
 
     // Convert content pages to slides
     if (adminLesson.content && Array.isArray(adminLesson.content) && adminLesson.content.length > 0) {
-      console.log('Processing content pages:', adminLesson.content.length);
       
       adminLesson.content.forEach((contentPage, index) => {
-        console.log(`Processing content page ${index}:`, contentPage);
         
         switch (contentPage.type) {
           case 'text':
@@ -424,7 +420,6 @@ const LessonViewer = () => {
         }
       });
     } else {
-      console.warn('No valid content found in admin lesson:', adminLesson);
       // Add a default content slide if no content is available
       slides.push({
         id: `${adminLesson.id}-content-default`,
@@ -504,9 +499,6 @@ const LessonViewer = () => {
         isComplete: true
       }
     });
-
-    console.log('Generated slides:', slides.length);
-    console.log('Slides summary:', slides.map(s => ({ id: s.id, type: s.type, title: s.content.title })));
 
     return {
       id: adminLesson.id,

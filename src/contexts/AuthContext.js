@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { 
   onAuthStateChanged, 
-  signOut as firebaseSignOut,
+  signOut,
   GoogleAuthProvider,
   signInWithPopup,
   signInWithRedirect,
@@ -10,9 +10,9 @@ import {
   createUserWithEmailAndPassword,
   EmailAuthProvider,
   reauthenticateWithCredential,
-  updatePassword as firebaseUpdatePassword,
-  sendPasswordResetEmail as firebaseSendPasswordResetEmail,
-  deleteUser as firebaseDeleteUser
+  updatePassword,
+  sendPasswordResetEmail,
+  deleteUser
 } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { upsertUserProfile, getUserProfile, deleteUserFirestoreData } from '../services/firestoreService';
@@ -184,7 +184,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await firebaseSignOut(auth);
+      await signOut(auth);
     } catch (error) {
       console.error('Error signing out:', error);
       analytics.apiError('logout_error', error.message);
@@ -195,7 +195,7 @@ export const AuthProvider = ({ children }) => {
   const switchAccount = async () => {
     try {
       // First, sign out completely
-      await firebaseSignOut(auth);
+      await signOut(auth);
       
       // Clear any cached authentication data
       localStorage.clear();
@@ -262,7 +262,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      await firebaseUpdatePassword(auth.currentUser, newPassword);
+      await updatePassword(auth.currentUser, newPassword);
       return { success: true, message: 'Password updated successfully' };
     } catch (error) {
       console.error('Error updating password:', error);
@@ -272,7 +272,7 @@ export const AuthProvider = ({ children }) => {
 
   const sendPasswordResetEmail = async (email) => {
     try {
-      await firebaseSendPasswordResetEmail(auth, email);
+      await sendPasswordResetEmail(auth, email);
       return { success: true, message: 'Password reset email sent' };
     } catch (error) {
       console.error('Error sending password reset email:', error);
@@ -302,7 +302,7 @@ export const AuthProvider = ({ children }) => {
       console.log('Firestore data deleted successfully.');
 
       // Step 3: Delete user from Firebase Authentication
-      await firebaseDeleteUser(userToDelete);
+      await deleteUser(userToDelete);
       console.log('Firebase Auth user deleted successfully.');
       // setUser(null) will be handled by onAuthStateChanged
 

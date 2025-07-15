@@ -108,7 +108,7 @@ const Dashboard = () => {
       
       {/* Custom CSS for animated shadows - wrapped in relative div */}
       <div className="relative z-10"> 
-        <style jsx>{`
+        <style jsx='jsx'>{`
           @keyframes dashboard-glow {
             0% {
               box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(236, 72, 153, 0.2);

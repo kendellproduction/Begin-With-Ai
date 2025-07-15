@@ -1,5 +1,6 @@
 // Centralized framer-motion configuration for optimal performance
 import { LazyMotion, domAnimation, m } from 'framer-motion';
+import { AnimatePresence as FMAnimatePresence } from 'framer-motion';
 
 // Export LazyMotion wrapper for optimal performance
 export const MotionProvider = ({ children }) => (
@@ -12,7 +13,8 @@ export const MotionProvider = ({ children }) => (
 export const motion = m;
 
 // Re-export necessary components for backwards compatibility
-export { AnimatePresence, useAnimation, useMotionValue, useTransform } from 'framer-motion';
+export { useAnimation, useMotionValue, useTransform } from 'framer-motion';
+export const AnimatePresence = FMAnimatePresence;
 
 // Common animation presets for consistent performance
 export const animations = {

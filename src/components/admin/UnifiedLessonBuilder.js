@@ -31,6 +31,7 @@ import {
   ChevronDownIcon,
   CloudArrowUpIcon
 } from '@heroicons/react/24/outline';
+import logger from '../../utils/logger';
 
 const UnifiedLessonBuilder = () => {
   const navigate = useNavigate();
@@ -106,6 +107,11 @@ const UnifiedLessonBuilder = () => {
   // Get current page and blocks
   const currentPage = lessonPages[currentPageIndex];
   const lessonBlocks = currentPage?.blocks || [];
+  
+  // After existing state declarations:
+  const [currentTier, setCurrentTier] = useState('free');
+  const [freePages, setFreePages] = useState([]);
+  const [premiumPages, setPremiumPages] = useState([]);
   
   const checkScreenSize = useCallback(() => {
     const width = window.innerWidth;
@@ -204,53 +210,31 @@ const UnifiedLessonBuilder = () => {
       // Check if we're editing an existing draft
       if (location.state?.draft) {
         const draft = location.state.draft;
-        console.log('Loading draft for editing:', draft);
+        logger.log('Loading draft for editing:', draft);
         
         // Set lesson metadata
         setLessonTitle(draft.title || 'Untitled Lesson');
         setLessonDescription(draft.description || '');
         setCurrentDraftId(draft.id);
-        
-        // Load lesson pages from draft
-        if (draft.contentVersions?.free?.pages && draft.contentVersions.free.pages.length > 0) {
-          setLessonPages(draft.contentVersions.free.pages);
-        } else if (draft.pages && draft.pages.length > 0) {
-          setLessonPages(draft.pages);
-        } else {
-          // Draft exists but has no pages, create default page
-          const defaultPage = {
-            id: generateId(),
-            title: 'Introduction',
-            blocks: [],
-            created: new Date().toISOString()
-          };
-          setLessonPages([defaultPage]);
-        }
+        const loadedFreePages = draft.contentVersions?.free?.pages || draft.pages || [];
+        const loadedPremiumPages = draft.contentVersions?.premium?.pages || draft.pages || [];
+        setFreePages(loadedFreePages);
+        setPremiumPages(loadedPremiumPages);
+        setLessonPages(currentTier === 'free' ? loadedFreePages : loadedPremiumPages);
         
         showNotification('info', `Loaded draft: ${draft.title || 'Untitled Lesson'}`);
       } else if (location.state?.editingLesson) {
         const lesson = location.state.editingLesson;
-        console.log('Loading published lesson for editing:', lesson);
+        logger.log('Loading published lesson for editing:', lesson);
         
         // Set lesson metadata
         setLessonTitle(lesson.title || 'Untitled Lesson');
         setLessonDescription(lesson.description || '');
-        
-        // Load lesson pages from published lesson
-        if (lesson.contentVersions?.free?.pages && lesson.contentVersions.free.pages.length > 0) {
-          setLessonPages(lesson.contentVersions.free.pages);
-        } else if (lesson.pages && lesson.pages.length > 0) {
-          setLessonPages(lesson.pages);
-        } else {
-          // Create default page if no content
-          const defaultPage = {
-            id: generateId(),
-            title: 'Introduction',
-            blocks: [],
-            created: new Date().toISOString()
-          };
-          setLessonPages([defaultPage]);
-        }
+        const loadedFreePages = lesson.contentVersions?.free?.pages || lesson.pages || [];
+        const loadedPremiumPages = lesson.contentVersions?.premium?.pages || lesson.pages || [];
+        setFreePages(loadedFreePages);
+        setPremiumPages(loadedPremiumPages);
+        setLessonPages(currentTier === 'free' ? loadedFreePages : loadedPremiumPages);
         
         showNotification('info', `Loaded lesson: ${lesson.title || 'Untitled Lesson'}`);
         
@@ -266,6 +250,8 @@ const UnifiedLessonBuilder = () => {
           blocks: [],
           created: new Date().toISOString()
         };
+        setFreePages([defaultPage]);
+        setPremiumPages([defaultPage]);
         setLessonPages([defaultPage]);
       }
     };
@@ -523,12 +509,12 @@ const UnifiedLessonBuilder = () => {
           free: {
             title: lessonTitle,
             description: lessonDescription,
-            pages: lessonPages
+            pages: freePages
           },
           premium: {
             title: lessonTitle,
             description: lessonDescription,
-            pages: lessonPages
+            pages: premiumPages
           }
         },
         metadata: {
@@ -540,6 +526,13 @@ const UnifiedLessonBuilder = () => {
         }
       };
 
+      // Before saving, update the current tier's pages
+      if (currentTier === 'free') {
+        setFreePages(lessonPages);
+      } else {
+        setPremiumPages(lessonPages);
+      }
+
       const result = await draftService.saveDraft(user.uid, lessonData);
       setCurrentDraftId(result.id);
       setSaveStatus('saved');
@@ -547,7 +540,7 @@ const UnifiedLessonBuilder = () => {
       showNotification('success', 'Draft saved successfully!');
       
     } catch (error) {
-      console.error('Error saving draft:', error);
+      logger.error('Error saving draft:', error);
       setSaveStatus('error');
       showNotification('error', 'Failed to save draft');
     }
@@ -572,9 +565,8 @@ const UnifiedLessonBuilder = () => {
     try {
       const result = await draftService.publishDraft(user.uid, currentDraftId, pathId, moduleId);
       showNotification('success', `Draft published as lesson: ${result.lessonId}`);
-      console.log('Published lesson:', result);
     } catch (error) {
-      console.error('Error publishing draft:', error);
+      logger.error('Error publishing draft:', error);
       showNotification('error', 'Failed to publish draft');
     }
   };
@@ -1427,6 +1419,21 @@ const UnifiedLessonBuilder = () => {
     );
   };
 
+  // Add switchTier function:
+  const switchTier = (newTier) => {
+    if (newTier === currentTier) return;
+    if (currentTier === 'free') {
+      setFreePages(lessonPages);
+      setLessonPages(premiumPages);
+    } else {
+      setPremiumPages(lessonPages);
+      setLessonPages(freePages);
+    }
+    setCurrentTier(newTier);
+    showNotification('info', `Switched to ${newTier} tier editing`);
+    triggerUnsavedState();
+  };
+
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
       {/* Sidebar */}
@@ -1467,7 +1474,7 @@ const UnifiedLessonBuilder = () => {
                   onFocus={handleTitleFocus}
                   onBlur={handleTitleBlur}
                   onClick={(e) => {
-                    console.log('🔍 Title input clicked, focusing...');
+                    logger.log('🔍 Title input clicked, focusing...');
                     e.stopPropagation();
                     lessonTitleInputRef.current?.focus();
                   }}
@@ -1613,6 +1620,25 @@ const UnifiedLessonBuilder = () => {
                         <option key={module.id} value={module.id}>{module.name}</option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* Add toggle UI in showLessonSettings section, after Description textarea: */}
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Editing Tier</label>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => switchTier('free')}
+                        className={`flex-1 py-2 rounded-lg ${currentTier === 'free' ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-blue-700`}
+                      >
+                        Free
+                      </button>
+                      <button
+                        onClick={() => switchTier('premium')}
+                        className={`flex-1 py-2 rounded-lg ${currentTier === 'premium' ? 'bg-blue-600' : 'bg-gray-700'} hover:bg-blue-700`}
+                      >
+                        Premium
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

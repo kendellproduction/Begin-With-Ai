@@ -15,6 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { animations } from '../utils/framerMotion';
 import logger from '../utils/logger';
 import OptimizedStarField from '../components/OptimizedStarField';
+import { differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
 
 
 const HomePage = () => {
@@ -27,6 +28,7 @@ const HomePage = () => {
   const [timeOfDay, setTimeOfDay] = useState('');
   const [showAchievement, setShowAchievement] = useState(false);
   const [todaysChallenge, setTodaysChallenge] = useState(null);
+  const [daysLoggedIn, setDaysLoggedIn] = useState(0);
 
   // Adaptive learning state
   const [adaptiveLessons, setAdaptiveLessons] = useState([]);
@@ -182,32 +184,20 @@ const HomePage = () => {
                 localStorage.setItem('activeLearningPath', JSON.stringify(userData.activeLearningPath));
               }
             }
-          }
-          
-          // If we have local data but not in database, sync to database
-          if (quizCompletedState && (!userDoc.exists() || !userDoc.data().quizCompleted)) {
-            const { setDoc, updateDoc } = await import('firebase/firestore');
             
-            const updateData = {};
-            if (quizResultsData) {
-              updateData.aiAssessmentResults = quizResultsData;
-              updateData.quizCompleted = { completed: true, timestamp: new Date(), results: quizResultsData };
-            }
-            if (learningPathData) {
-              updateData.activeLearningPath = learningPathData;
-            }
+            // Calculate days logged in
+            const createdAt = userData.createdAt?.toDate() || new Date();
+            const lastActivityAt = userData.lastActivityAt?.toDate() || new Date();
+            const totalDays = differenceInDays(new Date(), createdAt) + 1;
             
-            if (Object.keys(updateData).length > 0) {
-              if (userDoc.exists()) {
-                await updateDoc(userDocRef, updateData);
-              } else {
-                await setDoc(userDocRef, {
-                  ...updateData,
-                  createdAt: new Date(),
-                  lastLogin: new Date()
-                });
-              }
-            }
+            // Simulate unique login days - in production, track actual login dates
+            // For now, assume daily logins since creation, capped by last activity
+            const uniqueDays = Math.min(
+              differenceInDays(lastActivityAt, createdAt) + 1,
+              totalDays
+            );
+            
+            setDaysLoggedIn(uniqueDays);
           }
         } catch (error) {
           logger.error('Error syncing quiz state with Firebase:', error);
@@ -571,6 +561,10 @@ const HomePage = () => {
                   <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-purple-300">Lv.{userStats.level || 1}</div>
                     <div className="text-xs text-blue-200">Current Level 🏆</div>
+                  </div>
+                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
+                    <div className="text-xl font-bold text-blue-300">{daysLoggedIn}</div>
+                    <div className="text-xs text-blue-200">Days Logged In 📅</div>
                   </div>
                 </div>
 

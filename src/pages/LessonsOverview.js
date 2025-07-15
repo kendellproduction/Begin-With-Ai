@@ -19,6 +19,7 @@ const LessonsOverview = React.memo(() => {
   const [learningProgress, setLearningProgress] = useState(null);
   const [adaptiveLessons, setAdaptiveLessons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [totalLessons, setTotalLessons] = useState(0);
   
   // Dynamic motivational quotes
   const motivationalQuotes = [
@@ -260,6 +261,7 @@ const LessonsOverview = React.memo(() => {
       // Note: Deduplication is handled in the filteredLessons useMemo to ensure
       // only one result per unique lesson appears in search results
       setAdaptiveLessons(allLessons);
+      setTotalLessons(allLessons.length);
       
     } catch (error) {
       logger.error('Error loading adaptive lessons:', error);

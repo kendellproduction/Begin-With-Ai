@@ -23,6 +23,7 @@ import { getRealTimeDashboardAnalytics, subscribeToUserCount } from '../../../se
 import { localLessonsData } from '../../../data/lessonsData';
 import { adaptiveLessons } from '../../../utils/adaptiveLessonData';
 import { LessonFormatMigrator } from '../../../utils/lessonFormatMigration';
+import logger from '../../../utils/logger';
 
 const DashboardOverview = () => {
   const { currentUser } = useAuth();
@@ -180,10 +181,10 @@ const DashboardOverview = () => {
   };
 
   const handleEditLesson = (lesson) => {
-    console.log('Editing lesson:', lesson);
+    logger.log('Editing lesson:', lesson);
     
     // All lessons have been migrated, so always migrate before editing
-    console.log('Migrating lesson before editing:', lesson.format);
+    logger.log('Migrating lesson before editing:', lesson.format);
     
     // Migrate the lesson to the new format
     const migratedLesson = LessonFormatMigrator.migrateLesson(lesson.originalLesson, lesson.format);
@@ -204,7 +205,7 @@ const DashboardOverview = () => {
   };
 
   const handlePreviewLesson = (lesson) => {
-    console.log('Previewing lesson:', lesson);
+    logger.log('Previewing lesson:', lesson);
     
     // Use the correct lesson routes based on the routing configuration
     if (lesson.source === 'local') {
