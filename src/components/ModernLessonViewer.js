@@ -196,6 +196,18 @@ const ModernLessonViewer = () => {
           let correctAnswer = slide.content.correctAnswer;
           let options = slide.content.options || slide.content.choices;
           
+          // Debug logging for quiz processing (development only)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('=== QUIZ DEBUG ===');
+            console.log('Processing quiz slide:', {
+              slideIndex: index,
+              question: slide.content.question,
+              originalOptions: options,
+              correctAnswer: correctAnswer,
+              slideContent: slide.content
+            });
+          }
+          
           // If options are objects with correct property, find the correct index and extract text
           if (Array.isArray(options) && options.length > 0 && typeof options[0] === 'object' && options[0].hasOwnProperty('correct')) {
             // Find the index of the correct option
@@ -204,8 +216,25 @@ const ModernLessonViewer = () => {
             
             // Extract text from option objects
             options = options.map(opt => opt.text || opt);
+            
+            if (process.env.NODE_ENV === 'development') {
+              console.log('Processed quiz options:', {
+                correctAnswer,
+                processedOptions: options
+              });
+            }
           }
           
+          // Additional debug logging
+          if (process.env.NODE_ENV === 'development') {
+            console.log('Final quiz block data:', {
+              question: slide.content.question,
+              options: options,
+              correctAnswer: correctAnswer,
+              explanation: slide.content.explanation
+            });
+            console.log('=== END QUIZ DEBUG ===');
+          }
 
           
           blocks.push({
@@ -235,6 +264,24 @@ const ModernLessonViewer = () => {
             config: {
               showHints: true,
               instantFeedback: true
+            },
+            id: blockId
+          });
+          break;
+          
+        case 'progress_checkpoint':
+          blocks.push({
+            type: BLOCK_TYPES.PROGRESS_CHECKPOINT,
+            content: {
+              title: slide.content.title || "Progress Check",
+              message: slide.content.message || "Great progress so far!",
+              progress: slide.content.progress || 50,
+              nextSection: slide.content.nextSection || "Continue to next section",
+              celebration: slide.content.celebration || "🎉 Well done!"
+            },
+            config: {
+              showCelebration: true,
+              autoAdvance: false
             },
             id: blockId
           });
@@ -286,20 +333,35 @@ const ModernLessonViewer = () => {
     questions.forEach((question, index) => {
       const options = question.options;
       let correctAnswer = 0; // default fallback
+      let processedOptions = options;
       
-      // Find the index of the correct option
+      // Process options if they're objects with correct property
       if (Array.isArray(options) && options.length > 0) {
-        const correctIndex = options.findIndex(option => option.correct === true);
-        if (correctIndex !== -1) {
-          correctAnswer = correctIndex;
+        if (typeof options[0] === 'object' && options[0].hasOwnProperty('correct')) {
+          // Find the index of the correct option
+          correctAnswer = options.findIndex(option => option.correct === true);
+          if (correctAnswer === -1) correctAnswer = 0; // fallback
+          
+          // Extract text from option objects
+          processedOptions = options.map(opt => opt.text || opt);
         }
+      }
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.info('Processing assessment question:', {
+          questionIndex: index,
+          question: question.question,
+          originalOptions: options,
+          processedOptions: processedOptions,
+          correctAnswer: correctAnswer
+        });
       }
       
       blocks.push({
         type: BLOCK_TYPES.QUIZ,
         content: {
           question: question.question,
-          options: options,
+          options: processedOptions,
           correctAnswer: correctAnswer,
           correctFeedback: question.explanation || "Correct! Well done.",
           incorrectFeedback: "Not quite right. Try again!"
@@ -719,9 +781,8 @@ const ModernLessonViewer = () => {
   }
 
   return (
-    <div className="modern-lesson-viewer min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative overflow-hidden">
-      {/* Optimized Star Field Background */}
-      <OptimizedStarField starCount={180} opacity={0.8} speed={0.5} size={1.2} />
+    <div className="min-h-screen bg-black text-white overflow-hidden pwa-safe-top-padding relative">
+      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
 
       {/* Fixed Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-50">

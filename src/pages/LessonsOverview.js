@@ -513,7 +513,7 @@ const LessonsOverview = React.memo(() => {
 
   return (
     <div 
-      className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
+      className="relative min-h-screen bg-black text-white overflow-hidden"
     >
       <LoggedInNavbar />
 

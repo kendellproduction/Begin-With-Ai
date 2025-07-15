@@ -558,6 +558,16 @@ const UnifiedAdminPanel = () => {
               <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors">
                 <QuestionMarkCircleIcon className="w-5 h-5" />
               </button>
+              
+              {/* Exit Admin Panel Button */}
+              <button
+                onClick={() => navigate('/home')}
+                className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                title="Exit Admin Panel"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Exit Admin
+              </button>
             </div>
           </div>
         </div>

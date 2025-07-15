@@ -25,6 +25,7 @@ const HomePage = () => {
   
   const [currentQuote, setCurrentQuote] = useState('');
   const [currentFact, setCurrentFact] = useState('');
+  const [dailyTip, setDailyTip] = useState('');
   const [timeOfDay, setTimeOfDay] = useState('');
   const [showAchievement, setShowAchievement] = useState(false);
   const [todaysChallenge, setTodaysChallenge] = useState(null);
@@ -79,6 +80,53 @@ const HomePage = () => {
     "⚡ AI can reduce repetitive tasks by up to 80% in most jobs",
     "🌟 You don't need a computer science degree to master AI tools",
     "🔥 The next 5 years will see more AI advancement than the last 50 years combined"
+  ];
+
+  // AI Daily Tips
+  const aiTips = [
+    "When working with AI models, specificity in your prompts leads to better results. Instead of asking 'Tell me about dogs,' try 'Explain the key differences between training a Golden Retriever versus a Border Collie for agility competitions.'",
+    "Use the 'Chain of Thought' technique: Ask AI to explain its reasoning step by step. Add 'Let's think about this step by step' to your prompts for more accurate responses.",
+    "Context is king in AI conversations. Always provide relevant background information to get more accurate and useful responses from AI assistants.",
+    "Break complex tasks into smaller, specific prompts. Instead of asking AI to 'write a business plan,' ask it to help with one section at a time.",
+    "Use examples in your prompts. Show the AI the format or style you want by providing 1-2 examples of the desired output.",
+    "Be explicit about constraints. Tell the AI exactly what you want (length, tone, format, audience) to get more targeted results.",
+    "Iterate and refine. If the first response isn't perfect, ask follow-up questions or request modifications rather than starting over."
+  ];
+
+  // Achievements system
+  const achievements = [
+    { 
+      id: 1, 
+      name: 'First Steps', 
+      description: 'Complete your first lesson', 
+      unlocked: (userStats.completedLessons || 0) >= 1, 
+      icon: '🎯', 
+      color: 'from-blue-500 to-cyan-600' 
+    },
+    { 
+      id: 2, 
+      name: 'Getting Started', 
+      description: 'Maintain a 3-day streak', 
+      unlocked: (userStats.currentStreak || 0) >= 3, 
+      icon: '🔥', 
+      color: 'from-orange-500 to-red-600' 
+    },
+    { 
+      id: 3, 
+      name: 'Knowledge Seeker', 
+      description: 'Complete 10 lessons', 
+      unlocked: (userStats.completedLessons || 0) >= 10, 
+      icon: '📚', 
+      color: 'from-green-500 to-emerald-600' 
+    },
+    { 
+      id: 4, 
+      name: 'AI Master', 
+      description: 'Reach level 5', 
+      unlocked: (userStats.level || 1) >= 5, 
+      icon: '🤖', 
+      color: 'from-purple-500 to-indigo-600' 
+    }
   ];
 
   // Daily challenges
@@ -235,6 +283,7 @@ const HomePage = () => {
     setTimeOfDay(timeCategory);
     setCurrentQuote(quotes[timeCategory][Math.floor(Math.random() * quotes[timeCategory].length)]);
     setCurrentFact(aiFacts[Math.floor(Math.random() * aiFacts.length)]);
+    setDailyTip(aiTips[Math.floor(Math.random() * aiTips.length)]);
     setTodaysChallenge(dailyChallenges[Math.floor(Math.random() * dailyChallenges.length)]);
 
     // Check for achievements
@@ -517,8 +566,7 @@ const HomePage = () => {
 
       return (
       <div 
-        className="relative min-h-screen text-white overflow-hidden"
-        style={{backgroundColor: '#3b82f6'}}
+        className="relative min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white overflow-hidden"
       >
         {/* Optimized Star Field */}
         <OptimizedStarField starCount={180} opacity={0.9} speed={1} size={1.2} />
@@ -545,11 +593,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Real User Stats - Glass style */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
-                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
-                    <div className="text-xl font-bold text-orange-300">{userStats.currentStreak || 0}</div>
-                    <div className="text-xs text-blue-200">Day Streak 🔥</div>
-                  </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-green-300">{userStats.completedLessons || 0}</div>
                     <div className="text-xs text-blue-200">Lessons Done ✅</div>
@@ -561,10 +605,6 @@ const HomePage = () => {
                   <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
                     <div className="text-xl font-bold text-purple-300">Lv.{userStats.level || 1}</div>
                     <div className="text-xs text-blue-200">Current Level 🏆</div>
-                  </div>
-                  <div className="glass-surface rounded-xl p-3 text-center transition-all duration-300">
-                    <div className="text-xl font-bold text-blue-300">{daysLoggedIn}</div>
-                    <div className="text-xs text-blue-200">Days Logged In 📅</div>
                   </div>
                 </div>
 
@@ -753,35 +793,104 @@ const HomePage = () => {
                       <span className="text-base">🔍</span> Explore All Lessons
                     </button>
                     <button
-                      onClick={() => navigate('/dashboard')}
+                      onClick={() => navigate('/ai-news')}
                       className="w-full glass-button bg-gradient-to-r from-green-600 to-emerald-600 text-white p-2 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
                     >
-                      <span className="text-base">📊</span> View Progress
+                      <span className="text-base">📰</span> AI News
                     </button>
                   </div>
                 </div>
               </section>
             </div>
 
-            {/* Bottom Content - Consolidated Single Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {/* Achievements Section */}
+            <div className="mb-8">
+              <div className="glass-accent rounded-3xl p-6 shadow-lg">
+                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                  🏅 Learning Milestones
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {achievements.map((achievement, index) => (
+                    <motion.div
+                      key={index}
+                      className={`glass-surface rounded-2xl p-4 text-center transition-all duration-300 ${
+                        achievement.unlocked ? 'ring-2 ring-green-400/50 shadow-lg' : 'opacity-75'
+                      }`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                      <div className={`text-2xl mb-2 ${achievement.unlocked ? '' : 'grayscale'}`}>
+                        {achievement.icon}
+                      </div>
+                      <div className="text-sm font-semibold text-white mb-1">{achievement.name}</div>
+                      <div className="text-xs text-blue-200 mb-2">{achievement.description}</div>
+                      {achievement.unlocked && (
+                        <div className="text-xs text-green-300 font-semibold">✨ Achieved!</div>
+                      )}
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Weekly Goal Section */}
+            <div className="mb-8">
+              <div className="glass-secondary rounded-3xl p-6 shadow-lg max-w-2xl mx-auto">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  🎯 This Week's Goal
+                </h2>
+                <div className="glass-surface rounded-2xl p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-sm font-medium text-white">Complete 3 lessons</span>
+                    <span className="text-sm text-purple-200">{Math.min(userStats.completedLessons || 0, 3)}/3</span>
+                  </div>
+                  <div className="w-full glass-surface rounded-full h-3 mb-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-400 to-pink-400 h-3 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min((userStats.completedLessons || 0) / 3 * 100, 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-xs text-purple-200 text-center">
+                    {(userStats.completedLessons || 0) >= 3 
+                      ? "🎉 Goal achieved! You're crushing it!" 
+                      : `${Math.max(0, 3 - (userStats.completedLessons || 0))} more to reach your goal!`
+                    }
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Content - Enhanced Three Column Layout */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
               {/* AI Insight */}
               <div className="glass-primary rounded-3xl p-6 shadow-lg">
                 <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                  💡 AI Insight of the Day
+                  💡 AI Insight
                 </h2>
-                <p className="text-lg text-sky-100 leading-relaxed">
+                <p className="text-sm text-sky-100 leading-relaxed">
                   {currentFact}
                 </p>
+              </div>
+
+              {/* Daily AI Tip */}
+              <div className="glass-accent rounded-3xl p-6 shadow-lg">
+                <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
+                  🧠 Daily AI Tip
+                </h2>
+                <p className="text-sm text-cyan-100 leading-relaxed">
+                  {dailyTip}
+                </p>
+                <div className="text-xs text-cyan-300 mt-3 text-right">— AI Training Wisdom</div>
               </div>
 
               {/* Motivational Quote */}
               <div className="glass-secondary rounded-3xl p-6 text-center shadow-lg">
                 <div className="text-3xl mb-3">🌟</div>
-                <p className="text-base font-medium text-pink-100 italic">
+                <p className="text-sm font-medium text-pink-100 italic leading-relaxed">
                   "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
                 </p>
-                <p className="text-sm text-pink-200 mt-2">- Your AI Coach</p>
+                <p className="text-xs text-pink-200 mt-2">- Your AI Coach</p>
               </div>
             </div>
 

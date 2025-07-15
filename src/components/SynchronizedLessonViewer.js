@@ -117,8 +117,41 @@ const SynchronizedLessonViewer = () => {
         }
         
         // Create quiz section
-        const correctAnswerIndex = slide.content.options?.findIndex(opt => opt.correct === true) || 0;
+        const originalOptions = slide.content.options || [];
+        const correctAnswerIndex = originalOptions.findIndex(opt => opt.correct === true);
         
+        // Process quiz options properly - handle both object and string formats
+        let quizOptions = [];
+        
+        if (Array.isArray(originalOptions)) {
+          quizOptions = originalOptions.map(opt => {
+            if (typeof opt === 'string') {
+              return opt;
+            } else if (opt && typeof opt === 'object' && opt.text) {
+              return opt.text;
+            } else {
+              return String(opt);
+            }
+          });
+        }
+        
+        // Debug logging for development
+        if (process.env.NODE_ENV === 'development') {
+          console.log('=== SYNC QUIZ DEBUG ===');
+          console.log('Slide content:', slide.content);
+          console.log('Original options:', originalOptions);
+          console.log('Processed options:', quizOptions);
+          console.log('Correct answer index:', correctAnswerIndex);
+          console.log('Question:', slide.content.question);
+          console.log('Quiz options length:', quizOptions.length);
+          console.log('=== END SYNC QUIZ DEBUG ===');
+        }
+        
+        // Safety check - if we don't have valid options, skip this quiz
+        if (!quizOptions || quizOptions.length === 0) {
+          console.error('Quiz has no valid options, skipping:', slide.content);
+          return;
+        }
 
         
         const quizSection = {
@@ -130,7 +163,7 @@ const SynchronizedLessonViewer = () => {
             type: BLOCK_TYPES.QUIZ,
             content: {
               question: slide.content.question,
-              options: slide.content.options?.map(opt => opt.text) || slide.content.options,
+              options: quizOptions,
               correctAnswer: correctAnswerIndex,
               correctFeedback: slide.content.explanation || "Correct! Well done.",
               incorrectFeedback: "Not quite right. Try again!"
@@ -353,7 +386,7 @@ const SynchronizedLessonViewer = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black relative overflow-hidden">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Optimized Star Field Background */}
       <OptimizedStarField starCount={180} opacity={0.8} speed={0.5} size={1.2} />
       
@@ -395,7 +428,7 @@ const SynchronizedLessonViewer = () => {
           {/* Integrated Podcast Player */}
           <div className="relative z-20 mb-16">
             <IntegratedPodcastPlayer
-              audioUrl="/The Incredible Story of AI_ From Turing to Today.wav" // Your uploaded AI history audio
+              audioUrl="/HomePageHeroVideo.mp4" // Use existing MP4 file as placeholder
               title={podcastData.title}
               chapters={podcastData.chapters}
               onTimeUpdate={(time) => setCurrentTime(time)}

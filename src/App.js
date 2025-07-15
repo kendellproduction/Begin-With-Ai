@@ -53,7 +53,6 @@ const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
 const HomePage = React.lazy(() => import('./pages/HomePage'));
-const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 
 // Learning flow pages
@@ -97,10 +96,8 @@ function App() {
                     <Route index element={<HomePage />} />
                   </Route>
 
-                  {/* Other protected routes - REFACTORED */}
-                  <Route path="/dashboard" element={<ProtectedRoute requireEmailVerification={false} />}>
-                    <Route index element={<Dashboard />} />
-                  </Route>
+                  {/* Redirect dashboard to home - Dashboard functionality integrated into HomePage */}
+                  <Route path="/dashboard" element={<Navigate to="/home" replace />} />
 
                   <Route path="/profile" element={<ProtectedRoute />}>
                     <Route index element={<Profile />} />
@@ -169,13 +166,7 @@ function App() {
                     <Route index element={<AiNews />} />
                   </Route>
 
-                  <Route path="/lesson/:lessonId/quiz" element={<ProtectedRoute />}>
-                    <Route index element={<Quiz />} />
-                  </Route>
 
-                    <Route path="/lesson/:lessonId/results" element={<ProtectedRoute />}>
-    <Route index element={<QuizResults />} />
-  </Route>
 
   {/* Podcast Content Generator */}
   <Route path="/lesson/:lessonId/podcast" element={<ProtectedRoute />}>

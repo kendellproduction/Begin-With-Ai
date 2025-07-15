@@ -98,24 +98,41 @@ const QuizBlock = ({
     ? [...options].sort(() => Math.random() - 0.5)
     : options;
     
+  // Debug logging for development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('=== QUIZ BLOCK DEBUG ===');
+    console.log('QuizBlock received content:', content);
+    console.log('Options:', options);
+    console.log('Shuffled options:', shuffledOptions);
+    console.log('Question:', content.question);
+    console.log('=== END QUIZ BLOCK DEBUG ===');
+  }
 
 
   // Safety check for content
   if (!content || !content.question) {
-    console.warn('QuizBlock missing content or question');
+    console.warn('QuizBlock missing content or question', content);
     return (
       <div className={`quiz-block ${className} bg-red-500/10 border border-red-500/20 rounded-lg p-4`}>
         <p className="text-red-400">Quiz content not available. Please check the lesson data.</p>
+        <details className="mt-2 text-xs text-gray-500">
+          <summary>Debug Info</summary>
+          <pre>{JSON.stringify(content, null, 2)}</pre>
+        </details>
       </div>
     );
   }
 
   if (!shuffledOptions || shuffledOptions.length === 0) {
-    console.warn('QuizBlock missing options');
+    console.warn('QuizBlock missing options', { content, options, shuffledOptions });
     return (
       <div className={`quiz-block ${className} bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4`}>
         <h3 className="text-xl font-semibold text-white mb-3">{content.question}</h3>
-        <p className="text-yellow-400">No answer options available for this quiz.</p>
+        <p className="text-yellow-400 mb-2">No answer options available for this quiz.</p>
+        <details className="mt-2 text-xs text-gray-500">
+          <summary>Debug Info</summary>
+          <pre>{JSON.stringify({ content, options, shuffledOptions }, null, 2)}</pre>
+        </details>
       </div>
     );
   }

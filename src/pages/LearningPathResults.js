@@ -54,7 +54,7 @@ const LearningPathResults = () => {
   const { lessons, userProfile, estimatedDuration, pathTitle } = personalizedPath;
 
   return (
-    <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
+    <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
       
       {/* Optimized Star Field */}

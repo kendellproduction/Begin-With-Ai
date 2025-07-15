@@ -82,6 +82,18 @@ But this winter wasn't the end of the story. Like a forest fire that clears the 
         isLastInGroup: true
       }
     },
+
+    // Progress Checkpoint 1
+    {
+      type: 'progress_checkpoint',
+      content: {
+        title: 'Progress Check: Foundation Era Complete',
+        message: 'Great job! You\'ve learned about the early foundations of AI from the 1940s-1980s. You now understand the Turing Test, early expert systems, and the first AI Winter.',
+        progress: 33,
+        nextSection: 'Next: Discover how the Internet changed everything for AI',
+        celebration: '🎯 Foundation Era Mastered!'
+      }
+    },
     
     // Question 1
     {
@@ -177,6 +189,18 @@ By 2020, all the pieces were finally in place for the AI revolution you're livin
 Researchers had figured out how to build systems that could learn from massive amounts of data. The internet provided that data in abundance. Cloud computing made powerful AI accessible to any programmer with a credit card. And smartphone users had unknowingly created the largest training dataset in human history.
 
 The stage was set for November 2022, when a small research lab in San Francisco would release a chatbot that would make AI accessible to every person on the planet.`
+      }
+    },
+
+    // Progress Checkpoint 2
+    {
+      type: 'progress_checkpoint',
+      content: {
+        title: 'Progress Check: Internet Era Complete',
+        message: 'Excellent progress! You\'ve learned how the Internet and machine learning revolutionized AI. You understand neural networks, the smartphone impact, and the deep learning breakthrough.',
+        progress: 66,
+        nextSection: 'Next: The ChatGPT revolution and what\'s coming next',
+        celebration: '🌐 Internet Era Mastered!'
       }
     },
 
@@ -276,6 +300,18 @@ You're not just witnessing this revolution—you're participating in it. Every t
 The future of AI won't be determined by a small group of researchers in Silicon Valley labs. It will be shaped by millions of people like you, discovering new ways to use these tools, pushing for responsible development, and deciding what role we want AI to play in our society.
 
 The story of AI is still being written, and you're one of its authors.`
+      }
+    },
+
+    // Progress Checkpoint 3
+    {
+      type: 'progress_checkpoint',
+      content: {
+        title: 'Progress Check: Modern AI Era Complete',
+        message: 'Outstanding! You\'ve completed the full journey from wartime codebreakers to modern AI assistants. You understand transformers, ChatGPT\'s impact, and the current AI landscape.',
+        progress: 100,
+        nextSection: 'Final quiz to test your knowledge',
+        celebration: '🚀 AI History Master!'
       }
     },
 

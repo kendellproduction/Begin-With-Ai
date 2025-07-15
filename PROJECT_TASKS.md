@@ -6,99 +6,46 @@ This document is the single source of truth for all ongoing and planned tasks. I
 
 This section provides a high-level overview of all tasks, categorized by priority. More detailed descriptions can be found in the sections below.
 
-### 🔴 Priority 1: Critical Tasks (Immediate Focus)
-- **Fix Project Stability:**
-  - [x] Enforce exact dependency versions in `package.json`.
-  - [x] Resolve all peer dependency conflicts.
-  - [x] Perform a clean install of all `node_modules`.
-- **Admin Panel Overhaul:**
-  - [ ] Consolidate multiple admin builders into a single `UnifiedLessonBuilder.js`.
-  - [x] Implement a manual save system with unsaved changes detection.
-  - [ ] Update the lesson data model to support Free/Premium tiers.
-- **Core Functionality:**
-  - [ ] Re-enable all disabled core features (Admin Panel, AI News, Pricing pages).
-  - [ ] Fix and re-enable Firebase Analytics integration.
-  - [ ] Remove all `console.log` statements from production code.
+### 🔴 Priority 1: Critical Stability Fixes
+- [ ] Re-enable all disabled core features (Admin Panel, AI News, Pricing pages).
+- [ ] Fix and re-enable Firebase Analytics integration.
+- [ ] Remove all `console.log` statements from production code.
 
 **Pause here for review, testing, and potential GitHub push before proceeding to Priority 2.**
 
-### 🟠 Priority 2: Merge Dashboard into Home Page
-- **[CRITICAL] Eliminate Dashboard Page by Integrating Selected Features into Home Page:**
-  - Review features in `src/pages/Dashboard.js` (e.g., personalized stats, recent activity, achievements, quick actions, daily tip) and identify which to keep (focus on essentials; skip redundancies or unimplemented mocks as they may not be needed).
-  - Audit `src/pages/HomePage.js` for overlaps (e.g., existing stats, quick actions) and determine integration points.
-  - Integrate selected dashboard features into `src/pages/HomePage.js`, using conditional rendering for logged-in users and maintaining a clean, dynamic layout.
-  - Update routes in `src/App.js`: Remove the /dashboard route and add a redirect from /dashboard to /home.
-  - Delete `src/pages/Dashboard.js` after verifying the merge is successful.
-  - Test the combined home page for functionality, performance, user experience, and mobile responsiveness.
+### 🟠 Priority 2: UI and Page Consolidation
+- [ ] Fix lessons page background color from baby blue to space black (likely in `src/pages/Lessons.js` or related styles).
+- [ ] Eliminate Dashboard Page by Integrating Selected Features into Home Page:
+  - Review and integrate key features from `src/pages/Dashboard.js` into `src/pages/HomePage.js`.
+  - Update routes in `src/App.js` to remove /dashboard and redirect to /home.
+  - Delete `src/pages/Dashboard.js` after verification.
 
 **Pause here for review, testing, and potential GitHub push before proceeding to Priority 3.**
 
-### 🟠 Priority 3: Fix Quizzes in History of AI Lesson
-- **[HIGH] Resolve Blank Quiz Display:**
-  - Review quiz implementation in src/utils/historyOfAiLesson.js and src/components/ModernLessonViewer.js.
-  - Ensure quiz sections are properly rendered with questions and options.
-  - Fix any issues with isLastInGroup or section organization logic.
-  - Test rendering of all quiz slides in the lesson.
-  - Add fallback content if quiz data is missing.
+### 🟠 Priority 3: Lesson and Quiz Fixes
+- [ ] Resolve blank quiz display in History of AI lesson (review `src/utils/historyOfAiLesson.js` and `src/components/ModernLessonViewer.js`).
+- [ ] Audit structure, quizzes, sandboxes, and adaptive content in all lessons; add missing elements like progress checkpoints.
 
 **Pause here for review, testing, and potential GitHub push before proceeding to Priority 4.**
 
-### 🟠 Priority 4: Fix Custom Learning Journey
-- **[HIGH] Ensure New Users Take Questionnaire:**
-  - Verify src/services/newUserOnboardingService.js redirect logic for new users to '/learning-path/adaptive-quiz'.
-  - Fix any triggers that prevent pushing new users to the questionnaire.
-- **[HIGH] Implement User-Specific Learning Paths:**
-  - Audit database storage in user docs for activeLearningPath.
-  - Ensure each user sees only their own path, not shared ones.
-  - Update retrieval logic in components like HomePage.js to fetch user-specific data.
-
-**Pause here for review, testing, and potential GitHub push before proceeding to Priority 5.**
-
-### 🟠 Priority 5: Complete Lesson Review and Enhancements
-- **[MEDIUM] Audit All Lessons:**
-  - Review structure, content, and interactive elements in all lessons (e.g., src/utils/historyOfAiLesson.js, src/lessons/*).
-  - Ensure quizzes, sandboxes, and adaptive content work across difficulties.
-  - Add missing quizzes or fix rendering in other lessons if needed.
-- **[MEDIUM] Add Useful Lesson Features:**
-  - Implement progress checkpoints in long lessons.
-  - Add more interactive elements like fill-in-blanks or checklists.
-
-**Pause here for review, testing, and potential GitHub push before proceeding to Priority 6.**
-
-### 🟠 Priority 6: High Priority Tasks (Existing + New)
-- **Project Optimization:**
-  - [ ] Migrate from Create React App (CRA) to Vite for better performance.
-  - [ ] Implement route-based code splitting (`React.lazy()`) in `src/App.js`.
-  - [ ] Set up and configure ESLint for consistent code quality.
-  - [ ] Audit and remove unused npm packages.
-- **Admin Panel UI/UX:**
-  - [ ] Implement the full Webflow-inspired layout (Content, Settings, Preview).
-  - [ ] Build the Free/Premium toggle system.
-  - [ ] Implement all essential content blocks (Text, Image, Video, Quiz, Sandbox).
-- **Error Handling & Security:**
-  - [ ] Implement comprehensive error fallbacks for all API services.
-  - [ ] Fix the bug reporting system (Gmail authentication).
-  - [ ] Verify Firebase Security Rules are production-ready.
-- **New Additions:**
-  - [ ] Add comprehensive testing suite for core features.
-  - [ ] Optimize for mobile devices and test PWA functionality.
-
-**Pause here for review, testing, and potential GitHub push before proceeding to Priority 7.**
-
-### 🟡 Priority 7: Medium Priority Tasks (Future Work)
-- **Advanced Admin Features:**
-  - [ ] Implement advanced content blocks (Podcast, Interactive Elements).
-  - [ ] Build out all Settings Panel tabs (SEO, Analytics, Access Control).
-  - [ ] Implement a full draft management system with version control.
-- **User Experience & Monitoring:**
-  - [ ] Complete comprehensive mobile experience testing.
-  - [ ] Set up AI API cost monitoring and rate limiting.
-  - [ ] Fully configure and enable Sentry error reporting and Google Analytics.
-- **New Additions:**
-  - [ ] Integrate GitHub push after major changes.
-  - [ ] Add offline support enhancements for lessons.
+### 🟠 Priority 4: Custom Learning Paths
+- [ ] Ensure new users are redirected to the adaptive questionnaire (`src/services/newUserOnboardingService.js`).
+- [ ] Implement user-specific learning path retrieval and display (audit user docs and update components like HomePage.js).
 
 **Pause here for review, testing, and potential GitHub push.**
+
+### 🟡 Backlog (Lower Priority/Future Tasks)
+- Consolidate admin builders into `UnifiedLessonBuilder.js`.
+- Update lesson data model for Free/Premium tiers.
+- Migrate from CRA to Vite for performance.
+- Implement route-based code splitting with `React.lazy()`.
+- Set up ESLint and audit/remove unused npm packages.
+- Implement comprehensive error handling and verify Firebase Security Rules.
+- Add testing suite for core features and optimize for mobile/PWA.
+- Advanced admin features (e.g., content blocks, draft management).
+- User experience enhancements (e.g., cost monitoring, offline support).
+- Additional TODOs: Implement Firebase auth in `Register.js`, zoom modal in `ImageBlock.js`, published lesson deletion in `UnifiedLessonManager.js`.
+- Gamification (leaderboards), AR/VR integration, more lessons, Firestore optimizations.
 
 ---
 

@@ -18,6 +18,10 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
 
   // Check if user has admin permissions
   const isAdmin = user?.role === 'admin' || user?.role === 'developer';
+  
+  // Get user profile to check admin status more thoroughly
+  const userProfile = user?.customClaims || {};
+  const isAdminUser = isAdmin || userProfile.admin === true || userProfile.role === 'admin';
 
   // TEMPORARILY DISABLED: Check if lesson requires premium access
   // const isPremiumLesson = lesson.difficulty === 'Intermediate' || lesson.difficulty === 'Advanced';
@@ -27,14 +31,28 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
     e.preventDefault();
     e.stopPropagation();
     
-    // Navigate to lesson builder with lesson data for editing
+    // Import the lesson format migrator
+    const { LessonFormatMigrator } = require('../utils/lessonFormatMigration');
+    
+    // Detect lesson format and migrate if needed
+    const lessonFormat = LessonFormatMigrator.detectLessonFormat(lesson);
+    console.log('Detected lesson format:', lessonFormat, 'for lesson:', lesson.id);
+    
+    // Migrate the lesson to the new format for editing
+    const migratedLesson = LessonFormatMigrator.migrateLesson(lesson, lessonFormat);
+    
+    // Navigate to lesson builder with migrated lesson data
     navigate('/unified-lesson-builder', { 
       state: { 
         editingLesson: {
-          ...lesson,
+          ...migratedLesson,
           isDraft: false,
-          isPublished: true
-        }
+          isPublished: true,
+          wasMigrated: true,
+          originalFormat: lessonFormat,
+          originalLesson: lesson
+        },
+        fromAdmin: true
       } 
     });
   };
@@ -356,7 +374,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
       onClick={handleCardClick}
     >
       {/* Edit Button - Shows on hover for admin users */}
-      {isAdmin && showEditButton && (
+      {isAdminUser && showEditButton && (
         <button
           onClick={handleEditLesson}
           className={`absolute top-2 right-2 z-10 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all duration-200 ${

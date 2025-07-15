@@ -27,8 +27,7 @@ if (process.env.NODE_ENV === 'development') {
   const missingFields = requiredFields.filter(field => !firebaseConfig[field]);
   
   if (missingFields.length > 0) {
-    console.error('🚨 Missing Firebase configuration fields:', missingFields);
-    console.warn('⚠️  Firebase not configured! Please check FIREBASE_SETUP_GUIDE.md');
+    // Only log in development - removed console statements for production
   }
 }
 
@@ -48,8 +47,7 @@ try {
 } catch (error) {
   // Silent fail in production, warn in development
   if (process.env.NODE_ENV === 'development') {
-    console.warn('⚠️ Firebase Analytics initialization failed:', error.message);
-    console.warn('Analytics will be disabled but app will continue to work');
+    // Analytics initialization failed - removed console statements for production
   }
   analytics = null;
 }

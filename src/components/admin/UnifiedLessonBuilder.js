@@ -1758,9 +1758,9 @@ const UnifiedLessonBuilder = () => {
             </div>
 
             {/* Streamlined Action Bar */}
-            <div className="flex items-center justify-between bg-gray-800/90 backdrop-blur-sm rounded-xl px-4 py-2 border border-gray-700">
+            <div className="flex items-center space-x-4">
               {/* Save Status */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-gray-800/90 backdrop-blur-sm rounded-lg px-3 py-2 border border-gray-700">
                 {saveStatus === 'saving' && (
                   <div className="flex items-center space-x-2 text-blue-400">
                     <div className="w-3 h-3 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
@@ -1791,7 +1791,7 @@ const UnifiedLessonBuilder = () => {
               </div>
 
               {/* Quick Actions */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-3">
                 <button
                   onClick={() => setShowPreviewModal(true)}
                   className="flex items-center space-x-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors text-sm"

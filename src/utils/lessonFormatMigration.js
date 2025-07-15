@@ -79,9 +79,13 @@ export class LessonFormatMigrator {
       return 'admin_format';
     }
     
-    // Check for slides format (has slides array)
-    if (lesson.slides && Array.isArray(lesson.slides)) {
-      return 'slides_format';
+    // Check for slides format (has slides array) - improved detection
+    if (lesson.slides && Array.isArray(lesson.slides) && lesson.slides.length > 0) {
+      // Additional check for slide structure
+      const firstSlide = lesson.slides[0];
+      if (firstSlide && firstSlide.type && firstSlide.content) {
+        return 'slides_format';
+      }
     }
     
     // Check for adaptive lessons format
@@ -92,6 +96,11 @@ export class LessonFormatMigrator {
     // Check for local lessons format
     if (lesson.adaptedContent && (lesson.difficulty || lesson.category)) {
       return 'local_lessons';
+    }
+    
+    // Special check for history lesson format
+    if (lesson.id === 'history-of-ai' && lesson.slides && Array.isArray(lesson.slides)) {
+      return 'slides_format';
     }
     
     return 'unknown';
@@ -113,36 +122,36 @@ export class LessonFormatMigrator {
     
     // Add description block
     if (lesson.description) {
-      contentBlocks.push(this.createBlock('paragraph', {
+      contentBlocks.push(this.createBlock('text', {
         text: lesson.description
       }));
     }
     
-    // Add adapted content
-    if (lesson.adaptedContent?.content) {
-      const adaptedContent = lesson.adaptedContent.content;
-      
-      // Add introduction
-      if (adaptedContent.introduction) {
-        contentBlocks.push(this.createBlock('paragraph', {
-          text: adaptedContent.introduction
-        }));
+          // Add adapted content
+      if (lesson.adaptedContent?.content) {
+        const adaptedContent = lesson.adaptedContent.content;
+        
+        // Add introduction
+        if (adaptedContent.introduction) {
+          contentBlocks.push(this.createBlock('text', {
+            text: adaptedContent.introduction
+          }));
+        }
+        
+        // Add key points
+        if (adaptedContent.keyPoints && adaptedContent.keyPoints.length > 0) {
+          contentBlocks.push(this.createBlock('text', {
+            text: '**Key Points:**\n' + adaptedContent.keyPoints.map(point => `• ${point}`).join('\n')
+          }));
+        }
+        
+        // Add examples
+        if (adaptedContent.examples && adaptedContent.examples.length > 0) {
+          contentBlocks.push(this.createBlock('text', {
+            text: '**Examples:**\n' + adaptedContent.examples.map(example => `• ${example}`).join('\n')
+          }));
+        }
       }
-      
-      // Add key points
-      if (adaptedContent.keyPoints && adaptedContent.keyPoints.length > 0) {
-        contentBlocks.push(this.createBlock('paragraph', {
-          text: '**Key Points:**\n' + adaptedContent.keyPoints.map(point => `• ${point}`).join('\n')
-        }));
-      }
-      
-      // Add examples
-      if (adaptedContent.examples && adaptedContent.examples.length > 0) {
-        contentBlocks.push(this.createBlock('paragraph', {
-          text: '**Examples:**\n' + adaptedContent.examples.map(example => `• ${example}`).join('\n')
-        }));
-      }
-    }
     
     // Add assessment questions
     if (lesson.adaptedContent?.assessment?.questions) {
@@ -224,38 +233,38 @@ export class LessonFormatMigrator {
     if (content) {
       // Add introduction
       if (content.introduction) {
-        contentBlocks.push(this.createBlock('paragraph', {
+        contentBlocks.push(this.createBlock('text', {
           text: content.introduction
         }));
       }
       
-      // Add main content
-      if (content.mainContent) {
-        if (typeof content.mainContent === 'string') {
-          contentBlocks.push(this.createBlock('paragraph', {
-            text: content.mainContent
-          }));
-        } else if (typeof content.mainContent === 'object') {
-          Object.entries(content.mainContent).forEach(([key, value]) => {
-            if (typeof value === 'string') {
-              contentBlocks.push(this.createBlock('paragraph', {
-                text: `**${key}:** ${value}`
-              }));
-            }
-          });
+              // Add main content
+        if (content.mainContent) {
+          if (typeof content.mainContent === 'string') {
+            contentBlocks.push(this.createBlock('text', {
+              text: content.mainContent
+            }));
+          } else if (typeof content.mainContent === 'object') {
+            Object.entries(content.mainContent).forEach(([key, value]) => {
+              if (typeof value === 'string') {
+                contentBlocks.push(this.createBlock('text', {
+                  text: `**${key}:** ${value}`
+                }));
+              }
+            });
+          }
         }
-      }
       
       // Add key points
       if (content.keyPoints && content.keyPoints.length > 0) {
-        contentBlocks.push(this.createBlock('paragraph', {
+        contentBlocks.push(this.createBlock('text', {
           text: '**Key Points:**\n' + content.keyPoints.map(point => `• ${point}`).join('\n')
         }));
       }
       
       // Add examples
       if (content.examples && content.examples.length > 0) {
-        contentBlocks.push(this.createBlock('paragraph', {
+        contentBlocks.push(this.createBlock('text', {
           text: '**Examples:**\n' + content.examples.map(example => `• ${example}`).join('\n')
         }));
       }
@@ -321,38 +330,65 @@ export class LessonFormatMigrator {
       level: 1
     }));
     
-    // Process slides
+    // Add lesson description if available
+    if (lesson.description) {
+      contentBlocks.push(this.createBlock('text', {
+        text: lesson.description
+      }));
+    }
+    
+    // Process slides and convert them to content blocks
     if (lesson.slides && Array.isArray(lesson.slides)) {
       lesson.slides.forEach((slide, index) => {
         switch (slide.type) {
           case 'concept':
           case 'intro':
+            // Add section title if available
             if (slide.content.title) {
               contentBlocks.push(this.createBlock('heading', {
                 text: slide.content.title,
                 level: 2
               }));
-              
-              if (slide.content.explanation || slide.content.description) {
-                contentBlocks.push(this.createBlock('paragraph', {
-                  text: slide.content.explanation || slide.content.description
-                }));
-              }
             }
             
+            // Add main content
+            if (slide.content.explanation || slide.content.description) {
+              contentBlocks.push(this.createBlock('text', {
+                text: slide.content.explanation || slide.content.description
+              }));
+            }
+            
+            // Add key points as separate text block
             if (slide.content.keyPoints && slide.content.keyPoints.length > 0) {
-              contentBlocks.push(this.createBlock('paragraph', {
+              contentBlocks.push(this.createBlock('text', {
                 text: '**Key Points:**\n' + slide.content.keyPoints.map(point => `• ${point}`).join('\n')
               }));
             }
             break;
             
           case 'quiz':
-            contentBlocks.push(this.createBlock('quiz', {
-              question: slide.content.question,
-              options: slide.content.options.map(opt => (typeof opt === 'string' ? opt : opt.text || opt)),
-              correctAnswer: slide.content.options.findIndex(opt => opt.correct || opt.isCorrect),
-              explanation: slide.content.explanation || slide.content.correctFeedback || 'Great job!'
+            // Handle quiz slides
+            if (slide.content.question && slide.content.options) {
+              const options = slide.content.options.map(opt => {
+                if (typeof opt === 'string') return opt;
+                return opt.text || opt;
+              });
+              
+              const correctIndex = slide.content.options.findIndex(opt => opt.correct || opt.isCorrect);
+              
+              contentBlocks.push(this.createBlock('quiz', {
+                question: slide.content.question,
+                options: options,
+                correctAnswer: correctIndex,
+                explanation: slide.content.explanation || slide.content.correctFeedback || 'Great job!'
+              }));
+            }
+            break;
+            
+          case 'progress_checkpoint':
+            // Handle progress checkpoints as informational blocks
+            contentBlocks.push(this.createBlock('text', {
+              text: `**${slide.content.title}**\n\n${slide.content.message || ''}`
             }));
             break;
             
@@ -361,7 +397,7 @@ export class LessonFormatMigrator {
               text: 'Example',
               level: 3
             }));
-            contentBlocks.push(this.createBlock('paragraph', {
+            contentBlocks.push(this.createBlock('text', {
               text: slide.content.example || slide.content.explanation || ''
             }));
             break;
@@ -387,13 +423,16 @@ export class LessonFormatMigrator {
             break;
             
           default:
+            // Handle any other slide types
             if (slide.content.title || slide.content.explanation) {
-              contentBlocks.push(this.createBlock('heading', {
-                text: slide.content.title || 'Content',
-                level: 3
-              }));
+              if (slide.content.title) {
+                contentBlocks.push(this.createBlock('heading', {
+                  text: slide.content.title,
+                  level: 3
+                }));
+              }
               if (slide.content.explanation || slide.content.description) {
-                contentBlocks.push(this.createBlock('paragraph', {
+                contentBlocks.push(this.createBlock('text', {
                   text: slide.content.explanation || slide.content.description
                 }));
               }
@@ -455,7 +494,7 @@ export class LessonFormatMigrator {
     }
     
     // Add fallback content
-    contentBlocks.push(this.createBlock('paragraph', {
+    contentBlocks.push(this.createBlock('text', {
       text: 'This lesson is being migrated to the new format. Content will be available soon.'
     }));
     

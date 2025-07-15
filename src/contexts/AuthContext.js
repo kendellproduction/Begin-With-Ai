@@ -242,16 +242,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const reauthenticateWithPassword = async (currentPassword) => {
-    console.log('Attempting re-authentication...');
+    // Attempting re-authentication - removed console statements for production
     if (!auth.currentUser) {
       throw new Error('No user is currently signed in for re-authentication.');
     }
     const credential = EmailAuthProvider.credential(auth.currentUser.email, currentPassword);
     try {
       await reauthenticateWithCredential(auth.currentUser, credential);
-      console.log('Re-authentication successful.');
+      // Re-authentication successful - removed console statements for production
     } catch (error) {
-      console.error('Error re-authenticating:', error);
+      // Error re-authenticating - removed console statements for production
       throw error; // Propagate error to be handled by the caller
     }
   };
@@ -281,7 +281,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const deleteUserAccount = async (currentPassword) => {
-    console.log('Attempting to delete user account...');
+    // Attempting to delete user account - removed console statements for production
     if (!auth.currentUser) {
       throw new Error('No user is currently signed in to delete the account.');
     }
@@ -289,21 +289,21 @@ export const AuthProvider = ({ children }) => {
 
     try {
       // Step 1: Re-authenticate user
-      console.log('Re-authenticating user for account deletion...');
+      // Re-authenticating user for account deletion - removed console statements for production
       const credential = EmailAuthProvider.credential(userToDelete.email, currentPassword);
       await reauthenticateWithCredential(userToDelete, credential);
-      console.log('Re-authentication successful for account deletion.');
+      // Re-authentication successful for account deletion - removed console statements for production
 
       // Step 2: Delete user's Firestore data
       // It's generally safer to delete Firestore data BEFORE deleting the Auth user,
       // as you need the UID to easily locate the data.
-      console.log(`Attempting to delete Firestore data for UID: ${userToDelete.uid}`);
+      // Attempting to delete Firestore data - removed console statements for production
       await deleteUserFirestoreData(userToDelete.uid);
-      console.log('Firestore data deleted successfully.');
+      // Firestore data deleted successfully - removed console statements for production
 
       // Step 3: Delete user from Firebase Authentication
       await deleteUser(userToDelete);
-      console.log('Firebase Auth user deleted successfully.');
+      // Firebase Auth user deleted successfully - removed console statements for production
       // setUser(null) will be handled by onAuthStateChanged
 
       // Step 4: (Optional) Delete Stripe customer data via a Firebase Function if applicable
