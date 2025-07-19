@@ -130,7 +130,7 @@ const UnifiedLessonBuilder = () => {
     const handleResize = () => checkScreenSize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [checkScreenSize]);
+  }, []); // Remove checkScreenSize dependency to prevent infinite loop
 
   // Add optimized handlers to prevent focus loss
   const handleTitleChange = useCallback((e) => {
@@ -349,16 +349,16 @@ const UnifiedLessonBuilder = () => {
   // Enhanced block creation with all content types
   const createNewBlock = (blockType) => {
     const defaultContent = {
-      heading: { text: 'Click to edit heading', level: 2 },
-      paragraph: { text: 'Double-click to edit this text. You can write your lesson content here...' },
-      image: { src: '', alt: 'Image', caption: 'Add caption...', fileName: '' },
+      heading: { text: 'New Heading', level: 1 },
+      paragraph: { text: '' },
+      image: { src: '', alt: '', caption: '' },
       video: { src: '', title: 'Video Title', description: 'Video description...', fileName: '' },
       podcast: { audioSrc: '', title: 'Podcast Episode', description: 'Episode description...', duration: '', fileName: '' },
       quiz: { 
         question: 'What is the correct answer?', 
         options: ['Option A', 'Option B', 'Option C', 'Option D'], 
         correctAnswer: 0,
-        explanation: 'Explanation for the correct answer...'
+        explanation: 'Explanation of the correct answer...'
       },
       'code-sandbox': { 
         language: 'javascript', 
@@ -457,7 +457,7 @@ const UnifiedLessonBuilder = () => {
   };
 
   // Enhanced inline editing for all block types
-  const handleInlineEdit = (blockId, field, value) => {
+  const handleInlineEdit = useCallback((blockId, field, value) => {
     const newBlocks = lessonBlocks.map(block => 
       block.id === blockId 
         ? { 
@@ -473,7 +473,7 @@ const UnifiedLessonBuilder = () => {
     if (selectedBlockId === blockId) {
       setSelectedBlock(newBlocks.find(b => b.id === blockId));
     }
-  };
+  }, [lessonBlocks, selectedBlockId, updateCurrentPageBlocks]);
 
   const undo = () => {
     if (historyIndex > 0) {
@@ -1001,15 +1001,50 @@ const UnifiedLessonBuilder = () => {
               {isEditing ? (
                 <div className="space-y-2">
                   <textarea
-                    value={block.content.text}
+                    ref={(el) => {
+                      if (el && isEditing) {
+                        // Focus and move cursor to end
+                        setTimeout(() => {
+                          el.focus();
+                          // If the content is placeholder text, start with empty field
+                          const isPlaceholder = !block.content.text || 
+                                              block.content.text === 'Double-click to add text...' ||
+                                              block.content.text.trim() === '';
+                          
+                          if (isPlaceholder) {
+                            // Don't call handleInlineEdit here to avoid re-render loop
+                            el.value = '';
+                            el.setSelectionRange(0, 0);
+                          } else {
+                            const textLength = el.value.length;
+                            el.setSelectionRange(textLength, textLength);
+                          }
+                          
+                          // Force text direction
+                          el.style.direction = 'ltr';
+                          el.style.textAlign = 'left';
+                          el.style.unicodeBidi = 'normal';
+                        }, 100);
+                      }
+                    }}
+                    value={block.content.text === 'Double-click to add text...' ? '' : (block.content.text || '')}
                     onChange={(e) => {
                       e.stopPropagation();
                       handleInlineEdit(block.id, 'text', e.target.value);
+                      
+                      // Maintain text direction
+                      e.target.style.direction = 'ltr';
+                      e.target.style.textAlign = 'left';
                     }}
                     onClick={(e) => e.stopPropagation()}
-                    onFocus={(e) => e.stopPropagation()}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white min-h-[80px] whitespace-pre-wrap"
-                    placeholder="Enter text..."
+                    onFocus={(e) => {
+                      e.stopPropagation();
+                      // Only handle cursor positioning, no state updates
+                      const textLength = e.target.value.length;
+                      e.target.setSelectionRange(textLength, textLength);
+                    }}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white min-h-[80px] whitespace-pre-wrap paragraph-editor"
+                    placeholder="Enter your lesson content here..."
                     autoFocus
                     dir="ltr"
                     style={{
@@ -1019,7 +1054,8 @@ const UnifiedLessonBuilder = () => {
                       lineHeight: '1.5',
                       direction: 'ltr',
                       textAlign: 'left',
-                      unicodeBidi: 'normal'
+                      unicodeBidi: 'normal',
+                      writingMode: 'horizontal-tb'
                     }}
                     onPaste={(e) => {
                       e.stopPropagation();
@@ -1035,6 +1071,12 @@ const UnifiedLessonBuilder = () => {
                                     currentText.substring(selectionEnd);
                       
                       handleInlineEdit(block.id, 'text', newText);
+                      
+                      // Set cursor position after paste
+                      setTimeout(() => {
+                        const newPosition = selectionStart + pastedText.length;
+                        e.target.setSelectionRange(newPosition, newPosition);
+                      }, 0);
                     }}
                   />
                   <div className="flex items-center justify-between">
@@ -1068,7 +1110,11 @@ const UnifiedLessonBuilder = () => {
                     unicodeBidi: 'normal'
                   }}
                 >
-                  {block.content.text || 'Double-click to add text...'}
+                  {block.content.text || (
+                    <span className="italic text-gray-500">
+                      Double-click to add text...
+                    </span>
+                  )}
                 </div>
               )}
             </div>

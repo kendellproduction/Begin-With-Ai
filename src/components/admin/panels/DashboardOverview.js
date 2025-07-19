@@ -24,10 +24,16 @@ import { localLessonsData } from '../../../data/lessonsData';
 import { adaptiveLessons } from '../../../utils/adaptiveLessonData';
 import { LessonFormatMigrator } from '../../../utils/lessonFormatMigration';
 import logger from '../../../utils/logger';
+import LessonMigrationTool from '../LessonMigrationTool';
 
 const DashboardOverview = () => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+  // State management
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [publishedLessons, setPublishedLessons] = useState([]);
+  const [recentDrafts, setRecentDrafts] = useState([]);
   const [realTimeStats, setRealTimeStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
@@ -35,10 +41,15 @@ const DashboardOverview = () => {
     completionRate: 0,
     lastUpdated: null
   });
-  const [recentDrafts, setRecentDrafts] = useState([]);
-  const [publishedLessons, setPublishedLessons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [notification, setNotification] = useState(null);
+  const [showMigrationTool, setShowMigrationTool] = useState(false);
+  const [needsMigration, setNeedsMigration] = useState(false);
+
+  // Function to show notifications
+  const showNotification = (message, type = 'info') => {
+    // You can integrate with your notification system here
+    console.log(`${type.toUpperCase()}: ${message}`);
+  };
 
   useEffect(() => {
     loadDashboardData();
@@ -91,17 +102,97 @@ const DashboardOverview = () => {
 
   const loadDashboardData = async () => {
     try {
-      // Load published lessons from multiple sources
+      setLoading(true);
+      
+      // Initialize lessons array
       const lessons = [];
       
+      // Check if migration was manually marked as completed
+      const migrationCompleted = localStorage.getItem('lessonMigrationCompleted');
+      const migrationCompletedAt = localStorage.getItem('lessonMigrationCompletedAt');
+      
+      // If manually marked as complete within last 24 hours, don't show migration
+      if (migrationCompleted && migrationCompletedAt) {
+        const completedTime = new Date(migrationCompletedAt);
+        const timeDiff = Date.now() - completedTime.getTime();
+        const hoursDiff = timeDiff / (1000 * 60 * 60);
+        
+        if (hoursDiff < 24) {
+          setNeedsMigration(false);
+          console.log('Migration manually marked as completed recently, skipping migration check');
+        }
+      }
+      
+      // Check if Firestore lessons exist (more thorough check)
+      let hasFirestoreLessons = false;
+      let firestoreLessonCount = 0;
+      
+      try {
+        const firestoreLessons = await getLearningPaths();
+        
+        // Count total lessons across all paths and modules
+        firestoreLessons.forEach(path => {
+          if (path.modules && Array.isArray(path.modules)) {
+            path.modules.forEach(module => {
+              if (module.lessons && Array.isArray(module.lessons)) {
+                firestoreLessonCount += module.lessons.length;
+                module.lessons.forEach(lesson => {
+                  lessons.push({
+                    id: lesson.id,
+                    title: lesson.title || 'Firestore Lesson',
+                    description: lesson.description || 'Lesson from Firestore',
+                    difficulty: lesson.difficulty || 'Beginner',
+                    duration: `${lesson.estimatedTimeMinutes || 15} min`,
+                    category: lesson.category || path.title,
+                    icon: '📚',
+                    tags: lesson.tags || [],
+                    type: 'published',
+                    source: 'firestore',
+                    pathId: path.id,
+                    moduleId: module.id,
+                    needsMigration: false
+                  });
+                });
+              }
+            });
+          }
+        });
+        
+        // Consider migration complete if we have at least 3 lessons in Firestore
+        hasFirestoreLessons = firestoreLessonCount >= 3;
+        
+        console.log(`Found ${firestoreLessonCount} lessons in Firestore`);
+        
+        if (hasFirestoreLessons) {
+          // Mark migration as completed if we found lessons
+          localStorage.setItem('lessonMigrationCompleted', 'true');
+          localStorage.setItem('lessonMigrationCompletedAt', new Date().toISOString());
+        }
+        
+      } catch (firestoreError) {
+        console.warn('Error checking Firestore lessons:', firestoreError);
+        hasFirestoreLessons = false;
+      }
+      
+      // Only show migration if no Firestore lessons AND not manually marked complete
+      const shouldShowMigration = !hasFirestoreLessons && !migrationCompleted;
+      setNeedsMigration(shouldShowMigration);
+      
+      console.log('Migration status:', {
+        hasFirestoreLessons,
+        firestoreLessonCount,
+        migrationCompleted,
+        shouldShowMigration
+      });
+
       // Add lessons from localLessonsData
       if (localLessonsData && typeof localLessonsData === 'object') {
         Object.values(localLessonsData).forEach(lesson => {
           if (lesson && lesson.id) {
             // Detect format and add migration status
             const format = LessonFormatMigrator.detectLessonFormat(lesson);
-            // All lessons have been migrated via bulk migration script
-            const needsMigration = false; // Force false since bulk migration completed
+            // Only mark as needing migration if no Firestore lessons exist
+            const lessonNeedsMigration = needsMigration && format !== 'admin_format';
             
             lessons.push({
               id: lesson.id,
@@ -116,7 +207,7 @@ const DashboardOverview = () => {
               source: 'local',
               originalLesson: lesson,
               format: format,
-              needsMigration: needsMigration
+              needsMigration: lessonNeedsMigration
             });
           }
         });
@@ -130,8 +221,8 @@ const DashboardOverview = () => {
               if (lesson && lesson.id) {
                 // Detect format and add migration status
                 const format = LessonFormatMigrator.detectLessonFormat(lesson);
-                // All lessons have been migrated via bulk migration script
-                const needsMigration = false; // Force false since bulk migration completed
+                // Only mark as needing migration if no Firestore lessons exist
+                const lessonNeedsMigration = needsMigration && format !== 'admin_format';
                 
                 lessons.push({
                   id: lesson.id,
@@ -146,7 +237,7 @@ const DashboardOverview = () => {
                   source: 'adaptive',
                   originalLesson: lesson,
                   format: format,
-                  needsMigration: needsMigration
+                  needsMigration: lessonNeedsMigration
                 });
               }
             });
@@ -189,16 +280,37 @@ const DashboardOverview = () => {
     // Migrate the lesson to the new format
     const migratedLesson = LessonFormatMigrator.migrateLesson(lesson.originalLesson, lesson.format);
     
+    // For lessons from admin dashboard, we need to set default path and module info
+    // since static lessons don't have this information
+    const editingLessonData = {
+      ...migratedLesson,
+      // Ensure we have path and module info for saving
+      pathId: migratedLesson.pathId || 'ai-fundamentals', // Default learning path
+      moduleId: migratedLesson.moduleId || 'intro-to-ai', // Default module
+      isDraft: false,
+      isPublished: true,
+      wasMigrated: true,
+      originalFormat: lesson.format,
+      // Add additional metadata for debugging
+      source: lesson.source,
+      originalLesson: lesson.originalLesson
+    };
+    
+    console.log('=== Dashboard Edit Lesson Debug ===');
+    console.log('Original lesson:', lesson);
+    console.log('Migrated lesson:', migratedLesson);
+    console.log('Final editing data:', editingLessonData);
+    console.log('Has required fields:', {
+      pathId: !!editingLessonData.pathId,
+      moduleId: !!editingLessonData.moduleId,
+      id: !!editingLessonData.id
+    });
+    console.log('===================================');
+    
     // Navigate to the lesson builder with migrated data
     navigate('/unified-lesson-builder', { 
       state: { 
-        editingLesson: {
-          ...migratedLesson,
-          isDraft: false,
-          isPublished: true,
-          wasMigrated: true,
-          originalFormat: lesson.format
-        },
+        editingLesson: editingLessonData,
         fromAdmin: true
       } 
     });
@@ -223,14 +335,7 @@ const DashboardOverview = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown';
     const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays} days ago`;
-    return date.toLocaleDateString();
+    return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
   const QuickStatsCard = ({ title, value, icon: Icon, subtitle }) => (
@@ -410,7 +515,7 @@ const DashboardOverview = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <QuickStatsCard 
           title="Total Users" 
-          value={realTimeStats.totalUsers.toLocaleString()} 
+          value={realTimeStats.totalUsers?.toLocaleString() || '0'} 
           icon={UsersIcon} 
           subtitle={realTimeStats.lastUpdated ? `Updated: ${realTimeStats.lastUpdated.toLocaleTimeString()}` : 'Loading...'} 
         />
@@ -428,7 +533,7 @@ const DashboardOverview = () => {
         />
         <QuickStatsCard 
           title="Active Users" 
-          value={realTimeStats.activeUsers.toLocaleString()} 
+          value={realTimeStats.activeUsers?.toLocaleString() || '0'} 
           icon={StarIcon} 
           subtitle="Active in past week"
         />
@@ -469,6 +574,65 @@ const DashboardOverview = () => {
           </Link>
         </div>
       </div>
+
+      {/* Migration Tool Alert - Only show when migration is needed */}
+      {needsMigration && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+        >
+          <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 rounded-xl p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="bg-yellow-500/20 p-3 rounded-full">
+                  <ExclamationTriangleIcon className="w-6 h-6 text-yellow-400" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-white mb-1">
+                    Lesson System Setup Required
+                  </h3>
+                  <p className="text-yellow-200 text-sm">
+                    No lessons found in Firestore. Run migration to create editable lessons from static content.
+                  </p>
+                </div>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowMigrationTool(!showMigrationTool)}
+                  className="px-6 py-3 bg-yellow-600 hover:bg-yellow-700 text-white font-semibold rounded-lg transition-colors"
+                >
+                  {showMigrationTool ? 'Hide Migration Tool' : 'Setup Lessons'}
+                </button>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('lessonMigrationCompleted', 'true');
+                    localStorage.setItem('lessonMigrationCompletedAt', new Date().toISOString());
+                    setNeedsMigration(false);
+                    showNotification('Migration tool hidden. You can manually manage lessons in the admin panel.', 'info');
+                  }}
+                  className="px-4 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors text-sm"
+                  title="Skip migration and hide this tool"
+                >
+                  Skip & Hide
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Migration Tool Section */}
+      {needsMigration && showMigrationTool && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="mb-6"
+        >
+          <LessonMigrationTool onShowNotification={showNotification} />
+        </motion.div>
+      )}
 
       {/* Published Lessons */}
       <div className="space-y-8">
@@ -559,6 +723,19 @@ const DashboardOverview = () => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Debug User Status - Show for admin testing */}
+      {currentUser && (
+        <div className="bg-gray-800 rounded-xl p-4 border border-gray-700 mb-6">
+          <h3 className="text-sm font-semibold text-gray-300 mb-2">Debug: User Status</h3>
+          <div className="text-xs text-gray-400 space-y-1">
+            <p>User ID: {currentUser.uid}</p>
+            <p>Subscription Tier: {currentUser.subscriptionTier || 'free'}</p>
+            <p>Is Premium: {currentUser.isPremium ? 'Yes' : 'No'}</p>
+            <p>Should See Premium Content: {(currentUser.subscriptionTier === 'premium' || currentUser.isPremium) ? 'Yes' : 'No'}</p>
           </div>
         </div>
       )}

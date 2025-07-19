@@ -8,6 +8,7 @@ import ContentBlockRenderer from './ContentBlocks/ContentBlockRenderer';
 import { BLOCK_TYPES } from './ContentBlocks/constants';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
+import { findLessonAcrossAllPaths } from '../services/firestoreService';
 import IntegratedPodcastPlayer from './IntegratedPodcastPlayer';
 import OptimizedStarField from './OptimizedStarField';
 import logger from '../utils/logger';
@@ -109,19 +110,60 @@ const ModernLessonViewer = () => {
     
     try {
       let lessonData = null;
+      let loadedFromFirestore = false;
       
-      // Use our detailed history lesson for the AI history lesson
-      if (lessonId === 'welcome-ai-revolution' || lessonId === 'history-of-ai') {
-        const { historyOfAiLesson } = await import('../utils/historyOfAiLesson');
-        lessonData = historyOfAiLesson;
-      } else {
-        // Try adaptive lesson for other lessons
-        const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
-        if (adaptedLesson) {
-          lessonData = adaptedLesson;
+      // FIRST: Check if this lesson exists in Firestore (published via admin panel)
+      // This should always take priority over static content
+      try {
+        const firestoreLesson = await findLessonAcrossAllPaths(lessonId);
+        if (firestoreLesson && firestoreLesson.title && firestoreLesson.id) {
+          logger.info(`Found lesson ${lessonId} in Firestore:`, firestoreLesson);
+          
+          // Convert Firestore lesson format to content blocks format
+          lessonData = convertFirestoreLessonToViewer(firestoreLesson);
+          loadedFromFirestore = true;
+          setLesson(lessonData);
+          const blocks = convertLessonToContentBlocks(lessonData);
+          const sections = organizeBlocksIntoSections(blocks);
+          setContentSections(sections);
+          
+          // Flatten sections to blocks for backward compatibility
+          const flattenedBlocks = sections.flatMap(section => section.blocks);
+          setContentBlocks(flattenedBlocks);
+          
+          // Load saved progress/bookmark
+          loadLessonBookmark(lessonId);
+          setIsLoading(false);
+          
+          logger.info(`Successfully loaded lesson ${lessonId} from Firestore`);
+          return;
         } else {
-          // Fallback to creating a basic lesson structure
-          lessonData = createFallbackLesson(lessonId, difficulty);
+          logger.info(`Lesson ${lessonId} not found in Firestore or incomplete data`);
+        }
+      } catch (error) {
+        logger.warn('Error checking Firestore for lesson, falling back to static sources:', error);
+      }
+      
+      // SECOND: Only use static content if no Firestore lesson exists
+      if (!loadedFromFirestore) {
+        logger.info(`Loading lesson ${lessonId} from static sources...`);
+        
+        // Use our detailed history lesson for the AI history lesson
+        if (lessonId === 'welcome-ai-revolution' || lessonId === 'history-of-ai') {
+          const { historyOfAiLesson } = await import('../utils/historyOfAiLesson');
+          lessonData = historyOfAiLesson;
+          logger.info(`Loaded detailed history lesson for ${lessonId}`);
+        } else {
+          // Try adaptive lesson for other lessons
+          const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
+          if (adaptedLesson) {
+            lessonData = adaptedLesson;
+            logger.info(`Loaded adaptive lesson for ${lessonId}`);
+          } else {
+            // Fallback to creating a basic lesson structure
+            logger.warn(`No content found for ${lessonId}, creating fallback`);
+            lessonData = createFallbackLesson(lessonId, difficulty);
+          }
         }
       }
       
@@ -140,9 +182,134 @@ const ModernLessonViewer = () => {
     } catch (error) {
       logger.error('Error loading lesson:', error);
       showNotification('Error loading lesson. Please try again.', 'error');
+      
+      // Final fallback - create a basic lesson so the app doesn't break
+      const fallbackLesson = createFallbackLesson(lessonId, difficulty);
+      setLesson(fallbackLesson);
+      const blocks = convertLessonToContentBlocks(fallbackLesson);
+      setContentBlocks(blocks);
     }
     
     setIsLoading(false);
+  };
+
+  // Convert Firestore lesson format to the format expected by the lesson viewer
+  const convertFirestoreLessonToViewer = (firestoreLesson) => {
+    const contentPages = firestoreLesson.content || firestoreLesson.contentVersions?.free?.pages || [];
+    const premiumPages = firestoreLesson.premiumContent || firestoreLesson.contentVersions?.premium?.pages || [];
+    
+    // Use appropriate pages based on user tier
+    const pagesToUse = (difficulty === 'premium' && premiumPages.length > 0) ? premiumPages : contentPages;
+    
+    // Convert content blocks to slides format for compatibility
+    const slides = [];
+    
+    pagesToUse.forEach((page, pageIndex) => {
+      if (page.blocks && Array.isArray(page.blocks)) {
+        page.blocks.forEach((block, blockIndex) => {
+          const slideId = `${firestoreLesson.id}-page-${pageIndex}-block-${blockIndex}`;
+          
+          switch (block.type) {
+            case 'heading':
+              slides.push({
+                id: slideId,
+                type: 'intro',
+                content: {
+                  title: block.content?.text || 'Lesson Content',
+                  subtitle: firestoreLesson.title || 'Published Lesson',
+                  description: firestoreLesson.description || 'Lesson published from admin panel',
+                  estimatedTime: firestoreLesson.estimatedTimeMinutes || 15,
+                  xpReward: firestoreLesson.xpAward || 100
+                }
+              });
+              break;
+              
+            case 'text':
+              slides.push({
+                id: slideId,
+                type: 'concept',
+                content: {
+                  title: block.content?.title || 'Lesson Content',
+                  explanation: block.content?.text || '',
+                  keyPoints: block.content?.keyPoints || []
+                }
+              });
+              break;
+              
+            case 'quiz':
+              slides.push({
+                id: slideId,
+                type: 'quiz',
+                content: {
+                  question: block.content?.question || 'Quiz Question',
+                  options: block.content?.options || [],
+                  correctAnswer: block.content?.correctAnswer || 0,
+                  explanation: block.content?.explanation || 'Good job!'
+                }
+              });
+              break;
+              
+            case 'sandbox':
+              slides.push({
+                id: slideId,
+                type: 'sandbox',
+                content: {
+                  title: block.content?.title || 'Practice Exercise',
+                  instructions: block.content?.instructions || 'Try the exercise below',
+                  code: block.content?.code || '',
+                  language: block.content?.language || 'javascript'
+                }
+              });
+              break;
+              
+            default:
+              // Convert other block types to concept slides
+              slides.push({
+                id: slideId,
+                type: 'concept',
+                content: {
+                  title: block.content?.title || 'Content',
+                  explanation: block.content?.text || block.content?.description || 'Lesson content',
+                  keyPoints: []
+                }
+              });
+              break;
+          }
+        });
+      }
+    });
+    
+    // If no slides were created, add a default intro slide
+    if (slides.length === 0) {
+      slides.push({
+        id: `${firestoreLesson.id}-default`,
+        type: 'intro',
+        content: {
+          title: firestoreLesson.title || 'Published Lesson',
+          subtitle: 'Updated Content',
+          description: firestoreLesson.description || 'This lesson has been updated through the admin panel.',
+          estimatedTime: firestoreLesson.estimatedTimeMinutes || 15,
+          xpReward: firestoreLesson.xpAward || 100
+        }
+      });
+    }
+    
+    return {
+      id: firestoreLesson.id,
+      title: firestoreLesson.title || 'Published Lesson',
+      description: firestoreLesson.description || 'Lesson from admin panel',
+      estimatedTime: firestoreLesson.estimatedTimeMinutes || 15,
+      xpReward: firestoreLesson.xpAward || 100,
+      slides: slides,
+      difficulty: difficulty,
+      pathInfo: {
+        pathId: firestoreLesson.pathId,
+        pathTitle: firestoreLesson.pathTitle,
+        moduleId: firestoreLesson.moduleId,
+        moduleTitle: firestoreLesson.moduleTitle
+      },
+      isFromFirestore: true
+    };
   };
 
   const convertLessonToContentBlocks = (lessonData) => {
@@ -196,17 +363,7 @@ const ModernLessonViewer = () => {
           let correctAnswer = slide.content.correctAnswer;
           let options = slide.content.options || slide.content.choices;
           
-          // Debug logging for quiz processing (development only)
-          if (process.env.NODE_ENV === 'development') {
-            console.log('=== QUIZ DEBUG ===');
-            console.log('Processing quiz slide:', {
-              slideIndex: index,
-              question: slide.content.question,
-              originalOptions: options,
-              correctAnswer: correctAnswer,
-              slideContent: slide.content
-            });
-          }
+          // Quiz processing logic for development debugging
           
           // If options are objects with correct property, find the correct index and extract text
           if (Array.isArray(options) && options.length > 0 && typeof options[0] === 'object' && options[0].hasOwnProperty('correct')) {
@@ -217,24 +374,10 @@ const ModernLessonViewer = () => {
             // Extract text from option objects
             options = options.map(opt => opt.text || opt);
             
-            if (process.env.NODE_ENV === 'development') {
-              console.log('Processed quiz options:', {
-                correctAnswer,
-                processedOptions: options
-              });
-            }
+            // Processed quiz options for development debugging
           }
           
-          // Additional debug logging
-          if (process.env.NODE_ENV === 'development') {
-            console.log('Final quiz block data:', {
-              question: slide.content.question,
-              options: options,
-              correctAnswer: correctAnswer,
-              explanation: slide.content.explanation
-            });
-            console.log('=== END QUIZ DEBUG ===');
-          }
+          // Final quiz block data prepared for rendering
 
           
           blocks.push({

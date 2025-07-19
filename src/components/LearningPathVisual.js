@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { CheckCircleIcon, LockClosedIcon } from '@heroicons/react/24/solid';
+import { useAuth } from '../contexts/AuthContext';
 
 const LearningPathVisual = ({ 
   learningProgress, 
@@ -9,6 +12,7 @@ const LearningPathVisual = ({
   className = "",
   onLessonClick = null // Optional callback for lesson clicks
 }) => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [hoveredLesson, setHoveredLesson] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -44,8 +48,8 @@ const LearningPathVisual = ({
   const totalLessons = lessons.length;
   const progressPercentage = totalLessons > 0 ? (completedLessons / totalLessons) * 100 : 0;
 
-  // Handle lesson click - use callback or navigate to difficulty selection
-  const handleLessonClick = (lesson, index) => {
+  // Handle lesson click - define AFTER completedLessons is available
+  const handleLessonClick = useCallback((lesson, index) => {
     const isCompleted = index < completedLessons;
     const isCurrent = index === completedLessons;
     const isNext = index === completedLessons + 1;
@@ -55,31 +59,64 @@ const LearningPathVisual = ({
       return; // Can't access locked lessons
     }
     
+    // Check if user has premium subscription
+    const isPremiumUser = user?.subscriptionTier === 'premium' || user?.isPremium === true;
+    
     if (onLessonClick) {
-      // Use the provided callback
-      onLessonClick({
+      // If premium user, modify the lesson data to indicate premium access
+      const lessonData = {
         ...lesson,
         title: lesson.title,
         icon: lesson.icon,
         isCompleted,
         isCurrent,
         isNext,
-        fromLearningPath: true
-      });
+        fromLearningPath: true,
+        difficulty: isPremiumUser ? 'Premium' : 'Free'
+      };
+      
+      // For premium users, we can call onLessonClick with premium difficulty pre-set
+      if (isPremiumUser) {
+        // Skip the modal and go directly to lesson with premium content
+        navigate(`/lessons/${lesson.id}`, {
+          state: {
+            pathId: 'prompt-engineering-mastery',
+            moduleId: lesson.moduleId || 'intro-to-ai',
+            difficulty: 'Premium',
+            fromLearningPath: true
+          }
+        });
+      } else {
+        // Use the provided callback for free users (will show modal)
+        onLessonClick(lessonData);
+      }
     } else {
       // Navigate to lesson start page with difficulty selection (fallback)
-      navigate(`/lessons/start/${lesson.id}`, {
-        state: {
-          lessonTitle: lesson.title,
-          lessonIcon: lesson.icon,
-          isCompleted,
-          isCurrent,
-          isNext,
-          fromLearningPath: true
-        }
-      });
+      if (isPremiumUser) {
+        // Premium users go directly to lesson with premium content
+        navigate(`/lessons/${lesson.id}`, {
+          state: {
+            pathId: 'prompt-engineering-mastery',
+            moduleId: lesson.moduleId || 'intro-to-ai',
+            difficulty: 'Premium',
+            fromLearningPath: true
+          }
+        });
+      } else {
+        // Free users go to lesson start page with difficulty selection
+        navigate(`/lessons/start/${lesson.id}`, {
+          state: {
+            lessonTitle: lesson.title,
+            lessonIcon: lesson.icon,
+            isCompleted,
+            isCurrent,
+            isNext,
+            fromLearningPath: true
+          }
+        });
+      }
     }
-  };
+  }, [completedLessons, onLessonClick, navigate, user?.subscriptionTier, user?.isPremium]);
 
   const containerClass = compact 
     ? "bg-gradient-to-br from-gray-900/95 via-slate-900/90 to-black/95 backdrop-blur-xl rounded-xl p-4 border border-gray-600/40 shadow-2xl shadow-gray-500/25 hover:shadow-3xl hover:shadow-gray-400/30 transition-all duration-500"

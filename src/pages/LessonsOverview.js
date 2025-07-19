@@ -420,6 +420,9 @@ const LessonsOverview = React.memo(() => {
       return;
     }
     
+    // Check if user has premium subscription
+    const isPremiumUser = user?.subscriptionTier === 'premium' || user?.isPremium === true;
+    
     if (selectedDifficulty) {
       // Direct navigation with specific difficulty
       navigate(`/lessons/${lesson.id}`, { 
@@ -429,12 +432,21 @@ const LessonsOverview = React.memo(() => {
           difficulty: selectedDifficulty
         } 
       });
+    } else if (isPremiumUser) {
+      // Premium users go directly to premium content, no modal
+      navigate(`/lessons/${lesson.id}`, { 
+        state: { 
+          pathId: 'prompt-engineering-mastery',
+          moduleId: lesson.moduleId,
+          difficulty: 'Premium'
+        } 
+      });
     } else {
-      // Show difficulty selection modal
+      // Free users see difficulty selection modal
       setSelectedLesson(lesson);
       setShowDifficultyModal(true);
     }
-  }, [navigate]);
+  }, [navigate, user?.subscriptionTier, user?.isPremium]);
 
   const handleDifficultyConfirm = useCallback((difficulty) => {
     if (!selectedLesson) return;

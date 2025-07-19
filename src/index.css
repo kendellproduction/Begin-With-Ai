@@ -421,18 +421,114 @@ input[type="email"],
 input[type="password"], 
 input[type="search"],
 textarea {
-  direction: ltr;
-  text-align: left;
-  unicode-bidi: normal;
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
 }
 
 /* Force LTR for content editing areas */
 .lesson-builder textarea,
 .content-editor textarea,
-.text-editor textarea {
+.text-editor textarea,
+.paragraph-editor textarea,
+.text-block textarea,
+.content-block textarea {
   direction: ltr !important;
   text-align: left !important;
   unicode-bidi: normal !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* Force LTR for all content blocks and lesson components */
+.content-block-stable,
+.content-block-stable *,
+.lesson-content,
+.lesson-content *,
+.text-content,
+.paragraph-content,
+.prose,
+.prose * {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Specific overrides for admin panel components */
+.admin-panel textarea,
+.admin-panel input[type="text"],
+.unified-lesson-builder textarea,
+.unified-lesson-builder input[type="text"],
+.properties-panel textarea,
+.properties-panel input[type="text"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Override any RTL styling that might be inherited */
+[dir="rtl"] textarea,
+[dir="rtl"] input[type="text"],
+.rtl textarea,
+.rtl input[type="text"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Ensure consistent text direction for all form elements */
+form textarea,
+form input[type="text"],
+form input[type="email"],
+form input[type="password"],
+form input[type="search"] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Fix cursor positioning and text input behavior */
+textarea:focus,
+input[type="text"]:focus,
+.paragraph-editor:focus,
+.text-block:focus,
+.content-block textarea:focus {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  caret-color: white !important;
+}
+
+/* Prevent any RTL cursor behavior */
+*[contenteditable="true"],
+*[contenteditable] {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
+/* Force LTR for all textareas specifically */
+textarea {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  writing-mode: horizontal-tb !important;
+}
+
+/* Additional specificity for problematic cases */
+.admin-panel textarea:focus,
+.unified-lesson-builder textarea:focus,
+.lesson-builder textarea:focus {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+  caret-color: white !important;
+}
+
+/* Float animation for lesson cards */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-6px) rotate(2deg); }
+  66% { transform: translateY(-3px) rotate(-1deg); }
 }
 
 /* Enhanced focus styles for better UX */

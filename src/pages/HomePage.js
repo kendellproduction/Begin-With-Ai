@@ -501,8 +501,23 @@ const HomePage = () => {
   };
 
   const handleQuickLessonClick = (lesson) => {
-    setLessonForDifficultySelection(lesson);
-    setShowDifficultyModal(true);
+    // Check if user has premium subscription
+    const isPremiumUser = currentUser?.subscriptionTier === 'premium' || currentUser?.isPremium === true;
+    
+    if (isPremiumUser) {
+      // Premium users go directly to premium content, no modal
+      navigate(`/lessons/${lesson.id}`, {
+        state: {
+          pathId: 'prompt-engineering-mastery',
+          moduleId: lesson.moduleId,
+          selectedDifficulty: 'Premium'
+        }
+      });
+    } else {
+      // Free users see difficulty selection modal
+      setLessonForDifficultySelection(lesson);
+      setShowDifficultyModal(true);
+    }
   };
 
   const handleConfirmQuickAccessDifficulty = (selectedDifficulty) => {
@@ -812,7 +827,7 @@ const HomePage = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {achievements.map((achievement, index) => (
                     <motion.div
-                      key={index}
+                      key={achievement.id}
                       className={`glass-surface rounded-2xl p-4 text-center transition-all duration-300 ${
                         achievement.unlocked ? 'ring-2 ring-green-400/50 shadow-lg' : 'opacity-75'
                       }`}

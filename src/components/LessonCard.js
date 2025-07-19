@@ -506,14 +506,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
         </div>
       </div>
 
-      {/* Float animation */}
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          33% { transform: translateY(-6px) rotate(2deg); }
-          66% { transform: translateY(-3px) rotate(-1deg); }
-        }
-      `}</style>
+
     </div>
   );
 };

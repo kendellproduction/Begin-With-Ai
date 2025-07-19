@@ -17,6 +17,10 @@ const AdaptiveDatabaseSeeder = () => {
       const result = await AdaptiveLessonService.seedAdaptiveLessons();
       setSeedingResults(result);
       setSeedingStatus('✅ Adaptive lessons seeded successfully!');
+      
+      // Mark seeding as completed to hide this component in future
+      localStorage.setItem('adaptiveLessonsSeeded', 'true');
+      localStorage.setItem('seedingCompletedAt', new Date().toISOString());
     } catch (error) {
       console.error('Seeding error:', error);
       setSeedingStatus(`❌ Error: ${error.message}`);
@@ -82,6 +86,11 @@ const AdaptiveDatabaseSeeder = () => {
     return null;
   }
 
+  // Hide if seeding has been completed (unless forced to show)
+  if (localStorage.getItem('adaptiveLessonsSeeded') && !localStorage.getItem('forceShowSeeder')) {
+    return null;
+  }
+
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
       {isMinimized ? (
@@ -137,6 +146,33 @@ const AdaptiveDatabaseSeeder = () => {
               className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 text-sm font-medium transition-all duration-300"
             >
               {isSeeding ? 'Testing...' : 'Test Learning Path'}
+            </button>
+            
+            {/* Show reset option if seeding has been completed */}
+            {localStorage.getItem('adaptiveLessonsSeeded') && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem('adaptiveLessonsSeeded');
+                  localStorage.removeItem('seedingCompletedAt');
+                  setSeedingStatus('Seeding status reset');
+                  setSeedingResults(null);
+                }}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm font-medium transition-all duration-300"
+              >
+                Reset Seeding Status
+              </button>
+            )}
+            
+            {/* Hide this component permanently */}
+            <button
+              onClick={() => {
+                localStorage.setItem('adaptiveLessonsSeeded', 'true');
+                localStorage.setItem('seedingCompletedAt', new Date().toISOString());
+                window.location.reload(); // Refresh to hide the component
+              }}
+              className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-xs font-medium transition-all duration-300"
+            >
+              Hide This Tool (Mark as Complete)
             </button>
           </div>
 

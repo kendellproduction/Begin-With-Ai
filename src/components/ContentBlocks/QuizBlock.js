@@ -98,15 +98,7 @@ const QuizBlock = ({
     ? [...options].sort(() => Math.random() - 0.5)
     : options;
     
-  // Debug logging for development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('=== QUIZ BLOCK DEBUG ===');
-    console.log('QuizBlock received content:', content);
-    console.log('Options:', options);
-    console.log('Shuffled options:', shuffledOptions);
-    console.log('Question:', content.question);
-    console.log('=== END QUIZ BLOCK DEBUG ===');
-  }
+  // Quiz block processing for development debugging
 
 
   // Safety check for content

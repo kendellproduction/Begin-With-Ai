@@ -367,14 +367,24 @@ export class LessonFormatMigrator {
             break;
             
           case 'quiz':
-            // Handle quiz slides
+            // Handle quiz slides with improved option processing
             if (slide.content.question && slide.content.options) {
               const options = slide.content.options.map(opt => {
                 if (typeof opt === 'string') return opt;
                 return opt.text || opt;
               });
               
-              const correctIndex = slide.content.options.findIndex(opt => opt.correct || opt.isCorrect);
+              let correctIndex = slide.content.options.findIndex(opt => opt.correct === true || opt.isCorrect === true);
+              
+              // If no correct answer found, check for correctAnswer field
+              if (correctIndex === -1 && typeof slide.content.correctAnswer === 'number') {
+                correctIndex = slide.content.correctAnswer;
+              }
+              
+              // Fallback to first option if still no correct answer
+              if (correctIndex === -1) {
+                correctIndex = 0;
+              }
               
               contentBlocks.push(this.createBlock('quiz', {
                 question: slide.content.question,

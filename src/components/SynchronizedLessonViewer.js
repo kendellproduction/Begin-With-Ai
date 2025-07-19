@@ -137,14 +137,8 @@ const SynchronizedLessonViewer = () => {
         
         // Debug logging for development
         if (process.env.NODE_ENV === 'development') {
-          console.log('=== SYNC QUIZ DEBUG ===');
-          console.log('Slide content:', slide.content);
-          console.log('Original options:', originalOptions);
-          console.log('Processed options:', quizOptions);
-          console.log('Correct answer index:', correctAnswerIndex);
-          console.log('Question:', slide.content.question);
-          console.log('Quiz options length:', quizOptions.length);
-          console.log('=== END SYNC QUIZ DEBUG ===');
+                  // Debug information for quiz processing - removed console.logs for production
+                      // End sync quiz debugging
         }
         
         // Safety check - if we don't have valid options, skip this quiz

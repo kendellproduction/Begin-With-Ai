@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 import logger from '../utils/logger';
 import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
+import { findLessonAcrossAllPaths } from '../services/firestoreService';
 import OptimizedStarField from './OptimizedStarField';
 
 // Import slide components
@@ -87,20 +88,50 @@ const LessonViewer = () => {
     setIsLoading(true);
     
     try {
-      // Get adaptive lesson content
-      const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
+      let loadedFromFirestore = false;
       
-      if (adaptedLesson && adaptedLesson.slides.length > 0) {
-        // Use adaptive lesson data
-        setLesson(adaptedLesson);
-        setSlides(adaptedLesson.slides);
-        logger.info('Adaptive lesson loaded successfully:', adaptedLesson.title);
-      } else {
-        // Fallback to local lesson data if available
-        logger.warn(`Lesson ${lessonId} not found in adaptive data, trying local fallback`);
-        const localLesson = getLocalLessonFallback(lessonId, difficulty);
-        setLesson(localLesson);
-        setSlides(localLesson.slides);
+      // FIRST: Check if this lesson exists in Firestore (published via admin panel)
+      // This should always take priority over static content
+      try {
+        const firestoreLesson = await findLessonAcrossAllPaths(lessonId);
+        if (firestoreLesson && firestoreLesson.title && firestoreLesson.id) {
+          logger.info(`Found lesson ${lessonId} in Firestore:`, firestoreLesson);
+          
+          // Convert Firestore lesson format to slide format
+          const convertedLesson = convertFirestoreLessonToSlides(firestoreLesson, difficulty);
+          setLesson(convertedLesson);
+          setSlides(convertedLesson.slides);
+          loadedFromFirestore = true;
+          setIsLoading(false);
+          
+          logger.info(`Successfully loaded lesson ${lessonId} from Firestore`);
+          return;
+        } else {
+          logger.info(`Lesson ${lessonId} not found in Firestore or incomplete data`);
+        }
+      } catch (error) {
+        logger.warn('Error checking Firestore for lesson, falling back to static sources:', error);
+      }
+      
+      // SECOND: Only use static content if no Firestore lesson exists
+      if (!loadedFromFirestore) {
+        logger.info(`Loading lesson ${lessonId} from static sources...`);
+        
+        // Get adaptive lesson content
+        const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
+        
+        if (adaptedLesson && adaptedLesson.slides.length > 0) {
+          // Use adaptive lesson data
+          setLesson(adaptedLesson);
+          setSlides(adaptedLesson.slides);
+          logger.info('Adaptive lesson loaded successfully:', adaptedLesson.title);
+        } else {
+          // Fallback to local lesson data if available
+          logger.warn(`Lesson ${lessonId} not found in adaptive data, trying local fallback`);
+          const localLesson = getLocalLessonFallback(lessonId, difficulty);
+          setLesson(localLesson);
+          setSlides(localLesson.slides);
+        }
       }
       
     } catch (error) {
@@ -509,6 +540,126 @@ const LessonViewer = () => {
       slides: slides,
       difficulty: adminLesson.difficulty || 'intermediate',
       isAdminGenerated: true
+    };
+  };
+
+  // Convert Firestore lesson format to slide format for the legacy viewer
+  const convertFirestoreLessonToSlides = (firestoreLesson, difficulty) => {
+    const contentPages = firestoreLesson.content || firestoreLesson.contentVersions?.free?.pages || [];
+    const premiumPages = firestoreLesson.premiumContent || firestoreLesson.contentVersions?.premium?.pages || [];
+    
+    // Use appropriate pages based on user tier
+    const pagesToUse = (difficulty === 'premium' && premiumPages.length > 0) ? premiumPages : contentPages;
+    
+    const slides = [];
+    
+    // Add intro slide
+    slides.push({
+      id: `${firestoreLesson.id}-intro`,
+      type: 'intro',
+      content: {
+        title: firestoreLesson.title || 'Published Lesson',
+        subtitle: 'Updated Content',
+        icon: "📚",
+        description: firestoreLesson.description || 'This lesson has been updated through the admin panel.',
+        estimatedTime: firestoreLesson.estimatedTimeMinutes || 15,
+        xpReward: firestoreLesson.xpAward || 100
+      }
+    });
+    
+    // Convert content blocks to slides
+    pagesToUse.forEach((page, pageIndex) => {
+      if (page.blocks && Array.isArray(page.blocks)) {
+        page.blocks.forEach((block, blockIndex) => {
+          const slideId = `${firestoreLesson.id}-page-${pageIndex}-block-${blockIndex}`;
+          
+          switch (block.type) {
+            case 'text':
+              slides.push({
+                id: slideId,
+                type: 'concept',
+                content: {
+                  title: block.content?.title || page.title || 'Lesson Content',
+                  explanation: block.content?.text || '',
+                  icon: "📖",
+                  keyPoints: block.content?.keyPoints || []
+                }
+              });
+              break;
+              
+            case 'quiz':
+              slides.push({
+                id: slideId,
+                type: 'quiz',
+                content: {
+                  question: block.content?.question || 'Quiz Question',
+                  options: block.content?.options || [],
+                  correctAnswer: block.content?.correctAnswer || 0,
+                  explanation: block.content?.explanation || 'Good job!'
+                }
+              });
+              break;
+              
+            case 'sandbox':
+              slides.push({
+                id: slideId,
+                type: 'sandbox',
+                content: {
+                  title: block.content?.title || 'Practice Exercise',
+                  instructions: block.content?.instructions || 'Try the exercise below',
+                  code: block.content?.code || '',
+                  language: block.content?.language || 'javascript'
+                }
+              });
+              break;
+              
+            case 'image':
+              slides.push({
+                id: slideId,
+                type: 'example',
+                content: {
+                  title: block.content?.title || 'Visual Example',
+                  example: block.content?.url || '',
+                  explanation: block.content?.caption || block.content?.description || 'Example image'
+                }
+              });
+              break;
+              
+            default:
+              // Convert other block types to concept slides
+              if (block.content?.text || block.content?.description) {
+                slides.push({
+                  id: slideId,
+                  type: 'concept',
+                  content: {
+                    title: block.content?.title || 'Content',
+                    explanation: block.content?.text || block.content?.description || 'Lesson content',
+                    icon: "📚",
+                    keyPoints: []
+                  }
+                });
+              }
+              break;
+          }
+        });
+      }
+    });
+    
+    return {
+      id: firestoreLesson.id,
+      title: firestoreLesson.title || 'Published Lesson',
+      description: firestoreLesson.description || 'Lesson from admin panel',
+      estimatedTime: firestoreLesson.estimatedTimeMinutes || 15,
+      xpReward: firestoreLesson.xpAward || 100,
+      slides: slides,
+      difficulty: difficulty,
+      pathInfo: {
+        pathId: firestoreLesson.pathId,
+        pathTitle: firestoreLesson.pathTitle,
+        moduleId: firestoreLesson.moduleId,
+        moduleTitle: firestoreLesson.moduleTitle
+      },
+      isFromFirestore: true
     };
   };
 

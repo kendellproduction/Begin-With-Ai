@@ -760,3 +760,59 @@ export const syncLocalProgressToFirestore = async (userId) => {
     throw error;
   }
 }; 
+
+/**
+ * Searches for a lesson by ID across all learning paths and modules
+ * This is useful for lesson viewers to find lessons published through the admin panel
+ * @param {string} lessonId - The ID of the lesson to find
+ * @returns {Promise<object|null>} Lesson data with path and module info, or null if not found
+ */
+export const findLessonAcrossAllPaths = async (lessonId) => {
+  if (!lessonId) {
+    logger.error('lessonId is required to search for a lesson.');
+    return null;
+  }
+
+  try {
+    // Get all learning paths
+    const pathsRef = collection(db, 'learningPaths');
+    const pathsSnapshot = await getDocs(pathsRef);
+
+    for (const pathDoc of pathsSnapshot.docs) {
+      const pathId = pathDoc.id;
+      
+      // Get all modules in this path
+      const modulesRef = collection(db, 'learningPaths', pathId, 'modules');
+      const modulesSnapshot = await getDocs(modulesRef);
+
+      for (const moduleDoc of modulesSnapshot.docs) {
+        const moduleId = moduleDoc.id;
+        
+        // Search for the lesson in this module
+        const lessonRef = doc(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons', lessonId);
+        const lessonDoc = await getDoc(lessonRef);
+        
+        if (lessonDoc.exists()) {
+          const lessonData = lessonDoc.data();
+          logger.info(`Found lesson ${lessonId} in path ${pathId}, module ${moduleId}`);
+          
+          return {
+            id: lessonDoc.id,
+            pathId,
+            moduleId,
+            pathTitle: pathDoc.data().title,
+            moduleTitle: moduleDoc.data().title,
+            ...lessonData
+          };
+        }
+      }
+    }
+
+    logger.warn(`Lesson ${lessonId} not found in any learning path`);
+    return null;
+
+  } catch (error) {
+    logger.error(`Error searching for lesson ${lessonId}:`, error);
+    throw error;
+  }
+}; 

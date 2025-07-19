@@ -22,14 +22,9 @@ export function register(config = {}) {
     if (isLocalhost) {
       checkValidServiceWorker('/sw.js', config);
       
-      // Add some helpful logging for localhost
+      // Service worker ready for localhost - no logging needed in production
       navigator.serviceWorker.ready.then(() => {
-        if (process.env.NODE_ENV === 'development') {
-          console.log(
-            'This web app is being served cache-first by a service worker. ' +
-            'To learn more, visit https://cra.link/PWA'
-          );
-        }
+        // Service worker is ready
       });
     } else {
       // Register service worker in production
@@ -47,7 +42,7 @@ function registerValidSW(swUrl, config) {
     .register(swUrl)
     .then((registration) => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('SW: Registration successful', registration);
+        // SW: Registration successful
       }
       
       registration.onupdatefound = () => {
@@ -63,7 +58,7 @@ function registerValidSW(swUrl, config) {
               // but the previous service worker will still serve the older
               // content until all client tabs are closed.
               if (process.env.NODE_ENV === 'development') {
-                console.log('SW: New content is available and will be used when all tabs for this page are closed.');
+                // SW: New content is available and will be used when all tabs for this page are closed.
               }
               
               // Execute callback
@@ -75,7 +70,7 @@ function registerValidSW(swUrl, config) {
               // It's the perfect time to display a
               // "Content is cached for offline use." message.
               if (process.env.NODE_ENV === 'development') {
-                console.log('SW: Content is cached for offline use.');
+                // SW: Content is cached for offline use.
               }
               
               // Execute callback
@@ -117,7 +112,7 @@ function checkValidServiceWorker(swUrl, config) {
     })
     .catch(() => {
       if (process.env.NODE_ENV === 'development') {
-        console.log('SW: No internet connection found. App is running in offline mode.');
+        // SW: No internet connection found. App is running in offline mode.
       }
     });
 }
@@ -139,7 +134,7 @@ export function unregister() {
 // Handle online/offline status
 function handleOnline() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('App: Back online');
+    // App: Back online
   }
   if (CONFIG.onOnline) {
     CONFIG.onOnline();
@@ -151,7 +146,7 @@ function handleOnline() {
 
 function handleOffline() {
   if (process.env.NODE_ENV === 'development') {
-    console.log('App: Gone offline');
+    // App: Gone offline
   }
   if (CONFIG.onOffline) {
     CONFIG.onOffline();

@@ -337,12 +337,17 @@ const LandingPage = () => {
                 >
                   <motion.button
                     onClick={() => openAuthModal('signup')}
-                    className="bg-gradient-to-r from-cyan-400 to-blue-500 hover:from-cyan-300 hover:to-blue-400 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-2xl transform transition-all duration-300"
+                    className="bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-600 hover:from-cyan-300 hover:via-blue-400 hover:to-indigo-500 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-2xl transform transition-all duration-300 relative overflow-hidden group"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    🚀 Start Building Today - FREE
+                    <span className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    <span className="relative flex items-center justify-center gap-2">
+                      🚀 Start Building Today - FREE
+                    </span>
                   </motion.button>
+                  
+
                   <motion.button
                     onClick={handlePremiumCTA}
                     className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-4 px-8 rounded-2xl text-lg shadow-2xl transform transition-all duration-300"

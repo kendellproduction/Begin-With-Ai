@@ -44,7 +44,27 @@ const TextBlock = ({
       setTimeout(() => {
         if (textareaRef.current) {
           textareaRef.current.focus();
-          textareaRef.current.select();
+          
+          // Check if content is placeholder text
+          const isPlaceholder = !localText || 
+                               localText === 'Click to edit text...' ||
+                               localText.trim() === '';
+          
+          if (isPlaceholder) {
+            // Start with empty field for placeholder text
+            setLocalText('');
+            textareaRef.current.value = '';
+            textareaRef.current.setSelectionRange(0, 0);
+          } else {
+            // Move cursor to the end of existing content
+            const textLength = textareaRef.current.value.length;
+            textareaRef.current.setSelectionRange(textLength, textLength);
+          }
+          
+          // Force text direction
+          textareaRef.current.style.direction = 'ltr';
+          textareaRef.current.style.textAlign = 'left';
+          textareaRef.current.style.unicodeBidi = 'normal';
         }
       }, 50);
     }
@@ -54,6 +74,12 @@ const TextBlock = ({
     const newText = e.target.value;
     setLocalText(newText);
     debouncedUpdate(newText);
+    
+    // Ensure cursor positioning is maintained
+    if (textareaRef.current) {
+      textareaRef.current.style.direction = 'ltr';
+      textareaRef.current.style.textAlign = 'left';
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -124,12 +150,12 @@ const TextBlock = ({
       >
         <textarea
           ref={textareaRef}
-          value={localText}
+          value={localText === 'Click to edit text...' ? '' : localText}
           onChange={handleTextChange}
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           onInput={autoResizeTextarea}
-          className="w-full bg-transparent border-2 border-blue-500/50 rounded-lg p-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none stable-content"
+          className="w-full bg-transparent border-2 border-blue-500/50 rounded-lg p-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none stable-content text-block"
           dir="ltr"
           style={{
             ...textStyles,
@@ -138,7 +164,9 @@ const TextBlock = ({
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word',
             direction: 'ltr',
-            unicodeBidi: 'normal'
+            textAlign: 'left',
+            unicodeBidi: 'normal',
+            writingMode: 'horizontal-tb'
           }}
           placeholder="Enter your text here..."
           onPaste={(e) => {
@@ -175,6 +203,7 @@ const TextBlock = ({
       className={`content-block-stable ${editable ? 'cursor-pointer hover:bg-gray-800/30 rounded-lg transition-colors' : ''}`}
       style={containerStyles}
       onClick={handleTextClick}
+      dir="ltr"
     >
       {content.markdown ? (
         <div 
@@ -187,12 +216,29 @@ const TextBlock = ({
             '--tw-prose-bullets': '#94a3b8',
             '--tw-prose-hr': '#475569',
             '--tw-prose-quotes': '#e2e8f0',
+            direction: 'ltr',
+            textAlign: 'left',
+            unicodeBidi: 'normal'
           }}
           dangerouslySetInnerHTML={{ __html: processedContent }}
+          dir="ltr"
         />
       ) : (
-        <div style={textStyles} className="whitespace-pre-wrap leading-relaxed lesson-content">
-          {processedContent || (editable ? 'Click to edit text...' : '')}
+        <div 
+          style={{
+            ...textStyles,
+            direction: 'ltr',
+            textAlign: 'left',
+            unicodeBidi: 'normal'
+          }} 
+          className="whitespace-pre-wrap leading-relaxed lesson-content"
+          dir="ltr"
+        >
+          {processedContent || (editable ? (
+            <span className="italic text-gray-500">
+              Click to edit text...
+            </span>
+          ) : '')}
         </div>
       )}
       
