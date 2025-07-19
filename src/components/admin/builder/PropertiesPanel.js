@@ -94,8 +94,39 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
               onChange={(e) => handleContentChange('text', e.target.value)}
               placeholder="Enter your text content..."
               className="w-full h-32 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"
+              dir="ltr"
+              style={{
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                fontFamily: 'inherit',
+                lineHeight: '1.5',
+                direction: 'ltr',
+                textAlign: 'left',
+                unicodeBidi: 'normal'
+              }}
+              onPaste={(e) => {
+                // Preserve formatting from pasted content
+                e.preventDefault();
+                const pastedText = e.clipboardData.getData('text/plain');
+                const currentText = e.target.value;
+                const selectionStart = e.target.selectionStart;
+                const selectionEnd = e.target.selectionEnd;
+                
+                const newText = currentText.substring(0, selectionStart) + 
+                              pastedText + 
+                              currentText.substring(selectionEnd);
+                
+                handleContentChange('text', newText);
+                
+                // Update cursor position
+                setTimeout(() => {
+                  e.target.selectionStart = e.target.selectionEnd = selectionStart + pastedText.length;
+                }, 0);
+              }}
             />
-            <div className="text-xs text-gray-500 mt-1">Supports Markdown formatting</div>
+            <div className="text-xs text-gray-500 mt-1">
+              Supports Markdown formatting. Line breaks and spacing will be preserved.
+            </div>
           </div>
           
           <div>

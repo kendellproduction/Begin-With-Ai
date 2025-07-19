@@ -130,15 +130,40 @@ const TextBlock = ({
           onKeyDown={handleKeyDown}
           onInput={autoResizeTextarea}
           className="w-full bg-transparent border-2 border-blue-500/50 rounded-lg p-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none stable-content"
+          dir="ltr"
           style={{
             ...textStyles,
             minHeight: '1.5em',
             fontFamily: 'inherit',
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            direction: 'ltr',
+            unicodeBidi: 'normal'
           }}
           placeholder="Enter your text here..."
+          onPaste={(e) => {
+            // Preserve formatting from pasted content
+            e.preventDefault();
+            const pastedText = e.clipboardData.getData('text/plain');
+            const currentText = e.target.value;
+            const selectionStart = e.target.selectionStart;
+            const selectionEnd = e.target.selectionEnd;
+            
+            const newText = currentText.substring(0, selectionStart) + 
+                          pastedText + 
+                          currentText.substring(selectionEnd);
+            
+            setLocalText(newText);
+            debouncedUpdate(newText);
+            
+            // Update cursor position
+            setTimeout(() => {
+              e.target.selectionStart = e.target.selectionEnd = selectionStart + pastedText.length;
+            }, 0);
+          }}
         />
         <div className="absolute -bottom-6 left-0 text-xs text-blue-400 bg-gray-800 px-2 py-1 rounded">
-          Press Enter to save, Shift+Enter for new line
+          Press Enter to save, Shift+Enter for new line. Formatting will be preserved.
         </div>
       </div>
     );

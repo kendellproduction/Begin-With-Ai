@@ -571,6 +571,105 @@ const UnifiedLessonBuilder = () => {
     }
   };
 
+  // Direct update for published lessons (bypasses draft system)
+  const updatePublishedLesson = async () => {
+    const editingLesson = location.state?.editingLesson;
+    
+    console.log('=== Update Published Lesson Debug ===');
+    console.log('Location state:', location.state);
+    console.log('Editing lesson:', editingLesson);
+    console.log('Required fields check:');
+    console.log('- pathId:', editingLesson?.pathId);
+    console.log('- moduleId:', editingLesson?.moduleId);  
+    console.log('- lesson id:', editingLesson?.id);
+    console.log('=====================================');
+    
+    if (!editingLesson) {
+      showNotification('error', 'No lesson information found. Please try editing the lesson again from the admin dashboard.');
+      return;
+    }
+    
+    if (!editingLesson.pathId || !editingLesson.moduleId || !editingLesson.id) {
+      console.error('Missing lesson information:', {
+        pathId: editingLesson.pathId,
+        moduleId: editingLesson.moduleId,
+        id: editingLesson.id,
+        fullLesson: editingLesson
+      });
+      
+      showNotification('error', `Missing lesson information: ${!editingLesson.pathId ? 'pathId ' : ''}${!editingLesson.moduleId ? 'moduleId ' : ''}${!editingLesson.id ? 'lesson id' : ''}`);
+      return;
+    }
+
+    if (!user?.uid) {
+      showNotification('error', 'User not authenticated');
+      return;
+    }
+
+    try {
+      setSaveStatus('saving');
+      showNotification('info', 'Updating lesson...');
+      
+      // Import the adminService dynamically
+      const adminServiceModule = await import('../../services/adminService');
+      const { updateLesson } = adminServiceModule;
+      
+      if (!updateLesson) {
+        throw new Error('updateLesson function not found in adminService');
+      }
+      
+      const lessonData = {
+        title: lessonTitle,
+        description: lessonDescription,
+        content: freePages,
+        premiumContent: premiumPages,
+        contentVersions: {
+          free: {
+            title: lessonTitle,
+            description: lessonDescription,
+            pages: freePages
+          },
+          premium: {
+            title: lessonTitle,
+            description: lessonDescription,
+            pages: premiumPages
+          }
+        },
+        estimatedTimeMinutes: 15,
+        xpAward: 10,
+        category: selectedModule || 'General',
+        tags: [],
+        updatedAt: new Date(),
+        updatedBy: user.uid,
+        version: (editingLesson.version || 1) + 1
+      };
+
+      console.log('Updating lesson with data:', {
+        pathId: editingLesson.pathId,
+        moduleId: editingLesson.moduleId,
+        lessonId: editingLesson.id,
+        dataKeys: Object.keys(lessonData)
+      });
+
+      await updateLesson(editingLesson.pathId, editingLesson.moduleId, editingLesson.id, lessonData);
+      
+      setSaveStatus('saved');
+      setLastSaved(new Date());
+      showNotification('success', 'Lesson updated successfully! Changes are now live.');
+      
+    } catch (error) {
+      console.error('=== Error updating published lesson ===');
+      console.error('Error details:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+      console.error('=====================================');
+      
+      logger.error('Error updating published lesson:', error);
+      setSaveStatus('error');
+      showNotification('error', `Failed to update lesson: ${error.message}`);
+    }
+  };
+
   // Convert lesson to format suitable for preview
   const convertToPreviewFormat = () => {
     const slides = lessonBlocks.map((block, index) => {
@@ -864,14 +963,24 @@ const UnifiedLessonBuilder = () => {
                   <input
                     type="text"
                     value={block.content.text}
-                    onChange={(e) => handleInlineEdit(block.id, 'text', e.target.value)}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleInlineEdit(block.id, 'text', e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={(e) => e.stopPropagation()}
                     className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
                     placeholder="Enter heading..."
                     autoFocus
                   />
                   <button
-                    onClick={() => setEditingBlockId(null)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setEditingBlockId(null);
+                    }}
                     className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    type="button"
                   >
                     Done
                   </button>
@@ -893,25 +1002,74 @@ const UnifiedLessonBuilder = () => {
                 <div className="space-y-2">
                   <textarea
                     value={block.content.text}
-                    onChange={(e) => handleInlineEdit(block.id, 'text', e.target.value)}
-                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white min-h-[80px]"
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      handleInlineEdit(block.id, 'text', e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onFocus={(e) => e.stopPropagation()}
+                    className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white min-h-[80px] whitespace-pre-wrap"
                     placeholder="Enter text..."
                     autoFocus
+                    dir="ltr"
+                    style={{
+                      whiteSpace: 'pre-wrap',
+                      wordWrap: 'break-word',
+                      fontFamily: 'inherit',
+                      lineHeight: '1.5',
+                      direction: 'ltr',
+                      textAlign: 'left',
+                      unicodeBidi: 'normal'
+                    }}
+                    onPaste={(e) => {
+                      e.stopPropagation();
+                      // Preserve formatting from pasted content
+                      e.preventDefault();
+                      const pastedText = e.clipboardData.getData('text/plain');
+                      const currentText = e.target.value;
+                      const selectionStart = e.target.selectionStart;
+                      const selectionEnd = e.target.selectionEnd;
+                      
+                      const newText = currentText.substring(0, selectionStart) + 
+                                    pastedText + 
+                                    currentText.substring(selectionEnd);
+                      
+                      handleInlineEdit(block.id, 'text', newText);
+                    }}
                   />
-                  <button
-                    onClick={() => setEditingBlockId(null)}
-                    className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
-                  >
-                    Done
-                  </button>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">
+                      Line breaks and formatting will be preserved
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setEditingBlockId(null);
+                      }}
+                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                      type="button"
+                    >
+                      Done
+                    </button>
+                  </div>
                 </div>
               ) : (
-                <p 
-                  className="text-gray-300 cursor-pointer"
+                <div 
+                  className="text-gray-300 cursor-pointer whitespace-pre-wrap leading-relaxed"
                   onDoubleClick={() => setEditingBlockId(block.id)}
+                  dir="ltr"
+                  style={{
+                    whiteSpace: 'pre-wrap',
+                    wordWrap: 'break-word',
+                    lineHeight: '1.6',
+                    direction: 'ltr',
+                    textAlign: 'left',
+                    unicodeBidi: 'normal'
+                  }}
                 >
-                  {block.content.text}
-                </p>
+                  {block.content.text || 'Double-click to add text...'}
+                </div>
               )}
             </div>
           )}
@@ -919,19 +1077,142 @@ const UnifiedLessonBuilder = () => {
           {block.type === 'image' && (
             <div className="w-full text-center">
               {block.content.src ? (
-                <img 
-                  src={block.content.src} 
-                  alt={block.content.alt} 
-                  className="max-h-40 mx-auto rounded cursor-pointer"
-                  onDoubleClick={() => setEditingBlockId(block.id)}
-                />
+                <div className="relative group">
+                  <img 
+                    src={block.content.src} 
+                    alt={block.content.alt || 'Uploaded image'} 
+                    className="max-h-40 mx-auto rounded cursor-pointer"
+                    onDoubleClick={() => setEditingBlockId(block.id)}
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded">
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedBlockId(block.id);
+                          setSelectedBlock(block);
+                          fileInputRef.current?.click();
+                        }}
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                        type="button"
+                      >
+                        Change Image
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleInlineEdit(block.id, 'src', '');
+                          handleInlineEdit(block.id, 'alt', '');
+                          handleInlineEdit(block.id, 'fileName', '');
+                        }}
+                        className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                        type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div 
-                  className="border-2 border-dashed border-gray-600 rounded-lg py-8 cursor-pointer hover:border-gray-500"
-                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-gray-600 rounded-lg py-8 cursor-pointer hover:border-gray-500 transition-colors relative"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBlockId(block.id);
+                    setSelectedBlock(block);
+                    fileInputRef.current?.click();
+                  }}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.currentTarget.classList.add('border-blue-500', 'bg-blue-500/10');
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-500/10');
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    e.currentTarget.classList.remove('border-blue-500', 'bg-blue-500/10');
+                    
+                    const files = Array.from(e.dataTransfer.files);
+                    const imageFile = files.find(file => file.type.startsWith('image/'));
+                    
+                    if (imageFile) {
+                      setSelectedBlockId(block.id);
+                      setSelectedBlock(block);
+                      handleFileUpload(imageFile, block.id, 'image');
+                    } else {
+                      showNotification('error', 'Please drop an image file');
+                    }
+                  }}
                 >
                   <PhotoIcon className="w-12 h-12 mx-auto text-gray-500 mb-2" />
-                  <p className="text-gray-500">Click to add image</p>
+                  <p className="text-gray-500">Click to select or drag & drop an image</p>
+                  <p className="text-gray-400 text-sm mt-1">PNG, JPG, GIF up to 10MB</p>
+                </div>
+              )}
+              
+              {/* Image editing mode */}
+              {isEditing && (
+                <div className="mt-4 space-y-3 text-left">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Alt Text</label>
+                    <input
+                      type="text"
+                      value={block.content.alt || ''}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleInlineEdit(block.id, 'alt', e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
+                      className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                      placeholder="Describe the image for accessibility..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">Caption (Optional)</label>
+                    <input
+                      type="text"
+                      value={block.content.caption || ''}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleInlineEdit(block.id, 'caption', e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
+                      className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
+                      placeholder="Add a caption for the image..."
+                    />
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedBlockId(block.id);
+                        setSelectedBlock(block);
+                        fileInputRef.current?.click();
+                      }}
+                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                      type="button"
+                    >
+                      {block.content.src ? 'Change Image' : 'Upload Image'}
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                        setEditingBlockId(null);
+                      }}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700"
+                      type="button"
+                    >
+                      Done
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -946,7 +1227,12 @@ const UnifiedLessonBuilder = () => {
                     <input
                       type="text"
                       value={block.content.question}
-                      onChange={(e) => handleInlineEdit(block.id, 'question', e.target.value)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleInlineEdit(block.id, 'question', e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
                       placeholder="Enter your question..."
                     />
@@ -959,22 +1245,31 @@ const UnifiedLessonBuilder = () => {
                           type="radio"
                           name={`correct-${block.id}`}
                           checked={block.content.correctAnswer === index}
-                          onChange={() => handleInlineEdit(block.id, 'correctAnswer', index)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleInlineEdit(block.id, 'correctAnswer', index);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
                           className="mr-2"
                         />
                         <input
                           type="text"
                           value={option}
                           onChange={(e) => {
+                            e.stopPropagation();
                             const newOptions = [...block.content.options];
                             newOptions[index] = e.target.value;
                             handleInlineEdit(block.id, 'options', newOptions);
                           }}
+                          onClick={(e) => e.stopPropagation()}
+                          onFocus={(e) => e.stopPropagation()}
                           className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white"
                           placeholder={`Option ${index + 1}`}
                         />
                         <button
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
                             const newOptions = block.content.options.filter((_, i) => i !== index);
                             handleInlineEdit(block.id, 'options', newOptions);
                             if (block.content.correctAnswer === index) {
@@ -982,17 +1277,21 @@ const UnifiedLessonBuilder = () => {
                             }
                           }}
                           className="ml-2 p-1 text-red-400 hover:text-red-300"
+                          type="button"
                         >
                           <TrashIcon className="w-4 h-4" />
                         </button>
                       </div>
                     ))}
                     <button
-                      onClick={() => {
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
                         const newOptions = [...block.content.options, `Option ${block.content.options.length + 1}`];
                         handleInlineEdit(block.id, 'options', newOptions);
                       }}
                       className="mt-2 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                      type="button"
                     >
                       Add Option
                     </button>
@@ -1001,14 +1300,24 @@ const UnifiedLessonBuilder = () => {
                     <label className="block text-sm font-medium text-gray-300 mb-2">Explanation</label>
                     <textarea
                       value={block.content.explanation}
-                      onChange={(e) => handleInlineEdit(block.id, 'explanation', e.target.value)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        handleInlineEdit(block.id, 'explanation', e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      onFocus={(e) => e.stopPropagation()}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white h-20"
                       placeholder="Explain the correct answer..."
                     />
                   </div>
                   <button
-                    onClick={() => setEditingBlockId(null)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      setEditingBlockId(null);
+                    }}
                     className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    type="button"
                   >
                     Done
                   </button>
@@ -1801,24 +2110,40 @@ const UnifiedLessonBuilder = () => {
                   <span>Preview</span>
                 </button>
 
-                <button
-                  onClick={saveDraft}
-                  className="flex items-center space-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
-                  title="Save as draft"
-                >
-                  <BookmarkIcon className="w-4 h-4" />
-                  <span>Save Draft</span>
-                </button>
-
-                {currentDraftId && (
+                {/* Show different buttons based on whether we're editing a published lesson or a draft */}
+                {location.state?.editingLesson && location.state.editingLesson.isPublished ? (
+                  // Editing published lesson - show only Update button
                   <button
-                    onClick={publishDraft}
+                    onClick={updatePublishedLesson}
                     className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
-                    title="Publish draft as lesson"
+                    title="Update published lesson directly"
                   >
                     <CloudArrowUpIcon className="w-4 h-4" />
-                    <span>Publish</span>
+                    <span>Update Lesson</span>
                   </button>
+                ) : (
+                  // Working with drafts - show both Save Draft and Publish buttons
+                  <>
+                    <button
+                      onClick={saveDraft}
+                      className="flex items-center space-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
+                      title="Save as draft"
+                    >
+                      <BookmarkIcon className="w-4 h-4" />
+                      <span>Save Draft</span>
+                    </button>
+
+                    {currentDraftId && (
+                      <button
+                        onClick={publishDraft}
+                        className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
+                        title="Publish draft as lesson"
+                      >
+                        <CloudArrowUpIcon className="w-4 h-4" />
+                        <span>Publish</span>
+                      </button>
+                    )}
+                  </>
                 )}
               </div>
             </div>

@@ -415,6 +415,26 @@ code {
   }
 }
 
+/* Ensure all text inputs default to left-to-right direction */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="search"],
+textarea {
+  direction: ltr;
+  text-align: left;
+  unicode-bidi: normal;
+}
+
+/* Force LTR for content editing areas */
+.lesson-builder textarea,
+.content-editor textarea,
+.text-editor textarea {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: normal !important;
+}
+
 /* Enhanced focus styles for better UX */
 @layer components {
   .focus-visible-blue {
