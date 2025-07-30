@@ -187,35 +187,12 @@ export class LessonDataMigration {
     console.log('🔄 Migrating local lessons data...');
     
     try {
-      const { localLessonsData } = await import('../data/lessonsData.js');
-      const migratedData = {};
-      
-      for (const [lessonId, lessonData] of Object.entries(localLessonsData)) {
-        if (lessonData.difficulty) {
-          console.log(`  📄 Migrating local lesson: ${lessonData.title} (${lessonData.difficulty})`);
-          migratedData[lessonId] = DataMigrationUtils.transformLessonData(lessonData);
-        } else {
-          migratedData[lessonId] = lessonData;
-        }
-      }
-      
-      // Generate new file content
-      const newFileContent = `// Migrated lesson data - Auto-generated on ${new Date().toISOString()}
-export const localLessonsData = ${JSON.stringify(migratedData, null, 2)};
-
-export const getLessonById = (lessonId) => {
-  return localLessonsData[lessonId] || null;
-};
-
-export default localLessonsData;`;
-      
-      console.log('📝 Generated new localLessonsData structure');
-      console.log('💡 Manual step: Save the following to src/data/lessonsData.js:');
-      console.log('='.repeat(60));
-      console.log(newFileContent);
-      console.log('='.repeat(60));
-      
-      return { success: true, migratedData };
+      // Note: localLessonsData file removed - migration should handle database content only
+      console.log('Static lesson data removed - skipping local lessons migration');
+             return { 
+         skipped: true, 
+         reason: 'Static lesson data files removed - migrations should work with database content only' 
+       };
       
     } catch (error) {
       console.error('❌ Local migration failed:', error);

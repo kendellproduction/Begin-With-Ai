@@ -13,8 +13,8 @@ import {
   ChevronDownIcon,
   ChevronUpIcon
 } from '@heroicons/react/24/outline';
-import { localLessonsData } from '../../data/lessonsData';
-import { adaptiveLessons } from '../../utils/adaptiveLessonData';
+// Note: Static local lesson data removed - using database only
+// Note: Static adaptive lesson imports removed - using database only
 import LessonFormatMigrator from '../../utils/lessonFormatMigration';
 import MigrationValidator from '../../utils/migrationValidation';
 import { logger } from '../../utils/logger';
@@ -37,32 +37,9 @@ const LessonMigrationInterface = () => {
     try {
       const lessons = [];
       
-      // Collect all lessons from different sources
-      if (localLessonsData && typeof localLessonsData === 'object') {
-        Object.values(localLessonsData).forEach(lesson => {
-          if (lesson && lesson.id) {
-            lessons.push({
-              ...lesson,
-              source: 'local'
-            });
-          }
-        });
-      }
+      // Note: Static lesson data removed - migration interface should only handle database lessons
 
-      if (adaptiveLessons && typeof adaptiveLessons === 'object') {
-        Object.values(adaptiveLessons).forEach(lessonGroup => {
-          if (Array.isArray(lessonGroup)) {
-            lessonGroup.forEach(lesson => {
-              if (lesson && lesson.id) {
-                lessons.push({
-                  ...lesson,
-                  source: 'adaptive'
-                });
-              }
-            });
-          }
-        });
-      }
+      // Note: Static adaptive lessons removed - migration interface should only handle database lessons
 
       // Analyze each lesson
       const analyzedLessons = lessons.map(lesson => {

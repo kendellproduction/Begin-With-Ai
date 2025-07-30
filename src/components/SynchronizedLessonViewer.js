@@ -47,30 +47,11 @@ const SynchronizedLessonViewer = () => {
 
   // Load lesson data and setup timestamps
   useEffect(() => {
-    const loadLessonData = async () => {
-      setIsLoading(true);
-      try {
-        const { historyOfAiLesson } = await import('../utils/historyOfAiLesson');
-        setLesson(historyOfAiLesson);
-        
-        // Convert slides to synchronized sections
-        const sections = createSynchronizedSections(historyOfAiLesson.slides);
-        setContentSections(sections);
-        
-        // Initialize audio
-        await initAudio();
-        
-      } catch (error) {
-        logger.error('Error loading synchronized lesson:', error);
-        showNotification('Error loading lesson. Please try again.', 'error');
-      }
-      setIsLoading(false);
-    };
-
-    if (lessonId === 'history-of-ai' || lessonId === 'welcome-ai-revolution') {
-      loadLessonData();
-    }
-  }, [lessonId, showNotification]);
+    // Since static lesson data was removed, this component needs database integration
+    // For now, just set an error state to prevent infinite loops
+    setIsLoading(false);
+    logger.warn('SynchronizedLessonViewer requires database integration to load lessons');
+  }, [lessonId]);
 
   // Create synchronized sections from slides
   const createSynchronizedSections = (slides) => {
@@ -368,6 +349,27 @@ const SynchronizedLessonViewer = () => {
     );
   }
 
+  // Show message when no lesson data is available (since static content was removed)
+  if (!lesson) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="text-yellow-400 text-6xl mb-4">🚧</div>
+          <h2 className="text-2xl font-bold text-white mb-4">Lesson Under Development</h2>
+          <p className="text-gray-300 mb-6">
+            This synchronized lesson viewer needs to be updated to load content from the database.
+          </p>
+          <button
+            onClick={() => navigate('/lessons')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Back to Lessons
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Podcast data with fixed audio source
   const podcastData = {
     audioUrl: "/HomePageHeroVideo.mp4", // Use the MP4 file that exists in public folder
@@ -403,7 +405,7 @@ const SynchronizedLessonViewer = () => {
           <div className="text-center">
             <button
               onClick={() => navigate('/lessons')}
-              className="flex items-center text-gray-400 hover:text-white transition-colors mb-6 mx-auto"
+              className="flex items-center text-gray-400 hover:text-white transition-colors mb-6 mx-auto bg-black/30 hover:bg-black/50 rounded-full px-4 py-2 backdrop-blur-sm"
             >
               <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M19 11H7.414l4.293-4.293a1 1 0 00-1.414-1.414l-6 6a1 1 0 000 1.414l6 6a1 1 0 001.414-1.414L7.414 13H19a1 1 0 100-2z"/>

@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sanitizeText, checkRateLimit } from '../utils/sanitization';
 import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
-import lessonsData from '../data/lessonsData';
+// Note: Static lesson data removed - should load from database
 import { navigateAfterAuth } from '../utils/navigationUtils';
 import OptimizedStarField from '../components/OptimizedStarField';
 
@@ -22,8 +22,33 @@ const LandingPage = () => {
     }
   }, [user, navigate]);
 
-  // Use all available lessons for rotation
-  const featuredLessons = Object.values(lessonsData);
+  // Fallback featured lessons since static data was removed
+  const featuredLessons = [
+    {
+      id: 'welcome-ai-revolution',
+      title: 'AI History: How We Got Here & Where We\'re Going',
+      description: 'Understanding how AI evolved from 1950s research to today\'s tools like ChatGPT, and where we\'re headed next.',
+      difficulty: 'Beginner',
+      duration: '20 min',
+      category: 'AI Fundamentals'
+    },
+    {
+      id: 'how-ai-thinks',
+      title: 'How AI "Thinks" — From Data to Decisions',
+      description: 'Learn how AI processes information and makes decisions, from training data to final outputs.',
+      difficulty: 'Beginner', 
+      duration: '15 min',
+      category: 'AI Fundamentals'
+    },
+    {
+      id: 'ai-vocabulary-bootcamp',
+      title: 'AI Vocabulary Bootcamp: Master 25 Essential Terms',
+      description: 'Build your AI vocabulary with the most important terms every AI user should know.',
+      difficulty: 'Beginner',
+      duration: '25 min', 
+      category: 'AI Fundamentals'
+    }
+  ];
 
   // State management
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -566,115 +591,6 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          {/* Featured lesson carousel - Redesigned for better visibility */}
-          <div className="mb-12">
-            <div className="relative">
-              {featuredLessons.map((lesson, index) => (
-                <motion.div
-                  key={index}
-                  className={`${index === currentLesson ? 'block' : 'hidden'}`}
-                  initial={{ opacity: 0, x: 100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-                    <div className="grid lg:grid-cols-2 gap-12 items-center">
-                      {/* Left side - Lesson Content */}
-                      <div className="space-y-6">
-                        <div className="flex gap-4 text-sm">
-                          <span className={`px-4 py-2 rounded-full font-bold ${
-                            lesson.difficulty === 'Beginner' ? 'bg-green-500 text-white' :
-                            lesson.difficulty === 'Intermediate' ? 'bg-yellow-500 text-black' :
-                            'bg-red-500 text-white'
-                          }`}>
-                            {lesson.difficulty}
-                          </span>
-                          <span className="bg-blue-500/20 text-blue-300 px-4 py-2 rounded-full font-semibold">⏱️ {lesson.duration}</span>
-                          <span className="bg-purple-500/20 text-purple-300 px-4 py-2 rounded-full font-semibold">🏢 {lesson.company}</span>
-                        </div>
-                        
-                        <h3 className="text-4xl font-bold text-white leading-tight">{lesson.title}</h3>
-                        <p className="text-xl text-gray-200 leading-relaxed">{lesson.description}</p>
-                        
-                        <div className="bg-gray-900/50 rounded-2xl p-6 border border-gray-600">
-                          <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                            <span className="text-2xl">🎯</span>
-                            What you'll learn:
-                          </h4>
-                          <ul className="space-y-3 text-gray-200">
-                            {lesson.learningObjectives?.slice(0, 3).map((objective, idx) => (
-                              <li key={idx} className="flex items-start gap-3">
-                                <span className="text-cyan-400 mt-1 text-lg">✓</span>
-                                <span className="text-base">{objective}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                        
-                        <motion.button
-                          onClick={() => openAuthModal('signup')}
-                          className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-2xl text-lg shadow-xl transition-all duration-300 transform hover:scale-105"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          🚀 Start This Lesson
-                        </motion.button>
-                      </div>
-                      
-                      {/* Right side - Lesson Preview */}
-                      <motion.div 
-                        className="relative"
-                        whileHover={{ scale: 1.02 }}
-                        transition={{ duration: 0.3 }}
-                      >
-                        <div className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-                          <div className="text-center">
-                            <div className="text-6xl mb-4">{lesson.icon}</div>
-                            <div className="text-2xl font-bold text-white mb-6">{lesson.category}</div>
-                            
-                            {/* Feature highlights */}
-                            <div className="grid grid-cols-2 gap-4 mb-6">
-                              <div className="bg-cyan-500/20 rounded-xl p-4 border border-cyan-500/30">
-                                <div className="text-cyan-300 font-bold text-lg">Hands-on</div>
-                                <div className="text-gray-300">Projects</div>
-                              </div>
-                              <div className="bg-green-500/20 rounded-xl p-4 border border-green-500/30">
-                                <div className="text-green-300 font-bold text-lg">Real-time</div>
-                                <div className="text-gray-300">Feedback</div>
-                              </div>
-                            </div>
-                            
-                            {/* Skills badge */}
-                            <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white px-4 py-2 rounded-full font-bold text-sm">
-                              {lesson.tags?.length || 3}+ Skills You'll Master
-                            </div>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-
-              {/* Lesson navigation - Enhanced */}
-              <div className="flex justify-center mt-8 gap-3">
-                {featuredLessons.map((_, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => setCurrentLesson(index)}
-                    className={`h-4 rounded-full transition-all duration-300 ${
-                      index === currentLesson
-                        ? 'bg-cyan-500 w-12 shadow-lg shadow-cyan-500/50'
-                        : 'bg-gray-600 hover:bg-gray-500 w-4'
-                    }`}
-                    whileHover={{ scale: 1.2 }}
-                    whileTap={{ scale: 0.9 }}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 

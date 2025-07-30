@@ -12,13 +12,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import logger from '../utils/logger';
-import { 
-  promptEngineeringMasteryPath,
-  vibeCodePath,
-  adaptiveModules, 
-  adaptiveLessons 
-} from '../utils/adaptiveLessonData';
-import { getAdaptiveLessonData, getAdaptiveLessonById, getAdaptivePathById } from '../utils/adaptiveLessonData';
+// Note: Static adaptive lesson data removed - service should use database only
+// TODO: Update this service to fetch all data from Firestore
 
 /**
  * Adaptive Lesson Service - Handles dynamic lesson content and difficulty adaptation

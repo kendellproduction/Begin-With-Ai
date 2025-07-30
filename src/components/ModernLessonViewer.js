@@ -7,7 +7,7 @@ import { useGamification } from '../contexts/GamificationContext';
 import ContentBlockRenderer from './ContentBlocks/ContentBlockRenderer';
 import { BLOCK_TYPES } from './ContentBlocks/constants';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
-import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
+// Note: Static adaptive lesson imports removed - using database only
 import { findLessonAcrossAllPaths } from '../services/firestoreService';
 import IntegratedPodcastPlayer from './IntegratedPodcastPlayer';
 import OptimizedStarField from './OptimizedStarField';
@@ -25,6 +25,7 @@ const ModernLessonViewer = () => {
   const [lesson, setLesson] = useState(null);
   const [contentBlocks, setContentBlocks] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [difficulty, setDifficulty] = useState('intermediate');
   const [isComplete, setIsComplete] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -104,6 +105,57 @@ const ModernLessonViewer = () => {
     setDifficulty(finalDifficulty);
   }, [location, user?.subscriptionTier]);
 
+  // Check for preview mode and data
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const isPreviewMode = urlParams.get('preview') === 'true';
+    const previewData = urlParams.get('data');
+    
+    if (isPreviewMode) {
+      if (previewData) {
+        // Load preview data from URL parameter
+        try {
+          const parsedData = JSON.parse(decodeURIComponent(previewData));
+          setLesson(parsedData);
+          
+          // Convert pages to content blocks
+          if (parsedData.pages && Array.isArray(parsedData.pages)) {
+            const blocks = parsedData.pages.flatMap(page => page.blocks || []);
+            setContentBlocks(blocks);
+          }
+          
+          setIsLoading(false);
+          logger.info('Loaded lesson from preview data');
+          return;
+        } catch (error) {
+          logger.error('Error parsing preview data:', error);
+        }
+      } else {
+        // Check localStorage for preview data
+        const previewKey = `lesson_preview_${lessonId}`;
+        const storedPreview = localStorage.getItem(previewKey);
+        
+        if (storedPreview) {
+          try {
+            const previewLesson = JSON.parse(storedPreview);
+            setLesson(previewLesson);
+            
+            // Convert lesson data to content blocks format
+            const convertedLesson = convertFirestoreLessonToViewer(previewLesson);
+            const blocks = convertLessonToContentBlocks(convertedLesson);
+            setContentBlocks(blocks);
+            
+            setIsLoading(false);
+            logger.info('Loaded lesson from preview localStorage');
+            return;
+          } catch (error) {
+            logger.error('Error parsing stored preview data:', error);
+          }
+        }
+      }
+    }
+  }, [lessonId, location.search]);
+
   const loadLessonData = async () => {
     setIsLoading(true);
     logger.info('Loading lesson for modern viewer:', lessonId, 'difficulty:', difficulty);
@@ -138,33 +190,16 @@ const ModernLessonViewer = () => {
           logger.info(`Successfully loaded lesson ${lessonId} from Firestore`);
           return;
         } else {
-          logger.info(`Lesson ${lessonId} not found in Firestore or incomplete data`);
+          logger.error(`Lesson ${lessonId} not found in database`);
+          setError(`Lesson "${lessonId}" not found. Please contact support if this lesson should exist.`);
+          setIsLoading(false);
+          return;
         }
       } catch (error) {
-        logger.warn('Error checking Firestore for lesson, falling back to static sources:', error);
-      }
-      
-      // SECOND: Only use static content if no Firestore lesson exists
-      if (!loadedFromFirestore) {
-        logger.info(`Loading lesson ${lessonId} from static sources...`);
-        
-        // Use our detailed history lesson for the AI history lesson
-        if (lessonId === 'welcome-ai-revolution' || lessonId === 'history-of-ai') {
-          const { historyOfAiLesson } = await import('../utils/historyOfAiLesson');
-          lessonData = historyOfAiLesson;
-          logger.info(`Loaded detailed history lesson for ${lessonId}`);
-        } else {
-          // Try adaptive lesson for other lessons
-          const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
-          if (adaptedLesson) {
-            lessonData = adaptedLesson;
-            logger.info(`Loaded adaptive lesson for ${lessonId}`);
-          } else {
-            // Fallback to creating a basic lesson structure
-            logger.warn(`No content found for ${lessonId}, creating fallback`);
-            lessonData = createFallbackLesson(lessonId, difficulty);
-          }
-        }
+        logger.error('Error loading lesson from database:', error);
+        setError(`Error loading lesson "${lessonId}". Please try again or contact support.`);
+        setIsLoading(false);
+        return;
       }
       
       setLesson(lessonData);
@@ -547,7 +582,7 @@ const ModernLessonViewer = () => {
             id: `content-${sections.length}`,
             type: 'content',
             blocks: currentSection,
-            isVisible: true, // All content before quizzes is always visible
+            isVisible: true, // All content is always visible initially
             precedingQuizId: null
           });
           currentSection = [];
@@ -613,13 +648,12 @@ const ModernLessonViewer = () => {
 
     // Add remaining content as final section
     if (currentSection.length > 0) {
-      const isAfterLastQuiz = quizIndices.length > 0;
       sections.push({
         id: `content-${sections.length}`,
         type: 'content',
         blocks: currentSection,
-        isVisible: !isAfterLastQuiz, // Only hidden if after the last quiz
-        precedingQuizId: isAfterLastQuiz ? `quiz-${quizCounter - 1}` : null
+        isVisible: true, // Always show content sections initially
+        precedingQuizId: null // No quiz dependency for simple lessons
       });
     }
 
@@ -923,12 +957,30 @@ const ModernLessonViewer = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h2 className="text-white text-2xl mb-4">Lesson Not Found</h2>
+          <p className="text-gray-300 mb-6 max-w-md">{error}</p>
+          <button
+            onClick={() => navigate('/lessons')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+          >
+            Back to Lessons
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden pwa-safe-top-padding relative">
       <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
 
       {/* Fixed Progress Bar */}
-      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-50">
+      <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-30">
         <motion.div 
           ref={progressBarRef}
           className="h-full bg-gradient-to-r from-green-400 to-blue-500"
@@ -938,35 +990,35 @@ const ModernLessonViewer = () => {
       </div>
 
       {/* Enhanced Fixed Header with Better Navigation */}
-      <div className="fixed top-1 left-4 right-4 z-40 flex items-center justify-between relative">
+      <div className="fixed top-4 left-4 right-4 z-50 flex items-center justify-between relative">
         <div className="flex items-center gap-2">
           <button
             onClick={handleExit}
-            className="w-10 h-10 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white transition-colors"
+            className="w-10 h-10 bg-black/70 hover:bg-black/90 rounded-full flex items-center justify-center text-white transition-colors shadow-lg backdrop-blur-sm"
             title="Exit lesson"
           >
             ✕
           </button>
           <button
             onClick={() => navigate('/lessons')}
-            className="bg-black/50 hover:bg-black/70 rounded-full px-3 py-1 text-white text-sm transition-colors"
+            className="bg-black/70 hover:bg-black/90 rounded-full px-3 py-1 text-white text-sm transition-colors shadow-lg backdrop-blur-sm"
             title="Back to lessons"
           >
             ← Lessons
           </button>
         </div>
         
-        <div className="bg-black/50 rounded-full px-3 py-1 text-white text-sm">
+        <div className="bg-black/70 rounded-full px-3 py-1 text-white text-sm shadow-lg backdrop-blur-sm">
           {Math.round(totalProgress)}% Complete
         </div>
         
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowPodcastPlayer(!showPodcastPlayer)}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
+            className={`rounded-full px-3 py-1 text-sm transition-colors shadow-lg backdrop-blur-sm ${
               showPodcastPlayer 
-                ? 'bg-purple-600/40 text-purple-100' 
-                : 'bg-purple-500/20 hover:bg-purple-500/30 text-purple-200'
+                ? 'bg-purple-600/60 text-purple-100' 
+                : 'bg-purple-500/30 hover:bg-purple-500/50 text-purple-200'
             }`}
             title={showPodcastPlayer ? "Hide podcast player" : "Show podcast player"}
           >
@@ -975,7 +1027,7 @@ const ModernLessonViewer = () => {
           {lastBookmark && (
             <button
               onClick={scrollToBookmark}
-              className="bg-blue-500/20 hover:bg-blue-500/30 rounded-full px-3 py-1 text-blue-200 text-sm transition-colors"
+              className="bg-blue-500/30 hover:bg-blue-500/50 rounded-full px-3 py-1 text-blue-200 text-sm transition-colors shadow-lg backdrop-blur-sm"
               title="Jump to last position"
             >
               📖 Resume
@@ -983,7 +1035,7 @@ const ModernLessonViewer = () => {
           )}
           <button
             onClick={scrollToTop}
-            className="bg-gray-500/20 hover:bg-gray-500/30 rounded-full px-3 py-1 text-gray-200 text-sm transition-colors"
+            className="bg-gray-500/30 hover:bg-gray-500/50 rounded-full px-3 py-1 text-gray-200 text-sm transition-colors shadow-lg backdrop-blur-sm"
             title="Go to top"
           >
             ↑ Top
@@ -992,8 +1044,60 @@ const ModernLessonViewer = () => {
       </div>
 
       {/* Main Content - Section-based with conditional visibility */}
-      <div ref={containerRef} className="pt-16 pb-8 relative z-10">
+      <div ref={containerRef} className="pt-24 pb-8 relative z-10">
         <div className="max-w-4xl mx-auto px-4 space-y-8">
+          
+          {/* Lesson Header - Title and Description */}
+          <div className="text-center mb-12 space-y-4">
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-4xl sm:text-5xl font-bold text-white leading-tight"
+            >
+              {lesson?.title || 'Loading Lesson...'}
+            </motion.h1>
+              
+            {lesson?.description && (
+              <motion.p 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
+              >
+                {lesson.description}
+              </motion.p>
+            )}
+            
+            {/* Lesson Metadata */}
+            {lesson && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+                className="flex items-center justify-center space-x-6 text-sm text-gray-400"
+              >
+                <span className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  </svg>
+                  {lesson?.estimatedTimeMinutes || lesson?.estimatedTime || 15} min
+                </span>
+                <span className="flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                  </svg>
+                  +{lesson?.xpReward || lesson?.xpAward || 100} XP
+                </span>
+                {lesson?.difficulty && (
+                  <span className="px-3 py-1 bg-blue-600/20 text-blue-300 rounded-full text-xs font-medium">
+                    {lesson.difficulty}
+                  </span>
+                )}
+              </motion.div>
+            )}
+          </div>
+          
           {/* Integrated Podcast Player for AI History Lesson */}
           {showPodcastPlayer && (lessonId === 'history-of-ai' || lessonId === 'welcome-ai-revolution') && (
             <>

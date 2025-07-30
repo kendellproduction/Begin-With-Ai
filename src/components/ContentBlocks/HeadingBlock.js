@@ -18,11 +18,11 @@ const HeadingBlock = ({
 
   // Merge default styles with custom styles
   const defaultStyles = {
-    fontSize: level === 1 ? '32px' : level === 2 ? '28px' : level === 3 ? '24px' : level === 4 ? '20px' : level === 5 ? '18px' : '16px',
-    fontWeight: 'bold',
+    fontSize: level === 1 ? '40px' : level === 2 ? '32px' : level === 3 ? '28px' : level === 4 ? '24px' : level === 5 ? '20px' : '18px',
+    fontWeight: level === 1 ? '800' : 'bold',
     color: '#ffffff',
-    textAlign: 'left',
-    margin: { top: 0, bottom: 16, left: 0, right: 0 },
+    textAlign: level === 1 ? 'center' : 'left',
+    margin: { top: level === 1 ? 24 : 16, bottom: level === 1 ? 24 : 16, left: 0, right: 0 },
     padding: { top: 0, bottom: 0, left: 0, right: 0 }
   };
 

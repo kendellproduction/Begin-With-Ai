@@ -1,115 +1,87 @@
-# 🚀 BeginningWithAi Master Task List
+# 🚀 BeginningWithAi Current Tasks
 
-This document is the single source of truth for all ongoing and planned tasks. It consolidates all previous to-do lists, plans, and checklists.
+This is the focused task list for immediate priorities.
 
-## 📋 Task Summary & Priority Assessment
+## 🔴 Current Priority: Phase 2 - UI/UX Improvements
 
-This section provides a high-level overview of all tasks, categorized by priority. More detailed descriptions can be found in the sections below.
+### Priority 4: Fix Lesson Viewer Display Issues
+- [ ] **Header text display**: Fix the lesson title and description not showing properly
+- [ ] **Top button cutoff**: Identify and fix the partially cut-off button at the top
+- [ ] **Content rendering**: Ensure H1 headers and other content blocks display correctly
+- [ ] **Layout spacing**: Improve spacing between elements for better readability
 
-### 🔴 Priority 1: Critical Stability Fixes
-- [ ] Re-enable all disabled core features (Admin Panel, AI News, Pricing pages).
-- [ ] Fix and re-enable Firebase Analytics integration.
-- [ ] Remove all `console.log` statements from production code.
+### Priority 5: Enhanced Podcast Block Design
+- [ ] **Podcast block styling**: Create colorful shadow effects and glowing appearance
+- [ ] **Color customization**: Add color picker for podcast block backgrounds
+- [ ] **Visual effects**: Implement CSS for vibrant, glowing shadows
+- [ ] **Admin controls**: Add podcast block color editing in UnifiedLessonBuilder
 
-**Pause here for review, testing, and potential GitHub push before proceeding to Priority 2.**
+### Priority 6: Publish/Unpublish Workflow
+- [ ] **Publish toggle**: Ensure publish/unpublish button works correctly
+- [ ] **Status indicators**: Add clear visual indicators for draft vs published status
+- [ ] **Instant updates**: When toggling publication, lesson cards should appear/disappear immediately
+- [ ] **Admin feedback**: Provide clear success/error messages for publication actions
 
-### 🟠 Priority 2: UI and Page Consolidation
-- [ ] Fix lessons page background color from baby blue to space black (likely in `src/pages/Lessons.js` or related styles).
-- [ ] Eliminate Dashboard Page by Integrating Selected Features into Home Page:
-  - Review and integrate key features from `src/pages/Dashboard.js` into `src/pages/HomePage.js`.
-  - Update routes in `src/App.js` to remove /dashboard and redirect to /home.
-  - Delete `src/pages/Dashboard.js` after verification.
+## 🟠 Previous Priority: Lesson System Fixes (Phase 1)
 
-**Pause here for review, testing, and potential GitHub push before proceeding to Priority 3.**
+### Fix Static vs Dynamic Lesson Loading Issue
+The main issue is that lessons are showing static hardcoded content instead of loading from the database where admin edits are made. We need to remove all static content and make the lesson workflow work properly.
 
-### 🟠 Priority 3: Lesson and Quiz Fixes
-- [ ] Resolve blank quiz display in History of AI lesson (review `src/utils/historyOfAiLesson.js` and `src/components/ModernLessonViewer.js`).
-- [ ] Audit structure, quizzes, sandboxes, and adaptive content in all lessons; add missing elements like progress checkpoints.
+- [ ] **Remove All Static Lesson Content**
+  - Delete/clean out static lesson data from files like `src/utils/historyOfAiLesson.js` and `src/utils/adaptiveLessonData.js`
+  - Remove all static lesson imports and references
 
-**Pause here for review, testing, and potential GitHub push before proceeding to Priority 4.**
+- [ ] **Update Lesson Viewers to Only Use Database**
+  - In `LessonViewer.js`, `ModernLessonViewer.js`, `SynchronizedLessonViewer.js` remove all static fallback code
+  - Ensure viewers only load from Firestore, with proper "lesson not found" error handling
+  - No more fallbacks to static content
 
-### 🟠 Priority 4: Custom Learning Paths
-- [ ] Ensure new users are redirected to the adaptive questionnaire (`src/services/newUserOnboardingService.js`).
-- [ ] Implement user-specific learning path retrieval and display (audit user docs and update components like HomePage.js).
+- [ ] **Fix Lesson Cards Dynamic Updates**
+  - Ensure lessons page automatically shows new lesson cards when lessons are created in admin
+  - Make lesson title/description updates in admin immediately reflect on lesson cards
+  - Test that lesson cards load from Firestore, not static data
 
-**Pause here for review, testing, and potential GitHub push.**
+- [ ] **Test Complete Lesson Workflow**
+  - Create lesson in admin panel → Should see new card on lessons page immediately
+  - Edit lesson title/content in admin → Should see updates on lesson cards immediately  
+  - Click lesson card → Should open lesson with current database content
+  - This entire workflow should work like you'd expect it to
 
-### 🟡 Backlog (Lower Priority/Future Tasks)
-- Consolidate admin builders into `UnifiedLessonBuilder.js`.
-- Update lesson data model for Free/Premium tiers.
-- Migrate from CRA to Vite for performance.
-- Implement route-based code splitting with `React.lazy()`.
-- Set up ESLint and audit/remove unused npm packages.
-- Implement comprehensive error handling and verify Firebase Security Rules.
-- Add testing suite for core features and optimize for mobile/PWA.
-- Advanced admin features (e.g., content blocks, draft management).
-- User experience enhancements (e.g., cost monitoring, offline support).
-- Additional TODOs: Implement Firebase auth in `Register.js`, zoom modal in `ImageBlock.js`, published lesson deletion in `UnifiedLessonManager.js`.
-- Gamification (leaderboards), AR/VR integration, more lessons, Firestore optimizations.
+- [ ] **Fix Preview Functionality**
+  - Make preview buttons in admin panel actually open and display current lesson data
+  - Add preview mode flag to viewers to show draft/unpublished content
+
+- [ ] **Implement Podcast Audio Handling**
+  - Add 'podcast' block type in UnifiedLessonBuilder.js with Firebase Storage upload
+  - Update lesson viewers to load and play audio from Storage URLs
+  - Document the upload process for future use
+
+## 🟡 Next Priority: Core Stability
+
+- [ ] **Remove Console Logs**
+  - Clean up debug console.log statements from production code
+  - Focus on `src/firebase.js` and `src/contexts/AuthContext.js`
+
+- [ ] **Error Handling**
+  - Add user-friendly error messages for lesson loading failures
+  - Handle cases where Firestore is unavailable
+
+## 🟢 Future Tasks (Lower Priority)
+
+- [ ] Migrate from CRA to Vite for better performance
+- [ ] Set up ESLint for code quality
+- [ ] Implement route-based code splitting with React.lazy()
+- [ ] Add comprehensive testing suite
+- [ ] Mobile optimization and PWA enhancements
+- [ ] Create more complete lessons for full learning paths
+- [ ] Implement cost monitoring for AI services
+- [ ] Add gamification features (leaderboards, achievements)
 
 ---
 
-## 📚 Detailed Task Breakdowns
+## 📝 Notes
 
-### 1. Project Health & Optimization
-
-#### 1.1. Dependency & Build System
-- **[COMPLETED] Resolve Node Corruption:** The `package.json` has been updated to use exact versions for all dependencies, and all peer dependency conflicts have been resolved. A clean `npm install` has been successfully executed.
-- **[HIGH] Migrate to Vite:** Replace `react-scripts` (Create React App) with Vite to gain significant performance improvements in development and production.
-- **[HIGH] Implement Code Splitting:** Use `React.lazy()` for all page-level components in `src/App.js` to reduce initial bundle size and improve load times.
-- **[HIGH] Configure ESLint:** Set up ESLint with a standard configuration (e.g., `eslint-config-react-app`) to enforce code quality and find errors.
-- **[HIGH] Audit NPM Packages:** Use a tool like `depcheck` to identify and remove any dependencies that are no longer used in the project.
-
-### 2. Admin Panel Overhaul (from `ADMIN_PANEL_OVERHAUL_PLAN.md`)
-
-#### 2.1. Foundation (Critical)
-- **[CRITICAL] Consolidate Builders:**
-  - Audit all current admin components.
-  - Remove `LessonBuilder.js`, `EnterpriseBuilder.js`, `LessonEditor.js`.
-  - Refactor all logic into `UnifiedLessonBuilder.js`.
-- **[CRITICAL] Data Architecture:**
-  - Update lesson data model in Firestore to use Free/Premium tiers instead of difficulty levels.
-  - Add `draft` and `published` states to lessons.
-  - Create a dedicated `drafts` collection in Firestore.
-- **[CRITICAL] Manual Save System:**
-  - Implement `AdminContext` for state management during lesson editing.
-  - Add robust unsaved changes detection.
-  - Create prominent "Save" button and "Exit with unsaved changes?" prompts.
-
-#### 2.2. UI/UX (High)
-- **[HIGH] Webflow-Inspired Layout:** Implement the three-column layout (Content Blocks, Settings, Preview) with a glass-morphism aesthetic.
-- **[HIGH] Free/Premium Toggle:** Create the UI toggle to switch between editing content for free vs. premium users.
-- **[HIGH] Content Block Implementation:**
-  - Build the base component for all drag-and-drop content blocks.
-  - Fully implement the Text, Image (with uploads), Video, Quiz, and Sandbox blocks.
-- **[MEDIUM] Advanced Blocks & Settings:**
-  - Implement Podcast and other interactive block types.
-  - Build out the full settings panel, including SEO, analytics, design, and media management.
-
-### 3. V1 Launch & Optimization (from `OPTIMIZATION_CHECKLIST.md` and `V1_LAUNCH_TODO_LIST.md`)
-
-#### 3.1. Core Features & Cleanup (Critical)
-- **[CRITICAL] Re-enable Routes:**
-  - Uncomment the routes for `AdminPanel`, `AiNews`, and `Pricing` in `src/App.js`.
-- **[CRITICAL] Enable PWA:** Rename `public/manifest.json.disabled` to `public/manifest.json`.
-- **[CRITICAL] Fix Analytics:** Resolve the "API issues" preventing Firebase Analytics from initializing in `src/firebase.js`.
-- **[CRITICAL] Remove `console.log`s:** Systematically remove all debug logs from the production codebase, especially in `src/firebase.js` and `src/contexts/AuthContext.js`.
-
-#### 3.2. Functional Fixes & Testing (High)
-- **[HIGH] Error Handling:** Implement user-friendly fallbacks and error messages for all critical API calls and user flows.
-- **[HIGH] Bug Reporting:** Fix the Gmail authentication issue in the bug report cloud function.
-- **[HIGH] Data Persistence:** Audit all `localStorage` usage, add sync indicators, and handle cases where storage might be full or unavailable.
-- **[MEDIUM] Mobile Experience:** Conduct end-to-end testing of all user flows on mobile devices, including touch interactions and PWA behavior.
-
-#### 3.3. Security & Monitoring (High)
-- **[HIGH] Firebase Security Rules:** Perform a full audit of your Firestore rules to ensure they are secure for production.
-- **[MEDIUM] Sentry & Google Analytics:** Properly configure Sentry with a production DSN and set up detailed event tracking in Google Analytics.
-- **[MEDIUM] Cost Monitoring:** Implement rate limiting and cost monitoring for all third-party AI services.
-
-### Updated TODO List
-
-- [ ] Implement leaderboards for gamification
-- [ ] Add AR/VR integration for immersive lessons
-- [ ] Optimize Firestore with composite indexes for queries
-- [ ] Set up cost monitoring and alerts in Firebase
-- [ ] Create 10+ more complete lessons to enable full paths
+- **Current Focus**: UI/UX improvements for lesson viewer display, podcast blocks, and publish workflow
+- **Previous**: Lesson system loading from database (should be working)
+- **Next**: Core stability improvements
+- **Future**: Performance and feature enhancements come after core functionality is solid

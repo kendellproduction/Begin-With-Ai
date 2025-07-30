@@ -20,8 +20,8 @@ import { useAuth } from '../../../contexts/AuthContext';
 import draftService from '../../../services/draftService';
 import { getLearningPaths } from '../../../services/firestoreService';
 import { getRealTimeDashboardAnalytics, subscribeToUserCount } from '../../../services/adminService';
-import { localLessonsData } from '../../../data/lessonsData';
-import { adaptiveLessons } from '../../../utils/adaptiveLessonData';
+// Note: Static local lesson data removed - using database only
+// Note: Static adaptive lesson imports removed - using database only
 import { LessonFormatMigrator } from '../../../utils/lessonFormatMigration';
 import logger from '../../../utils/logger';
 import LessonMigrationTool from '../LessonMigrationTool';
@@ -52,29 +52,22 @@ const DashboardOverview = () => {
   };
 
   useEffect(() => {
-    loadDashboardData();
-    loadRealTimeAnalytics();
-
-    // Set up real-time user count listener
-    let unsubscribeUserCount = null;
-    if (currentUser?.uid) {
-      unsubscribeUserCount = subscribeToUserCount((userStats) => {
-        if (userStats) {
-          setRealTimeStats(prev => ({
-            ...prev,
-            totalUsers: userStats.totalUsers,
-            activeUsers: userStats.activeUsers,
-            lastUpdated: userStats.timestamp
-          }));
-        }
-      });
-    }
-
-    return () => {
-      if (unsubscribeUserCount) {
-        unsubscribeUserCount();
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        await Promise.all([
+          loadAnalytics(),
+          loadPublishedLessons(),
+          loadRecentDrafts()
+        ]);
+      } catch (error) {
+        logger.error('Error loading dashboard data:', error);
+      } finally {
+        setLoading(false);
       }
     };
+
+    loadData();
   }, [currentUser]);
 
   const loadRealTimeAnalytics = async () => {
@@ -185,89 +178,94 @@ const DashboardOverview = () => {
         shouldShowMigration
       });
 
-      // Add lessons from localLessonsData
-      if (localLessonsData && typeof localLessonsData === 'object') {
-        Object.values(localLessonsData).forEach(lesson => {
-          if (lesson && lesson.id) {
-            // Detect format and add migration status
-            const format = LessonFormatMigrator.detectLessonFormat(lesson);
-            // Only mark as needing migration if no Firestore lessons exist
-            const lessonNeedsMigration = needsMigration && format !== 'admin_format';
-            
-            lessons.push({
-              id: lesson.id,
-              title: lesson.title || 'Untitled Lesson',
-              description: lesson.description || 'No description available',
-              difficulty: lesson.difficulty || 'Beginner',
-              duration: lesson.duration || '15 min',
-              category: lesson.category || 'General',
-              icon: lesson.icon || '📚',
-              tags: lesson.tags || [],
-              type: 'published',
-              source: 'local',
-              originalLesson: lesson,
-              format: format,
-              needsMigration: lessonNeedsMigration
-            });
-          }
-        });
-      }
+      // Note: Static lesson data removed - admin panel should only show database lessons
 
-      // Add lessons from adaptiveLessons
-      if (adaptiveLessons && typeof adaptiveLessons === 'object') {
-        Object.values(adaptiveLessons).forEach(lessonGroup => {
-          if (Array.isArray(lessonGroup)) {
-            lessonGroup.forEach(lesson => {
-              if (lesson && lesson.id) {
-                // Detect format and add migration status
-                const format = LessonFormatMigrator.detectLessonFormat(lesson);
-                // Only mark as needing migration if no Firestore lessons exist
-                const lessonNeedsMigration = needsMigration && format !== 'admin_format';
-                
-                lessons.push({
-                  id: lesson.id,
-                  title: lesson.title || 'Untitled AI Lesson',
-                  description: lesson.coreConcept || 'AI fundamentals lesson',
-                  difficulty: 'Beginner',
-                  duration: '25 min',
-                  category: 'AI Fundamentals',
-                  icon: '🤖',
-                  tags: ['ai', 'fundamentals'],
-                  type: 'published',
-                  source: 'adaptive',
-                  originalLesson: lesson,
-                  format: format,
-                  needsMigration: lessonNeedsMigration
-                });
-              }
-            });
-          }
-        });
-      }
+      // Note: Static adaptive lessons removed - admin panel should only show database lessons
 
-      // Remove duplicates based on ID
-      const uniqueLessons = lessons.filter((lesson, index, self) => 
-        index === self.findIndex(l => l.id === lesson.id)
-      );
-
-      setPublishedLessons(uniqueLessons);
-
-      // Load drafts (only if user is authenticated)
-      if (currentUser?.uid) {
-        const drafts = await draftService.loadDrafts(currentUser.uid).catch(() => []);
-        setRecentDrafts(drafts.slice(0, 3)); // Show only recent 3
-      } else {
-        setRecentDrafts([]);
-      }
+      setPublishedLessons(lessons);
       
     } catch (err) {
       console.error('Error loading dashboard data:', err);
       setError('Failed to load dashboard data');
       // Set empty arrays as fallback
       setPublishedLessons([]);
+    }
+  };
+
+  // Load recent drafts
+  const loadRecentDrafts = async () => {
+    try {
+      if (!currentUser?.uid) {
+        setRecentDrafts([]);
+        return;
+      }
+
+      console.log('Loading drafts for user:', currentUser.uid);
+      const drafts = await draftService.loadDrafts(currentUser.uid);
+      console.log('Loaded drafts:', drafts);
+      
+      // Sort by lastModified and take the 5 most recent
+      const sortedDrafts = drafts
+        .filter(draft => draft.status === 'draft') // Only show actual drafts
+        .sort((a, b) => {
+          const dateA = new Date(b.lastModified || b.createdAt || 0);
+          const dateB = new Date(a.lastModified || a.createdAt || 0);
+          return dateA - dateB;
+        })
+        .slice(0, 5);
+
+      setRecentDrafts(sortedDrafts);
+      console.log('Set recent drafts:', sortedDrafts);
+      
+    } catch (error) {
+      logger.error('Error loading recent drafts:', error);
       setRecentDrafts([]);
-    } finally {
-      setLoading(false);
+    }
+  };
+
+  const loadPublishedLessons = async () => {
+    try {
+      // Get all learning paths which contain published lessons
+      const firestoreLessons = await getLearningPaths();
+      
+      const allLessons = [];
+      
+      // Extract lessons from all paths and modules
+      firestoreLessons.forEach(path => {
+        if (path.modules && Array.isArray(path.modules)) {
+          path.modules.forEach(module => {
+            if (module.lessons && Array.isArray(module.lessons)) {
+              // FIXED: Only show published lessons in admin dashboard
+              const publishedLessons = module.lessons
+                .filter(lesson => {
+                  return lesson.status === 'published' || lesson.published === true || lesson.isPublished === true;
+                })
+                .map(lesson => ({
+                  ...lesson,
+                  moduleTitle: module.title,
+                  pathTitle: path.title,
+                  pathId: path.id,
+                  moduleId: module.id,
+                  category: path.category || lesson.category || 'General'
+                }));
+              
+              allLessons.push(...publishedLessons);
+            }
+          });
+        }
+      });
+
+      // Remove duplicates based on ID
+      const uniqueLessons = allLessons.filter((lesson, index, self) => 
+        index === self.findIndex(l => l.id === lesson.id)
+      );
+
+      setPublishedLessons(uniqueLessons);
+      console.log('Loaded published lessons:', uniqueLessons.length);
+      
+    } catch (error) {
+      logger.error('Error loading published lessons:', error);
+      setPublishedLessons([]);
     }
   };
 
@@ -319,16 +317,47 @@ const DashboardOverview = () => {
   const handlePreviewLesson = (lesson) => {
     logger.log('Previewing lesson:', lesson);
     
-    // Use the correct lesson routes based on the routing configuration
-    if (lesson.source === 'local') {
-      // For local lessons, try the lesson detail page first
-      window.open(`/lessons/${lesson.id}`, '_blank');
-    } else if (lesson.source === 'adaptive') {
-      // For adaptive lessons, try the lesson start page
-      window.open(`/lessons/start/${lesson.id}`, '_blank');
+    // FIXED: Proper preview functionality that passes lesson data
+    if (lesson.id && lesson.pathId && lesson.moduleId) {
+      // For lessons from database (published lessons), open with full context
+      const previewUrl = `/lessons/${lesson.id}?preview=true`;
+      const previewWindow = window.open(previewUrl, '_blank');
+      
+      // Pass lesson data through localStorage for immediate access
+      localStorage.setItem(`lesson_preview_${lesson.id}`, JSON.stringify({
+        ...lesson,
+        isPreview: true,
+        previewedAt: new Date().toISOString()
+      }));
+      
+      // Clean up preview data after 5 minutes
+      setTimeout(() => {
+        localStorage.removeItem(`lesson_preview_${lesson.id}`);
+      }, 5 * 60 * 1000);
+      
+    } else if (lesson.source === 'local' || lesson.format) {
+      // For migrated lessons or local lessons, pass through lesson builder preview
+      const lessonData = lesson.originalLesson || lesson;
+      
+      // Open lesson builder in preview mode
+      window.open('/unified-lesson-builder', '_blank');
+      
+      // Pass lesson data for preview
+      setTimeout(() => {
+        const previewWindow = window.open('/unified-lesson-builder', '_blank');
+        if (previewWindow) {
+          previewWindow.postMessage({
+            type: 'PREVIEW_LESSON',
+            lesson: lessonData,
+            isPreview: true
+          }, window.location.origin);
+        }
+      }, 1000);
+      
     } else {
-      // Fallback to modern lesson viewer
-      window.open(`/lesson-viewer/${lesson.id}`, '_blank');
+      // Fallback: Try to open with ModernLessonViewer
+      const previewUrl = `/lesson-viewer/${lesson.id}?preview=true`;
+      window.open(previewUrl, '_blank');
     }
   };
 

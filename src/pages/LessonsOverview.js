@@ -6,6 +6,7 @@ import LessonCard from '../components/LessonCard';
 import LearningPathVisual from '../components/LearningPathVisual';
 import DifficultySelectionModal from '../components/DifficultySelectionModal';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
+import { getAllLearningPaths } from '../services/adminService'; // Add this import
 import { isLearningPathActive, getCurrentLessonProgress, getLearningPath } from '../utils/learningPathUtils';
 import { motion, AnimatePresence } from 'framer-motion';
 import logger from '../utils/logger';
@@ -206,56 +207,54 @@ const LessonsOverview = React.memo(() => {
       const assessmentResults = localStorage.getItem('aiAssessmentResults');
       const skillLevel = assessmentResults ? JSON.parse(assessmentResults).skillLevel : 'intermediate';
 
-      // Add the adaptive welcome lesson as the first lesson
-      const adaptiveWelcomeLesson = {
-        id: 'adaptive-welcome',
-        title: '🚀 Personalized AI Welcome',
-        description: 'Discover your perfect AI learning path with our adaptive welcome experience.',
-        coreConcept: 'Take a quick assessment to get a personalized AI learning journey tailored to your comfort level and goals.',
-        difficulty: 'beginner',
-        duration: '5-8 min',
-        category: 'Onboarding',
-        moduleTitle: 'Welcome & Assessment',
-        pathTitle: 'Adaptive Welcome',
-        pathId: 'adaptive-welcome',
-        moduleId: 'welcome-assessment',
-        isPremium: false,
-        hasCodeSandbox: false,
-        imageUrl: null,
-        order: 0,
-        isAdaptiveWelcome: true,
-        tags: ['welcome', 'assessment', 'personalized', 'onboarding']
-      };
+      // Load ONLY lessons from the database - no static content
+      const allLessons = [];
 
-      // Load multiple learning paths
-      const paths = ['prompt-engineering-mastery', 'vibe-coding'];
-      const allLessons = [adaptiveWelcomeLesson]; // Start with welcome lesson
-
-      for (const pathId of paths) {
-        try {
-          const adaptivePath = await AdaptiveLessonService.getAdaptedLearningPath(pathId, { skillLevel });
-          
-          if (adaptivePath && adaptivePath.modules) {
-            // Get all lessons from this path
-            const pathLessons = adaptivePath.modules.flatMap((module, moduleIndex) => 
-              module.lessons.map((lesson, lessonIndex) => ({
-                ...lesson,
-                moduleTitle: module.title,
-                pathTitle: adaptivePath.title,
-                pathId: adaptivePath.id,
-                moduleId: module.id,
-                pathIcon: adaptivePath.icon || '📚',
-                isPremium: adaptivePath.isPremium || lesson.isPremium || false,
-                globalIndex: moduleIndex * 100 + lessonIndex,
-                moduleIndex,
-                lessonIndex
-              }))
-            );
-            allLessons.push(...pathLessons);
+      try {
+        // Get all learning paths from database (this includes lessons created in admin)
+        const allLearningPaths = await getAllLearningPaths();
+        
+        logger.info('Loaded learning paths from database:', allLearningPaths.length);
+        
+        // Extract all lessons from all paths and modules
+        allLearningPaths.forEach((path, pathIndex) => {
+          if (path.modules && Array.isArray(path.modules)) {
+            path.modules.forEach((module, moduleIndex) => {
+              if (module.lessons && Array.isArray(module.lessons)) {
+                const pathLessons = module.lessons
+                  .filter(lesson => {
+                    // FIXED: Only show published lessons on the public lessons page
+                    return lesson.status === 'published' || lesson.published === true || lesson.isPublished === true;
+                  })
+                  .map((lesson, lessonIndex) => ({
+                    ...lesson,
+                    moduleTitle: module.title,
+                    pathTitle: path.title,
+                    pathId: path.id,
+                    moduleId: module.id,
+                    pathIcon: path.icon || '📚',
+                    isPremium: path.isPremium || lesson.isPremium || false,
+                    globalIndex: pathIndex * 1000 + moduleIndex * 100 + lessonIndex,
+                    moduleIndex,
+                    lessonIndex,
+                    category: path.category || lesson.category || 'General',
+                    tags: lesson.tags || [path.category?.toLowerCase(), 'lesson'],
+                    // Ensure proper lesson data
+                    duration: lesson.estimatedTimeMinutes ? `${lesson.estimatedTimeMinutes} min` : (lesson.duration || '15 min'),
+                    xpReward: lesson.xpAward || 100,
+                    difficulty: lesson.difficulty || 'beginner'
+                  }));
+                allLessons.push(...pathLessons);
+              }
+            });
           }
-        } catch (error) {
-          logger.warn(`Failed to load path ${pathId}:`, error);
-        }
+        });
+        
+        logger.info(`Successfully loaded ${allLessons.length - 1} published lessons from ${allLearningPaths.length} learning paths`);
+        
+      } catch (error) {
+        logger.error('Error loading lessons from database:', error);
+        // No fallback - only show database lessons
       }
       
       // Note: Deduplication is handled in the filteredLessons useMemo to ensure
@@ -414,12 +413,6 @@ const LessonsOverview = React.memo(() => {
   }, []);
 
   const handleLessonClick = useCallback((lesson, selectedDifficulty = null) => {
-    // Handle adaptive welcome lesson specially
-    if (lesson.isAdaptiveWelcome) {
-      navigate('/learning-path/adaptive-quiz');
-      return;
-    }
-    
     // Check if user has premium subscription
     const isPremiumUser = user?.subscriptionTier === 'premium' || user?.isPremium === true;
     

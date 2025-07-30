@@ -152,7 +152,7 @@ const ContentBlockRenderer = ({
       <div
         key={`block-${index}`}
         data-block-index={index}
-        className={`content-block-wrapper ${isCompleted ? 'completed' : ''}`}
+        className={`content-block-wrapper mb-8 ${isCompleted ? 'completed' : ''}`}
       >
         <BlockErrorBoundary blockIndex={index} blockType={block.type}>
           <Suspense fallback={<BlockLoadingPlaceholder />}>

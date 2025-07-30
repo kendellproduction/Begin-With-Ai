@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 import logger from '../utils/logger';
-import { getAdaptiveLessonById, getAdaptedLessonContent } from '../utils/adaptiveLessonData';
+// Note: Static adaptive lesson imports removed - using database only
 import { findLessonAcrossAllPaths } from '../services/firestoreService';
 import OptimizedStarField from './OptimizedStarField';
 
@@ -26,6 +26,7 @@ const LessonViewer = () => {
   const [lesson, setLesson] = useState(null);
   const [slides, setSlides] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [userProgress, setUserProgress] = useState({});
   const [isComplete, setIsComplete] = useState(false);
   const [showExitModal, setShowExitModal] = useState(false);
@@ -83,6 +84,65 @@ const LessonViewer = () => {
     setDifficulty(selectedDifficulty.toLowerCase());
   }, [location]);
 
+  // Check for preview mode and data
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    const isPreviewMode = urlParams.get('preview') === 'true';
+    const previewData = urlParams.get('data');
+    
+    if (isPreviewMode) {
+      if (previewData) {
+        // Load preview data from URL parameter
+        try {
+          const parsedData = JSON.parse(decodeURIComponent(previewData));
+          
+          // Convert to slides format
+          const convertedLesson = {
+            id: 'preview-lesson',
+            title: parsedData.title || 'Preview Lesson',
+            description: parsedData.description || '',
+            slides: parsedData.pages ? 
+              parsedData.pages.flatMap(page => 
+                page.blocks?.map(block => ({
+                  id: block.id || `${Date.now()}-${Math.random()}`,
+                  type: block.type === 'paragraph' ? 'concept' : block.type,
+                  content: block.content
+                })) || []
+              ) : []
+          };
+          
+          setLesson(convertedLesson);
+          setSlides(convertedLesson.slides);
+          setIsLoading(false);
+          
+          logger.info('Loaded lesson from preview data');
+          return;
+        } catch (error) {
+          logger.error('Error parsing preview data:', error);
+        }
+      } else {
+        // Check localStorage for preview data
+        const previewKey = `lesson_preview_${lessonId}`;
+        const storedPreview = localStorage.getItem(previewKey);
+        
+        if (storedPreview) {
+          try {
+            const previewLesson = JSON.parse(storedPreview);
+            const convertedLesson = convertFirestoreLessonToSlides(previewLesson, difficulty);
+            setLesson(convertedLesson);
+            setSlides(convertedLesson.slides);
+            setIsLoading(false);
+            
+            logger.info('Loaded lesson from preview localStorage');
+            return;
+          } catch (error) {
+            logger.error('Error parsing stored preview data:', error);
+          }
+        }
+      }
+    }
+  }, [lessonId, location.search, difficulty]);
+
   const loadLessonData = async () => {
     logger.info('Loading lesson data for:', lessonId, 'difficulty:', difficulty);
     setIsLoading(true);
@@ -110,207 +170,34 @@ const LessonViewer = () => {
           logger.info(`Lesson ${lessonId} not found in Firestore or incomplete data`);
         }
       } catch (error) {
-        logger.warn('Error checking Firestore for lesson, falling back to static sources:', error);
+        logger.error('Error checking Firestore for lesson:', error);
+        setError(`Error loading lesson "${lessonId}". Please try again or contact support.`);
+        setIsLoading(false);
+        return;
       }
       
-      // SECOND: Only use static content if no Firestore lesson exists
+      // Lesson must exist in database - no static fallbacks
       if (!loadedFromFirestore) {
-        logger.info(`Loading lesson ${lessonId} from static sources...`);
-        
-        // Get adaptive lesson content
-        const adaptedLesson = getAdaptedLessonContent(lessonId, difficulty);
-        
-        if (adaptedLesson && adaptedLesson.slides.length > 0) {
-          // Use adaptive lesson data
-          setLesson(adaptedLesson);
-          setSlides(adaptedLesson.slides);
-          logger.info('Adaptive lesson loaded successfully:', adaptedLesson.title);
-        } else {
-          // Fallback to local lesson data if available
-          logger.warn(`Lesson ${lessonId} not found in adaptive data, trying local fallback`);
-          const localLesson = getLocalLessonFallback(lessonId, difficulty);
-          setLesson(localLesson);
-          setSlides(localLesson.slides);
-        }
+        logger.error(`Lesson ${lessonId} not found in database`);
+        setError(`Lesson "${lessonId}" not found. Please contact support if this lesson should exist.`);
+        setIsLoading(false);
+        return;
       }
       
     } catch (error) {
       logger.error('Error loading lesson:', error);
-      // Final fallback to ensure app doesn't break
-      const fallbackLesson = createFallbackLesson(lessonId, difficulty);
-      setLesson(fallbackLesson);
-      setSlides(fallbackLesson.slides);
+      setError(`Error loading lesson "${lessonId}". Please try again or contact support.`);
+      setIsLoading(false);
+      return;
     }
     
     setIsLoading(false);
     logger.info('Lesson loading completed');
   };
 
-  // Fallback for lessons that might be in local data
-  const getLocalLessonFallback = (lessonId, difficulty) => {
-    // Import local lessons data if available
-    try {
-      const { localLessonsData } = require('../data/lessonsData');
-      const localLesson = localLessonsData[lessonId];
-      
-      if (localLesson) {
-        return convertLocalLessonToSlides(localLesson, difficulty);
-      }
-    } catch (error) {
-      logger.warn('Local lessons data not available');
-    }
-    
-    return createFallbackLesson(lessonId, difficulty);
-  };
+  // Note: Static lesson fallback functions removed - lessons must exist in database
 
-  // Convert local lesson format to slides
-  const convertLocalLessonToSlides = (localLesson, difficulty) => {
-    const slides = [];
-    
-    // Intro slide
-    slides.push({
-      id: `${localLesson.id}-intro`,
-      type: 'intro',
-      content: {
-        title: localLesson.title,
-        subtitle: localLesson.coreConcept,
-        icon: "🤖",
-        description: localLesson.adaptedContent?.content?.introduction || localLesson.coreConcept,
-        estimatedTime: localLesson.adaptedContent?.estimatedTime || 20,
-        xpReward: localLesson.adaptedContent?.xpReward || 100
-      }
-    });
-
-    // Main content slide
-    if (localLesson.adaptedContent?.content) {
-      const content = localLesson.adaptedContent.content;
-      slides.push({
-        id: `${localLesson.id}-concept`,
-        type: 'concept',
-        content: {
-          title: localLesson.title,
-          explanation: content.introduction,
-          icon: "🤖",
-          keyPoints: content.keyPoints || []
-        }
-      });
-
-      // Add example slides
-      if (content.examples) {
-        content.examples.forEach((example, index) => {
-          slides.push({
-            id: `${localLesson.id}-example-${index}`,
-            type: 'example',
-            content: {
-              title: `Example ${index + 1}`,
-              example: example,
-              explanation: "This demonstrates the concept in practice."
-            }
-          });
-        });
-      }
-    }
-
-    // Add quiz slides
-    if (localLesson.adaptedContent?.assessment?.questions) {
-      localLesson.adaptedContent.assessment.questions.forEach((question, index) => {
-        slides.push({
-          id: `${localLesson.id}-quiz-${index}`,
-          type: 'quiz',
-          content: question
-        });
-      });
-    }
-
-    // Add sandbox slide if required
-    if (localLesson.sandbox?.required) {
-      slides.push({
-        id: `${localLesson.id}-sandbox`,
-        type: 'sandbox',
-        content: {
-          title: "Practice What You've Learned",
-          instructions: localLesson.adaptedContent?.sandbox?.instructions || "Try out the concepts!",
-          exercises: localLesson.adaptedContent?.sandbox?.exercises || []
-        }
-      });
-    }
-
-    return {
-      id: localLesson.id,
-      title: localLesson.title,
-      description: localLesson.coreConcept,
-      estimatedTime: localLesson.adaptedContent?.estimatedTime || 20,
-      xpReward: localLesson.adaptedContent?.xpReward || 100,
-      slides: slides,
-      difficulty: difficulty
-    };
-  };
-
-  // Create a basic fallback lesson to prevent app crashes
-  const createFallbackLesson = (lessonId, difficulty) => {
-    const lessonTitles = {
-      'welcome-ai-revolution': 'AI History: How We Got Here & Where We\'re Going',
-      'how-ai-thinks': 'How AI "Thinks" — From Data to Decisions',
-      'ai-vocabulary-bootcamp': 'AI Vocabulary Bootcamp',
-      'prompting-essentials': 'Prompting Essentials',
-      'prompt-engineering-action': 'Prompt Engineering in Action',
-      'creative-ai-mastery': 'Creative AI — Art, Video, and Voice',
-      'ai-workflow-fundamentals': 'AI Workflow Fundamentals',
-      'ai-daily-applications': 'AI for School, Work, and Life',
-      'local-ai-mastery': 'Hosting AI Locally & Open Source Models',
-      'ai-problem-solving-capstone': 'AI Problem-Solving Lab',
-      'vibe-code-video-game': 'Create a Video Game with AI'
-    };
-
-    const title = lessonTitles[lessonId] || 'AI Learning Lesson';
-    
-    return {
-      id: lessonId,
-      title: title,
-      description: `Learn about ${title.toLowerCase()} in this interactive lesson.`,
-      estimatedTime: 20,
-      xpReward: 100,
-      slides: [
-        {
-          id: `${lessonId}-intro`,
-          type: 'intro',
-          content: {
-            title: title,
-            subtitle: `Interactive ${difficulty} level lesson`,
-            icon: "🤖",
-            description: `Explore the fundamentals of ${title.toLowerCase()}.`,
-            estimatedTime: 20,
-            xpReward: 100
-          }
-        },
-        {
-          id: `${lessonId}-concept`,
-          type: 'concept',
-          content: {
-            title: title,
-            explanation: `This lesson covers the key concepts and principles of ${title.toLowerCase()}. Content is being loaded from the adaptive lesson system.`,
-            icon: "🧠",
-            keyPoints: [
-              "Core concepts and fundamentals",
-              "Practical applications and examples", 
-              "Hands-on exercises and practice",
-              "Assessment and skill validation"
-            ]
-          }
-        },
-        {
-          id: `${lessonId}-sandbox`,
-          type: 'sandbox',
-          content: {
-            title: "Practice & Apply",
-            instructions: "Use the sandbox to practice what you've learned in this lesson!",
-            exercises: ["Try out the concepts", "Experiment with examples", "Apply your knowledge"]
-          }
-        }
-      ],
-      difficulty: difficulty
-    };
-  };
+  // Note: convertLocalLessonToSlides function removed - lessons must exist in database
 
   // Convert admin lesson format to slide-based format
   const convertAdminLessonToSlides = (adminLesson) => {
@@ -787,6 +674,27 @@ const LessonViewer = () => {
     }
   };
 
+  if (error) {
+    return (
+      <div 
+        className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
+      >
+        <OptimizedStarField starCount={100} opacity={0.6} speed={0.8} size={1} />
+        <div className="text-center relative z-10 max-w-md mx-auto p-8">
+          <div className="text-red-400 text-6xl mb-4">⚠️</div>
+          <h2 className="text-2xl font-bold text-white mb-4">Lesson Not Found</h2>
+          <p className="text-gray-300 mb-6">{error}</p>
+          <button
+            onClick={() => navigate('/lessons')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+          >
+            Back to Lessons
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div 
@@ -898,13 +806,13 @@ const LessonViewer = () => {
       {/* Exit Button (top-right corner) */}
       <button
         onClick={() => setShowExitModal(true)}
-        className="lesson-exit-button absolute right-4 z-20 w-10 h-10 bg-black/50 rounded-full flex items-center justify-center text-white hover:bg-black/70 transition-colors"
+        className="lesson-exit-button absolute top-4 right-4 z-20 w-10 h-10 bg-black/70 rounded-full flex items-center justify-center text-white hover:bg-black/90 transition-colors shadow-lg backdrop-blur-sm"
       >
         ✕
       </button>
 
       {/* Slide Counter (top-left corner) */}
-      <div className="lesson-slide-counter absolute left-4 z-20 bg-black/50 rounded-full px-3 py-1 text-white text-sm">
+      <div className="lesson-slide-counter absolute top-4 left-4 z-20 bg-black/70 rounded-full px-3 py-1 text-white text-sm shadow-lg backdrop-blur-sm">
         {currentSlideIndex + 1} / {slides.length}
       </div>
 

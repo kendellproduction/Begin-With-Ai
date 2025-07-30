@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AdaptiveLessonService } from '../services/adaptiveLessonService';
+import { runQuickSeed } from '../scripts/quickLessonSeed';
 import logger from '../utils/logger';
 
 const AdaptiveDatabaseSeeder = () => {
@@ -23,6 +24,28 @@ const AdaptiveDatabaseSeeder = () => {
       localStorage.setItem('seedingCompletedAt', new Date().toISOString());
     } catch (error) {
       console.error('Seeding error:', error);
+      setSeedingStatus(`❌ Error: ${error.message}`);
+      setSeedingResults({ success: false, error: error.message });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  const handleQuickSeed = async () => {
+    setIsSeeding(true);
+    setSeedingStatus('Creating basic lessons...');
+    setSeedingResults(null);
+
+    try {
+      const result = await runQuickSeed();
+      setSeedingResults(result);
+      setSeedingStatus(`✅ Created ${result.count} basic lessons successfully!`);
+      
+      // Mark seeding as completed
+      localStorage.setItem('quickLessonsSeeded', 'true');
+      localStorage.setItem('quickSeedingCompletedAt', new Date().toISOString());
+    } catch (error) {
+      console.error('Quick seeding error:', error);
       setSeedingStatus(`❌ Error: ${error.message}`);
       setSeedingResults({ success: false, error: error.message });
     } finally {
@@ -125,11 +148,19 @@ const AdaptiveDatabaseSeeder = () => {
           
           <div className="space-y-2 mb-4">
             <button
+              onClick={handleQuickSeed}
+              disabled={isSeeding}
+              className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-lg hover:from-green-600 hover:to-blue-600 disabled:opacity-50 text-sm font-medium transition-all duration-300"
+            >
+              {isSeeding ? 'Creating...' : '🚀 Quick Seed (3 Lessons)'}
+            </button>
+            
+            <button
               onClick={handleSeedAdaptiveLessons}
               disabled={isSeeding}
               className="w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 text-sm font-medium transition-all duration-300"
             >
-              {isSeeding ? 'Seeding...' : 'Seed Adaptive Lessons'}
+              {isSeeding ? 'Seeding...' : 'Seed Adaptive Lessons (Full)'}
             </button>
             
             <button

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import lessonsData from '../utils/lessonsData';
+// Note: Static lesson data removed - should load from database
 import quizData from '../utils/quizData';
 import OptimizedStarField from './OptimizedStarField';
 

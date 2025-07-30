@@ -28,6 +28,7 @@ import {
 
 // Lazy load admin components to improve performance
 const DashboardOverview = React.lazy(() => import('./panels/DashboardOverview'));
+const DatabaseCleaner = React.lazy(() => import('./DatabaseCleaner'));
 const ContentCreation = React.lazy(() => import('./panels/ContentCreation'));
 const ContentManagement = React.lazy(() => import('./panels/ContentManagement'));
 const AIFeatures = React.lazy(() => import('./panels/AIFeatures'));
@@ -155,6 +156,15 @@ const UnifiedAdminPanel = () => {
           action: () => actions.setActivePanel('lesson-migration')
         }
       ]
+    },
+    {
+      id: 'database-cleaner',
+      name: 'Database Cleaner',
+      icon: CubeTransparentIcon,
+      description: 'Clear all lessons from database',
+      component: DatabaseCleaner,
+      searchTerms: ['delete', 'clear', 'clean', 'remove', 'database'],
+      subItems: []
     }
   ];
 

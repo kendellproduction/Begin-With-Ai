@@ -23,9 +23,8 @@ const runBulkMigration = async () => {
   console.log('📦 Loading migration utilities...');
   const { LessonFormatMigrator } = await import('../utils/lessonFormatMigration.js');
   const { MigrationValidator } = await import('../utils/migrationValidation.js');
-  const localLessonsData = (await import('../utils/lessonsData.js')).default;
-  const adaptiveLessons = (await import('../utils/adaptiveLessonData.js')).default;
-  const { historyOfAiLesson } = await import('../utils/historyOfAiLesson.js');
+  // Note: Static lesson data imports removed - migration should only work with database content
+  console.log('Static lesson imports removed - this script now requires lessons to exist in database');
   
   const allLessons = [];
   const migrationResults = {
@@ -39,44 +38,12 @@ const runBulkMigration = async () => {
     // Collect all lessons from different sources
     console.log('📚 Collecting lessons from all sources...');
 
-    // Add lessons from localLessonsData
-    if (localLessonsData && typeof localLessonsData === 'object') {
-      Object.values(localLessonsData).forEach(lesson => {
-        if (lesson && lesson.id) {
-          allLessons.push({
-            ...lesson,
-            source: 'local',
-            originalLesson: lesson
-          });
-        }
-      });
-    }
+    // Note: Static lesson data imports removed - migration should only work with database content
+    console.log('Static lesson imports removed - please seed lessons to database first');
 
-    // Add lessons from adaptiveLessons
-    if (adaptiveLessons && typeof adaptiveLessons === 'object') {
-      Object.values(adaptiveLessons).forEach(lessonGroup => {
-        if (Array.isArray(lessonGroup)) {
-          lessonGroup.forEach(lesson => {
-            if (lesson && lesson.id) {
-              allLessons.push({
-                ...lesson,
-                source: 'adaptive',
-                originalLesson: lesson
-              });
-            }
-          });
-        }
-      });
-    }
+    // Note: Static adaptive lesson imports also removed - migration should only work with database content
 
-    // Add historyOfAiLesson (slides format)
-    if (historyOfAiLesson && historyOfAiLesson.id) {
-      allLessons.push({
-        ...historyOfAiLesson,
-        source: 'slides',
-        originalLesson: historyOfAiLesson
-      });
-    }
+    // Note: historyOfAiLesson removed from static imports - should be migrated via database
 
     console.log(`📊 Found ${allLessons.length} lessons to analyze`);
 

@@ -2,6 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getAnalytics } from "firebase/analytics";
 import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { getStorage } from "firebase/storage"; // Add Firebase Storage import
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -55,6 +56,9 @@ try {
 // Initialize Firestore Database
 const db = getFirestore(app);
 
+// Initialize Firebase Storage
+const storage = getStorage(app);
+
 // Development-only utility exposure for testing
 if (process.env.NODE_ENV === 'development') {
   window.db = db;
@@ -62,6 +66,7 @@ if (process.env.NODE_ENV === 'development') {
   window.setDoc = setDoc;
   window.auth = auth;
   window.firebaseAuth = auth;
+  window.storage = storage; // Add storage to development window object
 }
 
-export { auth, googleProvider, analytics, db }; 
+export { auth, googleProvider, analytics, db, storage }; // Add storage to exports 

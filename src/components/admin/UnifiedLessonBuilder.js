@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import '../../styles/backgroundAnimations.css';
@@ -29,8 +29,14 @@ import {
   PlayIcon,
   ChevronUpIcon,
   ChevronDownIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  ArrowTopRightOnSquareIcon,
+  ClockIcon,
+  BookOpenIcon,
+  StarIcon
 } from '@heroicons/react/24/outline';
+import { storage } from '../../firebase'; // Add Firebase Storage import
+import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage'; // Add Firebase Storage functions
 import logger from '../../utils/logger';
 
 const UnifiedLessonBuilder = () => {
@@ -112,6 +118,9 @@ const UnifiedLessonBuilder = () => {
   const [currentTier, setCurrentTier] = useState('free');
   const [freePages, setFreePages] = useState([]);
   const [premiumPages, setPremiumPages] = useState([]);
+  
+  // State for tracking uploading files
+  const [uploadingFiles, setUploadingFiles] = useState(new Set());
   
   const checkScreenSize = useCallback(() => {
     const width = window.innerWidth;
@@ -273,47 +282,136 @@ const UnifiedLessonBuilder = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [saveStatus]);
 
-  // File upload handling
+  // Enhanced file upload handling with Firebase Storage
   const handleFileUpload = async (file, blockId, fileType) => {
     try {
-      const objectUrl = URL.createObjectURL(file);
-      let field;
+      showNotification('info', `Uploading ${fileType}...`);
+      setUploadingFiles(prev => new Set([...prev, blockId]));
       
-      // Determine the correct field based on file type
-      switch (fileType) {
-        case 'image':
-          field = 'src';
-          break;
-        case 'video':
-          field = 'src';
-          break;
-        case 'audio':
-          field = 'audioSrc';
-          break;
-        default:
-          field = 'src';
+      let downloadURL;
+      let fileName = file.name;
+      
+      // Check if Firebase Storage is properly configured
+      const isStorageConfigured = storage && storage.app && storage.app.options.storageBucket;
+      
+      if (!isStorageConfigured) {
+        // Fallback to object URL if Firebase Storage isn't configured
+        logger.warn('Firebase Storage not configured, using local object URL');
+        downloadURL = URL.createObjectURL(file);
+        
+        if (fileType === 'audio' || fileType === 'podcast') {
+          handleInlineEdit(blockId, 'audioSrc', downloadURL);
+          handleInlineEdit(blockId, 'fileName', fileName);
+          
+          // Add duration for audio files
+          const audio = new Audio(downloadURL);
+          audio.addEventListener('loadedmetadata', () => {
+            if (audio.duration && isFinite(audio.duration)) {
+              const minutes = Math.floor(audio.duration / 60);
+              const seconds = Math.floor(audio.duration % 60);
+              const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+              handleInlineEdit(blockId, 'duration', durationText);
+              showNotification('success', `Audio uploaded locally! Duration: ${durationText}`);
+            }
+          });
+        } else {
+          handleInlineEdit(blockId, 'src', downloadURL);
+          handleInlineEdit(blockId, 'fileName', fileName);
+        }
+        
+        showNotification('warning', `${fileType} uploaded locally (Firebase Storage not configured)`);
+        triggerUnsavedState();
+        return;
       }
       
-      handleInlineEdit(blockId, field, objectUrl);
-      handleInlineEdit(blockId, 'fileName', file.name);
-      
-      // Add duration for audio files if possible
-      if (fileType === 'audio') {
-        const audio = new Audio(objectUrl);
+      // Upload to Firebase Storage for persistent hosting
+      if (fileType === 'audio' || fileType === 'podcast') {
+        const storageRef = ref(storage, `lessons/audio/${Date.now()}_${fileName}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        downloadURL = await getDownloadURL(snapshot.ref);
+        
+        // Update the block with Firebase Storage URL
+        handleInlineEdit(blockId, 'audioSrc', downloadURL);
+        handleInlineEdit(blockId, 'fileName', fileName);
+        handleInlineEdit(blockId, 'uploadPath', snapshot.ref.fullPath); // Store path for potential deletion
+        
+        // Add duration for audio files
+        const audio = new Audio(downloadURL);
         audio.addEventListener('loadedmetadata', () => {
           if (audio.duration && isFinite(audio.duration)) {
             const minutes = Math.floor(audio.duration / 60);
             const seconds = Math.floor(audio.duration % 60);
             const durationText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
             handleInlineEdit(blockId, 'duration', durationText);
+            showNotification('success', `Audio uploaded successfully! Duration: ${durationText}`);
           }
         });
+        
+      } else if (fileType === 'image') {
+        const storageRef = ref(storage, `lessons/images/${Date.now()}_${fileName}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        downloadURL = await getDownloadURL(snapshot.ref);
+        
+        handleInlineEdit(blockId, 'src', downloadURL);
+        handleInlineEdit(blockId, 'fileName', fileName);
+        handleInlineEdit(blockId, 'uploadPath', snapshot.ref.fullPath);
+        
+      } else if (fileType === 'video') {
+        const storageRef = ref(storage, `lessons/videos/${Date.now()}_${fileName}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        downloadURL = await getDownloadURL(snapshot.ref);
+        
+        handleInlineEdit(blockId, 'src', downloadURL);
+        handleInlineEdit(blockId, 'fileName', fileName);
+        handleInlineEdit(blockId, 'uploadPath', snapshot.ref.fullPath);
+        
+      } else {
+        // Fallback to object URL for unsupported types
+        downloadURL = URL.createObjectURL(file);
+        handleInlineEdit(blockId, 'src', downloadURL);
+        handleInlineEdit(blockId, 'fileName', fileName);
       }
       
-      showNotification('success', `${fileType} uploaded successfully`);
+      showNotification('success', `${fileType} uploaded successfully!`);
+      triggerUnsavedState();
+      
     } catch (error) {
-      console.error(`Error uploading ${fileType}:`, error);
-      showNotification('error', `Failed to upload ${fileType}`);
+      logger.error(`Error uploading ${fileType}:`, error);
+      
+      // Fallback to object URL on Firebase error
+      try {
+        const objectUrl = URL.createObjectURL(file);
+        if (fileType === 'audio' || fileType === 'podcast') {
+          handleInlineEdit(blockId, 'audioSrc', objectUrl);
+        } else {
+          handleInlineEdit(blockId, 'src', objectUrl);
+        }
+        handleInlineEdit(blockId, 'fileName', file.name);
+        
+        showNotification('warning', `${fileType} uploaded locally (Firebase Storage error: ${error.message})`);
+        triggerUnsavedState();
+      } catch (fallbackError) {
+        showNotification('error', `Failed to upload ${fileType}: ${fallbackError.message}`);
+      }
+    } finally {
+      setUploadingFiles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(blockId);
+        return newSet;
+      });
+    }
+  };
+
+  // Function to delete uploaded files from Firebase Storage
+  const deleteUploadedFile = async (uploadPath) => {
+    if (!uploadPath) return;
+    
+    try {
+      const fileRef = ref(storage, uploadPath);
+      await deleteObject(fileRef);
+      logger.info('File deleted from Firebase Storage:', uploadPath);
+    } catch (error) {
+      logger.warn('Error deleting file from Firebase Storage:', error);
     }
   };
 
@@ -491,7 +589,7 @@ const UnifiedLessonBuilder = () => {
     }
   };
 
-  // Enhanced save system with draft service integration
+  // Enhanced save system with proper publication status
   const saveDraft = async () => {
     if (!user?.uid) {
       showNotification('error', 'Please log in to save drafts');
@@ -501,29 +599,49 @@ const UnifiedLessonBuilder = () => {
     try {
       setSaveStatus('saving');
       
+      // Ensure we have current blocks in the proper page format
+      const currentLessonPages = [{
+        id: 'page-1',
+        title: lessonTitle,
+        blocks: lessonBlocks.length > 0 ? lessonBlocks : [
+          {
+            id: 'block-1',
+            type: 'heading',
+            content: { text: lessonTitle || 'New Lesson' }
+          }
+        ]
+      }];
+
       const lessonData = {
         id: currentDraftId || generateId(),
-        title: lessonTitle,
-        description: lessonDescription,
+        title: lessonTitle || 'Untitled Draft',
+        description: lessonDescription || 'Draft lesson description',
         contentVersions: {
           free: {
-            title: lessonTitle,
-            description: lessonDescription,
-            pages: freePages
+            title: lessonTitle || 'Untitled Draft',
+            description: lessonDescription || 'Draft lesson description',
+            pages: currentLessonPages
           },
           premium: {
-            title: lessonTitle,
-            description: lessonDescription,
-            pages: premiumPages
+            title: lessonTitle || 'Untitled Draft',
+            description: lessonDescription || 'Draft lesson description', 
+            pages: premiumPages.length > 0 ? premiumPages : currentLessonPages
           }
         },
+        pages: currentLessonPages, // Also save at root level for compatibility
         metadata: {
           lessonType: 'concept_explanation',
           estimatedTimeMinutes: 15,
           xpAward: 10,
           category: selectedModule || 'General',
-          tags: []
-        }
+          tags: [],
+          blocksCount: lessonBlocks.length,
+          lastEditedAt: new Date().toISOString()
+        },
+        // Mark as draft - not published
+        status: 'draft',
+        published: false,
+        isPublished: false
       };
 
       // Before saving, update the current tier's pages
@@ -546,28 +664,78 @@ const UnifiedLessonBuilder = () => {
     }
   };
 
-  // Publish draft to production
+  // Enhanced publish function with proper status setting
   const publishDraft = async () => {
     if (!currentDraftId) {
-      showNotification('error', 'Please save the draft first');
+      showNotification('error', 'No draft to publish');
       return;
     }
 
-    if (!user?.uid) {
-      showNotification('error', 'User not authenticated');
+    if (!lessonTitle.trim()) {
+      showNotification('error', 'Please add a lesson title before publishing');
       return;
     }
 
-    // Simple publish for now - you can make this more sophisticated later
-    const pathId = 'ai-fundamentals'; // Default learning path
-    const moduleId = 'intro-to-ai'; // Default module
-    
     try {
-      const result = await draftService.publishDraft(user.uid, currentDraftId, pathId, moduleId);
-      showNotification('success', `Draft published as lesson: ${result.lessonId}`);
+      setSaveStatus('saving');
+      showNotification('info', 'Publishing lesson...');
+
+      // Import the adminService dynamically
+      const adminServiceModule = await import('../../services/adminService');
+      const { createLesson } = adminServiceModule;
+
+      const lessonData = {
+        title: lessonTitle,
+        description: lessonDescription,
+        content: freePages,
+        premiumContent: premiumPages,
+        contentVersions: {
+          free: {
+            title: lessonTitle,
+            description: lessonDescription,
+            pages: freePages
+          },
+          premium: {
+            title: lessonTitle,
+            description: lessonDescription,
+            pages: premiumPages
+          }
+        },
+        estimatedTimeMinutes: 15,
+        xpAward: 10,
+        category: selectedModule || 'General',
+        tags: [],
+        // FIXED: Properly mark as published
+        status: 'published',
+        published: true,
+        isPublished: true,
+        publishedAt: new Date(),
+        publishedBy: user.uid,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 1
+      };
+
+      // Default path and module for new lessons
+      const defaultPathId = 'ai-fundamentals';
+      const defaultModuleId = 'intro-to-ai';
+
+      await createLesson(defaultPathId, defaultModuleId, lessonData, user.uid);
+      
+      // Delete the draft after successful publication
+      await draftService.deleteDraft(user.uid, currentDraftId);
+      
+      setSaveStatus('saved');
+      setLastSaved(new Date());
+      showNotification('success', '🎉 Lesson published successfully! It will now appear on the lessons page.');
+      
+      // Clear the current draft ID since it's now published
+      setCurrentDraftId(null);
+      
     } catch (error) {
-      logger.error('Error publishing draft:', error);
-      showNotification('error', 'Failed to publish draft');
+      logger.error('Error publishing lesson:', error);
+      setSaveStatus('error');
+      showNotification('error', `Failed to publish lesson: ${error.message}`);
     }
   };
 
@@ -639,6 +807,10 @@ const UnifiedLessonBuilder = () => {
         xpAward: 10,
         category: selectedModule || 'General',
         tags: [],
+        // FIXED: Maintain the original publication status unless explicitly changed
+        status: editingLesson.status || 'published',
+        published: editingLesson.published !== false, // Default to true if not explicitly false
+        isPublished: editingLesson.isPublished !== false,
         updatedAt: new Date(),
         updatedBy: user.uid,
         version: (editingLesson.version || 1) + 1
@@ -648,7 +820,12 @@ const UnifiedLessonBuilder = () => {
         pathId: editingLesson.pathId,
         moduleId: editingLesson.moduleId,
         lessonId: editingLesson.id,
-        dataKeys: Object.keys(lessonData)
+        dataKeys: Object.keys(lessonData),
+        publicationStatus: {
+          status: lessonData.status,
+          published: lessonData.published,
+          isPublished: lessonData.isPublished
+        }
       });
 
       await updateLesson(editingLesson.pathId, editingLesson.moduleId, editingLesson.id, lessonData);
@@ -658,15 +835,40 @@ const UnifiedLessonBuilder = () => {
       showNotification('success', 'Lesson updated successfully! Changes are now live.');
       
     } catch (error) {
-      console.error('=== Error updating published lesson ===');
-      console.error('Error details:', error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('=====================================');
-      
       logger.error('Error updating published lesson:', error);
       setSaveStatus('error');
       showNotification('error', `Failed to update lesson: ${error.message}`);
+    }
+  };
+
+  // Function to toggle publication status
+  const togglePublicationStatus = async () => {
+    const editingLesson = location.state?.editingLesson;
+    
+    if (!editingLesson) {
+      showNotification('error', 'No lesson to toggle publication status');
+      return;
+    }
+
+    const isCurrentlyPublished = editingLesson.status === 'published' || editingLesson.published === true;
+    const newStatus = isCurrentlyPublished ? 'draft' : 'published';
+    
+    try {
+      // Update the lesson in state
+      const updatedLesson = {
+        ...editingLesson,
+        status: newStatus,
+        published: !isCurrentlyPublished,
+        isPublished: !isCurrentlyPublished
+      };
+      
+      // Update the lesson in database
+      await updatePublishedLesson();
+      
+      showNotification('success', `Lesson ${newStatus === 'published' ? 'published' : 'unpublished'} successfully!`);
+    } catch (error) {
+      logger.error('Error toggling publication status:', error);
+      showNotification('error', 'Failed to update publication status');
     }
   };
 
@@ -732,38 +934,120 @@ const UnifiedLessonBuilder = () => {
     };
   };
 
-  // Preview modal component
+  // Enhanced preview modal component with better functionality
   const PreviewModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-gray-900 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto mx-4 border border-gray-700">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-white">Lesson Preview</h2>
-            <button
-              onClick={() => setShowPreviewModal(false)}
-              className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-            >
-              <XMarkIcon className="w-6 h-6 text-gray-400" />
-            </button>
+    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-gray-900 rounded-lg max-w-6xl w-full max-h-[95vh] overflow-hidden mx-4 border border-gray-700 shadow-2xl">
+        <div className="flex flex-col h-full max-h-[95vh]">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-gray-700 bg-gray-800">
+            <div>
+              <h2 className="text-2xl font-bold text-white flex items-center">
+                <EyeIcon className="w-6 h-6 mr-2 text-blue-400" />
+                Lesson Preview
+              </h2>
+              <p className="text-gray-400 text-sm mt-1">
+                Preview how your lesson will appear to students
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => {
+                  // Open in full lesson viewer
+                  const previewUrl = `/lessons/preview?data=${encodeURIComponent(JSON.stringify({
+                    title: lessonTitle,
+                    description: lessonDescription,
+                    pages: lessonPages,
+                    isPreview: true
+                  }))}`;
+                  window.open(previewUrl, '_blank');
+                }}
+                className="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm flex items-center space-x-2"
+              >
+                <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                <span>Open Full Preview</span>
+              </button>
+              <button
+                onClick={() => setShowPreviewModal(false)}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <XMarkIcon className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
           </div>
           
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h1 className="text-3xl font-bold text-white mb-4">{lessonTitle}</h1>
-            {lessonDescription && (
-              <p className="text-gray-300 mb-6">{lessonDescription}</p>
-            )}
-            
-            <div className="space-y-6">
-              {lessonBlocks.map((block, index) => (
-                <div key={block.id} className="bg-gray-700 rounded-lg p-4">
-                  <ContentBlockRenderer
-                    block={block}
-                    onComplete={() => {}}
-                    onInteraction={() => {}}
-                    isPreview={true}
-                  />
+          {/* Preview Content */}
+          <div className="flex-1 overflow-y-auto bg-gradient-to-br from-gray-900 via-slate-900 to-black">
+            <div className="p-8 max-w-4xl mx-auto">
+              {/* Lesson Header */}
+              <div className="text-center mb-8">
+                <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
+                  {lessonTitle || 'Untitled Lesson'}
+                </h1>
+                {lessonDescription && (
+                  <p className="text-xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+                    {lessonDescription}
+                  </p>
+                )}
+                <div className="flex items-center justify-center space-x-6 mt-6 text-sm text-gray-400">
+                  <span className="flex items-center">
+                    <ClockIcon className="w-4 h-4 mr-1" />
+                    {Math.max(lessonBlocks.length * 2, 5)} min
+                  </span>
+                  <span className="flex items-center">
+                    <BookOpenIcon className="w-4 h-4 mr-1" />
+                    {lessonBlocks.length} sections
+                  </span>
+                  <span className="flex items-center">
+                    <StarIcon className="w-4 h-4 mr-1" />
+                    {lessonBlocks.length * 10} XP
+                  </span>
                 </div>
-              ))}
+              </div>
+              
+              {/* Content Blocks */}
+              <div className="space-y-8">
+                {lessonBlocks.length > 0 ? (
+                  lessonBlocks.map((block, index) => (
+                    <div key={block.id} className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-6 border border-gray-700/50">
+                      <div className="mb-2">
+                        <span className="text-xs text-blue-400 font-medium bg-blue-400/10 px-2 py-1 rounded-md">
+                          {block.type.replace(/[_-]/g, ' ').toUpperCase()}
+                        </span>
+                      </div>
+                      <ContentBlockRenderer
+                        block={block}
+                        onComplete={() => {}}
+                        onInteraction={() => {}}
+                        isPreview={true}
+                        config={{
+                          showProgress: false,
+                          enableInteraction: false,
+                          autoplay: false
+                        }}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-16">
+                    <div className="text-gray-600 text-6xl mb-4">📝</div>
+                    <h3 className="text-xl font-semibold text-gray-400 mb-2">No Content Yet</h3>
+                    <p className="text-gray-500">Add some content blocks to see your lesson preview</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Lesson Footer */}
+              {lessonBlocks.length > 0 && (
+                <div className="mt-12 text-center">
+                  <div className="bg-green-600/10 border border-green-600/20 rounded-xl p-6">
+                    <h3 className="text-xl font-semibold text-green-400 mb-2">🎉 Lesson Complete!</h3>
+                    <p className="text-green-300">
+                      Students will earn {lessonBlocks.length * 10} XP for completing this lesson
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1405,31 +1689,128 @@ const UnifiedLessonBuilder = () => {
           )}
           
           {block.type === 'podcast' && (
-            <div className="w-full text-center">
-              {block.content.audioSrc ? (
-                <div className="space-y-2">
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <SpeakerWaveIcon className="w-12 h-12 mx-auto text-purple-400 mb-2" />
-                    <p className="text-gray-300 text-sm">Audio: {block.content.title || 'Untitled'}</p>
-                    <p className="text-gray-500 text-xs">
-                      {block.content.fileName || 'audio file'}
-                    </p>
-                    {block.content.duration && (
-                      <p className="text-gray-500 text-xs">
-                        Duration: {block.content.duration}
-                      </p>
-                    )}
-                  </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Audio File</label>
+                <div className="space-y-3">
+                  {block.content.audioSrc ? (
+                    <div className="bg-gray-700 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
+                            🎧
+                          </div>
+                          <div>
+                            <p className="text-white font-medium">{block.content.fileName || 'Audio File'}</p>
+                            {block.content.duration && (
+                              <p className="text-gray-400 text-sm">Duration: {block.content.duration}</p>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              if (block.content.audioSrc) {
+                                const audio = new Audio(block.content.audioSrc);
+                                audio.play().catch(e => console.warn('Audio play failed:', e));
+                              }
+                            }}
+                            className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 flex items-center space-x-1"
+                            type="button"
+                          >
+                            <span>▶️</span>
+                            <span>Test</span>
+                          </button>
+                          <button
+                            onClick={async () => {
+                              // Delete from Firebase Storage if uploaded
+                              if (block.content.uploadPath) {
+                                await deleteUploadedFile(block.content.uploadPath);
+                              }
+                              handleInlineEdit(block.id, 'audioSrc', '');
+                              handleInlineEdit(block.id, 'fileName', '');
+                              handleInlineEdit(block.id, 'duration', '');
+                              handleInlineEdit(block.id, 'uploadPath', '');
+                            }}
+                            className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+                            type="button"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Audio Preview */}
+                      <audio 
+                        controls 
+                        className="w-full"
+                        src={block.content.audioSrc}
+                        onError={() => showNotification('warning', 'Audio file may not be compatible with this browser')}
+                      >
+                        Your browser does not support the audio element.
+                      </audio>
+                      
+                      {block.content.uploadPath && (
+                        <div className="mt-2 text-xs text-green-400 flex items-center space-x-1">
+                          <span>✅</span>
+                          <span>Uploaded to Firebase Storage</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-gray-600 rounded-lg p-6 text-center">
+                      {uploadingFiles.has(block.id) ? (
+                        <div className="space-y-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto"></div>
+                          <p className="text-gray-400">Uploading audio to Firebase Storage...</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="text-4xl">🎧</div>
+                          <p className="text-gray-400">Upload audio file for podcast block</p>
+                          <button
+                            onClick={() => {
+                              setSelectedBlockId(block.id);
+                              setSelectedBlock(block);
+                              podcastInputRef.current?.click();
+                            }}
+                            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
+                            type="button"
+                          >
+                            <CloudArrowUpIcon className="w-5 h-5" />
+                            <span>Upload Audio</span>
+                          </button>
+                          <p className="text-xs text-gray-500">
+                            Supports MP3, WAV, M4A files. Will be uploaded to Firebase Storage.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <div 
-                  className="border-2 border-dashed border-gray-600 rounded-lg py-8 cursor-pointer hover:border-gray-500"
-                  onClick={() => podcastInputRef.current?.click()}
-                >
-                  <SpeakerWaveIcon className="w-12 h-12 mx-auto text-gray-500 mb-2" />
-                  <p className="text-gray-500">Click to add audio</p>
-                </div>
-              )}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Podcast Title</label>
+                <input
+                  type="text"
+                  value={block.content.title || ''}
+                  onChange={(e) => handleInlineEdit(block.id, 'title', e.target.value)}
+                  placeholder="Enter podcast episode title..."
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <textarea
+                  value={block.content.description || ''}
+                  onChange={(e) => handleInlineEdit(block.id, 'description', e.target.value)}
+                  placeholder="Describe what this podcast episode covers..."
+                  rows={3}
+                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                />
+              </div>
             </div>
           )}
           
@@ -1789,6 +2170,42 @@ const UnifiedLessonBuilder = () => {
     triggerUnsavedState();
   };
 
+  // Listen for preview messages from other windows
+  useEffect(() => {
+    const handlePreviewMessage = (event) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data?.type === 'PREVIEW_LESSON' && event.data?.lesson) {
+        const lesson = event.data.lesson;
+        setLessonTitle(lesson.title || 'Preview Lesson');
+        setLessonDescription(lesson.description || '');
+        
+        // Load lesson content if available
+        if (lesson.pages && Array.isArray(lesson.pages)) {
+          setLessonPages(lesson.pages);
+        } else if (lesson.slides && Array.isArray(lesson.slides)) {
+          // Convert slides to pages format
+          const convertedPages = [{
+            id: 'preview-page',
+            title: 'Preview Content',
+            blocks: lesson.slides.map(slide => ({
+              id: slide.id || generateId(),
+              type: slide.type === 'concept' ? 'paragraph' : slide.type,
+              content: slide.content || {}
+            }))
+          }];
+          setLessonPages(convertedPages);
+        }
+        
+        // Show preview modal
+        setShowPreviewModal(true);
+      }
+    };
+
+    window.addEventListener('message', handlePreviewMessage);
+    return () => window.removeEventListener('message', handlePreviewMessage);
+  }, []);
+
   return (
     <div className="flex h-screen bg-gray-900 text-white overflow-hidden">
       {/* Sidebar */}
@@ -1909,42 +2326,45 @@ const UnifiedLessonBuilder = () => {
                     </div>
                   )}
 
-                  {/* File Upload Inputs */}
-                  <div className="hidden">
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        if (e.target.files[0] && selectedBlockId) {
-                          handleFileUpload(e.target.files[0], selectedBlockId, 'image');
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <input
-                      ref={videoInputRef}
-                      type="file"
-                      accept="video/*"
-                      onChange={(e) => {
-                        if (e.target.files[0] && selectedBlockId) {
-                          handleFileUpload(e.target.files[0], selectedBlockId, 'video');
-                        }
-                      }}
-                      className="hidden"
-                    />
-                    <input
-                      ref={podcastInputRef}
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => {
-                        if (e.target.files[0] && selectedBlockId) {
-                          handleFileUpload(e.target.files[0], selectedBlockId, 'audio');
-                        }
-                      }}
-                      className="hidden"
-                    />
-                  </div>
+                  {/* Hidden file inputs */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file && selectedBlockId) {
+                        handleFileUpload(file, selectedBlockId, 'image');
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  
+                  <input
+                    ref={videoInputRef}
+                    type="file"
+                    accept="video/*"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file && selectedBlockId) {
+                        handleFileUpload(file, selectedBlockId, 'video');
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  
+                  <input
+                    ref={podcastInputRef}
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg"
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file && selectedBlockId) {
+                        handleFileUpload(file, selectedBlockId, 'audio');
+                      }
+                    }}
+                    className="hidden"
+                  />
                   
                   <div>
                     <label className="block text-sm font-medium mb-1">Description</label>
@@ -2158,16 +2578,46 @@ const UnifiedLessonBuilder = () => {
 
                 {/* Show different buttons based on whether we're editing a published lesson or a draft */}
                 {location.state?.editingLesson && location.state.editingLesson.isPublished ? (
-                  // Editing published lesson - show only Update button
-                  <button
-                    onClick={updatePublishedLesson}
-                    className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 hover:bg-green-700 rounded-lg transition-colors text-sm"
-                    title="Update published lesson directly"
-                  >
-                    <CloudArrowUpIcon className="w-4 h-4" />
-                    <span>Update Lesson</span>
-                  </button>
-                ) : (
+                  // Editing published lesson - show Update and Publication Toggle buttons
+                  <div className="flex items-center space-x-2">
+                    {/* Publication Status Toggle */}
+                    <button
+                      onClick={togglePublicationStatus}
+                      className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                        location.state.editingLesson.status === 'published' || location.state.editingLesson.published
+                          ? 'bg-orange-600 hover:bg-orange-700 text-white'
+                          : 'bg-green-600 hover:bg-green-700 text-white'
+                      }`}
+                      title={
+                        location.state.editingLesson.status === 'published' || location.state.editingLesson.published
+                          ? 'Unpublish lesson (remove from lessons page)'
+                          : 'Publish lesson (add to lessons page)'
+                      }
+                    >
+                      {location.state.editingLesson.status === 'published' || location.state.editingLesson.published ? (
+                        <>
+                          <EyeSlashIcon className="w-4 h-4" />
+                          <span>Unpublish</span>
+                        </>
+                      ) : (
+                        <>
+                          <EyeIcon className="w-4 h-4" />
+                          <span>Publish</span>
+                        </>
+                      )}
+                    </button>
+                    
+                    {/* Update Button */}
+                    <button
+                      onClick={updatePublishedLesson}
+                      className="flex items-center space-x-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors text-sm"
+                      title="Save changes to published lesson"
+                    >
+                      <CloudArrowUpIcon className="w-4 h-4" />
+                      <span>Update Lesson</span>
+                    </button>
+                  </div>
+                ) :
                   // Working with drafts - show both Save Draft and Publish buttons
                   <>
                     <button
@@ -2190,7 +2640,7 @@ const UnifiedLessonBuilder = () => {
                       </button>
                     )}
                   </>
-                )}
+                }
               </div>
             </div>
           </div>

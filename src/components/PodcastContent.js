@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { historyOfAiLesson } from '../utils/historyOfAiLesson';
 
 const PodcastContent = () => {
   const { lessonId } = useParams();
@@ -8,10 +7,9 @@ const PodcastContent = () => {
   const [selectedSection, setSelectedSection] = useState(0);
 
   useEffect(() => {
-    // Load lesson data - for now we'll use the history lesson
-    if (lessonId === 'welcome-ai-revolution' || lessonId === 'history-of-ai') {
-      setLesson(historyOfAiLesson);
-    }
+    // TODO: Load lesson data from Firestore database instead of static imports
+    // This component should fetch lesson content from the database
+    console.log('PodcastContent needs to be updated to load from database');
   }, [lessonId]);
 
   if (!lesson) {
