@@ -10,9 +10,9 @@ function Header() {
             BeginningWithAi
           </Link>
           <nav className="nav">
-            <Link to="/" className="nav-link">Home</Link>
             <Link to="/lessons" className="nav-link">Lessons</Link>
             <Link to="/dashboard" className="nav-link">Dashboard</Link>
+            <Link to="/ai-news" className="nav-link">AI News</Link>
             <Link to="/login" className="nav-link">Login</Link>
             <Link to="/register" className="nav-link">Register</Link>
           </nav>

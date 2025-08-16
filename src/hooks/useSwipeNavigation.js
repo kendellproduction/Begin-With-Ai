@@ -11,9 +11,9 @@ const useSwipeNavigation = () => {
 
   // Define the main pages in order for horizontal navigation
   const mainPages = [
-    { path: '/home', name: 'Home' },
     { path: '/lessons', name: 'Lessons' },
-    { path: '/dashboard', name: 'Dashboard' },
+    { path: '/home', name: 'Dashboard' },
+    { path: '/ai-news', name: 'AI News' },
     { path: '/profile', name: 'Profile' }
   ];
 

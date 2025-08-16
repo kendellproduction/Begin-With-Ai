@@ -72,11 +72,11 @@ const LoggedInNavbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/home" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              Home
-            </Link>
             <Link to="/lessons" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Lessons
+            </Link>
+            <Link to="/home" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Dashboard
             </Link>
             <Link to="/ai-news" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               AI News
@@ -206,8 +206,8 @@ const LoggedInNavbar = () => {
         style={!isDarkSpacePage ? { backgroundColor: '#3b82f6' } : {}}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
           <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
+          <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
           <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
           {currentUser?.subscriptionTier !== 'premium' && (
             <Link 

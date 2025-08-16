@@ -120,7 +120,7 @@ const OptimizedStarField = ({
     <div 
       className={`star-container fixed inset-0 pointer-events-none ${className}`}
       style={{ 
-        zIndex: 1,
+        zIndex: 25,
         width: '100vw',
         height: '100vh',
         overflow: 'hidden'
