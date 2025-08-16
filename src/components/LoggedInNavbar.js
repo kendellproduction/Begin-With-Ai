@@ -142,6 +142,15 @@ const LoggedInNavbar = () => {
             <Link to="/ai-news" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               AI News
             </Link>
+            {isAdminUser && (
+              <Link 
+                to="/admin" 
+                className="text-purple-300 hover:text-purple-200 hover:bg-purple-900/30 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-purple-400/30 hover:border-purple-400/50"
+                title="Admin Panel"
+              >
+                ⚙️ Admin
+              </Link>
+            )}
             {currentUser?.subscriptionTier !== 'premium' && (
               <Link 
                 to="/pricing"
