@@ -56,7 +56,7 @@ const DashboardOverview = () => {
       setLoading(true);
       try {
         await Promise.all([
-          loadAnalytics(),
+          loadRealTimeAnalytics(),
           loadPublishedLessons(),
           loadRecentDrafts()
         ]);

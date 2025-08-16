@@ -8,12 +8,8 @@
  * @param {boolean} replace - Whether to replace the current history entry
  */
 export const navigateAfterAuth = (navigate, replace = true) => {
-  // Check if user has completed the adaptive quiz/questionnaire
-  if (hasCompletedQuestionnaire()) {
-    navigate('/home', { replace });
-  } else {
-    navigate('/learning-path/adaptive-quiz', { replace });
-  }
+  // Minimal change: after successful authentication, send users to Lessons
+  navigate('/lessons', { replace });
 };
 
 /**

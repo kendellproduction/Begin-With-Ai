@@ -2,6 +2,38 @@
 
 This is the focused task list for immediate priorities.
 
+## 🧭 Top Priorities (Quick Wins for Production)
+- [ ] Direct users to Lessons page on open/login
+  - Acceptance: Visiting `/` or completing login lands on `/lessons` (protected route).
+- [ ] Hide in‑progress/placeholder lessons from public list
+  - Acceptance: Lessons with `hidden: true` or `status: 'under_development'` do not render on `/lessons`.
+- [ ] Clean database of placeholder lessons
+  - Acceptance: No legacy placeholder cards; empty state appears until new content is published.
+- [ ] Confirm published‑only visibility
+  - Acceptance: Only lessons with `status: 'published'` (or explicit published flag) appear.
+- [ ] Clear empty state CTA on Lessons page (admin only)
+  - Acceptance: Admins see a “Create Your First Lesson” link to `/unified-lesson-builder` when no lessons exist.
+- [ ] Admin navigation UX
+  - Acceptance: Admins can reach `/admin-unified` and the builder in 1–2 clicks from the app.
+- [ ] Card visual control (optional)
+  - Acceptance: `icon` and optional `paletteIndex` fields on lesson documents override card visuals.
+- [ ] Smoke tests for routing and visibility
+  - Acceptance: Tests cover login redirect to `/lessons`, hidden/published filtering, and empty states.
+
+## 🔶 Bigger Items To Complete
+- [ ] Finish lesson content updates to new format
+  - Acceptance: Published lessons open in modern viewers without errors; no static fallbacks.
+- [ ] Make the admin lesson editor fully functional
+  - Acceptance: Create/edit/publish flows succeed; changes reflect immediately on `/lessons`.
+- [ ] Pre‑production checks
+  - Acceptance: Health check, security audit, and env validation pass per repo rules.
+- [ ] Production build and serve test
+  - Acceptance: `npm run build` + `npm run serve` run cleanly; no runtime errors.
+- [ ] Firebase security rules sanity
+  - Acceptance: Public can read published lessons; only admins can write/publish.
+- [ ] Monitoring and error boundaries
+  - Acceptance: Viewers wrapped with error boundaries; client errors logged.
+
 ## 🔴 Current Priority: Phase 2 - UI/UX Improvements
 
 ### Priority 4: Fix Lesson Viewer Display Issues

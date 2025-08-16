@@ -539,7 +539,7 @@ const LessonsOverview = React.memo(() => {
           </div>
 
           {/* Progress Section (if user has active path) or CTA */}
-          {userLearningPath && learningProgress ? (
+          {false && userLearningPath && learningProgress ? (
             <div className="mb-8">
               <div className="bg-gradient-to-br from-yellow-500/10 via-amber-400/8 to-orange-500/10 backdrop-blur-sm rounded-2xl p-4 relative transition-all duration-500 border border-yellow-200/30" style={{
                 boxShadow: '0 0 30px rgba(251, 191, 36, 0.3), 0 0 45px rgba(245, 158, 11, 0.2), 0 0 60px rgba(255, 215, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2), inset 0 -1px 0 rgba(255, 215, 0, 0.15)'

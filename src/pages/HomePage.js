@@ -19,6 +19,9 @@ import { differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
 
 
 const HomePage = () => {
+  // Feature flags to control visibility of learning path UI
+  const SHOW_LEARNING_PATH = false;
+  const SHOW_LEARNING_PATHS_SECTION = false;
   const navigate = useNavigate();
   const { user, currentUser } = useAuth();
   const { userStats, completeLesson, updateStreak } = useGamification();
@@ -394,10 +397,24 @@ const HomePage = () => {
       
       setAvailablePaths(pathsData);
       setAdaptiveLessons(allLessons.slice(0, 6)); // Show up to 6 lessons total
+
+      // Ensure we always have a next lesson recommendation even without a path
+      if (!nextLesson && allLessons.length > 0) {
+        const idx = Math.floor(Math.random() * allLessons.length);
+        setNextLesson(allLessons[idx]);
+      }
     } catch (error) {
       logger.error('Failed to load adaptive lessons:', error);
     }
   };
+
+  // If adaptive lessons load later and we still don't have a next lesson, pick one
+  useEffect(() => {
+    if (!nextLesson && adaptiveLessons.length > 0) {
+      const idx = Math.floor(Math.random() * adaptiveLessons.length);
+      setNextLesson(adaptiveLessons[idx]);
+    }
+  }, [adaptiveLessons, nextLesson]);
 
   const getUserGreeting = () => {
     const name = user?.displayName || user?.email?.split('@')[0] || 'AI Learner';
@@ -624,7 +641,7 @@ const HomePage = () => {
                 </div>
 
                 {/* Learning Path Visual and Continue Button */}
-                {isQuizCompleted && userLearningPath && (
+                {SHOW_LEARNING_PATH && isQuizCompleted && userLearningPath && (
                   <div className="mt-4 pt-4 border-t border-white/20">
                     <LearningPathVisual 
                       learningProgress={learningProgress}
@@ -643,6 +660,36 @@ const HomePage = () => {
                       <p className="mt-1 text-indigo-200 text-xs">
                         Pick up where you left off in your personalized path.
                       </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Recommended Next Lesson (shown when learning path UI is hidden) */}
+                {!SHOW_LEARNING_PATH && (
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <div className="glass-accent rounded-2xl p-4">
+                      <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                        🎯 Recommended Next Lesson
+                      </h3>
+                      {nextLesson ? (
+                        <div className="glass-surface rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="glass-primary px-2 py-1 text-blue-100 rounded-full text-xs font-medium">
+                              {nextLesson.moduleTitle || nextLesson.moduleName || 'Lesson'}
+                            </span>
+                            <span className="text-xs text-cyan-200">{nextLesson.duration || '15 min'}</span>
+                          </div>
+                          <h4 className="text-base font-semibold text-white mb-2">{nextLesson.title}</h4>
+                          <button
+                            onClick={() => handleQuickLessonClick(nextLesson)}
+                            className="w-full glass-button bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-300 text-sm"
+                          >
+                            Start Lesson →
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="text-blue-100 text-sm">We’re picking a great next step for you…</div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -671,7 +718,7 @@ const HomePage = () => {
               
               {/* Left Column - Learning Paths */}
               <section className="lg:col-span-2">
-                {availablePaths.length > 0 && (
+                {SHOW_LEARNING_PATHS_SECTION && availablePaths.length > 0 && (
                   <div className="glass-liquid rounded-3xl p-6 shadow-lg overflow-visible">
                     <h2 className="text-2xl font-bold text-white mb-4 text-center">🗺️ Explore Learning Paths</h2>
                     <div className="grid gap-4">
