@@ -3,22 +3,30 @@
 This is the focused task list for immediate priorities.
 
 ## 🧭 Top Priorities (Quick Wins for Production)
-- [ ] Direct users to Lessons page on open/login
-  - Acceptance: Visiting `/` or completing login lands on `/lessons` (protected route).
-- [ ] Hide in‑progress/placeholder lessons from public list
-  - Acceptance: Lessons with `hidden: true` or `status: 'under_development'` do not render on `/lessons`.
-- [ ] Clean database of placeholder lessons
+- [x] **COMPLETED: Direct users to Lessons page on open/login**
+  - ✅ Acceptance: Visiting `/` or completing login lands on `/lessons` (protected route).
+  - ✅ Implementation: `navigateAfterAuth()` in utils/navigationUtils.js redirects to `/lessons`
+- [x] **COMPLETED: Hide in‑progress/placeholder lessons from public list**
+  - ✅ Acceptance: Lessons with `hidden: true` or `status: 'under_development'` do not render on `/lessons`.
+  - ✅ Implementation: LessonsOverview.js filters for published lessons only (lines 225-228)
+- [x] **COMPLETED: Confirm published‑only visibility**
+  - ✅ Acceptance: Only lessons with `status: 'published'` (or explicit published flag) appear.
+  - ✅ Implementation: Consistent filtering applied across LessonsOverview and admin panels
+- [x] **COMPLETED: Clear empty state CTA on Lessons page (admin only)**
+  - ✅ Acceptance: Admins see a "Create Your First Lesson" link to `/unified-lesson-builder` when no lessons exist.
+  - ✅ Implementation: DashboardOverview.js shows create button for empty state
+- [ ] **REMAINING: Clean database of placeholder lessons**
   - Acceptance: No legacy placeholder cards; empty state appears until new content is published.
-- [ ] Confirm published‑only visibility
-  - Acceptance: Only lessons with `status: 'published'` (or explicit published flag) appear.
-- [ ] Clear empty state CTA on Lessons page (admin only)
-  - Acceptance: Admins see a “Create Your First Lesson” link to `/unified-lesson-builder` when no lessons exist.
-- [ ] Admin navigation UX
-  - Acceptance: Admins can reach `/admin-unified` and the builder in 1–2 clicks from the app.
-- [ ] Card visual control (optional)
+  - Next: Run database cleanup script or manually remove placeholder content
+- [ ] **REMAINING: Improve admin navigation UX**
+  - Acceptance: Admins can reach `/admin` and the builder in 1–2 clicks from the app.
+  - Current: Routes exist but could use better navigation links in main UI
+- [ ] **REMAINING: Card visual control (optional)**
   - Acceptance: `icon` and optional `paletteIndex` fields on lesson documents override card visuals.
-- [ ] Smoke tests for routing and visibility
+  - Next: Implement visual customization fields in lesson cards
+- [ ] **REMAINING: Smoke tests for routing and visibility**
   - Acceptance: Tests cover login redirect to `/lessons`, hidden/published filtering, and empty states.
+  - Next: Write test coverage for completed functionality
 
 ## 🔶 Bigger Items To Complete
 - [ ] Finish lesson content updates to new format
