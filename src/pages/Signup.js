@@ -96,7 +96,7 @@ const Signup = () => {
   return (
     <div className="min-h-screen relative overflow-hidden" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
       
       <Navbar />
       

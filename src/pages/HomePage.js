@@ -601,7 +601,7 @@ const HomePage = () => {
         className="relative min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white overflow-hidden"
       >
         {/* Optimized Star Field */}
-        <OptimizedStarField starCount={180} opacity={0.9} speed={1} size={1.2} />
+        <OptimizedStarField starCount={220} opacity={0.9} speed={1} size={1.2} />
 
         <div className="relative z-20">
           <LoggedInNavbar />

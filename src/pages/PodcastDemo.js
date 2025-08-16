@@ -125,7 +125,7 @@ Example: "You are a financial advisor. A 25-year-old just got their first job. W
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
       
-      <OptimizedStarField starCount={400} opacity={1} speed={1.5} size={1} />
+      <OptimizedStarField starCount={220} opacity={1} speed={1.5} size={1} />
 
       {/* Floating Orbs */}
       <div className="fixed inset-0 z-0 pointer-events-none">

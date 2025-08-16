@@ -394,7 +394,7 @@ const AdaptiveWelcomeLesson = () => {
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-      <OptimizedStarField starCount={200} opacity={0.8} speed={0.8} size={1} />
+              <OptimizedStarField starCount={220} opacity={0.8} speed={0.8} size={1} />
 
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-2 bg-gray-800 z-20">

@@ -289,7 +289,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700 px-6 py-6 relative z-10">

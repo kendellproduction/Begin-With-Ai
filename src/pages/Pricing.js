@@ -72,7 +72,7 @@ const Pricing = () => {
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Main content wrapper */}
       <div className="relative z-10">

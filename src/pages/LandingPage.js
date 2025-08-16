@@ -316,7 +316,7 @@ const LandingPage = () => {
       <Navbar openAuthModal={openAuthModal} />
       
       {/* Single Optimized Star Field for Entire Page */}
-      <OptimizedStarField starCount={180} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
       
       {/* Hero Section with Solid Blue Background & Adjusted Content */}
       <section 

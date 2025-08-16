@@ -9,7 +9,7 @@ const Footer = () => {
       className="py-8 relative overflow-hidden"
       style={{ backgroundColor: '#3b82f6' }}
     >
-      <OptimizedStarField starCount={100} opacity={0.8} speed={0.6} size={1} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={0.6} size={1} />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">

@@ -322,7 +322,7 @@ const AdminPanel = () => {
       <LoggedInNavbar />
       
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
 

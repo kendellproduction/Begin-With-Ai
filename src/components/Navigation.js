@@ -59,7 +59,7 @@ const Navigation = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Top Navigation Bar */}
       <nav className="bg-gray-800 shadow-lg relative z-10">

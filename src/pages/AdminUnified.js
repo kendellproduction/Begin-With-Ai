@@ -6,7 +6,7 @@ const AdminUnified = () => {
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Hidden header for context - only visible in dev mode */}
       {process.env.NODE_ENV === 'development' && (

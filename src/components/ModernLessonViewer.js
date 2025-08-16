@@ -949,7 +949,8 @@ const ModernLessonViewer = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black flex items-center justify-center">
-        <div className="text-center">
+        <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
+        <div className="text-center relative z-10">
           <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-white text-lg">Loading lesson...</p>
         </div>
@@ -960,7 +961,8 @@ const ModernLessonViewer = () => {
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black flex items-center justify-center">
-        <div className="text-center">
+        <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
+        <div className="text-center relative z-10">
           <div className="text-red-400 text-6xl mb-4">⚠️</div>
           <h2 className="text-white text-2xl mb-4">Lesson Not Found</h2>
           <p className="text-gray-300 mb-6 max-w-md">{error}</p>
@@ -977,7 +979,7 @@ const ModernLessonViewer = () => {
 
   return (
     <div className="min-h-screen bg-black text-white overflow-hidden pwa-safe-top-padding relative">
-      <OptimizedStarField starCount={100} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Fixed Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-30">

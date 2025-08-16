@@ -359,7 +359,7 @@ const DraftBrowser = () => {
   if (loading) {
     return (
       <div className="min-h-screen text-white flex items-center justify-center" style={{ backgroundColor: '#3b82f6' }}>
-        <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+        <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
         <div className="text-center z-10">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-white">Loading your drafts...</p>
@@ -374,7 +374,7 @@ const DraftBrowser = () => {
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Migration Status */}
       {migrationStatus && (

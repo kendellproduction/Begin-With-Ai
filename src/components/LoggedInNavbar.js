@@ -59,68 +59,7 @@ const LoggedInNavbar = () => {
       }`}
       style={!isDarkSpacePage ? { backgroundColor: '#3b82f6' } : {}}
     >
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(numStars)].map((_, i) => {
-          // Create variety in star types like AI News page
-          const isLargeStar = i % 10 === 0; // 10% large stars
-          const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars (excluding large)
-          
-          // Use the same size range as AI News page
-          let size;
-          if (isLargeStar) {
-            size = 3 + Math.random() * 2; // 3-5px for large stars
-          } else if (isMediumStar) {
-            size = 2 + Math.random() * 1; // 2-3px for medium stars
-          } else {
-            size = 0.5 + Math.random() * 1.5; // 0.5-2px for small stars
-          }
-          
-          const opacity = isLargeStar ? 0.9 : isMediumStar ? 0.85 : 0.8;
-          const duration = Math.random() * 20 + 15;
-          const delay = Math.random() * 10;
-
-          const initialY = Math.random() * 80 - 10;
-          const targetY = Math.random() * 80 - 10;
-          
-          const initialX = Math.random() * window.innerWidth;
-          const targetX = Math.random() * window.innerWidth;
-
-          return (
-            <motion.div
-              key={`navbar-star-${i}`}
-              className="absolute rounded-full bg-white/70"
-              style={{
-                width: size,
-                height: size,
-                left: initialX,
-                top: initialY,
-              }}
-              initial={{ opacity: 0, scale: 1 }}
-              animate={{
-                x: targetX - initialX,
-                y: targetY - initialY,
-                opacity: [0, opacity, opacity, 0],
-                scale: 1, // No scaling to keep consistent size
-              }}
-              transition={{
-                duration: duration,
-                delay: delay,
-                repeat: Infinity,
-                repeatType: 'loop',
-                ease: 'linear',
-                opacity: {
-                  times: [0, 0.2, 0.8, 1],
-                  duration: duration,
-                  repeat: Infinity,
-                  repeatType: 'loop',
-                  ease: 'linear',
-                },
-
-              }}
-            />
-          );
-        })}
-      </div>
+      {/* Removed navbar stars to improve performance - stars handled by OptimizedStarField */}
       
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pwa-safe-top-padding">
         <div className="flex justify-between h-16">
@@ -142,15 +81,6 @@ const LoggedInNavbar = () => {
             <Link to="/ai-news" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               AI News
             </Link>
-            {isAdminUser && (
-              <Link 
-                to="/admin" 
-                className="text-purple-300 hover:text-purple-200 hover:bg-purple-900/30 px-3 py-2 rounded-md text-sm font-medium transition-colors border border-purple-400/30 hover:border-purple-400/50"
-                title="Admin Panel"
-              >
-                ⚙️ Admin
-              </Link>
-            )}
             {currentUser?.subscriptionTier !== 'premium' && (
               <Link 
                 to="/pricing"
@@ -279,15 +209,6 @@ const LoggedInNavbar = () => {
           <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Home</Link>
           <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
           <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
-          {isAdminUser && (
-            <Link 
-              to="/admin" 
-              className="text-purple-300 hover:text-purple-200 hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" 
-              onClick={() => setIsMenuOpen(false)}
-            >
-              ⚙️ Admin Panel
-            </Link>
-          )}
           {currentUser?.subscriptionTier !== 'premium' && (
             <Link 
               to="/pricing"

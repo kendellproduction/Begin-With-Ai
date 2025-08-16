@@ -24,7 +24,7 @@ const LessonDetail = () => {
       className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
     >
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={80} opacity={0.6} speed={0.8} size={1} />
+      <OptimizedStarField starCount={220} opacity={0.6} speed={0.8} size={1} />
       <div className="text-center text-white relative z-10">
         <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
         <p className="text-xl">

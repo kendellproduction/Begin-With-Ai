@@ -2853,7 +2853,7 @@ const UnifiedLessonBuilder = () => {
                   {/* Stars Animation */}
                   {backgroundAnimation === 'floating-stars' && (
                     <div className="stars-container">
-                      <OptimizedStarField starCount={100} opacity={0.6} speed={1.2} size={1} />
+                      <OptimizedStarField starCount={220} opacity={0.6} speed={1.2} size={1} />
                     </div>
                   )}
 

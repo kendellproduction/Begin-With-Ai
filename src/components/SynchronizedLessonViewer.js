@@ -353,7 +353,8 @@ const SynchronizedLessonViewer = () => {
   if (!lesson) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto p-8">
+        <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
+        <div className="text-center max-w-md mx-auto p-8 relative z-10">
           <div className="text-yellow-400 text-6xl mb-4">🚧</div>
           <h2 className="text-2xl font-bold text-white mb-4">Lesson Under Development</h2>
           <p className="text-gray-300 mb-6">
@@ -384,7 +385,7 @@ const SynchronizedLessonViewer = () => {
   return (
     <div className="min-h-screen bg-black relative overflow-hidden">
       {/* Optimized Star Field Background */}
-      <OptimizedStarField starCount={180} opacity={0.8} speed={0.5} size={1.2} />
+              <OptimizedStarField starCount={220} opacity={0.8} speed={0.5} size={1.2} />
       
       {/* Quiz pause notification */}
       {isPaused && pauseReason === 'quiz' && (

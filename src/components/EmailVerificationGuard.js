@@ -51,7 +51,7 @@ const EmailVerificationGuard = ({ children, requireVerification = true }) => {
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center">

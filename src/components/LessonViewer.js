@@ -679,7 +679,7 @@ const LessonViewer = () => {
       <div 
         className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
       >
-        <OptimizedStarField starCount={100} opacity={0.6} speed={0.8} size={1} />
+        <OptimizedStarField starCount={220} opacity={0.6} speed={0.8} size={1} />
         <div className="text-center relative z-10 max-w-md mx-auto p-8">
           <div className="text-red-400 text-6xl mb-4">⚠️</div>
           <h2 className="text-2xl font-bold text-white mb-4">Lesson Not Found</h2>
@@ -700,7 +700,7 @@ const LessonViewer = () => {
       <div 
         className="fixed inset-0 flex items-center justify-center bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden"
       >
-        <OptimizedStarField starCount={100} opacity={0.6} speed={0.8} size={1} />
+        <OptimizedStarField starCount={220} opacity={0.6} speed={0.8} size={1} />
         <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-400 mx-auto mb-4"></div>
           <p className="text-xl text-white">Loading lesson...</p>
@@ -715,7 +715,7 @@ const LessonViewer = () => {
         className="fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black flex items-center justify-center text-center"
         onClick={() => !showCompletionButtons && setShowCompletionButtons(true)}
       >
-        <OptimizedStarField starCount={100} opacity={0.7} speed={1.2} size={1} />
+        <OptimizedStarField starCount={220} opacity={0.7} speed={1.2} size={1} />
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -790,7 +790,7 @@ const LessonViewer = () => {
       ref={containerRef}
       className="lesson-viewer fixed inset-0 bg-gradient-to-br from-gray-950 via-slate-950 to-black z-50 overflow-hidden"
     >
-      <OptimizedStarField starCount={120} opacity={0.6} speed={0.8} size={1} />
+      <OptimizedStarField starCount={220} opacity={0.6} speed={0.8} size={1} />
       {/* Progress Bar */}
       <div className="lesson-progress-bar-container absolute top-0 left-0 right-0 h-auto bg-gray-800 z-10">
         <div className="h-1">

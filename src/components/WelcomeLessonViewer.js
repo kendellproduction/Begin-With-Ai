@@ -175,7 +175,7 @@ const WelcomeLessonViewer = () => {
   return (
     <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-2 bg-gray-200 z-20">

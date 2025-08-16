@@ -24,7 +24,7 @@ const Quiz = () => {
     return (
       <div className="min-h-screen text-white flex items-center justify-center" style={{ backgroundColor: '#3b82f6' }}>
         {/* Optimized Star Field */}
-        <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+        <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
         <div className="text-center relative z-10">
           <h1 className="text-2xl font-bold mb-4">Loading quiz...</h1>
@@ -58,7 +58,7 @@ const Quiz = () => {
   return (
     <div className="min-h-screen text-white flex items-center justify-center p-4" style={{ backgroundColor: '#3b82f6' }}>
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       <div className="max-w-2xl w-full bg-gray-800 rounded-3xl p-8 shadow-2xl relative z-10">
         {/* Progress */}

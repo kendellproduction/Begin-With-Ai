@@ -883,7 +883,7 @@ const AdaptiveLearningPathQuiz = () => {
       <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
         <LoggedInNavbar />
         
-        <OptimizedStarField starCount={80} opacity={0.5} speed={0.8} size={1} />
+        <OptimizedStarField starCount={220} opacity={0.5} speed={0.8} size={1} />
         
         <div className="relative z-10 flex items-center justify-center min-h-[70vh]">
           <div className="text-center">
@@ -904,7 +904,7 @@ const AdaptiveLearningPathQuiz = () => {
       <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
         <LoggedInNavbar />
 
-        <OptimizedStarField starCount={150} opacity={0.5} speed={0.8} size={1} />
+        <OptimizedStarField starCount={220} opacity={0.5} speed={0.8} size={1} />
         
         <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Check if this is a return visit */}
@@ -1212,7 +1212,7 @@ const AdaptiveLearningPathQuiz = () => {
     <div className="relative min-h-screen bg-gradient-to-br from-gray-950 via-slate-950 to-black text-white overflow-hidden">
       <LoggedInNavbar />
 
-      <OptimizedStarField starCount={200} opacity={0.8} speed={0.8} size={1} />
+              <OptimizedStarField starCount={220} opacity={0.8} speed={0.8} size={1} />
       
       {/* Main content wrapper */}
       <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

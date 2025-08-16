@@ -35,41 +35,7 @@ const Navbar = ({ openAuthModal }) => {
       className="sticky top-0 z-50"
       style={{ backgroundColor: '#3b82f6' }}
     >
-      <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-        {[...Array(30)].map((_, i) => (
-          <motion.div
-            key={`nav-star-${i}`}
-            className="absolute bg-white rounded-full"
-            initial={{
-              x: Math.random() * window.innerWidth,
-              y: Math.random() * navbarHeight * 1.5 - (navbarHeight * 0.25),
-              opacity: Math.random() * 0.5 + 0.4,
-            }}
-            animate={{
-              x: [
-                Math.random() * window.innerWidth,
-                Math.random() * window.innerWidth,
-              ],
-              y: [
-                Math.random() * navbarHeight * 1.5 - (navbarHeight * 0.25),
-                Math.random() * navbarHeight * 1.5 - (navbarHeight * 0.25),
-              ],
-              scale: [Math.random() * 1.2 + 0.6, Math.random() * 1.2 + 0.6, Math.random() * 1.2 + 0.6],
-            }}
-            transition={{
-              duration: Math.random() * 20 + 15,
-              repeat: Infinity,
-              repeatType: "loop",
-              ease: "linear",
-              delay: 0
-            }}
-            style={{
-              width: Math.random() * 2 + 1,
-              height: Math.random() * 2 + 1,
-            }}
-          />
-        ))}
-      </div>
+      {/* Removed navbar stars to improve performance - stars handled by OptimizedStarField */}
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">

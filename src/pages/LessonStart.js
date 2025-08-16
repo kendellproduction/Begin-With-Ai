@@ -98,7 +98,7 @@ const LessonStart = () => {
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={200} opacity={0.8} speed={0.8} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={0.8} size={1.2} />
 
       <main className="relative z-10 container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

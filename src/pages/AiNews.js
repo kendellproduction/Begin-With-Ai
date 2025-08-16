@@ -528,7 +528,7 @@ const AiNews = () => {
       <LoggedInNavbar />
 
       {/* Optimized Star Field */}
-      <OptimizedStarField starCount={150} opacity={0.8} speed={1} size={1.2} />
+      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Custom CSS for animated shadows */}
       <div className="relative z-10">
