@@ -64,6 +64,19 @@ const UnifiedLessonBuilder = () => {
   const [lessonBackground, setLessonBackground] = useState('dark');
   const [customBackgroundImage, setCustomBackgroundImage] = useState('');
   const [backgroundAnimation, setBackgroundAnimation] = useState('floating-stars');
+  
+  // NEW: Lesson card visual customization
+  const [lessonIcon, setLessonIcon] = useState('');
+  const [lessonPaletteIndex, setLessonPaletteIndex] = useState(3); // Default to blue (Ocean Blue palette)
+  const [useCustomColors, setUseCustomColors] = useState(false);
+  const [customCardColors, setCustomCardColors] = useState({
+    gradient: 'bg-blue-600/85',
+    borderGlow: 'border-blue-400/70', 
+    shadowColor: 'shadow-blue-600/50',
+    textAccent: 'text-blue-100',
+    buttonStyle: 'from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600'
+  });
+  
   const [availableModules] = useState([
     { id: 'prompt-engineering', name: 'Prompt Engineering Mastery' },
     { id: 'vibe-coding', name: 'Vibe Coding' },
@@ -79,10 +92,80 @@ const UnifiedLessonBuilder = () => {
     { id: 'purple', name: 'Purple', description: 'Purple theme', preview: 'bg-purple-900', textColor: 'text-white' },
     { id: 'green', name: 'Green', description: 'Green theme', preview: 'bg-green-900', textColor: 'text-white' },
     { id: 'orange', name: 'Orange', description: 'Orange theme', preview: 'bg-orange-900', textColor: 'text-white' },
-    { id: 'light', name: 'Light', description: 'Light theme', preview: 'bg-gray-100', textColor: 'text-gray-900' },
-    { id: 'custom-image', name: 'Custom Image', description: 'Upload custom background', preview: 'bg-gray-600', textColor: 'text-white' }
+    { id: 'light', name: 'Light', description: 'Light theme', preview: 'bg-gray-100', textColor: 'text-gray-900' }
   ]);
-
+  
+  // Card color palettes (same as LessonCard.js)
+  const [colorPalettes] = useState([
+    // Ocean Blue (Index 3 - Default)
+    {
+      name: 'Ocean Blue',
+      gradient: 'bg-blue-600/85',
+      borderGlow: 'border-blue-400/70',
+      shadowColor: 'shadow-blue-600/50',
+      textAccent: 'text-blue-100',
+      buttonStyle: 'from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600',
+      particles: ['🌊', '💧', '🐟']
+    },
+    // Warm Caramel
+    {
+      name: 'Warm Caramel',
+      gradient: 'bg-amber-600/85',
+      borderGlow: 'border-amber-400/70',
+      shadowColor: 'shadow-amber-600/50',
+      textAccent: 'text-amber-100',
+      buttonStyle: 'from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600',
+      particles: ['✨', '🍯', '🌟']
+    },
+    // Forest Green
+    {
+      name: 'Forest Green',
+      gradient: 'bg-green-600/85',
+      borderGlow: 'border-green-400/70',
+      shadowColor: 'shadow-green-600/50',
+      textAccent: 'text-green-100',
+      buttonStyle: 'from-green-500 to-green-700 hover:from-green-400 hover:to-green-600',
+      particles: ['🌿', '🍃', '🌱']
+    },
+    // Rich Terracotta
+    {
+      name: 'Rich Terracotta',
+      gradient: 'bg-orange-700/85',
+      borderGlow: 'border-orange-500/70',
+      shadowColor: 'shadow-orange-700/50',
+      textAccent: 'text-orange-100',
+      buttonStyle: 'from-orange-600 to-orange-800 hover:from-orange-500 hover:to-orange-700',
+      particles: ['🏺', '🍂', '🌅']
+    },
+    // Deep Purple
+    {
+      name: 'Deep Purple',
+      gradient: 'bg-purple-600/85',
+      borderGlow: 'border-purple-400/70',
+      shadowColor: 'shadow-purple-600/50',
+      textAccent: 'text-purple-100',
+      buttonStyle: 'from-purple-500 to-purple-700 hover:from-purple-400 hover:to-purple-600',
+      particles: ['🔮', '🌙', '💜']
+    },
+    // Emerald 
+    {
+      name: 'Emerald',
+      gradient: 'bg-emerald-600/85',
+      borderGlow: 'border-emerald-400/70',
+      shadowColor: 'shadow-emerald-600/50',
+      textAccent: 'text-emerald-100',
+      buttonStyle: 'from-emerald-500 to-emerald-700 hover:from-emerald-400 hover:to-emerald-600',
+      particles: ['💚', '🔮', '🌿']
+    }
+  ]);
+  
+  // Popular lesson icons
+  const [popularIcons] = useState([
+    '🚀', '📚', '🧠', '📖', '⚙️', '🎨', '🔧', '🤖', 
+    '💡', '🎯', '⭐', '🔥', '💎', '🌟', '✨', '🎪',
+    '🎓', '🎊', '🏆', '📊', '🔍', '💼', '🎮', '🎵'
+  ]);
+  
   // Background animation options - only star, bubbles, rain, and snow
   const [animationOptions] = useState([
     { id: 'none', name: 'None', description: 'No animation' },
@@ -225,6 +308,15 @@ const UnifiedLessonBuilder = () => {
         setLessonTitle(draft.title || 'Untitled Lesson');
         setLessonDescription(draft.description || '');
         setCurrentDraftId(draft.id);
+        
+        // Load visual customization settings
+        setLessonIcon(draft.icon || '');
+        setLessonPaletteIndex(draft.paletteIndex !== undefined ? draft.paletteIndex : 3); // Default to blue
+        setUseCustomColors(!!draft.customColors);
+        if (draft.customColors) {
+          setCustomCardColors(draft.customColors);
+        }
+        
         const loadedFreePages = draft.contentVersions?.free?.pages || draft.pages || [];
         const loadedPremiumPages = draft.contentVersions?.premium?.pages || draft.pages || [];
         setFreePages(loadedFreePages);
@@ -239,6 +331,15 @@ const UnifiedLessonBuilder = () => {
         // Set lesson metadata
         setLessonTitle(lesson.title || 'Untitled Lesson');
         setLessonDescription(lesson.description || '');
+        
+        // Load visual customization settings
+        setLessonIcon(lesson.icon || '');
+        setLessonPaletteIndex(lesson.paletteIndex !== undefined ? lesson.paletteIndex : 3); // Default to blue
+        setUseCustomColors(!!lesson.customColors);
+        if (lesson.customColors) {
+          setCustomCardColors(lesson.customColors);
+        }
+        
         const loadedFreePages = lesson.contentVersions?.free?.pages || lesson.pages || [];
         const loadedPremiumPages = lesson.contentVersions?.premium?.pages || lesson.pages || [];
         setFreePages(loadedFreePages);
@@ -638,6 +739,10 @@ const UnifiedLessonBuilder = () => {
           blocksCount: lessonBlocks.length,
           lastEditedAt: new Date().toISOString()
         },
+        // Visual customization fields
+        icon: lessonIcon || undefined,
+        paletteIndex: lessonPaletteIndex,
+        customColors: useCustomColors ? customCardColors : undefined,
         // Mark as draft - not published
         status: 'draft',
         published: false,
@@ -705,6 +810,10 @@ const UnifiedLessonBuilder = () => {
         xpAward: 10,
         category: selectedModule || 'General',
         tags: [],
+        // Visual customization fields
+        icon: lessonIcon || undefined,
+        paletteIndex: lessonPaletteIndex,
+        customColors: useCustomColors ? customCardColors : undefined,
         // FIXED: Properly mark as published
         status: 'published',
         published: true,
@@ -807,6 +916,10 @@ const UnifiedLessonBuilder = () => {
         xpAward: 10,
         category: selectedModule || 'General',
         tags: [],
+        // Visual customization fields
+        icon: lessonIcon || undefined,
+        paletteIndex: lessonPaletteIndex,
+        customColors: useCustomColors ? customCardColors : undefined,
         // FIXED: Maintain the original publication status unless explicitly changed
         status: editingLesson.status || 'published',
         published: editingLesson.published !== false, // Default to true if not explicitly false
@@ -2413,6 +2526,87 @@ const UnifiedLessonBuilder = () => {
                       >
                         Premium
                       </button>
+                    </div>
+                  </div>
+
+                  {/* NEW: Card Visual Customization */}
+                  <div className="border-t border-gray-600 pt-4">
+                    <h3 className="text-sm font-medium mb-3 text-purple-300">🎨 Card Appearance</h3>
+                    
+                    {/* Icon Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2">Lesson Icon</label>
+                      <div className="grid grid-cols-8 gap-1 p-2 bg-gray-800 rounded-lg max-h-24 overflow-y-auto">
+                        {popularIcons.map(icon => (
+                          <button
+                            key={icon}
+                            onClick={() => {
+                              setLessonIcon(icon);
+                              triggerUnsavedState();
+                            }}
+                            className={`w-8 h-8 rounded flex items-center justify-center text-lg transition-all ${
+                              lessonIcon === icon
+                                ? 'bg-blue-600 ring-2 ring-blue-400'
+                                : 'hover:bg-gray-700'
+                            }`}
+                            title={`Use ${icon} icon`}
+                          >
+                            {icon}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        type="text"
+                        value={lessonIcon}
+                        onChange={(e) => {
+                          setLessonIcon(e.target.value);
+                          triggerUnsavedState();
+                        }}
+                        placeholder="Custom emoji or leave blank"
+                        className="w-full mt-2 bg-gray-800 border border-gray-600 rounded px-2 py-1 text-sm"
+                      />
+                    </div>
+
+                    {/* Color Palette Selection */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium mb-2">Color Theme</label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {colorPalettes.map((palette, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setLessonPaletteIndex(index);
+                              setUseCustomColors(false);
+                              triggerUnsavedState();
+                            }}
+                            className={`p-2 rounded-lg border-2 transition-all ${
+                              !useCustomColors && lessonPaletteIndex === index
+                                ? 'border-blue-500 bg-blue-900/50'
+                                : 'border-gray-600 hover:border-gray-500'
+                            }`}
+                            title={palette.name}
+                          >
+                            <div className={`w-full h-4 rounded mb-1 ${palette.gradient.replace('/85', '')}`}></div>
+                            <span className="text-xs">{palette.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Custom Colors Toggle */}
+                    <div className="mb-2">
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={useCustomColors}
+                          onChange={(e) => {
+                            setUseCustomColors(e.target.checked);
+                            triggerUnsavedState();
+                          }}
+                          className="rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm">Use custom colors (advanced)</span>
+                      </label>
                     </div>
                   </div>
                 </div>

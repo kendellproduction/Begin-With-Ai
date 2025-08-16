@@ -351,14 +351,35 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
 
   // Get unique color palette for each lesson
   const getThematicBackground = (lesson) => {
-    const lessonId = lesson.id || lesson.title || 'default';
-    const hash = getColorHash(lessonId);
-    const paletteIndex = hash % colorPalettes.length;
-    const palette = colorPalettes[paletteIndex];
+    // PRIORITY 1: Check for custom lesson overrides
+    if (lesson.customColors) {
+      return {
+        gradient: lesson.customColors.gradient || 'bg-blue-600/85',
+        borderGlow: lesson.customColors.borderGlow || 'border-blue-400/70',
+        shadowColor: lesson.customColors.shadowColor || 'shadow-blue-600/50',
+        textAccent: lesson.customColors.textAccent || 'text-blue-100',
+        buttonStyle: lesson.customColors.buttonStyle || 'from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600',
+        particles: lesson.customColors.particles || ['🌊', '💧', '🐟'],
+        icon: lesson.icon || getThematicIcon(lesson)
+      };
+    }
     
+    // PRIORITY 2: Check for custom palette index
+    if (lesson.paletteIndex !== undefined && lesson.paletteIndex !== null) {
+      const paletteIndex = lesson.paletteIndex % colorPalettes.length;
+      const palette = colorPalettes[paletteIndex];
+      return {
+        ...palette,
+        icon: lesson.icon || getThematicIcon(lesson)
+      };
+    }
+    
+    // PRIORITY 3: Default blue theme (as requested)
+    // Use Ocean Blue palette (index 3) as default instead of hash-based selection
+    const defaultPalette = colorPalettes[3]; // Ocean Blue palette
     return {
-      ...palette,
-      icon: getThematicIcon(lesson)
+      ...defaultPalette,
+      icon: lesson.icon || getThematicIcon(lesson)
     };
   };
 
