@@ -3,9 +3,14 @@ const admin = require('firebase-admin');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 
-// Configure CORS
+// Configure CORS (restrict to prod/staging origins only)
 const corsOptions = {
-  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'https://beginai1.firebaseapp.com', 'https://beginai1.web.app'],
+  origin: [
+    'https://beginai1.firebaseapp.com',
+    'https://beginai1.web.app',
+    'https://beginningwithai.com',
+    'https://www.beginningwithai.com'
+  ],
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -19,6 +24,56 @@ if (!admin.apps.length) {
 }
 
 const db = admin.firestore();
+
+// Simple in-memory rate limiter: 1 request/min per user/IP
+const rateLimitWindowMs = 60 * 1000;
+const lastRequestByKey = new Map();
+
+function getClientKey(req) {
+  const forwarded = (req.headers['x-forwarded-for'] || '').toString();
+  const ip = forwarded.split(',')[0].trim() || req.ip || 'unknown';
+  const userId = (req.body && (req.body.userId || req.body.uid)) || null;
+  const email = (req.body && req.body.userEmail) || null;
+  return userId || email || ip;
+}
+
+function isThrottled(req) {
+  const key = getClientKey(req);
+  const now = Date.now();
+  const last = lastRequestByKey.get(key) || 0;
+  if (now - last < rateLimitWindowMs) {
+    const retryAfterMs = rateLimitWindowMs - (now - last);
+    return { throttled: true, retryAfterMs };
+  }
+  lastRequestByKey.set(key, now);
+  return { throttled: false, retryAfterMs: 0 };
+}
+
+// Admin auth/authorization helper
+async function requireAdmin(req, res) {
+  try {
+    const authHeader = req.headers.authorization || '';
+    const hasBearer = authHeader.startsWith('Bearer ');
+    if (!hasBearer) {
+      res.status(401).json({ success: false, message: 'Unauthorized: missing Bearer token' });
+      return null;
+    }
+    const idToken = authHeader.replace('Bearer ', '').trim();
+    const decoded = await admin.auth().verifyIdToken(idToken);
+    const uid = decoded.uid;
+    const doc = await db.collection('users').doc(uid).get();
+    const role = (doc.exists && doc.data() && doc.data().role) || null;
+    if (role !== 'admin') {
+      res.status(403).json({ success: false, message: 'Forbidden: admin role required' });
+      return null;
+    }
+    return uid;
+  } catch (e) {
+    console.error('Admin auth check failed:', e);
+    res.status(401).json({ success: false, message: 'Unauthorized: invalid token' });
+    return null;
+  }
+}
 
 // News fetching logic (similar to the client-side service)
 class CloudNewsService {
@@ -244,10 +299,10 @@ class CloudNewsService {
 
 const newsService = new CloudNewsService();
 
-// Scheduled function - runs once per day (commented out for now)
-// Note: Uncomment and redeploy when pubsub schedule functions are properly configured
-/*
-exports.updateAINewsScheduled = functions.pubsub
+// Scheduled function - runs once per day with region and timezone
+exports.updateAINewsScheduled = functions
+  .region('us-central1')
+  .pubsub
   .schedule('every day')
   .timeZone('America/New_York')
   .onRun(async (context) => {
@@ -262,12 +317,13 @@ exports.updateAINewsScheduled = functions.pubsub
       throw error;
     }
   });
-*/
 
 // Manual trigger function (can be called via HTTP)
 exports.updateAINewsManual = functions.https.onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
+      const uid = await requireAdmin(req, res);
+      if (!uid) return;
       console.log('Manual news update triggered...');
       const results = await newsService.updateNews();
       await newsService.cleanOldNews();
@@ -315,6 +371,15 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
       // Only allow POST requests
       if (req.method !== 'POST') {
         res.status(405).json({ success: false, message: 'Method not allowed' });
+        return;
+      }
+
+      const throttle = isThrottled(req);
+      if (throttle.throttled) {
+        res.status(429).json({
+          success: false,
+          message: `You are sending messages too fast. Please wait ${Math.ceil(throttle.retryAfterMs / 1000)} seconds and try again.`
+        });
         return;
       }
 
@@ -430,6 +495,15 @@ exports.sendBugReport = functions.https.onRequest(async (req, res) => {
       // Only allow POST requests
       if (req.method !== 'POST') {
         res.status(405).json({ success: false, message: 'Method not allowed' });
+        return;
+      }
+
+      const throttle = isThrottled(req);
+      if (throttle.throttled) {
+        res.status(429).json({
+          success: false,
+          message: `Thanks for the report! You recently submitted one. Please wait ${Math.ceil(throttle.retryAfterMs / 1000)} seconds and try again.`
+        });
         return;
       }
 
@@ -648,6 +722,8 @@ exports.sendBugReport = functions.https.onRequest(async (req, res) => {
 exports.initializeNewsData = functions.https.onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
     try {
+      const uid = await requireAdmin(req, res);
+      if (!uid) return;
       const sampleNews = [
         {
           id: 'init-1',

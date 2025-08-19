@@ -19,6 +19,7 @@ These batches are ordered to minimize risk. Each batch ends with a verification 
 Verification pause: Deploy to staging, run `npm run health-check`, confirm app loads, news still reads, and likes still work.
 
 ### Batch 2: Secure endpoints and scheduling
+Status: Implemented in `functions/index.js` (admin auth, restricted CORS, daily scheduler, and 1/min rate limiting) — pending staging verification.
 - [ ] Require Firebase auth + admin role for `updateAINewsManual` and `initializeNewsData`
   - Acceptance: Unauthenticated/unauthorized requests get 401/403; admins succeed
 - [ ] Restrict CORS to prod/staging origins only for Functions
