@@ -179,7 +179,7 @@ exports.getYouTubeMetadata = functions.https.onRequest(async (req, res) => {
  */
 const validateAdminPermissions = async (uid) => {
   try {
-    const userDoc = await admin.firestore().doc(`userProfiles/${uid}`).get();
+    const userDoc = await admin.firestore().doc(`users/${uid}`).get();
     if (!userDoc.exists) {
       throw new Error('User profile not found');
     }

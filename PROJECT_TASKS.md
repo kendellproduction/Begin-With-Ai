@@ -2,6 +2,60 @@
 
 This is the focused task list for immediate priorities.
 
+## 🔒 Backend Critical Issues & Easy Wins (Safe Batches)
+
+These batches are ordered to minimize risk. Each batch ends with a verification pause before proceeding.
+
+### Batch 1: Critical security hotfixes (stop-the-bleed)
+- [x] Remove committed email credentials from `functions/index.js`
+  - Acceptance: No secrets in repo; email creds loaded via secrets/config only; exposed Gmail App Password rotated
+- [x] Lock down Firestore rules for `aiNews`
+  - Acceptance: Admin-only create/update/delete of articles; users can only update `likes` and `likedBy`; deletes admin-only
+- [x] Standardize admin role source across code and rules
+  - Acceptance: Both Functions and Rules check the same path (choose `users/{uid}.role` or `userProfiles/{uid}.role`) and work for existing admins
+- [x] Replace `require('node-fetch')` with global `fetch` in Functions (Node 18)
+  - Acceptance: Functions deploy without module errors; news fetching still works
+
+Verification pause: Deploy to staging, run `npm run health-check`, confirm app loads, news still reads, and likes still work.
+
+### Batch 2: Secure endpoints and scheduling
+- [ ] Require Firebase auth + admin role for `updateAINewsManual` and `initializeNewsData`
+  - Acceptance: Unauthenticated/unauthorized requests get 401/403; admins succeed
+- [ ] Restrict CORS to prod/staging origins only for Functions
+  - Acceptance: Requests from unknown origins are blocked
+- [ ] Re-enable scheduled news updater with region and timezone
+  - Acceptance: Daily run logs visible; manual trigger retained for admins
+- [ ] Add basic rate limiting to `sendContactEmail` and `sendBugReport`
+  - Acceptance: Max 1 request/min per user/IP; returns friendly throttle message
+
+Verification pause: Hit endpoints from client and curl; confirm auth/roles enforced and throttling works.
+
+### Batch 3: Client/service boundary hardening (minimal UI impact)
+- [ ] Make `src/services/newsService.js` read-only for `aiNews` (no client create/update/delete)
+  - Acceptance: Only reads from client; any mutations happen via secured Functions
+- [ ] Keep user likes functional with tight rules
+  - Acceptance: Users can like/unlike via allowed fields update or via a small Function; totals update correctly
+- [ ] Remove or replace `src/firebase-node.js` with Admin SDK in Node-only scripts
+  - Acceptance: No Node context uses client SDK; scripts still function
+
+Verification pause: Smoke test news list and like/unlike in UI; confirm no client write attempts.
+
+### Batch 4: Stability and observability
+- [ ] Add retry/backoff and per-source isolation to RSS fetching in Functions
+  - Acceptance: Temporary feed failures don’t fail the whole batch; logs show granular errors
+- [ ] Switch email from Gmail SMTP to a transactional provider (SendGrid/SES) with secrets
+  - Acceptance: Emails send reliably in staging; no secrets in code
+- [ ] Add minimal unit tests (firebase-functions-test) for YouTube endpoints, news update trigger, and rate limiting
+  - Acceptance: Tests run in CI and pass locally
+
+Verification pause: Run tests; verify logs and metrics for scheduled jobs.
+
+### Batch 5: Functions runtime configuration
+- [ ] Set region, memory/timeout, concurrency, and min instances where appropriate
+  - Acceptance: Hot paths have explicit runtime options; cold starts acceptable for others
+- [ ] Document per-env config/secrets and deployment steps
+  - Acceptance: README updated; deploy scripts reference config; `npm run production-deploy` validates
+
 ## 🧭 Top Priorities (Quick Wins for Production)
 - [x] **COMPLETED: Direct users to Lessons page on open/login**
   - ✅ Acceptance: Visiting `/` or completing login lands on `/lessons` (protected route).

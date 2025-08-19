@@ -59,7 +59,6 @@ class CloudNewsService {
 
   async fetchRSSFeed(url) {
     try {
-      const fetch = require('node-fetch');
       const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`;
       const response = await fetch(proxyUrl);
       const data = await response.json();
@@ -290,6 +289,25 @@ exports.updateAINewsManual = functions.https.onRequest(async (req, res) => {
     });
 });
 
+// Helper to create a Gmail transporter from env or functions config
+function createGmailTransporter() {
+  try {
+    const user = process.env.GMAIL_USER || (functions.config().gmail && functions.config().gmail.user);
+    const pass = process.env.GMAIL_APP_PASSWORD || (functions.config().gmail && functions.config().gmail.app_password);
+    if (!user || !pass) {
+      console.warn('Email credentials not configured; email sending is disabled.');
+      return null;
+    }
+    return nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user, pass }
+    });
+  } catch (e) {
+    console.warn('Failed to initialize email transporter; email sending is disabled.', e);
+    return null;
+  }
+}
+
 // Email sending function for contact form
 exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
   return corsHandler(req, res, async () => {
@@ -321,14 +339,8 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
         return;
       }
 
-      // Configure nodemailer with Gmail SMTP
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'kendellproduction@gmail.com',
-          pass: 'rnug tjwb jtjo aqbh'
-        }
-      });
+      // Configure nodemailer with Gmail SMTP (from env/config)
+      const transporter = createGmailTransporter();
 
       // Email content to send to kendellproduction@gmail.com
       const mailOptions = {
@@ -375,8 +387,12 @@ exports.sendContactEmail = functions.https.onRequest(async (req, res) => {
         `
       };
 
-      // Send the email
-      await transporter.sendMail(mailOptions);
+      // Send the email when transporter is available
+      if (transporter) {
+        await transporter.sendMail(mailOptions);
+      } else {
+        console.warn('Contact email not sent due to missing transporter configuration.');
+      }
 
       // Log the contact form submission to Firestore for record keeping
       try {
@@ -441,14 +457,8 @@ exports.sendBugReport = functions.https.onRequest(async (req, res) => {
         return;
       }
 
-      // Configure nodemailer with Gmail SMTP
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'kendellproduction@gmail.com',
-          pass: 'rnug tjwb jtjo aqbh'
-        }
-      });
+      // Configure nodemailer with Gmail SMTP (from env/config)
+      const transporter = createGmailTransporter();
 
       // Bug severity emoji mapping
       const priorityEmojis = {
@@ -591,10 +601,8 @@ exports.sendBugReport = functions.https.onRequest(async (req, res) => {
         `
       };
 
-      // TEMPORARILY DISABLED: Gmail still rejecting authentication with new password
-      // Gmail error: "Username and Password not accepted"
-      // Need to verify the App Password is correctly generated for "Beginning With Ai"
-      // await transporter.sendMail(mailOptions);
+      // Email sending can be enabled by uncommenting the line below once credentials are configured
+      // if (transporter) { await transporter.sendMail(mailOptions); }
       console.log('Bug report received and saved to Firestore (email temporarily disabled):', { bugTitle, bugDescription, bugCategory, bugPriority, userEmail });
       
       // Log the bug report to Firestore for record keeping and analytics
