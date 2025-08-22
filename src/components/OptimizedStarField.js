@@ -1,16 +1,18 @@
 import React, { useMemo, useEffect, useState, useCallback } from 'react';
 
 const OptimizedStarField = ({ 
-  starCount = 220, // Reduced from 250 by 30 stars
-  opacity = 0.8, 
+  starCount = 200, // Further reduced for better performance
+  opacity = 0.7, 
   className = "",
   speed = 1,
-  size = 1 
+  size = 1,
+  enableLargeStars = true // Allow consumers to hide large stars if desired
 }) => {
   const [dimensions, setDimensions] = useState({
     width: typeof window !== 'undefined' ? window.innerWidth : 1200,
     height: typeof window !== 'undefined' ? window.innerHeight : 800
   });
+  const [isReady, setIsReady] = useState(false);
 
   // Debounced resize handler to prevent excessive re-renders
   const handleResize = useCallback(() => {
@@ -24,13 +26,20 @@ const OptimizedStarField = ({
     let timeoutId;
     const debouncedResize = () => {
       clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleResize, 100);
+      timeoutId = setTimeout(handleResize, 150); // Increased debounce delay
     };
 
     window.addEventListener('resize', debouncedResize);
+    
+    // Set ready state after initial load
+    const readyTimer = setTimeout(() => {
+      setIsReady(true);
+    }, 200);
+    
     return () => {
       window.removeEventListener('resize', debouncedResize);
       clearTimeout(timeoutId);
+      clearTimeout(readyTimer);
     };
   }, [handleResize]);
 
@@ -41,8 +50,14 @@ const OptimizedStarField = ({
       const screenW = dimensions.width;
       
       // Star variety
-      const isLargeStar = i % 10 === 0; // 10% large stars
-      const isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars
+      let isLargeStar = i % 10 === 0; // 10% large stars
+      let isMediumStar = i % 5 === 0 && !isLargeStar; // 20% medium stars
+
+      // If large stars are disabled, convert them to medium (or small) to keep density
+      if (!enableLargeStars && isLargeStar) {
+        isLargeStar = false;
+        isMediumStar = i % 5 === 0; // allow medium classification when applicable
+      }
       
       let starSize;
       if (isLargeStar) {
@@ -53,9 +68,9 @@ const OptimizedStarField = ({
         starSize = (0.5 + Math.random() * 1.5) * size; // 0.5-2px
       }
       
-      const starOpacity = isLargeStar ? 0.7 : isMediumStar ? 0.8 : 0.85;
-      const duration = (Math.random() * 15 + 20) / speed; // 20-35 seconds
-      const delay = Math.random() * 0.5; // Very short delay
+      const starOpacity = isLargeStar ? 0.6 : isMediumStar ? 0.7 : 0.8;
+      const duration = (Math.random() * 20 + 25) / speed; // 25-45 seconds (slower for stability)
+      const delay = Math.random() * 2; // Longer staggered delays
 
       // Start stars scattered across visible screen
       const startX = Math.random() * screenW;
@@ -81,7 +96,7 @@ const OptimizedStarField = ({
         isMedium: isMediumStar
       };
     });
-  }, [starCount, dimensions.width, dimensions.height, speed, size, opacity]);
+  }, [starCount, dimensions.width, dimensions.height, speed, size, opacity, enableLargeStars]);
 
   // Simple CSS animations
   const generateAnimationCSS = useMemo(() => {
@@ -116,6 +131,10 @@ const OptimizedStarField = ({
     };
   }, [generateAnimationCSS]);
 
+  if (!isReady) {
+    return null; // Don't render until ready
+  }
+
   return (
     <div 
       className={`star-container fixed inset-0 pointer-events-none ${className}`}
@@ -123,7 +142,9 @@ const OptimizedStarField = ({
         zIndex: 25,
         width: '100vw',
         height: '100vh',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        opacity: isReady ? 1 : 0,
+        transition: 'opacity 0.5s ease-in-out'
       }}
     >
       {starConfigs.map((star) => (
@@ -147,7 +168,7 @@ const OptimizedStarField = ({
             willChange: 'transform, opacity',
             backfaceVisibility: 'hidden',
             // Start immediately visible at starting position
-            opacity: star.opacity,
+            opacity: star.opacity * 0.8, // Slightly more transparent initially
             transform: `translate(${star.startX}px, ${star.startY}px) scale(1)`,
           }}
         />

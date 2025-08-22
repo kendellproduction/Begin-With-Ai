@@ -162,7 +162,8 @@ function App() {
                     <Route index element={<LearningPathResults />} />
                   </Route>
 
-                  <Route path="/ai-news" element={<ProtectedRoute />}>
+                  {/* Keep route, but it's effectively hidden from nav; still accessible for admin/testing if needed */}
+                  <Route path="/ai-news" element={<ProtectedRoute requireAdminRole={true} />}>
                     <Route index element={<AiNews />} />
                   </Route>
 

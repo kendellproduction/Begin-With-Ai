@@ -374,9 +374,10 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
       };
     }
     
-    // PRIORITY 3: Default blue theme (as requested)
-    // Use Ocean Blue palette (index 3) as default instead of hash-based selection
-    const defaultPalette = colorPalettes[3]; // Ocean Blue palette
+    // PRIORITY 3: Varied palette based on a stable hash of lesson identity
+    const seed = lesson.id || lesson.title || 'default';
+    const paletteIndex = getColorHash(String(seed)) % colorPalettes.length;
+    const defaultPalette = colorPalettes[paletteIndex];
     return {
       ...defaultPalette,
       icon: lesson.icon || getThematicIcon(lesson)

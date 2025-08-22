@@ -1,6 +1,6 @@
 /* ===== IMPROVED LANDING PAGE WITH BETTER UI/UX ===== */
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, MotionProvider } from '../utils/framerMotion';
 import { useAuth } from '../contexts/AuthContext';
 import { sanitizeText, checkRateLimit } from '../utils/sanitization';
 import Navbar from '../components/Navbar';
@@ -14,6 +14,8 @@ const LandingPage = () => {
   
   const navigate = useNavigate();
   const { user, signInWithEmail, signInWithGoogle, signUpWithEmail } = useAuth();
+  const [isContentLoaded, setIsContentLoaded] = useState(false);
+  const landingPageRef = useRef(null);
   
   // Redirect if user is already logged in, but check if they need to complete questionnaire first
   useEffect(() => {
@@ -21,6 +23,15 @@ const LandingPage = () => {
       navigateAfterAuth(navigate, true);
     }
   }, [user, navigate]);
+
+  // Ensure content is loaded before showing animations
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsContentLoaded(true);
+    }, 100); // Small delay to prevent flickering
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Fallback featured lessons since static data was removed
   const featuredLessons = [
@@ -68,7 +79,6 @@ const LandingPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [authSuccess, setAuthSuccess] = useState(false);
-  const [redirectToPremiumAfterAuth, setRedirectToPremiumAfterAuth] = useState(false);
 
   // Auto-rotate lessons every 6 seconds for better reading time
   useEffect(() => {
@@ -219,14 +229,7 @@ const LandingPage = () => {
         await signInWithEmail(sanitizedEmail, sanitizedPassword);
       }
       setAuthSuccess(true);
-      
-      // Check if we need to redirect to premium after auth
-      if (redirectToPremiumAfterAuth) {
-        navigate('/pricing');
-        setRedirectToPremiumAfterAuth(false);
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
     } catch (error) {
       setError(error.message || 'An error occurred during authentication');
     } finally {
@@ -247,14 +250,7 @@ const LandingPage = () => {
     try {
       await signInWithGoogle();
       setAuthSuccess(true);
-      
-      // Check if we need to redirect to premium after auth
-      if (redirectToPremiumAfterAuth) {
-        navigate('/pricing');
-        setRedirectToPremiumAfterAuth(false);
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
     } catch (error) {
       setError(error.message || 'An error occurred during Google authentication');
     } finally {
@@ -262,22 +258,13 @@ const LandingPage = () => {
     }
   };
 
-  const openAuthModal = (mode, shouldRedirectToPremium = false) => {
+  const openAuthModal = (mode) => {
     setAuthMode(mode);
     setShowAuthModal(true);
     setError('');
     setAuthSuccess(false);
-    setRedirectToPremiumAfterAuth(shouldRedirectToPremium);
   };
 
-  const handlePremiumCTA = () => {
-    if (user) {
-      navigate('/pricing');
-    } else {
-      // User needs to sign up first, then redirect to premium
-      openAuthModal('signup', true);
-    }
-  };
 
   // Auto-rotate content
   useEffect(() => {
@@ -288,35 +275,22 @@ const LandingPage = () => {
     return () => clearInterval(interval);
   }, [testimonials.length, featuredLessons.length]);
 
-  // Intersection Observer for animations
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsVisible(prev => ({
-              ...prev,
-              [entry.target.id]: true
-            }));
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    document.querySelectorAll('[data-animate]').forEach((el) => {
-      observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  // Removed scroll-based observers to improve performance
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white overflow-x-hidden">
+    <MotionProvider>
+    <div 
+      ref={landingPageRef}
+      className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white overflow-x-hidden"
+      style={{
+        opacity: isContentLoaded ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out'
+      }}
+    >
       <Navbar openAuthModal={openAuthModal} />
       
-      {/* Single Optimized Star Field for Entire Page */}
-      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
+      {/* Single Optimized Star Field for Entire Page - Only show when content loaded */}
+      {isContentLoaded && <OptimizedStarField starCount={200} opacity={0.7} speed={1} size={1.1} enableLargeStars={false} />}
       
       {/* Hero Section with Solid Blue Background & Adjusted Content */}
       <section 
@@ -328,16 +302,16 @@ const LandingPage = () => {
             {/* Left side - Main content */}
             <motion.div 
               className="text-center lg:text-left"
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1 }}
+              initial={isContentLoaded ? { opacity: 0, x: -30 } : false}
+              animate={isContentLoaded ? { opacity: 1, x: 0 } : false}
+              transition={{ duration: 0.6, ease: 'easeOut' }}
             >
               <div className="mb-8">
                 <motion.h1 
                   className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-white leading-tight mb-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
+                  initial={isContentLoaded ? { opacity: 0, y: 15 } : false}
+                  animate={isContentLoaded ? { opacity: 1, y: 0 } : false}
+                  transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }}
                 >
                   Master <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI</span>
                   <br />Build. Learn.
@@ -346,9 +320,9 @@ const LandingPage = () => {
 
                 <motion.p 
                   className="text-xl lg:text-2xl text-blue-100 mb-8 leading-relaxed"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
+                  initial={isContentLoaded ? { opacity: 0, y: 15 } : false}
+                  animate={isContentLoaded ? { opacity: 1, y: 0 } : false}
+                  transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
                 >
                   Transform your career with hands-on AI projects. Build real applications, get instant feedback, and become job-ready in weeks, not years.
                 </motion.p>
@@ -356,9 +330,9 @@ const LandingPage = () => {
                 {/* CTA Buttons */}
                 <motion.div 
                   className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
+                  initial={isContentLoaded ? { opacity: 0, y: 15 } : false}
+                  animate={isContentLoaded ? { opacity: 1, y: 0 } : false}
+                  transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
                 >
                   <motion.button
                     onClick={() => openAuthModal('signup')}
@@ -368,27 +342,20 @@ const LandingPage = () => {
                   >
                     <span className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     <span className="relative flex items-center justify-center gap-2">
-                      🚀 Start Building Today - FREE
+                      Create a Free Account
                     </span>
                   </motion.button>
                   
 
-                  <motion.button
-                    onClick={handlePremiumCTA}
-                    className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-black font-bold py-4 px-8 rounded-2xl text-lg shadow-2xl transform transition-all duration-300"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    ⚠️ Go Premium Now - $10/mo
-                  </motion.button>
+                  {/* Premium CTA removed while app is free for everyone */}
                 </motion.div>
 
                 {/* Feature bullets */}
                 <motion.div 
                   className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start text-sm"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1 }}
+                  initial={isContentLoaded ? { opacity: 0 } : false}
+                  animate={isContentLoaded ? { opacity: 1 } : false}
+                  transition={{ delay: 0.4, ease: 'easeOut' }}
                 >
                   <div className="flex items-center gap-2">
                     <span className="text-green-400">✓</span>
@@ -398,10 +365,7 @@ const LandingPage = () => {
                     <span className="text-yellow-400">⚡</span>
                     <span className="text-blue-200">Instant access</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-orange-400">⚠️</span>
-                    <span className="text-blue-200">Premium: Full AI toolkit</span>
-                  </div>
+                  {/* Premium mention removed while app is free */}
                 </motion.div>
               </div>
             </motion.div>
@@ -409,9 +373,9 @@ const LandingPage = () => {
             {/* Right side - Lesson preview */}
             <motion.div 
               className="relative"
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 1, delay: 0.5 }}
+              initial={isContentLoaded ? { opacity: 0, x: 30 } : false}
+              animate={isContentLoaded ? { opacity: 1, x: 0 } : false}
+              transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
             >
               <div className="bg-gray-800/90 rounded-3xl p-6 border border-gray-600/50 shadow-2xl">
                 <div className="bg-gray-900/90 rounded-2xl p-6 border border-gray-700/50">
@@ -489,12 +453,8 @@ const LandingPage = () => {
       {/* What You'll Learn Section */}
       <section className="py-20 bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <div 
             className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               What You'll <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Master</span>
@@ -502,18 +462,14 @@ const LandingPage = () => {
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               From AI fundamentals to advanced applications, our comprehensive curriculum covers everything you need to succeed
             </p>
-          </motion.div>
+          </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {learningAreas.map((area, index) => (
               <motion.div
                 key={index}
                 className="glass-card rounded-2xl p-8 text-center"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="text-5xl mb-6">{area.icon}</div>
                 <h3 className="text-xl font-bold text-white mb-4">{area.title}</h3>
@@ -530,37 +486,27 @@ const LandingPage = () => {
       {/* Stats Section */}
       <section className="py-20 bg-gray-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <div 
             className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Join Thousands of <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI Learners</span>
             </h2>
-          </motion.div>
+          </div>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
                 className="text-center group"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="glass-card rounded-3xl p-8 h-full">
-                  <motion.div 
+                  <div 
                     className="text-6xl mb-6"
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
                   >
                     {stat.icon}
-                  </motion.div>
+                  </div>
                   <div className="text-4xl md:text-5xl font-bold text-white mb-3 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                     {stat.number}
                   </div>
@@ -576,12 +522,8 @@ const LandingPage = () => {
       {/* Real Lessons Showcase Section - Redesigned for Maximum Visibility */}
       <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <div 
             className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
           >
             <h2 className="text-5xl md:text-6xl font-bold text-white mb-6">
               Real <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">AI Lessons</span>
@@ -589,175 +531,12 @@ const LandingPage = () => {
             <p className="text-xl text-gray-200 max-w-3xl mx-auto">
               Master practical AI skills through our comprehensive curriculum. From fundamentals to advanced applications.
             </p>
-          </motion.div>
-
-        </div>
-      </section>
-
-      {/* Free vs Premium Comparison Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-900/80 via-blue-900/60 to-indigo-900/70 relative overflow-hidden">
-
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Compact Header */}
-          <motion.div 
-            className="text-center mb-12"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Free vs <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">Premium</span>
-            </h2>
-            <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-              See why premium users get 10x more value from their AI learning journey
-            </p>
-          </motion.div>
-
-          {/* Compact Comparison Cards */}
-          <div className="grid lg:grid-cols-2 gap-6 max-w-5xl mx-auto mb-12">
-            {/* Free Tier Card */}
-            <motion.div
-              className="bg-gradient-to-br from-gray-800/90 to-gray-900/90 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-            >
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-white mb-2">Free Tier</h3>
-                <div className="text-3xl font-bold text-cyan-400 mb-2">$0<span className="text-sm text-gray-400">/forever</span></div>
-              </div>
-
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  <span className="text-gray-300">Basic AI concepts</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  <span className="text-gray-300">Beginner lessons only</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-green-400">✓</span>
-                  <span className="text-gray-300">Overview explanations</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-400">✗</span>
-                  <span className="text-gray-500">AI-powered feedback</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-400">✗</span>
-                  <span className="text-gray-500">Interactive sandboxes</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-red-400">✗</span>
-                  <span className="text-gray-500">Advanced lessons</span>
-                </li>
-              </ul>
-
-              <motion.button
-                onClick={() => openAuthModal('signup')}
-                className="w-full mt-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-xl text-white font-semibold hover:from-cyan-700 hover:to-blue-700 transition-all duration-300"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.97 }}
-              >
-                Start Free
-              </motion.button>
-            </motion.div>
-
-            {/* Premium Tier Card */}
-            <motion.div
-              className="bg-gradient-to-br from-yellow-900/40 via-amber-900/30 to-orange-900/40 backdrop-blur-xl rounded-2xl p-6 border-2 border-yellow-400/70 relative ring-1 ring-yellow-500/30 shadow-xl shadow-yellow-500/10"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
-            >
-              {/* Most Popular Badge */}
-              <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                <span className="bg-gradient-to-r from-yellow-400 to-amber-500 text-black px-4 py-1.5 rounded-full text-xs font-bold shadow-lg">
-                  🚀 Most Popular
-                </span>
-              </div>
-
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold text-yellow-400 mb-2">Premium</h3>
-                <div className="text-3xl font-bold text-white mb-2">$10<span className="text-sm text-gray-400">/month</span></div>
-              </div>
-
-              <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-2">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-gray-200"><strong>Deep-dive explanations</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-gray-200"><strong>All difficulty levels</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-gray-200"><strong>Real-time AI feedback</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-gray-200"><strong>Interactive sandboxes</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-gray-200"><strong>Industry projects</strong></span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-yellow-400">★</span>
-                  <span className="text-gray-200"><strong>Priority support</strong></span>
-                </li>
-              </ul>
-
-              <motion.button
-                onClick={handlePremiumCTA}
-                className="w-full mt-6 py-3 bg-gradient-to-r from-yellow-500 via-amber-500 to-orange-500 rounded-xl text-black font-bold hover:from-yellow-400 hover:to-orange-400 transition-all duration-300 shadow-lg"
-                whileHover={{ scale: 1.03, boxShadow: "0 8px 25px -8px rgba(245, 158, 11, 0.4)" }}
-                whileTap={{ scale: 0.97 }}
-              >
-                👑 Upgrade Now
-              </motion.button>
-            </motion.div>
           </div>
 
-          {/* Quick CTA */}
-          <motion.div 
-            className="text-center"
-            initial={{ opacity: 0, y: 15 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-          >
-            <p className="text-gray-300 mb-4">
-              <span className="text-yellow-400 font-semibold">Premium members</span> get detailed content, exclusive lessons, and AI mentorship
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <motion.button
-                onClick={() => openAuthModal('signup')}
-                className="px-6 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-full text-white font-semibold text-sm"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                Try Free First
-              </motion.button>
-              <motion.button
-                onClick={handlePremiumCTA}
-                className="px-6 py-2 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-full text-black font-bold text-sm border border-yellow-300"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                👑 Go Premium
-              </motion.button>
-            </div>
-          </motion.div>
         </div>
       </section>
+
+      {/* Premium comparison removed while app is free */}
 
 
 
@@ -767,38 +546,28 @@ const LandingPage = () => {
 
         
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div 
+          <div 
             className="text-center mb-20"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Trusted by learners <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">worldwide</span>
             </h2>
             <p className="text-gray-300 text-xl max-w-2xl mx-auto">Real numbers from real students achieving real results</p>
-          </motion.div>
+          </div>
           
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <motion.div
                 key={index}
                 className="text-center group"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ scale: 1.05 }}
+                whileHover={{ scale: 1.02 }}
               >
                 <div className="glass-card rounded-3xl p-8 h-full">
-                  <motion.div 
+                  <div 
                     className="text-6xl mb-6"
-                    animate={{ rotate: [0, 5, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, delay: index * 0.2 }}
                   >
                     {stat.icon}
-                  </motion.div>
+                  </div>
                   <div className="text-4xl md:text-5xl font-bold text-white mb-3 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
                     {stat.number}
                   </div>
@@ -811,9 +580,7 @@ const LandingPage = () => {
         </div>
       </section>
 
-      {/* Real Lessons Showcase Section */}
-      <section className="py-20 bg-gradient-to-br from-gray-900 via-blue-900/80 to-indigo-900/70 relative overflow-hidden">
-      </section>
+      
 
       {/* Combined Features + Testimonials Section */}
       <section className="py-32 bg-gradient-to-br from-gray-800/50 via-blue-800/30 to-cyan-800/30 relative overflow-hidden">
@@ -825,10 +592,9 @@ const LandingPage = () => {
           {/* Testimonials */}
           <motion.div 
             className="text-center mb-16"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Success <span className="bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">Stories</span>
@@ -854,6 +620,8 @@ const LandingPage = () => {
                         <motion.img 
                           src={testimonial.image} 
                           alt={testimonial.name}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover"
                           whileHover={{ scale: 1.1 }}
                           transition={{ duration: 0.3 }}
@@ -871,8 +639,6 @@ const LandingPage = () => {
                       <p className="text-gray-400">{testimonial.company}</p>
                       <motion.div 
                         className="mt-4 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-lg p-3"
-                        animate={{ scale: [1, 1.02, 1] }}
-                        transition={{ duration: 2, repeat: Infinity }}
                       >
                         <p className="text-cyan-400 font-semibold text-sm">{testimonial.achievement}</p>
                       </motion.div>
@@ -916,21 +682,12 @@ const LandingPage = () => {
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.div 
             className="max-w-4xl mx-auto space-y-8"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1 }}
-            viewport={{ once: true }}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
           >
             <motion.h2 
               className="text-6xl md:text-7xl font-bold leading-tight"
-              animate={{ 
-                backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: "linear"
-              }}
             >
               Your AI Journey
               <span className="block bg-gradient-to-r from-cyan-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent mt-4 bg-300% animate-gradient">
@@ -941,9 +698,8 @@ const LandingPage = () => {
             <motion.p 
               className="text-2xl md:text-3xl text-gray-300 leading-relaxed"
               initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2, ease: 'easeOut' }}
             >
               Join the AI revolution before it's too late. 
               <span className="text-cyan-400 font-bold block mt-2">Every day you wait is a day your competitors get ahead.</span>
@@ -951,11 +707,10 @@ const LandingPage = () => {
 
             <motion.div 
               className="bg-black/30 backdrop-blur-sm rounded-3xl p-12 border border-white/20 max-w-2xl mx-auto"
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.5 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.02 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.3, ease: 'easeOut' }}
+              whileHover={{ scale: 1.01 }}
             >
               <h3 className="text-3xl font-bold mb-6 text-white">🚀 Ready to Begin?</h3>
               <p className="text-xl text-gray-300 mb-8 leading-relaxed">
@@ -984,20 +739,6 @@ const LandingPage = () => {
                   boxShadow: "0 25px 50px -12px rgba(6, 182, 212, 0.5)"
                 }}
                 whileTap={{ scale: 0.98 }}
-                animate={{
-                  boxShadow: [
-                    "0 10px 30px -12px rgba(6, 182, 212, 0.3)",
-                    "0 20px 40px -12px rgba(6, 182, 212, 0.5)",
-                    "0 10px 30px -12px rgba(6, 182, 212, 0.3)"
-                  ]
-                }}
-                transition={{
-                  boxShadow: {
-                    duration: 2,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }
-                }}
               >
                 <span className="absolute inset-0 bg-gradient-to-r from-cyan-300 to-blue-300 rounded-full blur opacity-30 group-hover:opacity-60 transition-opacity"></span>
                 <span className="relative flex items-center justify-center gap-3">
@@ -1224,6 +965,7 @@ const LandingPage = () => {
         </div>
       )}
     </div>
+    </MotionProvider>
   );
 };
 

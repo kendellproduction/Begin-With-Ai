@@ -303,7 +303,7 @@ const newsService = new CloudNewsService();
 exports.updateAINewsScheduled = functions
   .region('us-central1')
   .pubsub
-  .schedule('every day')
+  .schedule('0 6 * * *') // 6:00 AM daily
   .timeZone('America/New_York')
   .onRun(async (context) => {
     try {

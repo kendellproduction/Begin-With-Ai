@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { collection, addDoc, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc, startAfter } from 'firebase/firestore';
 import logger from '../utils/logger';
 
 class NewsService {
@@ -321,6 +321,42 @@ class NewsService {
     }
   }
 
+  // Paginated news fetch with cursor
+  async getNewsPage(pageSize = 12, cursor = null) {
+    try {
+      const newsCollection = collection(db, 'aiNews');
+      const constraints = [orderBy('date', 'desc'), limit(pageSize)];
+      if (cursor) {
+        const cursorValue = cursor.toDate ? cursor : Timestamp.fromDate(cursor);
+        constraints.splice(1, 0, startAfter(cursorValue));
+      }
+      const newsQuery = query(newsCollection, ...constraints);
+      const querySnapshot = await getDocs(newsQuery);
+
+      const articles = [];
+      querySnapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        if (data.isActive !== false) {
+          articles.push({
+            ...data,
+            firestoreId: docSnap.id,
+            date: data.date.toDate ? data.date.toDate() : new Date(data.date)
+          });
+        }
+      });
+
+      const last = articles[articles.length - 1];
+      return {
+        articles,
+        nextCursor: last ? (last.date instanceof Date ? last.date : new Date(last.date)) : null,
+        hasMore: articles.length === pageSize
+      };
+    } catch (error) {
+      logger.error('Error fetching paginated news from Firestore:', error);
+      return { articles: [], nextCursor: null, hasMore: false };
+    }
+  }
+
   // Main function to update news
   async updateNews() {
     try {
@@ -444,6 +480,7 @@ const newsService = new NewsService();
 // Export functions for use in components and cloud functions
 export const updateAINews = () => newsService.updateNews();
 export const getAINews = (limit) => newsService.getNewsFromFirestore(limit);
+export const getAINewsPage = (pageSize, cursor) => newsService.getNewsPage(pageSize, cursor);
 export const cleanOldAINews = () => newsService.cleanOldNews();
 export const likeAINewsArticle = (articleId, userId) => newsService.likeArticle(articleId, userId);
 export const getAINewsLikeStatus = (articleId, userId) => newsService.getUserLikeStatus(articleId, userId);

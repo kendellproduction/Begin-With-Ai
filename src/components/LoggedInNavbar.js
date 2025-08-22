@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useGamification } from '../contexts/GamificationContext';
@@ -6,7 +7,7 @@ import { motion } from 'framer-motion';
 import BugReportModal from './BugReportModal';
 import AccountSwitcher from './admin/AccountSwitcher';
 
-const LoggedInNavbar = () => {
+const LoggedInNavbar = ({ themeColor }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isBugReportModalOpen, setIsBugReportModalOpen] = useState(false);
@@ -57,7 +58,7 @@ const LoggedInNavbar = () => {
           ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
           : ''
       }`}
-      style={!isDarkSpacePage ? { backgroundColor: '#3b82f6' } : {}}
+      style={!isDarkSpacePage ? { backgroundColor: themeColor } : {}}
     >
       {/* Removed navbar stars to improve performance - stars handled by OptimizedStarField */}
       
@@ -78,9 +79,7 @@ const LoggedInNavbar = () => {
             <Link to="/home" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
               Dashboard
             </Link>
-            <Link to="/ai-news" className="text-slate-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              AI News
-            </Link>
+            {/* AI News link hidden (dashboard shows news preview) */}
             {currentUser?.subscriptionTier !== 'premium' && (
               <Link 
                 to="/pricing"
@@ -203,12 +202,12 @@ const LoggedInNavbar = () => {
             ? 'bg-gradient-to-br from-gray-950 via-slate-950 to-black' 
             : ''
         }`}
-        style={!isDarkSpacePage ? { backgroundColor: '#3b82f6' } : {}}
+        style={!isDarkSpacePage ? { backgroundColor: themeColor } : {}}
       >
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link to="/lessons" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Lessons</Link>
           <Link to="/home" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
-          <Link to="/ai-news" className="text-slate-300 hover:text-white hover:bg-slate-700/50 block px-3 py-2 rounded-md text-base font-medium transition-colors" onClick={() => setIsMenuOpen(false)}>AI News</Link>
+          {/* AI News link hidden in mobile menu */}
           {currentUser?.subscriptionTier !== 'premium' && (
             <Link 
               to="/pricing"
@@ -270,6 +269,14 @@ const LoggedInNavbar = () => {
       />
     </nav>
   );
+};
+
+LoggedInNavbar.propTypes = {
+  themeColor: PropTypes.string
+};
+
+LoggedInNavbar.defaultProps = {
+  themeColor: '#3b82f6'
 };
 
 export default LoggedInNavbar;

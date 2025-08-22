@@ -213,8 +213,12 @@ const AiNews = () => {
     }
   }, [showNewPostForm]);
 
-  // Load news on component mount and implement fetch-on-load-if-stale
+  // Prevent double-run in React 18 StrictMode (dev) and implement fetch-on-load-if-stale
+  const initOnceRef = useRef(false);
   useEffect(() => {
+    if (initOnceRef.current) return; // guard against double-invoke in StrictMode
+    initOnceRef.current = true;
+
     const loadAndRefreshIfNeeded = async () => {
       const now = new Date();
       const lastFetchString = localStorage.getItem('lastNewsFetchTimestamp');
@@ -520,19 +524,21 @@ const AiNews = () => {
     return shadowMap[gradient] || '0 0 30px rgba(99, 102, 241, 0.4), 0 0 60px rgba(139, 92, 246, 0.3), 0 0 100px rgba(236, 72, 153, 0.2), 0 0 140px rgba(99, 102, 241, 0.15)';
   };
 
+  // Unified lighter blue card look with subtle blur inside for readability
+
   return (
     <div 
       className="relative min-h-screen text-white overflow-hidden"
       style={{ backgroundColor: '#3b82f6' }}
     >
-      <LoggedInNavbar />
+      <LoggedInNavbar themeColor={'#3b82f6'} />
 
       {/* Optimized Star Field */}
       <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
 
       {/* Custom CSS for animated shadows */}
       <div className="relative z-10">
-        <style jsx>{`
+        <style>{`
           @keyframes news-glow {
             0% {
               box-shadow: 0 0 20px rgba(99, 102, 241, 0.4), 0 0 40px rgba(139, 92, 246, 0.3), 0 0 60px rgba(236, 72, 153, 0.2);
@@ -589,30 +595,7 @@ const AiNews = () => {
               Stay updated with the latest AI developments and learn from the community
             </p>
             
-            {/* Refresh Controls */}
-            <div className="flex items-center justify-center space-x-4 mb-6">
-              <button
-                onClick={refreshNews}
-                disabled={refreshing}
-                className={`flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl border border-white/20 transition-all duration-300 ${refreshing ? 'cursor-not-allowed' : 'hover:scale-105'}`}
-              >
-                <svg 
-                  className={`w-5 h-5 ${refreshing ? 'refresh-spin' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                <span>{refreshing ? 'Updating...' : 'Refresh News'}</span>
-              </button>
-              
-              {lastUpdated && (
-                <span className="text-sm text-gray-400">
-                  {formatLastUpdated(lastUpdated)}
-                </span>
-              )}
-            </div>
+            {/* Manual refresh controls removed; feed auto-refreshes daily */}
             
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
@@ -667,10 +650,17 @@ const AiNews = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
-                    className={`group bg-gradient-to-br ${news.gradient || 'from-gray-700/80 to-gray-600/80'} backdrop-blur-sm rounded-3xl p-6 border border-white/20 transition-all duration-300 cursor-pointer hover:scale-105`}
-                    style={{boxShadow: getColorMatchedShadow(news.gradient || 'from-gray-700/80 to-gray-600/80')}}
+                    className={`group rounded-3xl overflow-hidden border border-blue-300/60 transition-all duration-300 cursor-pointer hover:scale-105 relative`}
+                    style={{
+                      boxShadow: '0 10px 30px rgba(13, 61, 144, 0.25)',
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)'
+                    }}
                     onClick={() => news.url && window.open(news.url, '_blank')}
                   >
+                    {/* Inner content with padding */}
+                    <div className="p-6 relative z-10">
                     <div className="flex items-center justify-between mb-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10 text-white">
                         {news.category}
@@ -680,11 +670,11 @@ const AiNews = () => {
                       </div>
                     </div>
                     
-                    <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-blue-200 transition-colors">
+                    <h3 className="text-xl font-semibold text-white mb-3 group-hover:text-blue-100 transition-colors">
                       {news.title}
                     </h3>
                     
-                    <p className="text-gray-300 mb-4 leading-relaxed">
+                    <p className="text-blue-50/95 mb-4 leading-relaxed">
                       {news.summary}
                     </p>
                     
@@ -737,7 +727,7 @@ const AiNews = () => {
                         </div>
                       </div>
                     </div>
-                    
+                    </div>
                     {/* Engagement indicator for new articles */}
                     {news.likes?.simulated > 0 && (
                       <div className="mt-3 pt-3 border-t border-white/10">

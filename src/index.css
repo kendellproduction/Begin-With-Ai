@@ -70,6 +70,10 @@ html, body, #root {
   transform: translateZ(0);
   /* Improve compositing */
   isolation: isolate;
+  /* Prevent flickering */
+  backface-visibility: hidden;
+  /* Smooth transitions */
+  transition: opacity 0.3s ease-in-out;
 }
 
 .star-element {
@@ -1034,5 +1038,54 @@ body {
   isolation: isolate;
   /* GPU acceleration */
   transform: translateZ(0);
+}
+
+/* Prevent layout shifts and flickering on page load */
+.prevent-flicker {
+  /* Prevent reflow during animations */
+  contain: layout style;
+  /* Ensure smooth transitions */
+  will-change: opacity, transform;
+  /* Prevent flash of unstyled content */
+  visibility: hidden;
+}
+
+.prevent-flicker.loaded {
+  visibility: visible;
+  animation: smoothFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes smoothFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stabilize framer motion animations */
+.motion-stable {
+  /* Prevent layout shifts during animations */
+  contain: layout;
+  /* Optimize for GPU */
+  transform: translateZ(0);
+  /* Reduce composite layers */
+  will-change: auto;
+}
+
+/* Optimize star field container */
+.star-container {
+  /* More aggressive containment */
+  contain: strict;
+  /* Prevent any layout interference */
+  position: fixed !important;
+  pointer-events: none !important;
+  /* Force layer creation */
+  transform: translateZ(0);
+  /* Optimize rendering */
+  will-change: auto;
 }
 

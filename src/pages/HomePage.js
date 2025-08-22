@@ -15,13 +15,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { animations } from '../utils/framerMotion';
 import logger from '../utils/logger';
 import OptimizedStarField from '../components/OptimizedStarField';
-import { differenceInDays, eachDayOfInterval, isSameDay } from 'date-fns';
+import differenceInDays from 'date-fns/differenceInDays';
+import { getAINews, getAINewsPage } from '../services/newsService';
 
 
 const HomePage = () => {
   // Feature flags to control visibility of learning path UI
   const SHOW_LEARNING_PATH = false;
   const SHOW_LEARNING_PATHS_SECTION = false;
+  // Deeper dashboard theme blue (lighter than before, but still deep)
+  const DASHBOARD_BLUE = '#1d4ed8';
   const navigate = useNavigate();
   const { user, currentUser } = useAuth();
   const { userStats, completeLesson, updateStreak } = useGamification();
@@ -41,6 +44,11 @@ const HomePage = () => {
   const [learningProgress, setLearningProgress] = useState(null);
   const [nextLesson, setNextLesson] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [newsArticles, setNewsArticles] = useState([]);
+  const [newsCursor, setNewsCursor] = useState(null);
+  const [newsHasMore, setNewsHasMore] = useState(true);
+  const [newsLoading, setNewsLoading] = useState(false);
+  const newsSentinelRef = useRef(null);
   
   // Quiz completion state
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
@@ -304,6 +312,53 @@ const HomePage = () => {
     
     setIsLoading(false);
   };
+
+  // Load initial AI News page for preview section
+  useEffect(() => {
+    (async () => {
+      try {
+        setNewsLoading(true);
+        const { articles, nextCursor, hasMore } = await getAINewsPage(18, null);
+        setNewsArticles(Array.isArray(articles) ? articles : []);
+        setNewsCursor(nextCursor || null);
+        setNewsHasMore(!!hasMore);
+        setNewsLoading(false);
+      } catch (e) {
+        logger.warn('Failed to load news preview:', e);
+        setNewsLoading(false);
+      }
+    })();
+  }, []);
+
+  // Infinite scroll for news section (dashboard preview)
+  useEffect(() => {
+    if (!newsSentinelRef.current) return;
+    if (!newsHasMore) return;
+    const observer = new IntersectionObserver(async (entries) => {
+      const first = entries[0];
+      if (first.isIntersecting && newsHasMore && !newsLoading) {
+        try {
+          setNewsLoading(true);
+          const { articles, nextCursor, hasMore } = await getAINewsPage(18, newsCursor);
+          if (articles && articles.length > 0) {
+            setNewsArticles(prev => [...prev, ...articles]);
+            setNewsCursor(nextCursor || null);
+            setNewsHasMore(!!hasMore);
+            setNewsLoading(false);
+          } else {
+            setNewsHasMore(false);
+            setNewsLoading(false);
+          }
+        } catch (e) {
+          logger.warn('Failed to load more news:', e);
+          setNewsLoading(false);
+        }
+      }
+    }, { root: null, rootMargin: '800px', threshold: 0 });
+    const el = newsSentinelRef.current;
+    observer.observe(el);
+    return () => observer.unobserve(el);
+  }, [newsCursor, newsHasMore, newsLoading]);
 
   const loadUserLearningData = async () => {
     // Check for active learning path from quiz completion
@@ -584,8 +639,8 @@ const HomePage = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen text-white" style={{backgroundColor: '#3b82f6'}}>
-        <LoggedInNavbar />
+      <div className="min-h-screen text-white" style={{backgroundColor: DASHBOARD_BLUE}}>
+        <LoggedInNavbar themeColor={DASHBOARD_BLUE} />
         <div className="flex items-center justify-center min-h-[50vh]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
@@ -598,13 +653,14 @@ const HomePage = () => {
 
       return (
       <div 
-        className="relative min-h-screen bg-gradient-to-br from-blue-950 via-blue-900 to-blue-800 text-white overflow-hidden"
+        className="relative min-h-screen text-white overflow-hidden"
+        style={{ backgroundColor: DASHBOARD_BLUE }}
       >
         {/* Optimized Star Field */}
         <OptimizedStarField starCount={220} opacity={0.9} speed={1} size={1.2} />
 
         <div className="relative z-20">
-          <LoggedInNavbar />
+          <LoggedInNavbar themeColor={DASHBOARD_BLUE} />
         </div>
 
       {/* Main content wrapper */}
@@ -616,6 +672,7 @@ const HomePage = () => {
                 
                 {/* Greeting and Quote */}
                 <div className="text-center mb-4">
+                  {/* Removed manual dashboard refresh button; content auto-updates daily */}
                   <h1 className="text-3xl md:text-5xl lg:text-6xl font-bold text-white mb-2 leading-tight py-2">
                     {getUserGreeting()}
                   </h1>
@@ -713,12 +770,12 @@ const HomePage = () => {
 
             {/* Optimized Layout - Minimal Scrolling */}
             
-            {/* Primary Content - 3 Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            {/* Primary Content - Responsive Layout */}
+            <div className={`grid grid-cols-1 ${SHOW_LEARNING_PATHS_SECTION && availablePaths.length > 0 ? 'lg:grid-cols-3' : 'lg:grid-cols-2'} gap-8 mb-8`}>
               
               {/* Left Column - Learning Paths */}
+              {SHOW_LEARNING_PATHS_SECTION && availablePaths.length > 0 && (
               <section className="lg:col-span-2">
-                {SHOW_LEARNING_PATHS_SECTION && availablePaths.length > 0 && (
                   <div className="glass-liquid rounded-3xl p-6 shadow-lg overflow-visible">
                     <h2 className="text-2xl font-bold text-white mb-4 text-center">🗺️ Explore Learning Paths</h2>
                     <div className="grid gap-4">
@@ -779,8 +836,8 @@ const HomePage = () => {
                       </button>
                     </div>
                   </div>
-                )}
               </section>
+              )}
 
               {/* Right Column - Sidebar */}
               <section className="space-y-6">
@@ -809,150 +866,84 @@ const HomePage = () => {
                   </div>
                 )}
 
-                {/* Today's Challenge */}
-                {todaysChallenge && (
-                  <div className="glass-warning rounded-3xl p-4 shadow-lg">
-                    <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
-                      ⚡ Today's Challenge
-                    </h3>
-                    <div className="text-center">
-                      <div className="text-3xl mb-2">{todaysChallenge.icon}</div>
-                      <h4 className="text-sm font-semibold text-white mb-2">{todaysChallenge.title}</h4>
-                      <div className="flex items-center justify-center space-x-2 mb-3">
-                        <span className="glass-surface px-2 py-1 text-yellow-300 rounded-full text-xs font-medium">+{todaysChallenge.xp} XP</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                          todaysChallenge.difficulty === 'Easy' ? 'glass-success text-green-300' :
-                          todaysChallenge.difficulty === 'Medium' ? 'glass-warning text-orange-300' :
-                          'glass-card text-red-300'
-                        }`}>{todaysChallenge.difficulty}</span>
-                      </div>
-                      <button 
-                        onClick={handleCompleteChallenge}
-                        className="w-full glass-button bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-2 px-4 rounded-xl transition-all duration-300 text-sm"
-                      >
-                        Accept Challenge 💪
-                      </button>
-                    </div>
-                  </div>
-                )}
+                {/* Today's Challenge removed per request */}
 
-                {/* Quick Actions */}
-                <div className="glass-primary rounded-3xl p-4 shadow-lg">
-                  <h3 className="text-lg font-bold text-white mb-3">⚡ Quick Actions</h3>
-                  <div className="space-y-2">
-                    {!isQuizCompleted && (
-                      <button
-                        onClick={() => navigate('/learning-path/adaptive-quiz')}
-                        className="w-full glass-button bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
-                      >
-                        <span className="text-base">🎯</span> Take AI Assessment
-                      </button>
-                    )}
-                    <button
-                      onClick={() => navigate('/lessons')}
-                      className="w-full glass-button bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-2 rounded-xl hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
-                    >
-                      <span className="text-base">🔍</span> Explore All Lessons
-                    </button>
-                    <button
-                      onClick={() => navigate('/ai-news')}
-                      className="w-full glass-button bg-gradient-to-r from-green-600 to-emerald-600 text-white p-2 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"
-                    >
-                      <span className="text-base">📰</span> AI News
-                    </button>
-                  </div>
-                </div>
+                {/* Quick Actions moved to two-up section below */}
               </section>
             </div>
 
-            {/* Achievements Section */}
-            <div className="mb-8">
-              <div className="glass-accent rounded-3xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                  🏅 Learning Milestones
-                </h2>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {achievements.map((achievement, index) => (
-                    <motion.div
-                      key={achievement.id}
-                      className={`glass-surface rounded-2xl p-4 text-center transition-all duration-300 ${
-                        achievement.unlocked ? 'ring-2 ring-green-400/50 shadow-lg' : 'opacity-75'
-                      }`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.4, delay: index * 0.1 }}
-                    >
-                      <div className={`text-2xl mb-2 ${achievement.unlocked ? '' : 'grayscale'}`}>
-                        {achievement.icon}
-                      </div>
-                      <div className="text-sm font-semibold text-white mb-1">{achievement.name}</div>
-                      <div className="text-xs text-blue-200 mb-2">{achievement.description}</div>
-                      {achievement.unlocked && (
-                        <div className="text-xs text-green-300 font-semibold">✨ Achieved!</div>
-                      )}
-                    </motion.div>
-                  ))}
+            {/* Learning Milestones removed per request */}
+
+            {/* Weekly Goal removed per request */}
+
+            {/* Two-up: Quick Actions + Daily Tip */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl mx-auto">
+              <div className="glass-primary rounded-3xl p-4 shadow-lg">
+                <h3 className="text-lg font-bold text-white mb-3">⚡ Quick Actions</h3>
+                <div className="space-y-2">
+                  {!isQuizCompleted && (
+                    <button onClick={() => navigate('/learning-path/adaptive-quiz')} className="w-full glass-button bg-gradient-to-r from-purple-600 to-pink-600 text-white p-2 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"><span className="text-base">🎯</span> Take AI Assessment</button>
+                  )}
+                  <button onClick={() => navigate('/lessons')} className="w-full glass-button bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-2 rounded-xl hover:from-cyan-700 hover:to-blue-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"><span className="text-base">🔍</span> Explore All Lessons</button>
+                  <button onClick={() => navigate('/ai-news')} className="w-full glass-button bg-gradient-to-r from-green-600 to-emerald-600 text-white p-2 rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 text-left flex items-center gap-2 text-sm"><span className="text-base">📰</span> AI News</button>
                 </div>
+              </div>
+              <div className="glass-accent rounded-3xl p-6 shadow-lg">
+                <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">🧠 Daily AI Tip</h2>
+                <p className="text-sm text-cyan-100 leading-relaxed">{dailyTip}</p>
+                <div className="text-xs text-cyan-300 mt-3 text-right">— Updated Daily</div>
               </div>
             </div>
 
-            {/* Weekly Goal Section */}
-            <div className="mb-8">
-              <div className="glass-secondary rounded-3xl p-6 shadow-lg max-w-2xl mx-auto">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  🎯 This Week's Goal
-                </h2>
-                <div className="glass-surface rounded-2xl p-4">
-                  <div className="flex justify-between items-center mb-3">
-                    <span className="text-sm font-medium text-white">Complete 3 lessons</span>
-                    <span className="text-sm text-purple-200">{Math.min(userStats.completedLessons || 0, 3)}/3</span>
+            {/* AI News with Infinite Scroll Preview */}
+            <div className="max-w-6xl mx-auto mt-8">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-lg font-bold text-white">📰 Latest AI News</h2>
+                <button onClick={() => navigate('/ai-news')} className="text-sm text-blue-100 hover:text-white transition-colors">View all →</button>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {newsArticles && newsArticles.map((article, idx) => (
+                  <a
+                    key={`${article.firestoreId || article.id || idx}-${idx}`}
+                    href={article.url || '#'}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`group relative rounded-2xl overflow-hidden transition-all block border border-blue-300/60 hover:shadow-xl hover:shadow-blue-900/20`}
+                    style={{
+                      background: 'rgba(59, 130, 246, 0.1)',
+                      backdropFilter: 'blur(20px)',
+                      WebkitBackdropFilter: 'blur(20px)'
+                    }}
+                  >
+                    <div className="p-5 relative z-10">
+                    <div className="flex items-center gap-2 text-xs text-blue-200 mb-2">
+                      <span className="opacity-90">{article.icon || '📰'}</span>
+                      <span className="font-medium">{article.source}</span>
+                      <span className="mx-2 text-white/20">•</span>
+                      <span className="text-white/70">{new Date(article.date).toLocaleDateString()}</span>
+                    </div>
+                    <h3 className="text-white font-semibold text-base md:text-lg mb-2 group-hover:text-white">
+                      {article.title}
+                    </h3>
+                    <p className="text-sm text-blue-100 leading-relaxed line-clamp-4">
+                      {(article.summary && String(article.summary)) || (article.content ? String(article.content).replace(/<[^>]*>/g, '').slice(0, 240) + (String(article.content).length > 240 ? '…' : '') : '')}
+                    </p>
+                    </div>
+                  </a>
+                ))}
+                {newsArticles && newsArticles.length === 0 && (
+                  <div className="md:col-span-2 text-blue-100 text-sm">News will appear here once available.</div>
+                )}
+              </div>
+              <div ref={newsSentinelRef} className="h-10 flex items-center justify-center mt-5">
+                {newsHasMore ? (
+                  <div className="text-xs text-blue-200 flex items-center gap-2">
+                    {newsLoading && <span className="inline-block h-3 w-3 rounded-full border-2 border-blue-200 border-t-transparent animate-spin"></span>}
+                    <span>{newsLoading ? 'Loading more…' : 'Scroll for more'}</span>
                   </div>
-                  <div className="w-full glass-surface rounded-full h-3 mb-3">
-                    <div 
-                      className="bg-gradient-to-r from-purple-400 to-pink-400 h-3 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min((userStats.completedLessons || 0) / 3 * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-xs text-purple-200 text-center">
-                    {(userStats.completedLessons || 0) >= 3 
-                      ? "🎉 Goal achieved! You're crushing it!" 
-                      : `${Math.max(0, 3 - (userStats.completedLessons || 0))} more to reach your goal!`
-                    }
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Content - Enhanced Three Column Layout */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-              {/* AI Insight */}
-              <div className="glass-primary rounded-3xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                  💡 AI Insight
-                </h2>
-                <p className="text-sm text-sky-100 leading-relaxed">
-                  {currentFact}
-                </p>
-              </div>
-
-              {/* Daily AI Tip */}
-              <div className="glass-accent rounded-3xl p-6 shadow-lg">
-                <h2 className="text-xl font-bold text-white mb-3 flex items-center gap-2">
-                  🧠 Daily AI Tip
-                </h2>
-                <p className="text-sm text-cyan-100 leading-relaxed">
-                  {dailyTip}
-                </p>
-                <div className="text-xs text-cyan-300 mt-3 text-right">— AI Training Wisdom</div>
-              </div>
-
-              {/* Motivational Quote */}
-              <div className="glass-secondary rounded-3xl p-6 text-center shadow-lg">
-                <div className="text-3xl mb-3">🌟</div>
-                <p className="text-sm font-medium text-pink-100 italic leading-relaxed">
-                  "The future belongs to those who learn, adapt, and grow. You're already ahead of 99% of people."
-                </p>
-                <p className="text-xs text-pink-200 mt-2">- Your AI Coach</p>
+                ) : (
+                  <div className="text-xs text-blue-200">No more articles</div>
+                )}
               </div>
             </div>
 
