@@ -106,21 +106,21 @@ Verification pause: Run tests; verify logs and metrics for scheduled jobs.
 ## 🔴 Current Priority: Phase 2 - UI/UX Improvements
 
 ### Priority 4: Complete Frontend Pages
-- [ ] About Us: fix page not opening and flicker
-  - Ensure route `/about` is public and loads without auth guard
-  - Remove any missing imports causing runtime errors (e.g., `navigate` not defined)
-  - Replace `whileInView` heavy animations with safer `initial/animate` where appropriate to prevent flicker
-  - Verify Navbar/Footer integration on public route
-- [ ] Contact: fix page not opening and mailto flow
-  - Ensure route `/contact` is public and loads without auth guard
-  - Validate imports exist (`sanitizeText`, `checkRateLimit`, `OptimizedStarField`) and remove unused deps (emailjs) from component
-  - Keep lightweight mailto-based submit; add graceful fallback text if blocked
-  - Add basic client-side validation and success/error states
-- [ ] Pricing: update to reflect removal of paid tier
-  - Remove Premium purchase flow; keep card but mark "Coming soon"
-  - Hide/disable upgrade button; make messaging consistent with free-only access
-  - Remove references to Stripe/PayPal for now and add note about upcoming plans
-  - Ensure `/pricing` is accessible (decide: public or behind login) and consistent across Navbar
+- [x] ✅ About Us: fixed page and eliminated flicker
+  - ✅ Public `/about` route loads without auth guard
+  - ✅ Missing imports resolved (`navigate` via `useNavigate`)
+  - ✅ Removed scroll-triggered animations; static content prevents flicker
+  - ✅ Navbar/Footer integration verified on public route
+- [x] ✅ Contact: fixed page and mailto flow
+  - ✅ Public `/contact` route loads without auth guard
+  - ✅ Validated imports (`sanitizeText`, `checkRateLimit`, `OptimizedStarField`); removed unused emailjs
+  - ✅ Mailto-based submit with graceful error states
+  - ✅ Added sanitization, simple validation, and basic rate limit
+- [x] ✅ Pricing: updated to reflect removal of paid tier
+  - ✅ Premium purchase flow removed; card marked "Coming soon"
+  - ✅ Upgrade button disabled; messaging is free-first
+  - ✅ Payment references removed for now
+  - ✅ `/pricing` made public and reflected in Navbar
 
 ### Priority 5: Fix Lesson Viewer Display Issues
 - [ ] **Header text display**: Fix the lesson title and description not showing properly
