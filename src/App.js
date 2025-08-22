@@ -52,7 +52,7 @@ const About = React.lazy(() => import('./pages/About'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Signup = React.lazy(() => import('./pages/Signup'));
 const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
-const HomePage = React.lazy(() => import('./pages/HomePage'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
 const Pricing = React.lazy(() => import('./pages/Pricing'));
 
 // Learning flow pages
@@ -87,16 +87,17 @@ function App() {
                   <Route path="/about" element={<About />} />
                   <Route path="/features" element={<Features />} />
                   <Route path="/contact" element={<Contact />} />
+                  <Route path="/pricing" element={<Pricing />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
                   
                   {/* Protected /home path */}
                   <Route path="/home" element={<ProtectedRoute />}>
-                    <Route index element={<HomePage />} />
+                    <Route index element={<Dashboard />} />
                   </Route>
 
-                  {/* Redirect dashboard to home - Dashboard functionality integrated into HomePage */}
+                  {/* Redirect dashboard to home - Dashboard functionality integrated into Dashboard component */}
                   <Route path="/dashboard" element={<Navigate to="/home" replace />} />
 
                   <Route path="/profile" element={<ProtectedRoute />}>
@@ -111,9 +112,7 @@ function App() {
                     <Route path="" element={<LessonsOverview />} />
                   </Route>
 
-                  <Route path="/pricing" element={<ProtectedRoute />}>
-                    <Route index element={<Pricing />} />
-                  </Route>
+                  
 
                   {/* Lesson start page with difficulty selection */}
                   <Route path="/lessons/start/:lessonId" element={<ProtectedRoute />}>

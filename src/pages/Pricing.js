@@ -1,14 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import LoggedInNavbar from '../components/LoggedInNavbar';
+import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 import OptimizedStarField from '../components/OptimizedStarField';
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const [selectedPlan, setSelectedPlan] = useState('premium');
+  const [selectedPlan, setSelectedPlan] = useState('free');
 
   const plans = [
     {
@@ -33,35 +31,31 @@ const Pricing = () => {
       buttonStyle: 'bg-gray-600 cursor-not-allowed',
       popular: false
     },
+    // Premium temporarily disabled
     {
       id: 'premium',
-      name: 'Premium',
-      price: '$10',
-      period: 'month',
-      description: 'Unlock your full AI learning potential',
+      name: 'Premium (Coming Soon)',
+      price: '$—',
+      period: '—',
+      description: 'Our full-featured plan is being revamped. Stay tuned!',
       features: [
         'Everything in Free Tier',
-        'Access to ALL intermediate & advanced lessons',
-        'Interactive coding sandboxes',
-        'AI-powered feedback and guidance',
-        'Priority support',
-        'Advanced project tutorials',
-        'Real-world AI applications',
-        'Certificate of completion'
+        'More advanced lessons',
+        'Interactive projects and sandboxes',
+        'AI-powered feedback',
       ],
       limitations: [],
-      buttonText: 'Upgrade to Premium',
-      buttonStyle: 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-400 hover:to-amber-400',
+      buttonText: 'Coming Soon',
+      buttonStyle: 'bg-gray-600 cursor-not-allowed',
       popular: true
     }
   ];
 
   const handlePlanSelect = (planId) => {
-    if (planId === 'free') return; // Already on free plan
-    
-    // Here you would integrate with Stripe or your payment processor
-    // For now, just show a message
-    alert('Payment integration coming soon! You\'ll be able to upgrade to premium shortly.');
+    // Premium disabled — show info toast for now
+    if (planId !== 'free') {
+      alert('Premium is coming soon. For now, enjoy the Free Tier!');
+    }
   };
 
   return (
@@ -69,7 +63,7 @@ const Pricing = () => {
       className="relative min-h-screen text-white overflow-hidden"
       style={{ backgroundColor: '#3b82f6' }}
     >
-      <LoggedInNavbar />
+      <Navbar />
 
       {/* Optimized Star Field */}
       <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
@@ -84,8 +78,7 @@ const Pricing = () => {
                 Choose Your Learning Path
               </h1>
               <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-                Start with our free tier or unlock advanced AI lessons with Premium. 
-                No hidden fees, cancel anytime.
+                BeginningWithAI is currently free. Premium features are under construction.
               </p>
             </div>
 
@@ -169,18 +162,18 @@ const Pricing = () => {
                   {/* Action Button - Stays at the bottom due to flex-col and flex-grow above */}
                   <button
                     onClick={() => handlePlanSelect(plan.id)}
-                    disabled={plan.id === 'free' && user?.subscriptionTier !== 'premium'}
+                    disabled={plan.id !== 'free'}
                     className={`
                       w-full py-4 rounded-xl font-semibold text-white transition-all duration-300 text-lg
                       transform hover:scale-[1.03] active:scale-[0.98] shadow-md hover:shadow-lg
-                      ${(plan.id === 'free' && user?.subscriptionTier !== 'premium') 
+                      ${plan.id === 'free' 
                           ? 'bg-slate-600 cursor-default opacity-80' 
                           : plan.buttonStyle + ' text-slate-900 font-bold'
                       }
                       ${plan.popular ? 'hover:shadow-yellow-500/30' : 'hover:shadow-indigo-500/30'}
                     `}
                   >
-                    {plan.id === 'free' && user?.subscriptionTier !== 'premium' ? 'Current Plan' : plan.buttonText}
+                    {plan.id === 'free' ? 'Current Plan' : plan.buttonText}
                   </button>
                 </div>
               ))}

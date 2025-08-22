@@ -1,5 +1,6 @@
 import { db } from '../firebase';
 import { collection, addDoc, getDocs, query, orderBy, limit, where, Timestamp, doc, updateDoc, startAfter } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 import logger from '../utils/logger';
 
 class NewsService {
@@ -237,7 +238,7 @@ class NewsService {
     return allArticles;
   }
 
-  // Save news articles to Firestore
+  // Save news articles to Firestore (admin-only; retained for server-side contexts). Not used from client.
   async saveNewsToFirestore(articles) {
     try {
       const newsCollection = collection(db, 'aiNews');
@@ -357,22 +358,27 @@ class NewsService {
     }
   }
 
-  // Main function to update news
+  // Main function to update news via Cloud Function (admin-only)
   async updateNews() {
     try {
-      logger.info('Starting news update process...');
-      
-      const newArticles = await this.fetchAllNews();
-      logger.info(`Found ${newArticles.length} new articles`);
-      
-      if (newArticles.length > 0) {
-        await this.saveNewsToFirestore(newArticles);
-        logger.info('News update completed successfully');
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken?.();
+      const resp = await fetch('https://us-central1-beginai1.cloudfunctions.net/updateAINewsManual', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({})
+      });
+      if (!resp.ok) {
+        throw new Error(`Update failed with status ${resp.status}`);
       }
-      
-      return newArticles;
+      const data = await resp.json();
+      logger.info('News update triggered via Cloud Function', data);
+      return data?.articlesProcessed ? new Array(data.articlesProcessed).fill(0) : [];
     } catch (error) {
-      logger.error('Error in news update process:', error);
+      logger.error('Error triggering Cloud Function update:', error);
       throw error;
     }
   }
@@ -398,54 +404,29 @@ class NewsService {
     }
   }
 
-  // Like an article (real user interaction)
+  // Like/unlike an article via Cloud Function
   async likeArticle(articleId, userId) {
     try {
-      const newsCollection = collection(db, 'aiNews');
-      const articleDoc = doc(newsCollection, articleId);
-      
-      // Get current article data
-      const articleSnapshot = await getDocs(query(newsCollection, where('id', '==', articleId)));
-      
-      if (articleSnapshot.empty) {
-        throw new Error('Article not found');
+      const auth = getAuth();
+      const token = await auth.currentUser?.getIdToken?.();
+      if (!token) {
+        throw new Error('Not authenticated');
       }
-      
-      const articleData = articleSnapshot.docs[0].data();
-      const docRef = articleSnapshot.docs[0].ref;
-      
-      // Check if user already liked this article
-      const likedBy = articleData.likedBy || [];
-      const hasLiked = likedBy.includes(userId);
-      
-      let updatedLikedBy;
-      let realLikes = articleData.likes?.real || 0;
-      
-      if (hasLiked) {
-        // Unlike - remove user from likedBy array
-        updatedLikedBy = likedBy.filter(id => id !== userId);
-        realLikes = Math.max(0, realLikes - 1);
-      } else {
-        // Like - add user to likedBy array
-        updatedLikedBy = [...likedBy, userId];
-        realLikes += 1;
-      }
-      
-      const simulatedLikes = articleData.likes?.simulated || 0;
-      const totalLikes = simulatedLikes + realLikes;
-      
-      // Update the article
-      await updateDoc(docRef, {
-        likedBy: updatedLikedBy,
-        'likes.real': realLikes,
-        'likes.total': totalLikes
+      const resp = await fetch('https://us-central1-beginai1.cloudfunctions.net/toggleNewsLike', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ articleId })
       });
-      
-      logger.info(`Article ${hasLiked ? 'unliked' : 'liked'} by user ${userId}`);
-      return { liked: !hasLiked, totalLikes, realLikes };
-      
+      if (!resp.ok) {
+        throw new Error(`Like toggle failed with status ${resp.status}`);
+      }
+      const data = await resp.json();
+      return { liked: !!data.liked, totalLikes: data.totalLikes || 0, realLikes: data.realLikes || 0 };
     } catch (error) {
-      logger.error('Error liking article:', error);
+      logger.error('Error toggling like via Cloud Function:', error);
       throw error;
     }
   }

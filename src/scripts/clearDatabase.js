@@ -1,6 +1,5 @@
-// Simple script to clear all lessons from database
-import { db } from '../firebase.js';
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
+// Simple script to clear all lessons from database (Admin SDK)
+import { db, collection, getDocs, deleteDoc, doc } from '../../scripts/firestoreAdminCompat.js';
 
 async function clearAllLessons() {
   console.log('🗑️  Clearing all lessons from database...');

@@ -9,9 +9,10 @@ const corsOptions = {
     'https://beginai1.firebaseapp.com',
     'https://beginai1.web.app',
     'https://beginningwithai.com',
-    'https://www.beginningwithai.com'
+    'https://www.beginningwithai.com',
+    'http://localhost:3000'
   ],
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
 };
@@ -764,3 +765,81 @@ const youtubeTranscript = require('./youtubeTranscript');
 exports.extractYouTubeTranscript = youtubeTranscript.extractYouTubeTranscript;
 exports.getYouTubeMetadata = youtubeTranscript.getYouTubeMetadata;
 exports.generateContentFromTranscript = youtubeTranscript.generateContentFromTranscript; 
+
+// Like/unlike AI News article (secure, authenticated)
+exports.toggleNewsLike = functions.https.onRequest(async (req, res) => {
+  return corsHandler(req, res, async () => {
+    try {
+      // Only allow POST requests
+      if (req.method !== 'POST') {
+        res.status(405).json({ success: false, message: 'Method not allowed' });
+        return;
+      }
+
+      // Basic rate limiting
+      const throttle = isThrottled(req);
+      if (throttle.throttled) {
+        res.status(429).json({
+          success: false,
+          message: `You are liking too fast. Please wait ${Math.ceil(throttle.retryAfterMs / 1000)} seconds and try again.`
+        });
+        return;
+      }
+
+      // Verify user auth via Bearer token
+      const authHeader = req.headers.authorization || '';
+      if (!authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ success: false, message: 'Unauthorized: missing Bearer token' });
+        return;
+      }
+      const idToken = authHeader.replace('Bearer ', '').trim();
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      const uid = decoded.uid;
+
+      const { articleId } = req.body || {};
+      if (!articleId || typeof articleId !== 'string') {
+        res.status(400).json({ success: false, message: 'Invalid request: articleId is required' });
+        return;
+      }
+
+      // Find the article by its stable id field
+      const snapshot = await db.collection('aiNews').where('id', '==', articleId).limit(1).get();
+      if (snapshot.empty) {
+        res.status(404).json({ success: false, message: 'Article not found' });
+        return;
+      }
+
+      const docRef = snapshot.docs[0].ref;
+
+      // Toggle like within a transaction for correctness
+      const result = await db.runTransaction(async (tx) => {
+        const docSnap = await tx.get(docRef);
+        if (!docSnap.exists) {
+          throw new Error('Article not found');
+        }
+        const data = docSnap.data() || {};
+        const likedBy = Array.isArray(data.likedBy) ? data.likedBy : [];
+        const alreadyLiked = likedBy.includes(uid);
+        const simulatedLikes = (data.likes && typeof data.likes.simulated === 'number') ? data.likes.simulated : 0;
+        const currentReal = (data.likes && typeof data.likes.real === 'number') ? data.likes.real : 0;
+
+        const updatedLikedBy = alreadyLiked ? likedBy.filter(x => x !== uid) : [...likedBy, uid];
+        const realLikes = Math.max(0, alreadyLiked ? currentReal - 1 : currentReal + 1);
+        const totalLikes = simulatedLikes + realLikes;
+
+        tx.update(docRef, {
+          likedBy: updatedLikedBy,
+          'likes.real': realLikes,
+          'likes.total': totalLikes
+        });
+
+        return { liked: !alreadyLiked, realLikes, totalLikes };
+      });
+
+      res.status(200).json({ success: true, ...result });
+    } catch (error) {
+      console.error('Error toggling news like:', error);
+      res.status(500).json({ success: false, message: 'Failed to toggle like' });
+    }
+  });
+});

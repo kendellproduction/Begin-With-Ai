@@ -94,7 +94,7 @@ const LessonsOverview = React.memo(() => {
       navigate(location.pathname, { replace: true });
     }
     
-    // Enhanced quiz completion detection - same as HomePage
+    // Enhanced quiz completion detection - same as Dashboard
     initializeLearningData();
     loadAdaptiveLessons();
   }, [location.state, navigate, location.pathname]);

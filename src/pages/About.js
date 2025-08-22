@@ -1,25 +1,20 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import LoggedInNavbar from '../components/LoggedInNavbar';
 import Navbar from '../components/Navbar';
-import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const About = () => {
-  const { user } = useAuth();
+  const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white">
+    <div className="min-h-screen text-white" style={{ backgroundColor: '#3b82f6' }}>
       <Navbar />
       
       <main className="pt-20 pb-16">
         {/* Hero Section */}
         <section className="py-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div 
+            <div 
               className="text-center mb-16"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
             >
               <div className="glass-hero rounded-3xl p-8 mb-8 mx-auto max-w-4xl">
                 <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
@@ -29,15 +24,11 @@ const About = () => {
                   We're on a mission to make artificial intelligence accessible to everyone, one learner at a time
                 </p>
               </div>
-            </motion.div>
+            </div>
 
             {/* Mission Statement */}
-            <motion.section 
+            <section 
               className="mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="glass-accent rounded-3xl p-8 md:p-12 text-center">
                 <div className="text-6xl mb-6">🌟</div>
@@ -48,15 +39,11 @@ const About = () => {
                   To democratize AI education and empower individuals from all backgrounds to harness the transformative power of artificial intelligence. We believe that AI literacy is not just the future - it's the present, and everyone deserves access to it.
                 </p>
               </div>
-            </motion.section>
+            </section>
 
             {/* Our Story */}
-            <motion.section 
+            <section 
               className="mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold text-white mb-6">
@@ -85,15 +72,11 @@ const About = () => {
                   </p>
                 </div>
               </div>
-            </motion.section>
+            </section>
 
             {/* Core Values */}
-            <motion.section 
+            <section 
               className="mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold text-white mb-6">
@@ -134,30 +117,21 @@ const About = () => {
                     description: "We leverage the latest educational technologies to create the most effective learning experiences."
                   }
                 ].map((value, index) => (
-                  <motion.div
+                  <div
                     key={index}
                     className="glass-surface rounded-2xl p-6 text-center"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{ scale: 1.05 }}
                   >
                     <div className="text-4xl mb-4">{value.icon}</div>
                     <h3 className="text-xl font-bold text-white mb-3">{value.title}</h3>
                     <p className="text-gray-200 leading-relaxed">{value.description}</p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.section>
+            </section>
 
             {/* Team Section */}
-            <motion.section 
+            <section 
               className="mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold text-white mb-6">
@@ -207,14 +181,9 @@ const About = () => {
                     icon: "🎨"
                   }
                 ].map((member, index) => (
-                  <motion.div
+                  <div
                     key={index}
                     className="glass-secondary rounded-2xl p-6 text-center"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{ scale: 1.05 }}
                   >
                     <div className="text-5xl mb-4">{member.icon}</div>
                     <div className="glass-surface rounded-lg p-4 mb-4">
@@ -222,18 +191,14 @@ const About = () => {
                       <p className="text-cyan-300 font-semibold">{member.role}</p>
                     </div>
                     <p className="text-gray-200 text-sm leading-relaxed">{member.bio}</p>
-                  </motion.div>
+                  </div>
                 ))}
               </div>
-            </motion.section>
+            </section>
 
             {/* Impact Stats */}
-            <motion.section 
+            <section 
               className="mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="glass-primary rounded-3xl p-8 text-center">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
@@ -250,30 +215,22 @@ const About = () => {
                     { number: "95%", label: "Success Rate", icon: "🏆" },
                     { number: "24/7", label: "AI Support", icon: "🤖" }
                   ].map((stat, index) => (
-                    <motion.div
+                    <div
                       key={index}
                       className="glass-surface rounded-2xl p-6"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      whileInView={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      viewport={{ once: true }}
                     >
                       <div className="text-4xl mb-2">{stat.icon}</div>
                       <div className="text-3xl font-bold text-white mb-1">{stat.number}</div>
                       <div className="text-sm text-gray-300">{stat.label}</div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </div>
-            </motion.section>
+            </section>
 
             {/* CTA Section */}
-            <motion.section 
+            <section 
               className="text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="glass-accent rounded-3xl p-8">
                 <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
@@ -283,25 +240,21 @@ const About = () => {
                   Ready to be part of the AI revolution? Start your journey with us today
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <motion.button 
+                  <button 
                     onClick={() => navigate('/signup')}
                     className="glass-button bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold py-4 px-8 rounded-full text-lg"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                   >
                     🚀 Start Learning
-                  </motion.button>
-                  <motion.button 
+                  </button>
+                  <button 
                     onClick={() => navigate('/contact')}
                     className="glass-secondary border-2 border-white/20 hover:border-white/40 text-white font-semibold py-4 px-8 rounded-full text-lg"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
                   >
                     💬 Get in Touch
-                  </motion.button>
+                  </button>
                 </div>
               </div>
-            </motion.section>
+            </section>
           </div>
         </section>
       </main>

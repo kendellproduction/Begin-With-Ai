@@ -1,14 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import LoggedInNavbar from '../components/LoggedInNavbar';
 import Navbar from '../components/Navbar';
-import { useAuth } from '../contexts/AuthContext';
-import emailjs from '@emailjs/browser';
 import { sanitizeText, checkRateLimit } from '../utils/sanitization';
 import OptimizedStarField from '../components/OptimizedStarField';
 
 const Contact = () => {
-  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,6 +14,7 @@ const Contact = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState(null);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleChange = (e) => {
     setFormData({
@@ -30,10 +27,33 @@ const Contact = () => {
     e.preventDefault();
     setIsSubmitting(true);
     setSubmitStatus(null);
+    setErrorMessage('');
     
     try {
+      // Basic rate limiting (3 requests per minute per email)
+      const id = (formData.email || 'anon').toLowerCase();
+      const rate = checkRateLimit(`contact:${id}`, 3, 60000);
+      if (!rate.allowed) {
+        setSubmitStatus('error');
+        setErrorMessage('Too many attempts. Please try again in a minute or email us directly at kendellproduction@gmail.com');
+        return;
+      }
+
+      // Sanitize and validate inputs
+      const name = sanitizeText(formData.name).trim();
+      const email = sanitizeText(formData.email).trim();
+      const subject = sanitizeText(formData.subject).trim();
+      const message = sanitizeText(formData.message).trim();
+
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      if (!name || !emailValid || subject.length < 3 || message.length < 10) {
+        setSubmitStatus('error');
+        setErrorMessage('Please provide a valid email and a meaningful subject and message.');
+        return;
+      }
+
       // Create mailto link
-      const mailtoLink = `mailto:kendellproduction@gmail.com?subject=${encodeURIComponent(`BeginningWithAI Contact: ${formData.subject}`)}&body=${encodeURIComponent(`From: ${formData.name} (${formData.email})\n\nMessage:\n${formData.message}`)}`;
+      const mailtoLink = `mailto:kendellproduction@gmail.com?subject=${encodeURIComponent(`BeginningWithAI Contact: ${subject}`)}&body=${encodeURIComponent(`From: ${name} (${email})\n\nMessage:\n${message}`)}`;
       
       // Use window.location.href to avoid blank page issue
       window.location.href = mailtoLink;
@@ -50,6 +70,7 @@ const Contact = () => {
     } catch (error) {
       console.error('Error submitting contact form:', error);
       setSubmitStatus('error');
+      setErrorMessage('Sorry, there was an error preparing your message. Please try again or email us directly at kendellproduction@gmail.com');
     } finally {
       setIsSubmitting(false);
     }
@@ -60,7 +81,7 @@ const Contact = () => {
       className="relative min-h-screen text-white overflow-hidden"
       style={{ backgroundColor: '#3b82f6' }}
     >
-      {user ? <LoggedInNavbar /> : <Navbar />}
+      <Navbar />
 
       {/* Optimized Star Field */}
       <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
@@ -71,11 +92,8 @@ const Contact = () => {
           <div className="max-w-6xl mx-auto">
             
             {/* Header */}
-            <motion.div 
+            <div 
               className="text-center mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
             >
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
                 Let's <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">Connect</span>
@@ -83,15 +101,11 @@ const Contact = () => {
               <p className="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto leading-relaxed">
                 Have questions? Need guidance? Want to share your AI journey? We're here to help and genuinely excited to hear from you.
               </p>
-            </motion.div>
+            </div>
 
             {/* Promise section */}
-            <motion.section 
+            <section 
               className="mb-20"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-green-400/30 text-center">
                 <div className="text-6xl mb-6">🤝</div>
@@ -103,43 +117,34 @@ const Contact = () => {
                   you're connecting with people who believe in your potential and are committed to your success.
                 </p>
               </div>
-            </motion.section>
+            </section>
 
             {/* Contact form and info */}
             <div className="grid lg:grid-cols-2 gap-12">
               
               {/* Contact Form */}
-              <motion.div 
-                initial={{ opacity: 0, x: -30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-              >
+              <div>
                 <div className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20">
                   <h2 className="text-2xl font-bold text-white mb-6">Send Us a Message</h2>
                   
                   {submitStatus === 'success' && (
-                    <motion.div 
+                    <div 
                       className="bg-green-500/20 border border-green-500/50 rounded-lg p-4 mb-6"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
                     >
                       <p className="text-green-200">
                         🎉 Thank you! Your message has been prepared and sent to BeginningWithAI. We'll get back to you soon!
                       </p>
-                    </motion.div>
+                    </div>
                   )}
                   
                   {submitStatus === 'error' && (
-                    <motion.div 
+                    <div 
                       className="bg-red-500/20 border border-red-500/50 rounded-lg p-4 mb-6"
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
                     >
                       <p className="text-red-200">
-                        ❌ Sorry, there was an error sending your message. Please try again or email us directly at kendellproduction@gmail.com
+                        ❌ {errorMessage || 'Sorry, there was an error sending your message.'}
                       </p>
-                    </motion.div>
+                    </div>
                   )}
                   
                   <form onSubmit={handleSubmit} className="space-y-6">
@@ -204,7 +209,7 @@ const Contact = () => {
                       />
                     </div>
                     
-                    <motion.button
+                    <button
                       type="submit"
                       disabled={isSubmitting}
                       className={`w-full py-4 rounded-lg font-bold text-lg transition-all duration-300 ${
@@ -212,23 +217,15 @@ const Contact = () => {
                           ? 'bg-gray-600 cursor-not-allowed' 
                           : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500'
                       }`}
-                      whileHover={!isSubmitting ? { scale: 1.02 } : {}}
-                      whileTap={!isSubmitting ? { scale: 0.98 } : {}}
                     >
                       {isSubmitting ? 'Sending...' : '🚀 Send Message'}
-                    </motion.button>
+                    </button>
                   </form>
                 </div>
-              </motion.div>
+              </div>
 
               {/* Contact Info */}
-              <motion.div 
-                initial={{ opacity: 0, x: 30 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.8 }}
-                viewport={{ once: true }}
-                className="space-y-8"
-              >
+              <div className="space-y-8">
                 
                 {/* Quick Help */}
                 <div className="bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-xl rounded-3xl p-8 border border-blue-400/30">
@@ -270,17 +267,13 @@ const Contact = () => {
                   </div>
                 </div>
 
-              </motion.div>
+              </div>
 
             </div>
 
             {/* Final message */}
-            <motion.section 
+            <section 
               className="mt-20 text-center"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              viewport={{ once: true }}
             >
               <div className="bg-gradient-to-br from-indigo-500/20 to-purple-600/20 backdrop-blur-xl rounded-3xl p-8 md:p-12 border border-indigo-400/30">
                 <div className="text-6xl mb-6">🚀</div>
@@ -292,7 +285,7 @@ const Contact = () => {
                   Don't hesitate to reach out - we're genuinely excited to be part of your AI journey.
                 </p>
               </div>
-            </motion.section>
+            </section>
 
           </div>
         </div>

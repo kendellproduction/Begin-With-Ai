@@ -124,7 +124,7 @@ These files contained lesson definitions that were seeded to database:
 - `src/scripts/createBlankLessons.js` 
 - `src/components/admin/LessonMigrationTool.js`
 - `src/pages/LandingPage.js` (featured lessons)
-- `src/pages/HomePage.js` (quick access lessons)
+- `src/pages/Dashboard.js` (quick access lessons)
 - `src/components/LessonViewer.js` (fallback lessons)
 
 The static code was removed, but the database entries remained.

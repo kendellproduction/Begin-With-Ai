@@ -1,14 +1,4 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, collection, getDocs, deleteDoc } from 'firebase/firestore';
-
-// Initialize Firebase (using the same config as your app)
-const firebaseConfig = {
-  // You'll need to add your Firebase config here
-  // Copy it from src/firebase.js
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+import { db, doc, setDoc, collection, getDocs, deleteDoc } from '../../scripts/firestoreAdminCompat.js';
 
 // Define the lessons we want to create blank versions of
 const lessonsToCreate = [

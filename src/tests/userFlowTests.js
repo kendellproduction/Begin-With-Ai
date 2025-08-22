@@ -11,11 +11,10 @@ import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
 // Import components to test
-import HomePage from '../pages/HomePage';
+import Dashboard from '../pages/Dashboard';
 import Signup from '../pages/Signup';
 import Login from '../pages/Login';
 import LessonsOverview from '../pages/LessonsOverview';
-import Dashboard from '../pages/Dashboard';
 import { TestRunner } from '../utils/testRunner';
 
 // Mock Firebase with secure defaults
@@ -250,7 +249,7 @@ describe('Critical User Flow Tests', () => {
       // Test that admin routes are protected
       render(
         <SecureTestWrapper>
-          <HomePage />
+          <Dashboard />
         </SecureTestWrapper>
       );
 
@@ -283,7 +282,7 @@ describe('Critical User Flow Tests', () => {
 
       render(
         <SecureTestWrapper>
-          <HomePage />
+          <Dashboard />
         </SecureTestWrapper>
       );
 
@@ -450,7 +449,7 @@ describe('Critical User Flow Tests', () => {
 
       render(
         <SecureTestWrapper>
-          <HomePage />
+          <Dashboard />
         </SecureTestWrapper>
       );
 
@@ -515,7 +514,7 @@ describe('🛡️ Security Utility Tests', () => {
   test('validates environment variables are not exposed', () => {
     render(
       <SecureTestWrapper>
-        <HomePage />
+        <Dashboard />
       </SecureTestWrapper>
     );
 

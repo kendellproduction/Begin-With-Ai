@@ -91,14 +91,10 @@ const NewsTestPanel = ({ onNewsUpdated }) => {
 
       <div className="mt-3 pt-3 border-t border-gray-600">
         <div className="text-xs text-gray-400 space-y-1">
-          <div>📊 Client-Side News Sources:</div>
-          <div className="text-xs">• OpenAI Blog (RSS)</div>
-          <div className="text-xs">• NVIDIA AI Blog (RSS)</div>
-          <div className="text-xs">• AI News (RSS)</div>
-          <div className="text-xs">• VentureBeat AI (RSS)</div>
-          <div className="text-xs">• The Verge AI (RSS)</div>
-          <div className="text-xs">• MIT Technology Review (RSS)</div>
-          <div className="text-xs text-green-400 mt-2">✅ No Cloud Functions needed!</div>
+          <div>🔒 News Updates via Cloud Functions</div>
+          <div className="text-xs">• Updates are fetched server-side on schedule</div>
+          <div className="text-xs">• Manual fetch calls secure admin endpoint</div>
+          <div className="text-xs text-green-400 mt-2">✅ Client performs read-only Firestore queries</div>
         </div>
       </div>
     </div>

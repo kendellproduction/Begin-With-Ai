@@ -4,8 +4,8 @@
  * To: isPremium boolean system with dual content versions
  */
 
-import { collection, getDocs, doc, updateDoc, writeBatch } from 'firebase/firestore';
-import { db } from '../firebase';
+import { collection, getDocs, doc, writeBatch } from '../../scripts/firestoreAdminCompat.js';
+import { db } from '../../scripts/firestoreAdminCompat.js';
 
 // Migration configuration
 const MIGRATION_CONFIG = {

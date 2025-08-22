@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import LoggedInNavbar from '../components/LoggedInNavbar';
 import NewsTestPanel from '../components/NewsTestPanel';
 import { motion } from 'framer-motion';
-import { getAINews, updateAINews, likeAINewsArticle, getAINewsLikeStatus } from '../services/newsService';
+import { getAINews, updateAINews } from '../services/newsService';
 import { useAuth } from '../contexts/AuthContext';
 import DOMPurify from 'dompurify'; // Import DOMPurify
 import OptimizedStarField from '../components/OptimizedStarField';
@@ -42,7 +42,7 @@ const AiNews = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [likingArticles, setLikingArticles] = useState(new Set()); // Track which articles are being liked
+
   const { user } = useAuth();
 
   // Enhanced user use cases with colorful designs and like functionality
@@ -334,65 +334,7 @@ const AiNews = () => {
     return `${diffDays}d ago`;
   };
 
-  // Handle article like/unlike
-  const handleLikeArticle = async (event, articleId) => {
-    event.stopPropagation(); // Prevent article click when clicking like button
-    
-    if (!user) {
-      alert('Please sign in to like articles');
-      return;
-    }
-    
-    if (likingArticles.has(articleId)) {
-      return; // Already processing this article
-    }
-    
-    try {
-      setLikingArticles(prev => new Set([...prev, articleId]));
-      
-      // Call like service
-      const result = await likeAINewsArticle(articleId, user.uid);
-      
-      // Update local state immediately for responsive UI
-      setAiNews(prevNews => 
-        prevNews.map(article => {
-          if (article.id === articleId) {
-            const wasLiked = article.likedBy?.includes(user.uid) || false;
-            const updatedLikedBy = wasLiked 
-              ? (article.likedBy || []).filter(uid => uid !== user.uid)
-              : [...(article.likedBy || []), user.uid];
-            
-            return {
-              ...article,
-              likedBy: updatedLikedBy,
-              likes: {
-                ...article.likes,
-                real: result.realLikes,
-                total: result.totalLikes
-              }
-            };
-          }
-          return article;
-        })
-      );
-      
-    } catch (error) {
-      console.error('Error liking article:', error);
-      alert('Failed to like article. Please try again.');
-    } finally {
-      setLikingArticles(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(articleId);
-        return newSet;
-      });
-    }
-  };
 
-  // Check if user has liked an article
-  const hasUserLiked = (article) => {
-    if (!user || !article.likedBy) return false;
-    return article.likedBy.includes(user.uid);
-  };
 
   // Handle use case like/unlike
   const handleLikeUseCase = (useCaseId) => {
@@ -678,69 +620,21 @@ const AiNews = () => {
                       {news.summary}
                     </p>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <p className="text-sm text-gray-400">
-                          {news.date.toLocaleDateString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric'
-                          })}
+                    <div className="flex flex-col">
+                      <p className="text-sm text-gray-400">
+                        {news.date.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}
+                      </p>
+                      {news.source && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          {news.source}
                         </p>
-                        {news.source && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {news.source}
-                          </p>
-                        )}
-                      </div>
-                      
-                      <div className="flex items-center space-x-3">
-                        {/* Like Button */}
-                        <button
-                          onClick={(e) => handleLikeArticle(e, news.id)}
-                          disabled={likingArticles.has(news.id)}
-                          className={`flex items-center space-x-1 px-3 py-2 rounded-xl transition-all duration-300 ${
-                            hasUserLiked(news)
-                              ? 'bg-pink-500/20 text-pink-300 border border-pink-500/30 hover:bg-pink-500/30'
-                              : 'bg-white/10 text-gray-300 border border-white/20 hover:bg-white/20 hover:text-pink-300'
-                          } ${likingArticles.has(news.id) ? 'cursor-not-allowed opacity-50' : 'hover:scale-105'}`}
-                        >
-                          <svg 
-                            className={`w-4 h-4 transition-transform duration-300 ${hasUserLiked(news) ? 'scale-110' : ''}`}
-                            fill={hasUserLiked(news) ? "currentColor" : "none"} 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                          </svg>
-                          <span className="text-sm font-medium">
-                            {news.likes?.total || 0}
-                          </span>
-                        </button>
-                        
-                        {/* Read More */}
-                        <div className="flex items-center space-x-2 text-sm text-blue-300 group-hover:text-blue-200 transition-colors">
-                          <span>Read</span>
-                          <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
-                        </div>
-                      </div>
+                      )}
                     </div>
                     </div>
-                    {/* Engagement indicator for new articles */}
-                    {news.likes?.simulated > 0 && (
-                      <div className="mt-3 pt-3 border-t border-white/10">
-                        <div className="flex items-center justify-between text-xs text-gray-400">
-                          <span>Community engagement</span>
-                          <span className="flex items-center space-x-1">
-                            <span>{news.likes.real} real</span>
-                            <span>•</span>
-                            <span>{news.likes.simulated} engagement</span>
-                          </span>
-                        </div>
-                      </div>
-                    )}
                   </motion.div>
                 ))}
               </div>

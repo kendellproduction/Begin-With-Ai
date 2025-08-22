@@ -373,7 +373,7 @@ const SynchronizedLessonViewer = () => {
 
   // Podcast data with fixed audio source
   const podcastData = {
-    audioUrl: "/HomePageHeroVideo.mp4", // Use the MP4 file that exists in public folder
+    audioUrl: "/HomePageHeroVideo.mp4", // Use the MP4 file that exists in public folder (kept for compatibility)
     title: lesson?.title || "The Incredible True Story of Artificial Intelligence",
     chapters: [
       { title: "The Codebreaker Who Started It All", time: 0 },
@@ -425,7 +425,7 @@ const SynchronizedLessonViewer = () => {
           {/* Integrated Podcast Player */}
           <div className="relative z-20 mb-16">
             <IntegratedPodcastPlayer
-              audioUrl="/HomePageHeroVideo.mp4" // Use existing MP4 file as placeholder
+              audioUrl="/HomePageHeroVideo.mp4" // Use existing MP4 file as placeholder (kept for compatibility)
               title={podcastData.title}
               chapters={podcastData.chapters}
               onTimeUpdate={(time) => setCurrentTime(time)}

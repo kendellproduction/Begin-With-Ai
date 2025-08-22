@@ -8,7 +8,7 @@ const Layout = ({ children }) => {
   const location = useLocation();
 
   // List of public routes where footer should be shown
-  const publicRoutes = ['/', '/about', '/features', '/contact', '/login', '/signup', '/privacy', '/faq', '/blog'];
+  const publicRoutes = ['/', '/about', '/features', '/contact', '/pricing', '/login', '/signup', '/privacy', '/faq', '/blog'];
 
   // Check if current route is public
   const isPublicRoute = publicRoutes.includes(location.pathname);

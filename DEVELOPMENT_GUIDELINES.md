@@ -18,10 +18,10 @@ function App() {
 #### ✅ **ALWAYS DO:**
 ```javascript
 // Only import what you actually use
-import HomePage from './pages/HomePage';
+import Dashboard from './pages/Dashboard';
 
 function App() {
-  return <HomePage />; // Component is properly used
+  return <Dashboard />; // Component is properly used
 }
 ```
 
