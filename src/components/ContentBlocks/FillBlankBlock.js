@@ -133,7 +133,7 @@ const FillBlankBlock = ({
     const hasAnswer = userAnswer.length > 0;
 
     return (
-      <span key={blank.index} className="inline-block mx-1">
+      <span key={`blank-${blank.index}`} className="inline-block mx-1">
         <motion.input
           type="text"
           value={userAnswer}
@@ -187,7 +187,7 @@ const FillBlankBlock = ({
           if (part.type === 'text') {
             return (
               <span 
-                key={index}
+                key={`text-${index}`}
                 dangerouslySetInnerHTML={{ 
                   __html: DOMPurify.sanitize(part.content) 
                 }}

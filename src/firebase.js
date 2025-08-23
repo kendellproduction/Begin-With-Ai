@@ -57,7 +57,20 @@ try {
 const db = getFirestore(app);
 
 // Initialize Firebase Storage
-const storage = getStorage(app);
+// Normalize storage bucket if misconfigured (e.g., ".firebasestorage.app" -> ".appspot.com")
+let storage;
+try {
+  const rawBucket = firebaseConfig.storageBucket;
+  const normalizedBucket = rawBucket && rawBucket.endsWith('.firebasestorage.app')
+    ? rawBucket.replace('.firebasestorage.app', '.appspot.com')
+    : rawBucket;
+  const bucketUrl = normalizedBucket
+    ? (normalizedBucket.startsWith('gs://') ? normalizedBucket : `gs://${normalizedBucket}`)
+    : undefined;
+  storage = bucketUrl ? getStorage(app, bucketUrl) : getStorage(app);
+} catch (e) {
+  storage = getStorage(app);
+}
 
 // Development-only utility exposure for testing
 if (process.env.NODE_ENV === 'development') {

@@ -250,6 +250,45 @@ const UnifiedLessonBuilder = () => {
     setSaveStatus('unsaved');
   };
 
+  // Robust file picker that falls back to a temporary input if needed
+  const openFilePicker = (inputRef, accept, onFileSelected) => {
+    try {
+      const input = inputRef?.current;
+      if (input) {
+        input.value = '';
+        if (accept) input.setAttribute('accept', accept);
+        input.click();
+        return;
+      }
+    } catch (err) {
+      // Fallback below
+    }
+    // Fallback: ephemeral input element
+    const tempInput = document.createElement('input');
+    tempInput.type = 'file';
+    if (accept) tempInput.accept = accept;
+    tempInput.style.display = 'none';
+    document.body.appendChild(tempInput);
+    tempInput.click();
+    // Relay change back to the hidden input if present
+    tempInput.onchange = (e) => {
+      const file = e.target?.files?.[0];
+      if (!file) {
+        document.body.removeChild(tempInput);
+        return;
+      }
+      if (onFileSelected && typeof onFileSelected === 'function') {
+        try { onFileSelected(file); } catch (_) {}
+      } else if (inputRef?.current) {
+        // Assign files to the hidden input to reuse existing onChange logic
+        Object.defineProperty(inputRef.current, 'files', { value: e.target.files, writable: false });
+        const event = new Event('change', { bubbles: true });
+        inputRef.current.dispatchEvent(event);
+      }
+      document.body.removeChild(tempInput);
+    };
+  };
+
   const saveToHistory = (state) => {
     const newHistory = history.slice(0, historyIndex + 1);
     newHistory.push(JSON.parse(JSON.stringify(state)));
@@ -450,6 +489,8 @@ const UnifiedLessonBuilder = () => {
         
       } else if (fileType === 'image') {
         const storageRef = ref(storage, `lessons/images/${Date.now()}_${fileName}`);
+        // Optimistic preview
+        try { handleInlineEdit(blockId, 'src', URL.createObjectURL(file)); } catch (_) {}
         const snapshot = await uploadBytes(storageRef, file);
         downloadURL = await getDownloadURL(snapshot.ref);
         
@@ -459,6 +500,8 @@ const UnifiedLessonBuilder = () => {
         
       } else if (fileType === 'video') {
         const storageRef = ref(storage, `lessons/videos/${Date.now()}_${fileName}`);
+        // Optimistic preview (may not render all codecs, but keeps UI responsive)
+        try { handleInlineEdit(blockId, 'src', URL.createObjectURL(file)); } catch (_) {}
         const snapshot = await uploadBytes(storageRef, file);
         downloadURL = await getDownloadURL(snapshot.ref);
         
@@ -489,7 +532,15 @@ const UnifiedLessonBuilder = () => {
         }
         handleInlineEdit(blockId, 'fileName', file.name);
         
-        showNotification('warning', `${fileType} uploaded locally (Firebase Storage error: ${error.message})`);
+        // Provide better error feedback
+        let errorMsg = error.message;
+        if (error.code === 'storage/unauthorized') {
+          errorMsg = 'You need admin permissions to upload files';
+        } else if (error.message.includes('CORS')) {
+          errorMsg = 'Storage configuration issue - using local file';
+        }
+        
+        showNotification('warning', `${fileType} uploaded locally (${errorMsg})`);
         triggerUnsavedState();
       } catch (fallbackError) {
         showNotification('error', `Failed to upload ${fileType}: ${fallbackError.message}`);
@@ -619,6 +670,24 @@ const UnifiedLessonBuilder = () => {
       setTimeout(() => setEditingBlockId(newBlock.id), 100);
     }
     
+    // Auto-open file picker for image blocks
+    if (blockType === 'image') {
+      setTimeout(() => {
+        const input = fileInputRef.current;
+        if (input) {
+          input.value = '';
+          try {
+            // Direct click is the most reliable method for file inputs
+            input.click();
+          } catch (error) {
+            console.warn('Auto file picker failed:', error);
+            // Fallback to direct click
+            input.click();
+          }
+        }
+      }, 300);
+    }
+    
     showNotification('success', `${blockTypes.find(t => t.id === blockType)?.name} added`);
   };
 
@@ -655,24 +724,101 @@ const UnifiedLessonBuilder = () => {
     showNotification('success', 'Block duplicated');
   };
 
-  // Enhanced inline editing for all block types
+  // Simple debounce implementation
+  const debounceRef = useRef({});
+  
+  const debouncedUpdate = useCallback((blockId, field, value) => {
+    const key = `${blockId}-${field}`;
+    
+    // Clear existing timeout
+    if (debounceRef.current[key]) {
+      clearTimeout(debounceRef.current[key]);
+    }
+    
+    // Set new timeout
+    debounceRef.current[key] = setTimeout(() => {
+      const newBlocks = lessonBlocks.map(block => 
+        block.id === blockId 
+          ? { 
+              ...block, 
+              content: { ...block.content, [field]: value },
+              metadata: { ...block.metadata, updated: new Date().toISOString() }
+            } 
+          : block
+      );
+      
+      updateCurrentPageBlocks(newBlocks);
+      
+      if (selectedBlockId === blockId) {
+        setSelectedBlock(newBlocks.find(b => b.id === blockId));
+      }
+      
+      delete debounceRef.current[key];
+    }, 300);
+  }, [updateCurrentPageBlocks]);
+
+  // Enhanced inline editing for all block types with improved focus handling
   const handleInlineEdit = useCallback((blockId, field, value) => {
+    // Preserve focus/caret and scroll during quiz typing
+    const activeEl = document.activeElement;
+    const isTextInput = activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA');
+    const selectionStart = isTextInput && 'selectionStart' in activeEl ? activeEl.selectionStart : null;
+    const selectionEnd = isTextInput && 'selectionEnd' in activeEl ? activeEl.selectionEnd : null;
+    const currentScrollY = window.scrollY || 0;
+    const targetBlock = lessonBlocks.find(b => b.id === blockId);
+
+    // Update selected block immediately for responsive UI
+    if (selectedBlockId === blockId) {
+      setSelectedBlock(prev => prev ? {
+        ...prev,
+        content: { ...prev.content, [field]: value }
+      } : prev);
+    }
+    
+    // Update local block state immediately to prevent input lag
     const newBlocks = lessonBlocks.map(block => 
       block.id === blockId 
         ? { 
             ...block, 
-            content: { ...block.content, [field]: value },
-            metadata: { ...block.metadata, updated: new Date().toISOString() }
+            content: { ...block.content, [field]: value }
           } 
         : block
     );
     
-    updateCurrentPageBlocks(newBlocks);
-    
-    if (selectedBlockId === blockId) {
-      setSelectedBlock(newBlocks.find(b => b.id === blockId));
+    // Update the lesson pages immediately for responsive typing
+    const newPages = [...lessonPages];
+    if (newPages[currentPageIndex]) {
+      newPages[currentPageIndex] = {
+        ...newPages[currentPageIndex],
+        blocks: newBlocks,
+        updated: new Date().toISOString()
+      };
+      setLessonPages(newPages);
     }
-  }, [lessonBlocks, selectedBlockId, updateCurrentPageBlocks]);
+    
+    // Debounce only the save status update to prevent excessive API calls
+    triggerUnsavedState();
+
+    // Restore focus/caret and scroll for quiz edits to prevent blur
+    if (targetBlock && targetBlock.type === 'quiz') {
+      requestAnimationFrame(() => {
+        // Re-find the same input by data attribute to avoid stale node refs
+        const selector = activeEl?.getAttribute && activeEl.getAttribute('data-block-input')
+          ? `[data-block-input="${activeEl.getAttribute('data-block-input')}"]`
+          : null;
+        const refocusEl = selector ? document.querySelector(selector) : activeEl;
+        if (isTextInput && refocusEl && typeof refocusEl.focus === 'function') {
+          refocusEl.focus();
+          try {
+            if (selectionStart !== null && selectionEnd !== null && 'setSelectionRange' in refocusEl) {
+              refocusEl.setSelectionRange(selectionStart, selectionEnd);
+            }
+          } catch (_) {}
+        }
+        window.scrollTo(0, currentScrollY);
+      });
+    }
+  }, [selectedBlockId, lessonBlocks, lessonPages, currentPageIndex]);
 
   const undo = () => {
     if (historyIndex > 0) {
@@ -700,18 +846,13 @@ const UnifiedLessonBuilder = () => {
     try {
       setSaveStatus('saving');
       
-      // Ensure we have current blocks in the proper page format
-      const currentLessonPages = [{
-        id: 'page-1',
-        title: lessonTitle,
-        blocks: lessonBlocks.length > 0 ? lessonBlocks : [
-          {
-            id: 'block-1',
-            type: 'heading',
-            content: { text: lessonTitle || 'New Lesson' }
-          }
-        ]
-      }];
+      // Persist all pages for both tiers; fall back to single page if empty
+      const normalizedFreePages = (currentTier === 'free' ? lessonPages : freePages).length > 0
+        ? (currentTier === 'free' ? lessonPages : freePages)
+        : [{ id: 'page-1', title: lessonTitle, blocks: lessonBlocks.length > 0 ? lessonBlocks : [{ id: 'block-1', type: 'heading', content: { text: lessonTitle || 'New Lesson' } }] }];
+      const normalizedPremiumPages = (currentTier === 'premium' ? lessonPages : premiumPages).length > 0
+        ? (currentTier === 'premium' ? lessonPages : premiumPages)
+        : normalizedFreePages;
 
       const lessonData = {
         id: currentDraftId || generateId(),
@@ -721,15 +862,15 @@ const UnifiedLessonBuilder = () => {
           free: {
             title: lessonTitle || 'Untitled Draft',
             description: lessonDescription || 'Draft lesson description',
-            pages: currentLessonPages
+            pages: normalizedFreePages.map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }))
           },
           premium: {
             title: lessonTitle || 'Untitled Draft',
             description: lessonDescription || 'Draft lesson description', 
-            pages: premiumPages.length > 0 ? premiumPages : currentLessonPages
+            pages: normalizedPremiumPages.map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }))
           }
         },
-        pages: currentLessonPages, // Also save at root level for compatibility
+        pages: normalizedFreePages.map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) })), // Root-level compatibility
         metadata: {
           lessonType: 'concept_explanation',
           estimatedTimeMinutes: 15,
@@ -750,11 +891,8 @@ const UnifiedLessonBuilder = () => {
       };
 
       // Before saving, update the current tier's pages
-      if (currentTier === 'free') {
-        setFreePages(lessonPages);
-      } else {
-        setPremiumPages(lessonPages);
-      }
+      if (currentTier === 'free') setFreePages(lessonPages);
+      if (currentTier === 'premium') setPremiumPages(lessonPages);
 
       const result = await draftService.saveDraft(user.uid, lessonData);
       setCurrentDraftId(result.id);
@@ -792,18 +930,18 @@ const UnifiedLessonBuilder = () => {
       const lessonData = {
         title: lessonTitle,
         description: lessonDescription,
-        content: freePages,
-        premiumContent: premiumPages,
+        content: (currentTier === 'free' ? lessonPages : freePages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) })),
+        premiumContent: (currentTier === 'premium' ? lessonPages : premiumPages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) })),
         contentVersions: {
           free: {
             title: lessonTitle,
             description: lessonDescription,
-            pages: freePages
+            pages: (currentTier === 'free' ? lessonPages : freePages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }))
           },
           premium: {
             title: lessonTitle,
             description: lessonDescription,
-            pages: premiumPages
+            pages: (currentTier === 'premium' ? lessonPages : premiumPages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }))
           }
         },
         estimatedTimeMinutes: 15,
@@ -1283,7 +1421,8 @@ const UnifiedLessonBuilder = () => {
   // Simplified block rendering for the builder
   const renderBlock = (block) => {
     const isSelected = selectedBlockId === block.id;
-    const isEditing = editingBlockId === block.id;
+    // Keep quiz in editing mode when selected to avoid input remounts while typing
+    const isEditing = block.type === 'quiz' ? (editingBlockId === block.id || isSelected) : (editingBlockId === block.id);
     
     return (
       <div 
@@ -1534,7 +1673,16 @@ const UnifiedLessonBuilder = () => {
                           e.stopPropagation();
                           setSelectedBlockId(block.id);
                           setSelectedBlock(block);
-                          fileInputRef.current?.click();
+                          
+                          // Trigger file dialog with proper user interaction
+                          setTimeout(() => {
+                            const input = fileInputRef.current;
+                            if (input) {
+                              input.value = '';
+                              // Direct click should work best for file inputs
+                              input.click();
+                            }
+                          }, 100);
                         }}
                         className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                         type="button"
@@ -1563,7 +1711,7 @@ const UnifiedLessonBuilder = () => {
                     e.stopPropagation();
                     setSelectedBlockId(block.id);
                     setSelectedBlock(block);
-                    fileInputRef.current?.click();
+                    openFilePicker(fileInputRef, 'image/*', (file) => handleFileUpload(file, block.id, 'image'));
                   }}
                   onDragOver={(e) => {
                     e.preventDefault();
@@ -1637,7 +1785,20 @@ const UnifiedLessonBuilder = () => {
                         e.stopPropagation();
                         setSelectedBlockId(block.id);
                         setSelectedBlock(block);
-                        fileInputRef.current?.click();
+                        const input = fileInputRef.current;
+                        if (input) {
+                          // Reset the input to ensure change events fire even for same file
+                          input.value = '';
+                          // Simple direct click is most reliable for file inputs
+                          try {
+                            input.click();
+                          } catch (error) {
+                            console.warn('File picker failed:', error);
+                            // Fallback approaches
+                            input.focus();
+                            input.click();
+                          }
+                        }
                       }}
                       className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
                       type="button"
@@ -1676,6 +1837,7 @@ const UnifiedLessonBuilder = () => {
                       }}
                       onClick={(e) => e.stopPropagation()}
                       onFocus={(e) => e.stopPropagation()}
+                      data-block-input={`quiz-question-${block.id}`}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white"
                       placeholder="Enter your question..."
                     />
@@ -1683,7 +1845,7 @@ const UnifiedLessonBuilder = () => {
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">Options</label>
                     {block.content.options.map((option, index) => (
-                      <div key={index} className="flex items-center mb-2">
+                      <div key={`${block.id}-option-${index}`} className="flex items-center mb-2">
                         <input
                           type="radio"
                           name={`correct-${block.id}`}
@@ -1706,6 +1868,7 @@ const UnifiedLessonBuilder = () => {
                           }}
                           onClick={(e) => e.stopPropagation()}
                           onFocus={(e) => e.stopPropagation()}
+                          data-block-input={`quiz-option-${block.id}-${index}`}
                           className="flex-1 bg-gray-700 border border-gray-600 rounded px-3 py-1 text-white"
                           placeholder={`Option ${index + 1}`}
                         />
@@ -1749,6 +1912,7 @@ const UnifiedLessonBuilder = () => {
                       }}
                       onClick={(e) => e.stopPropagation()}
                       onFocus={(e) => e.stopPropagation()}
+                      data-block-input={`quiz-explanation-${block.id}`}
                       className="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 text-white h-20"
                       placeholder="Explain the correct answer..."
                     />
@@ -1781,18 +1945,29 @@ const UnifiedLessonBuilder = () => {
             <div className="w-full text-center">
               {block.content.src ? (
                 <div className="space-y-2">
-                  <div className="bg-gray-700 rounded-lg p-4">
-                    <VideoCameraIcon className="w-12 h-12 mx-auto text-blue-400 mb-2" />
+                  {/* Inline video preview */}
+                  <div className="rounded-lg overflow-hidden bg-gray-800">
+                    <video
+                      className="w-full h-auto"
+                      controls
+                      preload="metadata"
+                      src={block.content.src}
+                    />
+                  </div>
+                  <div className="bg-gray-700 rounded-lg p-3">
                     <p className="text-gray-300 text-sm">Video: {block.content.title || 'Untitled'}</p>
-                    <p className="text-gray-500 text-xs">
-                      {block.content.fileName || 'video file'}
-                    </p>
+                    <p className="text-gray-500 text-xs">{block.content.fileName || 'video file'}</p>
                   </div>
                 </div>
               ) : (
                 <div 
                   className="border-2 border-dashed border-gray-600 rounded-lg py-8 cursor-pointer hover:border-gray-500"
-                  onClick={() => videoInputRef.current?.click()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedBlockId(block.id);
+                    setSelectedBlock(block);
+                    openFilePicker(videoInputRef, 'video/*', (file) => handleFileUpload(file, block.id, 'video'));
+                  }}
                 >
                   <VideoCameraIcon className="w-12 h-12 mx-auto text-gray-500 mb-2" />
                   <p className="text-gray-500">Click to add video</p>
@@ -1885,7 +2060,7 @@ const UnifiedLessonBuilder = () => {
                             onClick={() => {
                               setSelectedBlockId(block.id);
                               setSelectedBlock(block);
-                              podcastInputRef.current?.click();
+                              openFilePicker(podcastInputRef, 'audio/*,.mp3,.wav,.m4a,.aac,.ogg', (file) => handleFileUpload(file, block.id, 'audio'));
                             }}
                             className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center space-x-2 mx-auto"
                             type="button"
@@ -2283,7 +2458,7 @@ const UnifiedLessonBuilder = () => {
     triggerUnsavedState();
   };
 
-  // Listen for preview messages from other windows
+  // Listen for preview messages from admin dashboard (safe now that live editing is disabled)
   useEffect(() => {
     const handlePreviewMessage = (event) => {
       if (event.origin !== window.location.origin) return;
@@ -2439,7 +2614,7 @@ const UnifiedLessonBuilder = () => {
                     </div>
                   )}
 
-                  {/* Hidden file inputs */}
+                  {/* File upload inputs with proper event handling */}
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -2449,8 +2624,11 @@ const UnifiedLessonBuilder = () => {
                       if (file && selectedBlockId) {
                         handleFileUpload(file, selectedBlockId, 'image');
                       }
+                      // Reset input to allow same file selection
+                      e.target.value = '';
                     }}
-                    className="hidden"
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
                   />
                   
                   <input
@@ -2462,8 +2640,11 @@ const UnifiedLessonBuilder = () => {
                       if (file && selectedBlockId) {
                         handleFileUpload(file, selectedBlockId, 'video');
                       }
+                      // Reset input to allow same file selection
+                      e.target.value = '';
                     }}
-                    className="hidden"
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
                   />
                   
                   <input
@@ -2475,8 +2656,11 @@ const UnifiedLessonBuilder = () => {
                       if (file && selectedBlockId) {
                         handleFileUpload(file, selectedBlockId, 'audio');
                       }
+                      // Reset input to allow same file selection
+                      e.target.value = '';
                     }}
-                    className="hidden"
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
                   />
                   
                   <div>

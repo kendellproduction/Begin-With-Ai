@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import QuizEditor from './QuizEditor';
 import { motion } from 'framer-motion';
 import { 
   SwatchIcon, 
@@ -19,6 +20,9 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
   const [localConfig, setLocalConfig] = useState(block?.config || {});
   const [localStyles, setLocalStyles] = useState(block?.styles || {});
   const [activeTab, setActiveTab] = useState('content'); // content, styles, config
+  
+  // Debounce ref for performance optimization
+  const debounceRef = useRef({});
 
   // Update local state when block changes
   useEffect(() => {
@@ -43,23 +47,47 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
     );
   }
 
-  const handleContentChange = (field, value) => {
+  // Debounced update function to prevent excessive API calls
+  const debouncedUpdate = useCallback((updateFn, field, value, delay = 300) => {
+    const key = `${field}-${Date.now()}`;
+    
+    // Clear existing timeout
+    if (debounceRef.current[field]) {
+      clearTimeout(debounceRef.current[field]);
+    }
+    
+    // Set new timeout
+    debounceRef.current[field] = setTimeout(() => {
+      updateFn(field, value);
+      delete debounceRef.current[field];
+    }, delay);
+  }, []);
+
+  const handleContentChange = useCallback((field, value, immediate = false) => {
     const newContent = { ...localContent, [field]: value };
     setLocalContent(newContent);
-    onContentUpdate(newContent);
-  };
+    
+    if (immediate) {
+      onContentUpdate(newContent);
+    } else {
+      debouncedUpdate((f, v) => {
+        const updatedContent = { ...localContent, [f]: v };
+        onContentUpdate(updatedContent);
+      }, field, value);
+    }
+  }, [localContent, onContentUpdate, debouncedUpdate]);
 
-  const handleConfigChange = (field, value) => {
+  const handleConfigChange = useCallback((field, value) => {
     const newConfig = { ...localConfig, [field]: value };
     setLocalConfig(newConfig);
     onConfigUpdate(newConfig);
-  };
+  }, [localConfig, onConfigUpdate]);
 
-  const handleStyleChange = (field, value) => {
+  const handleStyleChange = useCallback((field, value) => {
     const newStyles = { ...localStyles, [field]: value };
     setLocalStyles(newStyles);
     onStylesUpdate(newStyles);
-  };
+  }, [localStyles, onStylesUpdate]);
 
   const handleMarginChange = (side, value) => {
     const currentMargin = localStyles.margin || { top: 0, bottom: 0, left: 0, right: 0 };
@@ -427,81 +455,13 @@ const PropertiesPanel = ({ block, onContentUpdate, onConfigUpdate, onStylesUpdat
   );
 
   const renderQuizBlockProperties = () => (
-    <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Question</label>
-        <input
-          type="text"
-          value={localContent.question || ''}
-          onChange={(e) => handleContentChange('question', e.target.value)}
-          placeholder="Enter your question..."
-          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Answer Options</label>
-        <div className="space-y-2">
-          {(localContent.options || ['', '', '']).map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
-              <input
-                type="radio"
-                name="correct-answer"
-                checked={localContent.correctAnswer === index}
-                onChange={() => handleContentChange('correctAnswer', index)}
-                className="text-blue-600 focus:ring-blue-500"
-              />
-              <input
-                type="text"
-                value={option}
-                onChange={(e) => {
-                  const newOptions = [...(localContent.options || ['', '', ''])];
-                  newOptions[index] = e.target.value;
-                  handleContentChange('options', newOptions);
-                }}
-                placeholder={`Option ${String.fromCharCode(65 + index)}`}
-                className="flex-1 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              {(localContent.options || []).length > 2 && (
-                <button
-                  onClick={() => {
-                    const newOptions = (localContent.options || []).filter((_, i) => i !== index);
-                    handleContentChange('options', newOptions);
-                    if (localContent.correctAnswer >= newOptions.length) {
-                      handleContentChange('correctAnswer', 0);
-                    }
-                  }}
-                  className="p-2 text-red-400 hover:text-red-300 transition-colors"
-                >
-                  <TrashIcon className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        
-        <button
-          onClick={() => {
-            const newOptions = [...(localContent.options || []), ''];
-            handleContentChange('options', newOptions);
-          }}
-          className="mt-2 flex items-center space-x-1 text-blue-400 hover:text-blue-300 transition-colors text-sm"
-        >
-          <PlusIcon className="w-4 h-4" />
-          <span>Add Option</span>
-        </button>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-300 mb-2">Explanation</label>
-        <textarea
-          value={localContent.explanation || ''}
-          onChange={(e) => handleContentChange('explanation', e.target.value)}
-          placeholder="Explain why this is the correct answer..."
-          className="w-full h-20 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-        />
-      </div>
-    </div>
+    <QuizEditor
+      content={localContent}
+      onUpdate={(newContent) => {
+        setLocalContent(newContent);
+        onContentUpdate(newContent);
+      }}
+    />
   );
 
   const renderImageBlockProperties = () => (

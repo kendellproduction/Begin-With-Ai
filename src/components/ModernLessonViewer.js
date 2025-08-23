@@ -845,13 +845,7 @@ const ModernLessonViewer = () => {
         // Clear bookmark since lesson is complete
         localStorage.removeItem(`lesson_bookmark_${lessonId}`);
         
-        // Scroll to completion section smoothly
-        setTimeout(() => {
-          window.scrollTo({
-            top: document.body.scrollHeight,
-            behavior: 'smooth'
-          });
-        }, 500);
+        // Note: Removed auto-scroll on completion to avoid interfering with input focus
       }
       
     } catch (error) {

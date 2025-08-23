@@ -105,11 +105,19 @@ const VideoBlock = ({
 
   const getVideoSource = () => {
     if (content.embedUrl) {
-      // Handle YouTube, Vimeo, etc.
       return content.embedUrl;
     }
+    // Prefer native src; fall back to URL
     return content.src || content.url;
   };
+
+  // If an optimistic blob URL is present, mark visible so preview shows instantly
+  useEffect(() => {
+    const src = getVideoSource();
+    if (src && src.startsWith('blob:')) {
+      setIsVisible(true);
+    }
+  }, [content?.src, content?.url]);
 
   const isEmbedded = content.embedUrl && 
     (content.embedUrl.includes('youtube') || content.embedUrl.includes('vimeo'));
