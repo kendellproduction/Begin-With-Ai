@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import logger from '../utils/logger';
 
 const PodcastContent = () => {
   const { lessonId } = useParams();
@@ -9,7 +10,7 @@ const PodcastContent = () => {
   useEffect(() => {
     // TODO: Load lesson data from Firestore database instead of static imports
     // This component should fetch lesson content from the database
-    console.log('PodcastContent needs to be updated to load from database');
+    logger.info('PodcastContent needs to be updated to load from database');
   }, [lessonId]);
 
   if (!lesson) {

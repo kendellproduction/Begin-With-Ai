@@ -27,7 +27,7 @@ import logger from '../../../utils/logger';
 import LessonMigrationTool from '../LessonMigrationTool';
 
 const DashboardOverview = () => {
-  const { currentUser } = useAuth();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   // State management
   const [loading, setLoading] = useState(true);
@@ -48,7 +48,15 @@ const DashboardOverview = () => {
   // Function to show notifications
   const showNotification = (message, type = 'info') => {
     // You can integrate with your notification system here
-    console.log(`${type.toUpperCase()}: ${message}`);
+    if (type === 'error') {
+      logger.error(message);
+    } else if (type === 'warn' || type === 'warning') {
+      logger.warn(message);
+    } else if (type === 'info') {
+      logger.info(message);
+    } else {
+      logger.log(message);
+    }
   };
 
   useEffect(() => {
@@ -112,7 +120,7 @@ const DashboardOverview = () => {
         
         if (hoursDiff < 24) {
           setNeedsMigration(false);
-          console.log('Migration manually marked as completed recently, skipping migration check');
+          logger.info('Migration manually marked as completed recently, skipping migration check');
         }
       }
       
@@ -154,7 +162,7 @@ const DashboardOverview = () => {
         // Consider migration complete if we have at least 3 lessons in Firestore
         hasFirestoreLessons = firestoreLessonCount >= 3;
         
-        console.log(`Found ${firestoreLessonCount} lessons in Firestore`);
+        logger.info(`Found ${firestoreLessonCount} lessons in Firestore`);
         
         if (hasFirestoreLessons) {
           // Mark migration as completed if we found lessons
@@ -171,7 +179,7 @@ const DashboardOverview = () => {
       const shouldShowMigration = !hasFirestoreLessons && !migrationCompleted;
       setNeedsMigration(shouldShowMigration);
       
-      console.log('Migration status:', {
+      logger.info('Migration status:', {
         hasFirestoreLessons,
         firestoreLessonCount,
         migrationCompleted,
@@ -200,9 +208,9 @@ const DashboardOverview = () => {
         return;
       }
 
-      console.log('Loading drafts for user:', currentUser.uid);
+      logger.info('Loading drafts for user:', currentUser.uid);
       const drafts = await draftService.loadDrafts(currentUser.uid);
-      console.log('Loaded drafts:', drafts);
+      logger.info('Loaded drafts:', drafts);
       
       // Sort by lastModified and take the 5 most recent
       const sortedDrafts = drafts
@@ -215,7 +223,7 @@ const DashboardOverview = () => {
         .slice(0, 5);
 
       setRecentDrafts(sortedDrafts);
-      console.log('Set recent drafts:', sortedDrafts);
+      logger.info('Set recent drafts:', sortedDrafts);
       
     } catch (error) {
       logger.error('Error loading recent drafts:', error);
@@ -261,7 +269,7 @@ const DashboardOverview = () => {
       );
 
       setPublishedLessons(uniqueLessons);
-      console.log('Loaded published lessons:', uniqueLessons.length);
+      logger.info('Loaded published lessons:', uniqueLessons.length);
       
     } catch (error) {
       logger.error('Error loading published lessons:', error);
@@ -294,16 +302,16 @@ const DashboardOverview = () => {
       originalLesson: lesson.originalLesson
     };
     
-    console.log('=== Dashboard Edit Lesson Debug ===');
-    console.log('Original lesson:', lesson);
-    console.log('Migrated lesson:', migratedLesson);
-    console.log('Final editing data:', editingLessonData);
-    console.log('Has required fields:', {
+    logger.info('=== Dashboard Edit Lesson Debug ===');
+    logger.info('Original lesson:', lesson);
+    logger.info('Migrated lesson:', migratedLesson);
+    logger.info('Final editing data:', editingLessonData);
+    logger.info('Has required fields:', {
       pathId: !!editingLessonData.pathId,
       moduleId: !!editingLessonData.moduleId,
       id: !!editingLessonData.id
     });
-    console.log('===================================');
+    logger.info('===================================');
     
     // Navigate to the lesson builder with migrated data
     navigate('/unified-lesson-builder', { 

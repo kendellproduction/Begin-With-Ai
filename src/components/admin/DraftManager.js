@@ -7,20 +7,19 @@ import {
   FiFileText,
   FiRefreshCw
 } from 'react-icons/fi';
-import { 
-  getDraftsIndex, 
-  getLessonDraft, 
-  deleteLessonDraft 
-} from '../../utils/localStorage';
+import { useAuth } from '../../contexts/AuthContext';
+import draftService from '../../services/draftService';
 
 const DraftManager = ({ onEditDraft, onShowNotification }) => {
   const [drafts, setDrafts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { currentUser } = useAuth();
 
-  const loadDrafts = () => {
+  const loadDrafts = async () => {
     try {
-      const draftsIndex = getDraftsIndex();
-      setDrafts(draftsIndex.sort((a, b) => new Date(b.lastSaved) - new Date(a.lastSaved)));
+      if (!currentUser?.uid) return;
+      const firestoreDrafts = await draftService.loadDrafts(currentUser.uid);
+      setDrafts(firestoreDrafts);
     } catch (error) {
       console.error('Error loading drafts:', error);
       onShowNotification?.('error', 'Error loading drafts');
@@ -31,26 +30,29 @@ const DraftManager = ({ onEditDraft, onShowNotification }) => {
 
   useEffect(() => {
     loadDrafts();
-  }, []);
+    if (!currentUser?.uid) return;
+    const unsubscribe = draftService.subscribeToDrafts(currentUser.uid, (newDrafts) => {
+      if (Array.isArray(newDrafts)) setDrafts(newDrafts);
+    });
+    return () => unsubscribe && unsubscribe();
+  }, [currentUser?.uid]);
 
   const handleEditDraft = (draft) => {
-    const draftData = getLessonDraft(draft.id);
-    if (draftData) {
-      onEditDraft({
-        type: 'lesson',
-        item: null, // No existing lesson, this is a draft
-        pathId: draftData.pathId,
-        moduleId: draftData.moduleId,
-        draftId: draft.id
-      });
-    }
+    onEditDraft({
+      type: 'lesson',
+      item: null,
+      pathId: draft.publishedPath || draft.metadata?.category || 'General',
+      moduleId: draft.publishedModule || draft.metadata?.category || 'General',
+      draftId: draft.id
+    });
   };
 
-  const handleDeleteDraft = (draftId) => {
+  const handleDeleteDraft = async (draftId) => {
     if (window.confirm('Are you sure you want to delete this draft? This action cannot be undone.')) {
       try {
-        deleteLessonDraft(draftId);
-        loadDrafts();
+        if (!currentUser?.uid) return;
+        await draftService.deleteDraft(currentUser.uid, draftId);
+        await loadDrafts();
         onShowNotification?.('success', 'Draft deleted successfully');
       } catch (error) {
         console.error('Error deleting draft:', error);
@@ -125,7 +127,7 @@ const DraftManager = ({ onEditDraft, onShowNotification }) => {
 
               <div className="flex items-center text-sm text-gray-400 mb-4">
                 <FiClock className="mr-1 h-3 w-3" />
-                <span>Last saved {formatDate(draft.lastSaved)}</span>
+                <span>Last saved {formatDate(draft.lastModified?.toDate ? draft.lastModified.toDate().toISOString() : draft.lastModified || draft.createdAt)}</span>
               </div>
 
               <div className="flex items-center space-x-2">

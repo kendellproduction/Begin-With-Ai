@@ -275,9 +275,12 @@ const LessonPageEditor = ({ pages, onSave, onCancel }) => {
 const PageContentEditor = ({ page, index, onUpdate }) => {
   const [editedPage, setEditedPage] = useState(page);
 
+  // Only update local state when the page object identity changes, not content
   useEffect(() => {
-    setEditedPage(page);
-  }, [page]);
+    if (page && (!editedPage || editedPage.type !== page.type)) {
+      setEditedPage(page);
+    }
+  }, [page?.type, page?.id]);
 
   const handleUpdate = (updates) => {
     const newPage = { ...editedPage, ...updates };
@@ -459,7 +462,7 @@ const QuizEditor = ({ page, onUpdate }) => {
         
         <div className="space-y-2">
           {(page.options || []).map((option, index) => (
-            <div key={index} className="flex items-center space-x-2">
+            <div key={`option-${index}-${option.text || index}`} className="flex items-center space-x-2">
               <input
                 type="checkbox"
                 checked={option.correct}

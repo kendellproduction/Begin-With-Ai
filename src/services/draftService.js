@@ -41,16 +41,25 @@ class DraftService {
   subscribeToDrafts(userId, callback) {
     try {
       const draftsRef = this.getDraftsCollection();
-      const q = query(draftsRef, orderBy('lastModified', 'desc'));
+      const q = query(
+        draftsRef,
+        where('createdBy', '==', userId)
+      );
       
       const unsubscribe = onSnapshot(q, (snapshot) => {
-        const drafts = [];
+        let drafts = [];
         snapshot.forEach((doc) => {
           drafts.push({ id: doc.id, ...doc.data() });
         });
+        // Sort client-side by lastModified desc
+        drafts = drafts.sort((a, b) => {
+          const aDate = (a.lastModified && a.lastModified.toDate && a.lastModified.toDate()) || (a.lastModified ? new Date(a.lastModified) : null) || (a.createdAt && a.createdAt.toDate && a.createdAt.toDate()) || (a.createdAt ? new Date(a.createdAt) : new Date(0));
+          const bDate = (b.lastModified && b.lastModified.toDate && b.lastModified.toDate()) || (b.lastModified ? new Date(b.lastModified) : null) || (b.createdAt && b.createdAt.toDate && b.createdAt.toDate()) || (b.createdAt ? new Date(b.createdAt) : new Date(0));
+          return (bDate?.getTime?.() || 0) - (aDate?.getTime?.() || 0);
+        });
         
         // Update cache
-        this.cache.set(`drafts_all`, drafts);
+        this.cache.set(`drafts_${userId}`, drafts);
         
         // Notify subscribers
         callback(drafts);
@@ -115,6 +124,10 @@ class DraftService {
 
       // Update localStorage buffer
       this.updateLocalStorageBuffer(userId, result);
+      // Invalidate per-user cache so next load reflects new draft immediately
+      try {
+        this.cache.delete(`drafts_${userId}`);
+      } catch (_) {}
       
       // Draft saved successfully
       return result;
@@ -138,22 +151,32 @@ class DraftService {
 
     try {
       // Check cache first
-      const cached = this.cache.get(`drafts_all`);
+      const cached = this.cache.get(`drafts_${userId}`);
       if (cached) {
         return cached;
       }
 
       const draftsRef = this.getDraftsCollection();
-      const q = query(draftsRef, orderBy('lastModified', 'desc'));
+      const q = query(
+        draftsRef,
+        where('createdBy', '==', userId)
+      );
       const snapshot = await getDocs(q);
       
-      const drafts = [];
+      let drafts = [];
       snapshot.forEach((doc) => {
         drafts.push({ id: doc.id, ...doc.data() });
       });
 
+      // Sort client-side by lastModified desc
+      drafts = drafts.sort((a, b) => {
+        const aDate = (a.lastModified && a.lastModified.toDate && a.lastModified.toDate()) || (a.lastModified ? new Date(a.lastModified) : null) || (a.createdAt && a.createdAt.toDate && a.createdAt.toDate()) || (a.createdAt ? new Date(a.createdAt) : new Date(0));
+        const bDate = (b.lastModified && b.lastModified.toDate && b.lastModified.toDate()) || (b.lastModified ? new Date(b.lastModified) : null) || (b.createdAt && b.createdAt.toDate && b.createdAt.toDate()) || (b.createdAt ? new Date(b.createdAt) : new Date(0));
+        return (bDate?.getTime?.() || 0) - (aDate?.getTime?.() || 0);
+      });
+
       // Update cache
-      this.cache.set(`drafts_all`, drafts);
+      this.cache.set(`drafts_${userId}`, drafts);
       
       // Drafts loaded from Firestore
       return drafts;

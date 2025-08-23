@@ -8,44 +8,31 @@ This is the focused task list for immediate priorities.
 - 🎯 **For News Changes**: Only edit Dashboard.js, newsService.js, or functions/index.js
 - 📋 **Reference**: See `CURRENT_NEWS_ARCHITECTURE.md` for full details
 
+## 🧯 Critical Bugs (Must Fix Next)
+
+- [x] Fix quiz input scroll-to-top bug on each keystroke
+  - Acceptance: Typing in quiz inputs no longer scrolls the page; focus and cursor remain stable; no unintended `window.scrollTo`/hash navigation triggered; works on mobile and desktop.
+  - Tasks:
+    - ✅ Audit `window.scrollTo` calls in `LessonViewer.js` and `ModernLessonViewer.js`; restrict to mount/slide-change only
+    - ✅ Verify no `scrollIntoView` or layout effect runs on quiz input state changes
+    - ✅ Ensure quiz inputs are not wrapped in anchors or elements with `href`/hash side-effects
+    - Add regression test: typing 20 chars in quiz input does not alter scroll position
+- [ ] Photo/Image upload in builder does not populate into quiz/lesson
+  - Acceptance: Selecting an image via the photo component uploads to Storage (or sets data URL in draft), updates the lesson draft block, shows preview in the builder, and renders in the lesson/quiz viewers.
+  - Tasks:
+    - ✅ Wire `type="file"` inputs in `UnifiedLessonBuilder` to block state with preview URL
+    - Implement upload to Firebase Storage with progress, size/type validation, and error UI
+    - Persist uploaded image URL in draft; ensure publish writes to lesson doc
+    - Update viewers to render image blocks reliably and handle missing URLs gracefully
+
 ## 🔒 Backend Critical Issues & Easy Wins (Safe Batches)
 
 These batches are ordered to minimize risk. Each batch ends with a verification pause before proceeding.
 
-### Batch 1: Critical security hotfixes (stop-the-bleed) ✅ COMPLETED
-- [x] ✅ Remove committed email credentials from `functions/index.js`
-  - ✅ Acceptance: No secrets in repo; email creds loaded via secrets/config only; exposed Gmail App Password rotated
-- [x] ✅ Lock down Firestore rules for `aiNews`
-  - ✅ Acceptance: Admin-only create/update/delete of articles; users can only update `likes` and `likedBy`; deletes admin-only
-- [x] ✅ Standardize admin role source across code and rules
-  - ✅ Acceptance: Both Functions and Rules check the same path (choose `users/{uid}.role` or `userProfiles/{uid}.role`) and work for existing admins
-- [x] ✅ Replace `require('node-fetch')` with global `fetch` in Functions (Node 18)
-  - ✅ Acceptance: Functions deploy without module errors; news fetching still works
-
-✅ Verification pause: Deploy to staging, run `npm run health-check`, confirm app loads, news still reads, and likes still work.
-
-### Batch 2: Secure endpoints and scheduling ✅ COMPLETED
-- [x] ✅ Require Firebase auth + admin role for `updateAINewsManual` and `initializeNewsData`
-  - ✅ Acceptance: Unauthenticated/unauthorized requests get 401/403; admins succeed
-- [x] ✅ Restrict CORS to prod/staging origins only for Functions
-  - ✅ Acceptance: Requests from unknown origins are blocked
+### Batch 2: Secure endpoints and scheduling (remaining)
 - [ ] Re-enable scheduled news updater with region and timezone
   - Acceptance: Daily run logs visible; manual trigger retained for admins
-- [x] ✅ Add basic rate limiting to `sendContactEmail` and `sendBugReport`
-  - ✅ Acceptance: Max 1 request/min per user/IP; returns friendly throttle message
-
-Verification pause: Hit endpoints from client and curl; confirm auth/roles enforced and throttling works.
-
-### Batch 3: Client/service boundary hardening (minimal UI impact) ✅ COMPLETED
-- [x] ✅ Make `src/services/newsService.js` read-only for `aiNews` (no client create/update/delete)
-  - ✅ Acceptance: Only reads from client; any mutations happen via secured Functions
-  - ✅ Note: AI news is now consolidated into dashboard (Dashboard.js) - no separate news page
-- [x] ✅ Keep user likes functional with tight rules in dashboard news section
-  - ✅ Acceptance: Users can like/unlike news articles in dashboard via allowed fields update or via a small Function; totals update correctly
-- [x] ✅ Remove or replace `src/firebase-node.js` with Admin SDK in Node-only scripts
-  - ✅ Acceptance: No Node context uses client SDK; scripts still function
-
-✅ Verification pause: Smoke tested news list and like/unlike in dashboard news section; confirmed no client write attempts. Likes routed via `toggleNewsLike` Function with auth + rate limit.
+  - Note: Completed items for this batch are archived below
 
 ### Batch 4: Stability and observability
 - [ ] Add retry/backoff and per-source isolation to RSS fetching in Functions
@@ -64,30 +51,29 @@ Verification pause: Run tests; verify logs and metrics for scheduled jobs.
   - Acceptance: README updated; deploy scripts reference config; `npm run production-deploy` validates
 
 ## 🧭 Top Priorities (Quick Wins for Production)
-- [x] **COMPLETED: Direct users to Lessons page on open/login**
-  - ✅ Acceptance: Visiting `/` or completing login lands on `/lessons` (protected route).
-  - ✅ Implementation: `navigateAfterAuth()` in utils/navigationUtils.js redirects to `/lessons`
-- [x] **COMPLETED: Hide in‑progress/placeholder lessons from public list**
-  - ✅ Acceptance: Lessons with `hidden: true` or `status: 'under_development'` do not render on `/lessons`.
-  - ✅ Implementation: LessonsOverview.js filters for published lessons only (lines 225-228)
-- [x] **COMPLETED: Confirm published‑only visibility**
-  - ✅ Acceptance: Only lessons with `status: 'published'` (or explicit published flag) appear.
-  - ✅ Implementation: Consistent filtering applied across LessonsOverview and admin panels
-- [x] **COMPLETED: Clear empty state CTA on Lessons page (admin only)**
-  - ✅ Acceptance: Admins see a "Create Your First Lesson" link to `/unified-lesson-builder` when no lessons exist.
-  - ✅ Implementation: DashboardOverview.js shows create button for empty state
 - [ ] **REMAINING: Clean database of placeholder lessons**
   - Acceptance: No legacy placeholder cards; empty state appears until new content is published.
   - Next: Run database cleanup script or manually remove placeholder content
-- [ ] **REMAINING: Improve admin navigation UX**
+- [x] **Improve admin navigation UX**
   - Acceptance: Admins can reach `/admin` and the builder in 1–2 clicks from the app.
-  - Current: Routes exist but could use better navigation links in main UI
-- [ ] **REMAINING: Card visual control (optional)**
+  - Current: Multiple links exist to `/admin` and `/unified-lesson-builder` from `LoggedInNavbar`, `DashboardOverview`, `DraftBrowser`, and admin pages; protected routes and redirects are in place.
+- [x] **Card visual control (optional)**
   - Acceptance: `icon` and optional `paletteIndex` fields on lesson documents override card visuals.
-  - Next: Implement visual customization fields in lesson cards
-- [ ] **REMAINING: Smoke tests for routing and visibility**
+  - Implemented: `LessonCard.js` supports `lesson.icon` and `lesson.paletteIndex` to override visuals.
+- [ ] Smoke tests for routing and visibility (tracked under Easy Wins below)
   - Acceptance: Tests cover login redirect to `/lessons`, hidden/published filtering, and empty states.
   - Next: Write test coverage for completed functionality
+
+## 🧰 Admin Lesson Builder Updates (High Priority)
+- [ ] Builder: Image upload and preview end-to-end
+  - Acceptance: Selecting an image updates the block state, shows a preview, persists to draft, and renders in viewers after publish; upload errors surface to the user.
+  - Status: ✅ Inline preview for image and video working in builder
+- [ ] Builder: Preview mode and draft syncing
+  - Acceptance: Preview reflects current unsaved/saved draft content (including images), supports unpublished content, and clearly indicates preview mode.
+- [ ] Builder: Media validation and UX polish
+  - Acceptance: Enforce file type/size constraints, show progress and retry, and protect against XSS via sanitized metadata.
+- [ ] Viewer: Image block rendering resilience
+  - Acceptance: Image blocks in lesson viewers handle loading states, errors, and alt text; no layout shift.
 
 ## 🔶 Bigger Items To Complete
 - [ ] Finish lesson content updates to new format
@@ -104,23 +90,6 @@ Verification pause: Run tests; verify logs and metrics for scheduled jobs.
   - Acceptance: Viewers wrapped with error boundaries; client errors logged.
 
 ## 🔴 Current Priority: Phase 2 - UI/UX Improvements
-
-### Priority 4: Complete Frontend Pages
-- [x] ✅ About Us: fixed page and eliminated flicker
-  - ✅ Public `/about` route loads without auth guard
-  - ✅ Missing imports resolved (`navigate` via `useNavigate`)
-  - ✅ Removed scroll-triggered animations; static content prevents flicker
-  - ✅ Navbar/Footer integration verified on public route
-- [x] ✅ Contact: fixed page and mailto flow
-  - ✅ Public `/contact` route loads without auth guard
-  - ✅ Validated imports (`sanitizeText`, `checkRateLimit`, `OptimizedStarField`); removed unused emailjs
-  - ✅ Mailto-based submit with graceful error states
-  - ✅ Added sanitization, simple validation, and basic rate limit
-- [x] ✅ Pricing: updated to reflect removal of paid tier
-  - ✅ Premium purchase flow removed; card marked "Coming soon"
-  - ✅ Upgrade button disabled; messaging is free-first
-  - ✅ Payment references removed for now
-  - ✅ `/pricing` made public and reflected in Navbar
 
 ### Priority 5: Fix Lesson Viewer Display Issues
 - [ ] **Header text display**: Fix the lesson title and description not showing properly
@@ -180,6 +149,42 @@ The main issue is that lessons are showing static hardcoded content instead of l
   - Clean up debug console.log statements from production code
   - Focus on `src/firebase.js` and `src/contexts/AuthContext.js`
 
+## ✅ Newly Verified as Completed
+
+- [x] Admin navigation UX is present throughout the app
+  - Verified links/buttons exist to `/admin` and `/unified-lesson-builder` in `LoggedInNavbar`, `DashboardOverview`, `DraftBrowser`, and routes/redirects in `App.js`.
+- [x] Card visual control via `icon` and `paletteIndex`
+  - `LessonCard.js` reads `lesson.icon` and `lesson.paletteIndex` to override visuals.
+- [x] Login redirect centralized
+  - `navigateAfterAuth()` used in `LandingPage`, `Login`, `Signup`, and quick wins tests.
+
+- [x] Logger no-op tests in production mode
+  - Ensures `logger.log/warn/info/debug` do nothing when `NODE_ENV === 'production'`.
+- [x] Enhanced sanitization unit tests
+  - Validates prompt injection blocking, HTML sanitization, sensitive data redaction, and code safety rules.
+- [x] CI workflow to run tests on push/PR
+  - Adds GitHub Actions workflow to run health-check and Jest coverage on every push and PR.
+
+## 🟢 Easy Wins (Do Next)
+
+- [ ] Add a basic smoke test for login redirect to `/lessons`
+  - Implement in `src/tests/quickWinsSmoke.test.js` alongside existing test utilities.
+- [ ] Add a smoke test for published-only lesson visibility
+  - Assert `LessonsOverview` filters to `status === 'published'` entries.
+- [x] Confirm no stray `console.log` in `LessonCard.js`
+  - None found.
+- [ ] Review `UnifiedLessonBuilder.js` for production `console.log`
+  - Sample code strings may include `console.log` (acceptable); ensure no runtime logs remain.
+- [x] Tweak `window.scrollTo` usage to run only on slide change
+  - Verified no scroll on input changes in `LessonViewer.js` and `ModernLessonViewer.js`.
+- [ ] Add an admin shortcut button to `/admin` in `Navbar.js` when user is admin
+  - Small UX improvement for quick access (conditional render).
+
+## 📌 Notes from Audit
+
+- Builder has `<input type="file">` for image, video, and podcast; uploads map to block state and Firebase Storage, but needs validation and user feedback hooks finalized.
+- Scheduled news updater not currently present; remains to be re-enabled with region/timezone in Functions.
+
 - [ ] **Error Handling**
   - Add user-friendly error messages for lesson loading failures
   - Handle cases where Firestore is unavailable
@@ -232,3 +237,72 @@ The main issue is that lessons are showing static hardcoded content instead of l
 - **Previous**: Lesson system loading from database (should be working)
 - **Next**: Core stability improvements
 - **Future**: Performance and feature enhancements come after core functionality is solid
+
+---
+
+## 📦 Recently Completed (Archived)
+
+### Backend Batches
+#### Batch 1: Critical security hotfixes (stop-the-bleed)
+- [x] ✅ Remove committed email credentials from `functions/index.js`
+  - ✅ Acceptance: No secrets in repo; email creds loaded via secrets/config only; exposed Gmail App Password rotated
+- [x] ✅ Lock down Firestore rules for `aiNews`
+  - ✅ Acceptance: Admin-only create/update/delete of articles; users can only update `likes` and `likedBy`; deletes admin-only
+- [x] ✅ Standardize admin role source across code and rules
+  - ✅ Acceptance: Both Functions and Rules check the same path (choose `users/{uid}.role` or `userProfiles/{uid}.role`) and work for existing admins
+- [x] ✅ Replace `require('node-fetch')` with global `fetch` in Functions (Node 18)
+  - ✅ Acceptance: Functions deploy without module errors; news fetching still works
+
+✅ Verification pause: Deploy to staging, run `npm run health-check`, confirm app loads, news still reads, and likes still work.
+
+#### Batch 2: Secure endpoints and scheduling
+- [x] ✅ Require Firebase auth + admin role for `updateAINewsManual` and `initializeNewsData`
+  - ✅ Acceptance: Unauthenticated/unauthorized requests get 401/403; admins succeed
+- [x] ✅ Restrict CORS to prod/staging origins only for Functions
+  - ✅ Acceptance: Requests from unknown origins are blocked
+- [x] ✅ Add basic rate limiting to `sendContactEmail` and `sendBugReport`
+  - ✅ Acceptance: Max 1 request/min per user/IP; returns friendly throttle message
+
+Verification pause: Hit endpoints from client and curl; confirm auth/roles enforced and throttling works.
+
+#### Batch 3: Client/service boundary hardening (minimal UI impact)
+- [x] ✅ Make `src/services/newsService.js` read-only for `aiNews` (no client create/update/delete)
+  - ✅ Acceptance: Only reads from client; any mutations happen via secured Functions
+  - ✅ Note: AI news is now consolidated into dashboard (Dashboard.js) - no separate news page
+- [x] ✅ Keep user likes functional with tight rules in dashboard news section
+  - ✅ Acceptance: Users can like/unlike news articles in dashboard via allowed fields update or via a small Function; totals update correctly
+- [x] ✅ Remove or replace `src/firebase-node.js` with Admin SDK in Node-only scripts
+  - ✅ Acceptance: No Node context uses client SDK; scripts still function
+
+✅ Verification pause: Smoke tested news list and like/unlike in dashboard news section; confirmed no client write attempts. Likes routed via `toggleNewsLike` Function with auth + rate limit.
+
+### Top Priorities (Completed)
+- [x] **Direct users to Lessons page on open/login**
+  - ✅ Acceptance: Visiting `/` or completing login lands on `/lessons` (protected route).
+  - ✅ Implementation: `navigateAfterAuth()` in utils/navigationUtils.js redirects to `/lessons`
+- [x] **Hide in‑progress/placeholder lessons from public list**
+  - ✅ Acceptance: Lessons with `hidden: true` or `status: 'under_development'` do not render on `/lessons`.
+  - ✅ Implementation: LessonsOverview.js filters for published lessons only (lines 225-228)
+- [x] **Confirm published‑only visibility**
+  - ✅ Acceptance: Only lessons with `status: 'published'` (or explicit published flag) appear.
+  - ✅ Implementation: Consistent filtering applied across LessonsOverview and admin panels
+- [x] **Clear empty state CTA on Lessons page (admin only)**
+  - ✅ Acceptance: Admins see a "Create Your First Lesson" link to `/unified-lesson-builder` when no lessons exist.
+  - ✅ Implementation: DashboardOverview.js shows create button for empty state
+
+### Phase 2 - UI/UX Improvements (Completed)
+- [x] ✅ About Us: fixed page and eliminated flicker
+  - ✅ Public `/about` route loads without auth guard
+  - ✅ Missing imports resolved (`navigate` via `useNavigate`)
+  - ✅ Removed scroll-triggered animations; static content prevents flicker
+  - ✅ Navbar/Footer integration verified on public route
+- [x] ✅ Contact: fixed page and mailto flow
+  - ✅ Public `/contact` route loads without auth guard
+  - ✅ Validated imports (`sanitizeText`, `checkRateLimit`, `OptimizedStarField`); removed unused emailjs
+  - ✅ Mailto-based submit with graceful error states
+  - ✅ Added sanitization, simple validation, and basic rate limit
+- [x] ✅ Pricing: updated to reflect removal of paid tier
+  - ✅ Premium purchase flow removed; card marked "Coming soon"
+  - ✅ Upgrade button disabled; messaging is free-first
+  - ✅ Payment references removed for now
+  - ✅ `/pricing` made public and reflected in Navbar

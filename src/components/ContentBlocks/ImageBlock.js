@@ -106,6 +106,14 @@ const ImageBlock = ({
 
   const { src, sources } = generateImageSources(content.src || content.url);
 
+  // If an optimistic blob URL is present, force visible and loaded state
+  useEffect(() => {
+    if (!src) return;
+    if (src.startsWith('blob:')) {
+      setIsVisible(true);
+    }
+  }, [src]);
+
   // Don't render anything if no source
   if (!src) {
     return (

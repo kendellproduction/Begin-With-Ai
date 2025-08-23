@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import logger from '../utils/logger';
 import { useAuth } from '../contexts/AuthContext';
 import { PencilSquareIcon } from '@heroicons/react/24/outline';
 
@@ -36,7 +37,7 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
     
     // Detect lesson format and migrate if needed
     const lessonFormat = LessonFormatMigrator.detectLessonFormat(lesson);
-    console.log('Detected lesson format:', lessonFormat, 'for lesson:', lesson.id);
+    logger.log('Detected lesson format:', lessonFormat, 'for lesson:', lesson.id);
     
     // Migrate the lesson to the new format for editing
     const migratedLesson = LessonFormatMigrator.migrateLesson(lesson, lessonFormat);
@@ -395,18 +396,10 @@ const LessonCard = ({ lesson, onClick, className = "", showDifficultySelector = 
       onMouseLeave={() => setIsHovered(false)}
       onClick={handleCardClick}
     >
-      {/* Edit Button - Shows on hover for admin users */}
-      {isAdminUser && showEditButton && (
-        <button
-          onClick={handleEditLesson}
-          className={`absolute top-2 right-2 z-10 p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-all duration-200 ${
-            isHovered ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-          }`}
-          title="Edit this lesson"
-        >
-          <PencilSquareIcon className="w-4 h-4" />
-        </button>
-      )}
+      {/* DISABLED: Live lesson editing from lesson cards - use admin panel instead
+          Edit Button temporarily disabled to improve lesson builder performance.
+          Admin users should edit lessons through the admin panel instead.
+      */}
 
       {/* Main Card */}
       <div

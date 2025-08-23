@@ -8,6 +8,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "test:coverage": "react-scripts test --coverage --watchAll=false",
+    "test:new": "react-scripts test --watchAll=false src/tests/logger.prod-noop.test.js src/tests/enhancedSanitization.test.js",
     "test:production": "npm run build && npm run test:coverage",
     "eject": "react-scripts eject",
     "analyze": "npm run build && npx serve -s build",
