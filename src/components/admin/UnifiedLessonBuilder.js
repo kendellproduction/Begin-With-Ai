@@ -949,9 +949,9 @@ const UnifiedLessonBuilder = () => {
         category: selectedModule || 'General',
         tags: [],
         // Visual customization fields
-        icon: lessonIcon || undefined,
+        ...(lessonIcon ? { icon: lessonIcon } : {}),
         paletteIndex: lessonPaletteIndex,
-        customColors: useCustomColors ? customCardColors : undefined,
+        ...(useCustomColors ? { customColors: customCardColors } : {}),
         // FIXED: Properly mark as published
         status: 'published',
         published: true,

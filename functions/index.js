@@ -1,4 +1,6 @@
 const functions = require('firebase-functions');
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
@@ -300,13 +302,14 @@ class CloudNewsService {
 
 const newsService = new CloudNewsService();
 
-// Scheduled function - runs once per day with region and timezone
-exports.updateAINewsScheduled = functions
-  .region('us-central1')
-  .pubsub
-  .schedule('0 6 * * *') // 6:00 AM daily
-  .timeZone('America/New_York')
-  .onRun(async (context) => {
+// Scheduled function - runs once per day with region and timezone (v2 API)
+exports.updateAINewsScheduled = onSchedule(
+  {
+    schedule: '0 6 * * *',
+    timeZone: 'America/New_York',
+    region: 'us-central1'
+  },
+  async (context) => {
     try {
       console.log('Scheduled news update starting...');
       await newsService.updateNews();
@@ -317,7 +320,8 @@ exports.updateAINewsScheduled = functions
       console.error('Scheduled news update failed:', error);
       throw error;
     }
-  });
+  }
+);
 
 // Manual trigger function (can be called via HTTP)
 exports.updateAINewsManual = functions.https.onRequest(async (req, res) => {
@@ -840,6 +844,72 @@ exports.toggleNewsLike = functions.https.onRequest(async (req, res) => {
     } catch (error) {
       console.error('Error toggling news like:', error);
       res.status(500).json({ success: false, message: 'Failed to toggle like' });
+    }
+  });
+});
+
+// Sync Firestore user role to Auth custom claims for Storage security rules
+exports.syncCustomClaimsOnUserWrite = onDocumentWritten('users/{uid}', async (event) => {
+  const uid = event.params.uid;
+  try {
+    const afterData = event.data && event.data.after && event.data.after.data ? event.data.after.data() : null;
+    const role = afterData && afterData.role ? String(afterData.role) : null;
+
+    const userRecord = await admin.auth().getUser(uid);
+    const currentClaims = userRecord.customClaims || {};
+
+    // Start from current claims and clear our managed flags
+    const newClaims = { ...currentClaims };
+    delete newClaims.admin;
+    delete newClaims.developer;
+
+    // Set claims based on role
+    if (role === 'admin' || role === 'developer') {
+      newClaims.admin = true; // both admin and developer can write to Storage per rules
+    }
+    if (role === 'developer') {
+      newClaims.developer = true;
+    }
+
+    // Only update if something actually changed
+    const changed = JSON.stringify(currentClaims) !== JSON.stringify(newClaims);
+    if (changed) {
+      await admin.auth().setCustomUserClaims(uid, newClaims);
+    }
+    return null;
+  } catch (err) {
+    console.error('Failed to sync custom claims:', err);
+    return null;
+  }
+});
+
+
+// Manual endpoint to sync claims for the current authenticated user (no admin required)
+exports.syncClaimsManual = functions.https.onRequest(async (req, res) => {
+  return corsHandler(req, res, async () => {
+    try {
+      const authHeader = req.headers.authorization || '';
+      if (!authHeader.startsWith('Bearer ')) {
+        res.status(401).json({ success: false, message: 'Unauthorized: missing Bearer token' });
+        return;
+      }
+      const idToken = authHeader.replace('Bearer ', '').trim();
+      const decoded = await admin.auth().verifyIdToken(idToken);
+      const uid = decoded.uid;
+
+      const userDoc = await db.collection('users').doc(uid).get();
+      const role = (userDoc.exists && userDoc.data() && userDoc.data().role) || null;
+
+      const claims = {};
+      if (role === 'admin' || role === 'developer') claims.admin = true;
+      if (role === 'developer') claims.developer = true;
+
+      await admin.auth().setCustomUserClaims(uid, claims);
+
+      res.status(200).json({ success: true, claims, role });
+    } catch (error) {
+      console.error('Failed to sync claims manually:', error);
+      res.status(500).json({ success: false, message: 'Failed to sync claims' });
     }
   });
 });

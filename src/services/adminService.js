@@ -9,10 +9,29 @@ import {
   query, 
   orderBy, 
   writeBatch,
-  onSnapshot 
+  onSnapshot,
+  setDoc 
 } from 'firebase/firestore';
 import { db } from '../firebase';
 import { getUserProfile } from './firestoreService';
+
+// Utility: deeply remove undefined values to satisfy Firestore constraints
+function removeUndefinedDeep(value) {
+  if (Array.isArray(value)) {
+    return value.map(removeUndefinedDeep);
+  }
+  if (value && typeof value === 'object') {
+    const cleaned = {};
+    Object.keys(value).forEach((key) => {
+      const v = value[key];
+      if (v !== undefined) {
+        cleaned[key] = removeUndefinedDeep(v);
+      }
+    });
+    return cleaned;
+  }
+  return value;
+}
 
 // Permission check utility
 const checkAdminPermission = async (userId) => {
@@ -239,7 +258,44 @@ export const createLesson = async (pathId, moduleId, lessonData, userId) => {
     if (userId) {
       await checkAdminPermission(userId);
     }
-    
+    // Ensure the parent learning path and module documents exist so that
+    // the LessonsOverview loader (which enumerates docs) can discover them.
+    const pathRef = doc(db, 'learningPaths', pathId);
+    const pathSnap = await getDoc(pathRef);
+    if (!pathSnap.exists()) {
+      const allPathsRef = collection(db, 'learningPaths');
+      const existingPaths = await getDocs(allPathsRef);
+      const maxPathOrder = existingPaths.docs.reduce((max, d) => Math.max(max, d.data().order || 0), 0);
+      await setDoc(pathRef, {
+        id: pathId,
+        title: pathId.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        description: 'Auto-created path',
+        category: 'General',
+        published: true,
+        isActive: true,
+        order: maxPathOrder + 1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        version: 1
+      });
+    }
+
+    const moduleRef = doc(db, 'learningPaths', pathId, 'modules', moduleId);
+    const moduleSnap = await getDoc(moduleRef);
+    if (!moduleSnap.exists()) {
+      const modulesRef = collection(db, 'learningPaths', pathId, 'modules');
+      const modulesSnap = await getDocs(modulesRef);
+      const maxModuleOrder = modulesSnap.docs.reduce((max, d) => Math.max(max, d.data().order || 0), 0);
+      await setDoc(moduleRef, {
+        id: moduleId,
+        title: moduleId.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        learningPathId: pathId,
+        order: maxModuleOrder + 1,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
+    }
+
     // Get the highest order number in this module and increment
     const lessonsRef = collection(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons');
     const snapshot = await getDocs(lessonsRef);
@@ -248,13 +304,13 @@ export const createLesson = async (pathId, moduleId, lessonData, userId) => {
       return Math.max(max, order);
     }, 0);
     
-    const newLessonData = {
+    const newLessonData = removeUndefinedDeep({
       ...lessonData,
       lessonModuleId: moduleId,
       order: maxOrder + 1,
       createdAt: new Date(),
       updatedAt: new Date()
-    };
+    });
     
     const docRef = await addDoc(lessonsRef, newLessonData);
     return docRef.id;
