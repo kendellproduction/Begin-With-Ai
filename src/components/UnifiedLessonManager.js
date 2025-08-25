@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   DocumentTextIcon,
   PlusIcon,
@@ -18,7 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import draftService from '../services/draftService';
-import { getLearningPaths } from '../services/firestoreService';
+import { getAllLearningPaths, deleteLesson } from '../services/adminService';
 
 const UnifiedLessonManager = ({ 
   compact = false, 
@@ -33,11 +33,18 @@ const UnifiedLessonManager = ({
   const [viewMode, setViewMode] = useState('all'); // 'all', 'drafts', 'published'
   const [sortBy, setSortBy] = useState('updated'); // 'updated', 'created', 'title'
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   useEffect(() => {
+    // Initialize view mode from query param if provided
+    const params = new URLSearchParams(location.search);
+    const view = params.get('view');
+    if (view === 'published' || view === 'drafts' || view === 'all') {
+      setViewMode(view);
+    }
     loadContent();
-  }, [user]);
+  }, [user, location.search]);
 
   const loadContent = async () => {
     if (!user?.uid) {
@@ -51,7 +58,7 @@ const UnifiedLessonManager = ({
       // Load drafts from Firestore
       const [userDrafts, learningPaths] = await Promise.all([
         draftService.loadDrafts(user.uid),
-        getLearningPaths()
+        getAllLearningPaths()
       ]);
       
       setDrafts(userDrafts);
@@ -61,14 +68,18 @@ const UnifiedLessonManager = ({
       learningPaths.forEach(path => {
         path.modules?.forEach(module => {
           module.lessons?.forEach(lesson => {
-            allLessons.push({
-              ...lesson,
-              pathId: path.id,
-              pathTitle: path.title,
-              moduleId: module.id,
-              moduleTitle: module.title,
-              type: 'published'
-            });
+            // Only include published lessons
+            const isPublished = lesson.status === 'published' || lesson.published === true || lesson.isPublished === true;
+            if (isPublished) {
+              allLessons.push({
+                ...lesson,
+                pathId: path.id,
+                pathTitle: path.title,
+                moduleId: module.id,
+                moduleTitle: module.title,
+                type: 'published'
+              });
+            }
           });
         });
       });
@@ -159,8 +170,9 @@ const UnifiedLessonManager = ({
           await draftService.deleteDraft(user.uid, item.id);
           setDrafts(drafts.filter(d => d.id !== item.id));
         } else {
-          // TODO: Implement published lesson deletion
-          alert('Published lesson deletion will be implemented soon.');
+          // Delete published lesson from Firestore
+          await deleteLesson(item.pathId, item.moduleId, item.id, user.uid);
+          setPublishedLessons(publishedLessons.filter(p => p.id !== item.id));
         }
       } catch (error) {
         console.error('Error deleting content:', error);

@@ -19,6 +19,8 @@ import {
   onSnapshot
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import { storage } from '../firebase';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
 import logger from '../utils/logger';
 
 class DraftService {
@@ -250,7 +252,48 @@ class DraftService {
         throw new Error('Draft not found');
       }
 
-      // Convert draft format to lesson format
+      // Upload any blob-based media to Storage and rewrite URLs
+      const rewriteMediaUrls = async (contentVersion) => {
+        if (!contentVersion || !Array.isArray(contentVersion.pages)) return contentVersion;
+        const pages = await Promise.all((contentVersion.pages || []).map(async (page, pIdx) => {
+          const blocks = await Promise.all((page.blocks || []).map(async (block, bIdx) => {
+            const type = String(block?.type || '').toLowerCase();
+            const content = block?.content || {};
+            const clone = { ...block, content: { ...content } };
+            // Image
+            if (type === 'image' && content.src && typeof content.src === 'string' && content.src.startsWith('blob:')) {
+              const response = await fetch(content.src);
+              const blob = await response.blob();
+              const filePath = `lessons/${draftId}/images/p${pIdx}_b${bIdx}_${Date.now()}.png`;
+              const r = storageRef(storage, filePath);
+              await uploadBytes(r, blob);
+              const url = await getDownloadURL(r);
+              clone.content.src = url;
+            }
+            // Video (treat as mp4 if blob URL)
+            if (type === 'video') {
+              const raw = content.embedUrl || content.src;
+              if (raw && typeof raw === 'string' && raw.startsWith('blob:') && !content.embedUrl) {
+                const response = await fetch(raw);
+                const blob = await response.blob();
+                const filePath = `lessons/${draftId}/videos/p${pIdx}_b${bIdx}_${Date.now()}.mp4`;
+                const r = storageRef(storage, filePath);
+                await uploadBytes(r, blob);
+                const url = await getDownloadURL(r);
+                clone.content.src = url;
+              }
+            }
+            return clone;
+          }));
+          return { ...page, blocks };
+        }));
+        return { ...contentVersion, pages };
+      };
+
+      const cleanedFree = await rewriteMediaUrls(draft.contentVersions?.free);
+      const cleanedPremium = await rewriteMediaUrls(draft.contentVersions?.premium);
+
+      // Convert draft format to lesson format using cleaned media URLs
       const lessonData = {
         title: draft.title,
         lessonType: draft.metadata?.lessonType || 'concept_explanation',
@@ -258,8 +301,12 @@ class DraftService {
         xpAward: draft.metadata?.xpAward || 10,
         category: draft.metadata?.category || 'General',
         tags: draft.metadata?.tags || [],
-        content: draft.contentVersions?.free || [],
-        premiumContent: draft.contentVersions?.premium || null,
+        contentVersions: {
+          free: cleanedFree || null,
+          premium: cleanedPremium || null
+        },
+        content: cleanedFree || [],
+        premiumContent: cleanedPremium || null,
         status: 'published',
         publishedAt: serverTimestamp(),
         publishedBy: userId,

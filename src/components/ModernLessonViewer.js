@@ -46,6 +46,135 @@ const ModernLessonViewer = () => {
   const containerRef = useRef(null);
   const progressBarRef = useRef(null);
 
+  // Helper to robustly extract pages from Firestore lessons regardless of shape
+  // Supports:
+  // - contentVersions.free.pages / contentVersions.premium.pages
+  // - legacy content/pages stored as an array
+  // - legacy content/premiumContent stored as an object with a pages array
+  const extractPagesFromLesson = (lesson, tier) => {
+    if (!lesson) return [];
+
+    const freePagesVersioned = lesson?.contentVersions?.free?.pages;
+    const premiumPagesVersioned = lesson?.contentVersions?.premium?.pages;
+
+    const freeLegacy = Array.isArray(lesson?.content)
+      ? lesson.content
+      : (lesson?.content?.pages || []);
+
+    const premiumLegacy = Array.isArray(lesson?.premiumContent)
+      ? lesson.premiumContent
+      : (lesson?.premiumContent?.pages || []);
+
+    // Some published lessons may store pages directly on the root as lesson.pages
+    const rootPages = Array.isArray(lesson?.pages) ? lesson.pages : [];
+
+    const freePages = Array.isArray(freePagesVersioned) && freePagesVersioned.length > 0
+      ? freePagesVersioned
+      : (freeLegacy.length > 0 ? freeLegacy : rootPages);
+
+    const premiumPages = Array.isArray(premiumPagesVersioned) && premiumPagesVersioned.length > 0
+      ? premiumPagesVersioned
+      : premiumLegacy;
+
+    const selected = tier === 'premium' ? (premiumPages.length > 0 ? premiumPages : freePages) : freePages;
+    return Array.isArray(selected) ? selected : [];
+  };
+
+  // Normalize arbitrary builder block shapes to the runtime renderer schema
+  const normalizeBlocksForRenderer = (blocks) => {
+    if (!Array.isArray(blocks)) return [];
+    return blocks.map((block, idx) => {
+      const rawType = (block?.type || '').toString().toLowerCase();
+      const content = block?.content || block || {};
+
+      // Heuristics for type mapping
+      let type = rawType;
+      if (['heading', 'title', 'intro', 'header'].includes(rawType)) {
+        type = BLOCK_TYPES.HEADING;
+      } else if (['text', 'paragraph', 'content', 'rich_text', 'richtext', 'markdown'].includes(rawType)) {
+        type = BLOCK_TYPES.TEXT;
+      } else if (['quiz', 'multiple_choice', 'multiplechoice', 'mcq'].includes(rawType)) {
+        type = BLOCK_TYPES.QUIZ;
+      } else if (['sandbox', 'code', 'exercise', 'editor'].includes(rawType)) {
+        type = BLOCK_TYPES.SANDBOX;
+      } else if (['section_break', 'divider', 'separator'].includes(rawType)) {
+        type = BLOCK_TYPES.SECTION_BREAK;
+      } else if (['fill_blank', 'fill-in-the-blank', 'fillblank'].includes(rawType)) {
+        type = BLOCK_TYPES.FILL_BLANK;
+      } else if (['image', 'img', 'picture'].includes(rawType)) {
+        type = BLOCK_TYPES.IMAGE;
+      } else if (['video', 'vid', 'media'].includes(rawType)) {
+        type = BLOCK_TYPES.VIDEO;
+      }
+
+      // Build normalized content
+      let normalizedContent = {};
+      switch (type) {
+        case BLOCK_TYPES.HEADING:
+          normalizedContent = {
+            text: content.text || content.title || block.title || 'Lesson',
+            level: content.level || 1
+          };
+          break;
+        case BLOCK_TYPES.TEXT:
+          normalizedContent = {
+            text: content.text || content.markdown || content.html || content.body || '',
+            markdown: Boolean(content.markdown || content.html)
+          };
+          break;
+        case BLOCK_TYPES.IMAGE: {
+          // Only keep stable URLs; drop ephemeral blob: URLs so the ImageBlock shows a placeholder instead of failing silently
+          const src = content.src || content.url;
+          const isStable = typeof src === 'string' && (src.startsWith('http') || src.startsWith('data:') || src.startsWith('https://firebasestorage')); 
+          normalizedContent = {
+            src: isStable ? src : undefined,
+            alt: content.alt || '',
+            caption: content.caption || content.title || ''
+          };
+          break;
+        }
+        case BLOCK_TYPES.VIDEO: {
+          // Prefer embedUrl; otherwise accept only stable http(s) sources
+          const rawSrc = content.embedUrl || content.src || content.url;
+          const isStable = typeof rawSrc === 'string' && (rawSrc.startsWith('http'));
+          normalizedContent = {
+            embedUrl: content.embedUrl && content.embedUrl.startsWith('http') ? content.embedUrl : undefined,
+            src: !content.embedUrl && isStable ? rawSrc : undefined,
+            title: content.title || '',
+            description: content.description || ''
+          };
+          break;
+        }
+        case BLOCK_TYPES.QUIZ:
+          normalizedContent = {
+            question: content.question || content.prompt || 'Quiz question',
+            options: content.options || content.choices || [],
+            correctAnswer: typeof content.correctAnswer === 'number' ? content.correctAnswer : (Array.isArray(content.options) ? content.options.findIndex(o => o && o.correct === true) : 0),
+            correctFeedback: content.correctFeedback || content.explanation || 'Great job!',
+            incorrectFeedback: content.incorrectFeedback || 'Not quite right. Try again!'
+          };
+          break;
+        case BLOCK_TYPES.SANDBOX:
+          normalizedContent = {
+            title: content.title || 'Interactive Exercise',
+            instructions: content.instructions || 'Try the exercise below',
+            code: content.code || content.initialCode || '// Write your code here',
+            language: content.language || 'javascript'
+          };
+          break;
+        default:
+          normalizedContent = { text: content.text || '', markdown: !!content.markdown };
+      }
+
+      return {
+        id: block.id || `normalized-${idx}`,
+        type,
+        content: normalizedContent,
+        config: block.config || {}
+      };
+    });
+  };
+
   // Initialize audio and scroll tracking
   useEffect(() => {
     const handleFirstInteraction = () => {
@@ -170,24 +299,75 @@ const ModernLessonViewer = () => {
         const firestoreLesson = await findLessonAcrossAllPaths(lessonId);
         if (firestoreLesson && firestoreLesson.title && firestoreLesson.id) {
           logger.info(`Found lesson ${lessonId} in Firestore:`, firestoreLesson);
-          
-          // Convert Firestore lesson format to content blocks format
+
+          // Prefer rendering the exact blocks saved by the builder, handling both
+          // versioned and legacy structures.
+          const pagesToUse = extractPagesFromLesson(firestoreLesson, difficulty);
+          const contentPages = extractPagesFromLesson(firestoreLesson, 'free');
+          const premiumPages = extractPagesFromLesson(firestoreLesson, 'premium');
+
+          const directBlocksRaw = Array.isArray(pagesToUse)
+            ? pagesToUse.flatMap(page => Array.isArray(page?.blocks) ? page.blocks : [])
+            : [];
+          const directBlocks = normalizeBlocksForRenderer(directBlocksRaw);
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log('LESSON DEBUG - Difficulty:', difficulty);
+            console.log('LESSON DEBUG - Content pages:', contentPages.length);
+            console.log('LESSON DEBUG - Premium pages:', premiumPages.length);
+            console.log('LESSON DEBUG - ContentVersions free pages:', firestoreLesson.contentVersions?.free?.pages?.length || 0);
+            console.log('LESSON DEBUG - Pages to use:', pagesToUse.length);
+            console.log('LESSON DEBUG - Direct blocks:', directBlocks.length);
+            if (directBlocks.length === 0 && pagesToUse.length > 0) {
+              console.log('LESSON DEBUG - Pages have no blocks:', pagesToUse.map(p => ({ title: p.title, blockCount: p.blocks?.length || 0 })));
+            }
+          }
+
+          if (directBlocks.length > 0) {
+            // Minimal lesson metadata for header
+            const minimalLesson = {
+              id: firestoreLesson.id,
+              title: firestoreLesson.title || 'Published Lesson',
+              description: firestoreLesson.description || '',
+              estimatedTime: firestoreLesson.estimatedTimeMinutes || 15,
+              xpAward: firestoreLesson.xpAward || 100,
+              difficulty: difficulty,
+              pathInfo: {
+                pathId: firestoreLesson.pathId,
+                pathTitle: firestoreLesson.pathTitle,
+                moduleId: firestoreLesson.moduleId,
+                moduleTitle: firestoreLesson.moduleTitle
+              },
+              isFromFirestore: true
+            };
+
+            setLesson(minimalLesson);
+            const sections = organizeBlocksIntoSections(directBlocks);
+            setContentSections(sections);
+            setContentBlocks(directBlocks);
+
+            // Load saved progress/bookmark
+            loadLessonBookmark(lessonId);
+            setIsLoading(false);
+            logger.info(`Successfully loaded lesson ${lessonId} blocks directly from Firestore`);
+            return;
+          }
+
+          // Fallback: use converter if no direct blocks found (older content formats)
+          if (process.env.NODE_ENV === 'development') {
+            console.log('LESSON DEBUG - No direct blocks found, using converter fallback');
+          }
           lessonData = convertFirestoreLessonToViewer(firestoreLesson);
           loadedFromFirestore = true;
           setLesson(lessonData);
           const blocks = convertLessonToContentBlocks(lessonData);
           const sections = organizeBlocksIntoSections(blocks);
           setContentSections(sections);
-          
-          // Flatten sections to blocks for backward compatibility
           const flattenedBlocks = sections.flatMap(section => section.blocks);
           setContentBlocks(flattenedBlocks);
-          
-          // Load saved progress/bookmark
           loadLessonBookmark(lessonId);
           setIsLoading(false);
-          
-          logger.info(`Successfully loaded lesson ${lessonId} from Firestore`);
+          logger.info(`Successfully loaded lesson ${lessonId} via converter fallback`);
           return;
         } else {
           logger.error(`Lesson ${lessonId} not found in database`);
@@ -230,11 +410,8 @@ const ModernLessonViewer = () => {
 
   // Convert Firestore lesson format to the format expected by the lesson viewer
   const convertFirestoreLessonToViewer = (firestoreLesson) => {
-    const contentPages = firestoreLesson.content || firestoreLesson.contentVersions?.free?.pages || [];
-    const premiumPages = firestoreLesson.premiumContent || firestoreLesson.contentVersions?.premium?.pages || [];
-    
-    // Use appropriate pages based on user tier
-    const pagesToUse = (difficulty === 'premium' && premiumPages.length > 0) ? premiumPages : contentPages;
+    // Use appropriate pages based on user tier, handling multiple shapes
+    const pagesToUse = extractPagesFromLesson(firestoreLesson, difficulty);
     
     // Convert content blocks to slides format for compatibility
     const slides = [];
@@ -1151,7 +1328,8 @@ const ModernLessonViewer = () => {
                     onBlockComplete={section.isVisible ? handleBlockComplete : () => {}}
                     onProgressUpdate={section.isVisible ? handleProgressUpdate : () => {}}
                     config={{
-                      lazyLoading: true,
+                      // Disable lazy loading in development to avoid any observer edge-cases
+                      lazyLoading: process.env.NODE_ENV === 'production',
                       animations: section.isVisible,
                       trackProgress: section.isVisible,
                       preloadOffset: 2,

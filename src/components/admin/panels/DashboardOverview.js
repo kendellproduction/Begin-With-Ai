@@ -11,6 +11,7 @@ import {
   EyeIcon,
   PencilSquareIcon,
   PlayIcon,
+  TrashIcon,
   StarIcon,
   UsersIcon,
   ExclamationTriangleIcon,
@@ -18,8 +19,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../../../contexts/AuthContext';
 import draftService from '../../../services/draftService';
-import { getLearningPaths } from '../../../services/firestoreService';
-import { getRealTimeDashboardAnalytics, subscribeToUserCount } from '../../../services/adminService';
+import { getRealTimeDashboardAnalytics, subscribeToUserCount, getAllLearningPaths, deleteLesson } from '../../../services/adminService';
 // Note: Static local lesson data removed - using database only
 // Note: Static adaptive lesson imports removed - using database only
 import { LessonFormatMigrator } from '../../../utils/lessonFormatMigration';
@@ -78,6 +78,13 @@ const DashboardOverview = () => {
     loadData();
   }, [currentUser]);
 
+  // Debug: log when published lessons change to trace disappearing grid
+  useEffect(() => {
+    try {
+      logger.info('Published lessons updated:', publishedLessons.length, publishedLessons.slice(0, 3));
+    } catch (e) {}
+  }, [publishedLessons]);
+
   const loadRealTimeAnalytics = async () => {
     try {
       const analytics = await getRealTimeDashboardAnalytics();
@@ -129,7 +136,7 @@ const DashboardOverview = () => {
       let firestoreLessonCount = 0;
       
       try {
-        const firestoreLessons = await getLearningPaths();
+        const firestoreLessons = await getAllLearningPaths();
         
         // Count total lessons across all paths and modules
         firestoreLessons.forEach(path => {
@@ -234,7 +241,7 @@ const DashboardOverview = () => {
   const loadPublishedLessons = async () => {
     try {
       // Get all learning paths which contain published lessons
-      const firestoreLessons = await getLearningPaths();
+      const firestoreLessons = await getAllLearningPaths();
       
       const allLessons = [];
       
@@ -497,6 +504,22 @@ const DashboardOverview = () => {
               </>
             )}
           </button>
+
+          <button
+            onClick={async () => {
+              if (!window.confirm('Delete this published lesson? This action cannot be undone.')) return;
+              try {
+                await deleteLesson(lesson.pathId, lesson.moduleId, lesson.id);
+                setPublishedLessons(prev => prev.filter(l => l.id !== lesson.id));
+              } catch (e) {
+                logger.error('Failed to delete lesson:', e);
+              }
+            }}
+            className="flex items-center space-x-2 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition-all duration-200"
+          >
+            <TrashIcon className="w-4 h-4" />
+            <span>Delete</span>
+          </button>
         </div>
       </div>
     </motion.div>
@@ -693,26 +716,55 @@ const DashboardOverview = () => {
         </div>
         
         {publishedLessons.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-            {publishedLessons.map((lesson, index) => (
-              <LessonCard key={lesson.id} lesson={lesson} />
+          <div className="bg-gray-800 rounded-xl border border-gray-700 divide-y divide-gray-700">
+            {publishedLessons.map((lesson) => (
+              <div key={lesson.id || Math.random()} className="flex items-center justify-between p-4">
+                <div className="min-w-0">
+                  <div className="text-white font-medium truncate">{lesson.title || 'Untitled Lesson'}</div>
+                  <div className="text-xs text-gray-400 truncate">
+                    {lesson.pathTitle || 'Path'} • {lesson.moduleTitle || 'Module'}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 ml-4">
+                  <button
+                    onClick={() => handlePreviewLesson(lesson)}
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded"
+                  >
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => handleEditLesson(lesson)}
+                    className="px-3 py-1.5 bg-gray-600 hover:bg-gray-700 text-white text-xs rounded"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={async () => {
+                      if (!window.confirm('Delete this published lesson?')) return;
+                      try {
+                        await deleteLesson(lesson.pathId, lesson.moduleId, lesson.id);
+                        setPublishedLessons((prev) => prev.filter((l) => l.id !== lesson.id));
+                      } catch (e) {
+                        logger.error('Failed to delete lesson:', e);
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white text-xs rounded"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
           <div className="text-center py-16 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-gray-700 relative overflow-hidden">
-            {/* Background decoration */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-purple-600/5" />
             <div className="relative z-10">
               <BookOpenIcon className="w-20 h-20 mx-auto text-gray-600 mb-6" />
               <h3 className="text-xl font-bold text-white mb-2">Ready to Create Something Amazing?</h3>
-              <p className="text-gray-400 mb-8 max-w-md mx-auto">
-                Start building interactive lessons that will help students learn AI concepts through hands-on projects
-              </p>
+              <p className="text-gray-400 mb-8 max-w-md mx-auto">Start building interactive lessons that will help students learn AI concepts through hands-on projects</p>
               <div className="flex items-center justify-center space-x-4">
-                <Link
-                  to="/unified-lesson-builder"
-                  className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 shadow-lg"
-                >
+                <Link to="/unified-lesson-builder" className="inline-flex items-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all hover:scale-105 shadow-lg">
                   <PlusIcon className="w-5 h-5" />
                   <span>Create Your First Lesson</span>
                 </Link>

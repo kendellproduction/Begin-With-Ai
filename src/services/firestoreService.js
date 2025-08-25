@@ -805,6 +805,30 @@ export const findLessonAcrossAllPaths = async (lessonId) => {
             ...lessonData
           };
         }
+
+        // Fallback: iterate lessons in this module and match by stored `id` field
+        // Some publishers create lessons with auto document IDs but keep a separate `id` field
+        // used by the UI. This ensures route IDs resolve correctly.
+        try {
+          const lessonsRef = collection(db, 'learningPaths', pathId, 'modules', moduleId, 'lessons');
+          const lessonsSnap = await getDocs(lessonsRef);
+          for (const docSnap of lessonsSnap.docs) {
+            const data = docSnap.data();
+            if (data && (data.id === lessonId)) {
+              logger.info(`Matched lesson by data.id in path ${pathId}, module ${moduleId}, doc ${docSnap.id}`);
+              return {
+                id: docSnap.id,
+                pathId,
+                moduleId,
+                pathTitle: pathDoc.data().title,
+                moduleTitle: moduleDoc.data().title,
+                ...data
+              };
+            }
+          }
+        } catch (innerErr) {
+          logger.warn(`Fallback scan failed for module ${moduleId} in path ${pathId}:`, innerErr);
+        }
       }
     }
 
