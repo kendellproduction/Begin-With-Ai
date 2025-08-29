@@ -927,23 +927,39 @@ const UnifiedLessonBuilder = () => {
       const adminServiceModule = await import('../../services/adminService');
       const { createLesson } = adminServiceModule;
 
+      // Mirror same pages to both tiers so free and premium see identical content for now
+      const unifiedFreePages = (currentTier === 'free' ? lessonPages : freePages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }));
+      const unifiedPremiumPages = (currentTier === 'premium' ? lessonPages : premiumPages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }));
+      const mirroredPremiumPages = unifiedPremiumPages.length > 0 ? unifiedPremiumPages : unifiedFreePages;
+      const mirroredFreePages = unifiedFreePages.length > 0 ? unifiedFreePages : unifiedPremiumPages;
+
       const lessonData = {
         title: lessonTitle,
         description: lessonDescription,
-        content: (currentTier === 'free' ? lessonPages : freePages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) })),
-        premiumContent: (currentTier === 'premium' ? lessonPages : premiumPages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) })),
+        content: mirroredFreePages,
+        premiumContent: mirroredPremiumPages,
         contentVersions: {
           free: {
             title: lessonTitle,
             description: lessonDescription,
-            pages: (currentTier === 'free' ? lessonPages : freePages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }))
+            pages: mirroredFreePages
           },
           premium: {
             title: lessonTitle,
             description: lessonDescription,
-            pages: (currentTier === 'premium' ? lessonPages : premiumPages).map(p => ({ ...p, blocks: p.blocks?.map(b => ({ ...b })) }))
+            pages: mirroredPremiumPages
           }
         },
+        // Persist appearance so viewer can render exact background/theme
+        appearance: {
+          background: lessonBackground,
+          backgroundAnimation,
+          customBackgroundImage
+        },
+        // Legacy fields for older viewers (safe to include)
+        lessonBackground: lessonBackground,
+        backgroundAnimation: backgroundAnimation,
+        customBackgroundImage: customBackgroundImage,
         estimatedTimeMinutes: 15,
         xpAward: 10,
         category: selectedModule || 'General',
@@ -1050,6 +1066,16 @@ const UnifiedLessonBuilder = () => {
             pages: premiumPages
           }
         },
+        // Persist appearance so viewer can render exact background/theme
+        appearance: {
+          background: lessonBackground,
+          backgroundAnimation,
+          customBackgroundImage
+        },
+        // Legacy fields as well
+        lessonBackground: lessonBackground,
+        backgroundAnimation: backgroundAnimation,
+        customBackgroundImage: customBackgroundImage,
         estimatedTimeMinutes: 15,
         xpAward: 10,
         category: selectedModule || 'General',

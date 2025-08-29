@@ -9,7 +9,6 @@ import { BLOCK_TYPES } from './ContentBlocks/constants';
 import { initAudio, playSuccessChime, playErrorSound } from '../utils/audioUtils';
 // Note: Static adaptive lesson imports removed - using database only
 import { findLessonAcrossAllPaths } from '../services/firestoreService';
-import IntegratedPodcastPlayer from './IntegratedPodcastPlayer';
 import OptimizedStarField from './OptimizedStarField';
 import logger from '../utils/logger';
 
@@ -45,6 +44,39 @@ const ModernLessonViewer = () => {
   const [showPodcastPlayer, setShowPodcastPlayer] = useState(false);
   const containerRef = useRef(null);
   const progressBarRef = useRef(null);
+  // Dev/debug state to verify loaded content
+  const [devDebugInfo, setDevDebugInfo] = useState(null);
+
+  // Map saved appearance to runtime background style and text color
+  const getAppearanceConfig = useCallback(() => {
+    const appearance = lesson?.appearance || {};
+    const bgKey = appearance.background || lesson?.lessonBackground;
+    const bgImage = appearance.customBackgroundImage || lesson?.customBackgroundImage;
+    const animation = appearance.backgroundAnimation || lesson?.backgroundAnimation || 'floating-stars';
+
+    // Color map aligned with builder choices
+    const colorMap = {
+      dark: '#0b1220',
+      blue: '#1e3a8a',
+      purple: '#4c1d95',
+      green: '#065f46',
+      orange: '#9a3412',
+      light: '#f3f4f6'
+    };
+
+    const backgroundColor = colorMap[bgKey] || (bgImage ? undefined : '#000000');
+    const isLight = bgKey === 'light';
+
+    const style = bgImage
+      ? { backgroundImage: `url(${bgImage})`, backgroundSize: 'cover', backgroundPosition: 'center', backgroundRepeat: 'no-repeat' }
+      : { backgroundColor };
+
+    return {
+      style,
+      textClass: isLight ? 'text-gray-900' : 'text-white',
+      animation
+    };
+  }, [lesson]);
 
   // Helper to robustly extract pages from Firestore lessons regardless of shape
   // Supports:
@@ -76,7 +108,17 @@ const ModernLessonViewer = () => {
       ? premiumPagesVersioned
       : premiumLegacy;
 
-    const selected = tier === 'premium' ? (premiumPages.length > 0 ? premiumPages : freePages) : freePages;
+    // Prefer premium only if it actually contains at least one block
+    const pagesHasRenderableBlocks = (pages) => Array.isArray(pages) && pages.some(p => Array.isArray(p?.blocks) && p.blocks.length > 0);
+
+    const shouldUsePremium = tier === 'premium' && pagesHasRenderableBlocks(premiumPages);
+    let selected = shouldUsePremium ? premiumPages : freePages;
+
+    // Fallback: if the selected tier has no renderable blocks, but premium does, use premium
+    if (!pagesHasRenderableBlocks(selected) && pagesHasRenderableBlocks(premiumPages)) {
+      selected = premiumPages;
+    }
+
     return Array.isArray(selected) ? selected : [];
   };
 
@@ -87,11 +129,11 @@ const ModernLessonViewer = () => {
       const rawType = (block?.type || '').toString().toLowerCase();
       const content = block?.content || block || {};
 
-      // Heuristics for type mapping
+      // Heuristics for type mapping with broad compatibility to builder terms
       let type = rawType;
       if (['heading', 'title', 'intro', 'header'].includes(rawType)) {
         type = BLOCK_TYPES.HEADING;
-      } else if (['text', 'paragraph', 'content', 'rich_text', 'richtext', 'markdown'].includes(rawType)) {
+      } else if (['text', 'paragraph', 'content', 'rich_text', 'richtext', 'markdown', 'body', 'description'].includes(rawType)) {
         type = BLOCK_TYPES.TEXT;
       } else if (['quiz', 'multiple_choice', 'multiplechoice', 'mcq'].includes(rawType)) {
         type = BLOCK_TYPES.QUIZ;
@@ -105,6 +147,9 @@ const ModernLessonViewer = () => {
         type = BLOCK_TYPES.IMAGE;
       } else if (['video', 'vid', 'media'].includes(rawType)) {
         type = BLOCK_TYPES.VIDEO;
+      } else if (rawType === '') {
+        // Empty type from builder defaults to text if it has text content
+        type = content?.text ? BLOCK_TYPES.TEXT : BLOCK_TYPES.SECTION_BREAK;
       }
 
       // Build normalized content
@@ -118,16 +163,44 @@ const ModernLessonViewer = () => {
           break;
         case BLOCK_TYPES.TEXT:
           normalizedContent = {
-            text: content.text || content.markdown || content.html || content.body || '',
+            text: content.text || content.markdown || content.html || content.body || block?.content?.text || block?.text || '',
             markdown: Boolean(content.markdown || content.html)
           };
           break;
         case BLOCK_TYPES.IMAGE: {
-          // Only keep stable URLs; drop ephemeral blob: URLs so the ImageBlock shows a placeholder instead of failing silently
-          const src = content.src || content.url;
-          const isStable = typeof src === 'string' && (src.startsWith('http') || src.startsWith('data:') || src.startsWith('https://firebasestorage')); 
+          // Be permissive with sources and normalize common Firebase Storage formats
+          let src = content.src 
+            || content.url 
+            || content.downloadURL 
+            || content.image?.src 
+            || content.image?.url 
+            || content.file?.url 
+            || block.src 
+            || block.url 
+            || block.downloadURL;
+          if (typeof src === 'string') {
+            // Convert gs://bucket/path to public download URL for rendering
+            if (src.startsWith('gs://')) {
+              try {
+                const withoutScheme = src.slice('gs://'.length);
+                const [bucket, ...pathParts] = withoutScheme.split('/');
+                const path = pathParts.join('/');
+                if (bucket && path) {
+                  src = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(path)}?alt=media`;
+                }
+              } catch (_) {
+                // leave as-is
+              }
+            }
+            // Drop ephemeral sources which cannot be resolved in viewer session
+            if (src.startsWith('blob:') || src.startsWith('file:')) {
+              src = undefined;
+            }
+          } else {
+            src = undefined;
+          }
           normalizedContent = {
-            src: isStable ? src : undefined,
+            src,
             alt: content.alt || '',
             caption: content.caption || content.title || ''
           };
@@ -135,7 +208,7 @@ const ModernLessonViewer = () => {
         }
         case BLOCK_TYPES.VIDEO: {
           // Prefer embedUrl; otherwise accept only stable http(s) sources
-          const rawSrc = content.embedUrl || content.src || content.url;
+          const rawSrc = content.embedUrl || content.src || content.url || block.src || block.url;
           const isStable = typeof rawSrc === 'string' && (rawSrc.startsWith('http'));
           normalizedContent = {
             embedUrl: content.embedUrl && content.embedUrl.startsWith('http') ? content.embedUrl : undefined,
@@ -211,28 +284,10 @@ const ModernLessonViewer = () => {
     loadLessonData();
   }, [lessonId, difficulty]);
 
-  // Determine lesson tier based on user subscription
+  // Force free-only lessons (premium temporarily disabled)
   useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const urlDifficulty = urlParams.get('difficulty');
-    const stateDifficulty = location.state?.difficulty;
-    
-    // Map user subscription to lesson tier
-    const userTier = user?.subscriptionTier || 'free';
-    const lessonTier = userTier === 'premium' ? 'premium' : 'free';
-    
-    // Use provided difficulty or default to user's tier
-    let finalDifficulty = urlDifficulty || stateDifficulty || lessonTier;
-    
-    // Map old difficulty levels to new system
-    if (finalDifficulty === 'beginner' || finalDifficulty === 'intermediate') {
-      finalDifficulty = 'free';
-    } else if (finalDifficulty === 'advanced') {
-      finalDifficulty = 'premium';
-    }
-    
-    setDifficulty(finalDifficulty);
-  }, [location, user?.subscriptionTier]);
+    setDifficulty('free');
+  }, [location]);
 
   // Check for preview mode and data
   useEffect(() => {
@@ -311,17 +366,15 @@ const ModernLessonViewer = () => {
             : [];
           const directBlocks = normalizeBlocksForRenderer(directBlocksRaw);
 
-          if (process.env.NODE_ENV === 'development') {
-            console.log('LESSON DEBUG - Difficulty:', difficulty);
-            console.log('LESSON DEBUG - Content pages:', contentPages.length);
-            console.log('LESSON DEBUG - Premium pages:', premiumPages.length);
-            console.log('LESSON DEBUG - ContentVersions free pages:', firestoreLesson.contentVersions?.free?.pages?.length || 0);
-            console.log('LESSON DEBUG - Pages to use:', pagesToUse.length);
-            console.log('LESSON DEBUG - Direct blocks:', directBlocks.length);
-            if (directBlocks.length === 0 && pagesToUse.length > 0) {
-              console.log('LESSON DEBUG - Pages have no blocks:', pagesToUse.map(p => ({ title: p.title, blockCount: p.blocks?.length || 0 })));
-            }
-          }
+          // Update dev overlay info
+          setDevDebugInfo({
+            difficulty,
+            contentPages: contentPages.length || 0,
+            premiumPages: premiumPages.length || 0,
+            pagesToUse: pagesToUse.length || 0,
+            directBlocks: directBlocks.length || 0,
+            directTypes: directBlocks.map(b => b.type)
+          });
 
           if (directBlocks.length > 0) {
             // Minimal lesson metadata for header
@@ -337,6 +390,12 @@ const ModernLessonViewer = () => {
                 pathTitle: firestoreLesson.pathTitle,
                 moduleId: firestoreLesson.moduleId,
                 moduleTitle: firestoreLesson.moduleTitle
+              },
+              // Pass through appearance so the viewer can honor background/theme
+              appearance: firestoreLesson.appearance || {
+                background: firestoreLesson.lessonBackground,
+                backgroundAnimation: firestoreLesson.backgroundAnimation,
+                customBackgroundImage: firestoreLesson.customBackgroundImage
               },
               isFromFirestore: true
             };
@@ -358,6 +417,7 @@ const ModernLessonViewer = () => {
             console.log('LESSON DEBUG - No direct blocks found, using converter fallback');
           }
           lessonData = convertFirestoreLessonToViewer(firestoreLesson);
+          setDevDebugInfo(prev => ({ ...(prev || {}), convertedSlides: lessonData?.slides?.length || 0 }));
           loadedFromFirestore = true;
           setLesson(lessonData);
           const blocks = convertLessonToContentBlocks(lessonData);
@@ -448,6 +508,18 @@ const ModernLessonViewer = () => {
               });
               break;
               
+            case 'image':
+              slides.push({
+                id: slideId,
+                type: 'image',
+                content: {
+                  src: block.content?.src || block.content?.url || block.src || block.url,
+                  alt: block.content?.alt || '',
+                  caption: block.content?.caption || block.content?.title || ''
+                }
+              });
+              break;
+              
             case 'quiz':
               slides.push({
                 id: slideId,
@@ -514,6 +586,12 @@ const ModernLessonViewer = () => {
       xpReward: firestoreLesson.xpAward || 100,
       slides: slides,
       difficulty: difficulty,
+      // Carry over appearance fields so viewer can honor them
+      appearance: firestoreLesson.appearance || {
+        background: firestoreLesson.lessonBackground,
+        backgroundAnimation: firestoreLesson.backgroundAnimation,
+        customBackgroundImage: firestoreLesson.customBackgroundImage
+      },
       pathInfo: {
         pathId: firestoreLesson.pathId,
         pathTitle: firestoreLesson.pathTitle,
@@ -1148,9 +1226,58 @@ const ModernLessonViewer = () => {
     );
   }
 
+  const appearanceConfig = getAppearanceConfig();
+
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden pwa-safe-top-padding relative">
-      <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
+    <div className={`min-h-screen overflow-hidden pwa-safe-top-padding relative ${appearanceConfig.textClass}`} style={appearanceConfig.style}>
+      {/* Background animation layer (under content) */}
+      {appearanceConfig.animation === 'floating-stars' && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
+          <OptimizedStarField starCount={220} opacity={0.8} speed={1} size={1.2} />
+        </div>
+      )}
+      {appearanceConfig.animation === 'rain' && (
+        <div className="background-animation rain-container" style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
+          {Array.from({ length: 90 }).map((_, i) => {
+            const duration = 2 + (i % 7) * 0.3; // 2s - ~4.1s
+            const delay = -((i % 15) * 0.2); // negative delay to desync cycles
+            return (
+              <div
+                key={`rain-${i}`}
+                className="raindrop"
+                style={{
+                  left: `${(i * 11) % 100}%`,
+                  animationDelay: `${delay}s`,
+                  animationDuration: `${duration}s`,
+                  height: `${18 + (i % 12)}px`
+                }}
+              />
+            );
+          })}
+        </div>
+      )}
+      {appearanceConfig.animation === 'snow' && (
+        <div className="background-animation snow-container" style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
+          {Array.from({ length: 80 }).map((_, i) => (
+            <div key={`snow-${i}`} className="snowflake" style={{
+              left: `${(i * 13) % 100}%`,
+              animationDelay: `${(i % 12) * 0.25}s`,
+              width: `${4 + (i % 4)}px`,
+              height: `${4 + (i % 4)}px`
+            }} />
+          ))}
+        </div>
+      )}
+      {appearanceConfig.animation === 'bubbles' && (
+        <div className="background-animation bubbles-container" style={{ position: 'fixed', inset: 0, zIndex: 5, pointerEvents: 'none' }}>
+          {Array.from({ length: 20 }).map((_, i) => (
+            <div key={`bubble-${i}`} className={i % 2 === 0 ? 'bubble' : 'bubble-slow'} style={{
+              left: `${(i * 7) % 100}%`,
+              animationDelay: `${(i % 10) * 0.5}s`
+            }} />
+          ))}
+        </div>
+      )}
 
       {/* Fixed Progress Bar */}
       <div className="fixed top-0 left-0 right-0 h-1 bg-gray-800 z-30">
@@ -1186,17 +1313,6 @@ const ModernLessonViewer = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowPodcastPlayer(!showPodcastPlayer)}
-            className={`rounded-full px-3 py-1 text-sm transition-colors shadow-lg backdrop-blur-sm ${
-              showPodcastPlayer 
-                ? 'bg-purple-600/60 text-purple-100' 
-                : 'bg-purple-500/30 hover:bg-purple-500/50 text-purple-200'
-            }`}
-            title={showPodcastPlayer ? "Hide podcast player" : "Show podcast player"}
-          >
-            🎙️ Podcast
-          </button>
           {lastBookmark && (
             <button
               onClick={scrollToBookmark}
@@ -1206,19 +1322,45 @@ const ModernLessonViewer = () => {
               📖 Resume
             </button>
           )}
-          <button
-            onClick={scrollToTop}
-            className="bg-gray-500/30 hover:bg-gray-500/50 rounded-full px-3 py-1 text-gray-200 text-sm transition-colors shadow-lg backdrop-blur-sm"
-            title="Go to top"
-          >
-            ↑ Top
-          </button>
         </div>
       </div>
 
       {/* Main Content - Section-based with conditional visibility */}
-      <div ref={containerRef} className="pt-24 pb-8 relative z-10">
+      <div ref={containerRef} className="pt-24 pb-8 relative z-30" style={{ minHeight: 'auto' }}>
         <div className="max-w-4xl mx-auto px-4 space-y-8">
+          {/* Minimal content fallback: show first few blocks without debug labels to avoid empty screen */}
+          {Array.isArray(contentBlocks) && contentBlocks.length > 0 && (
+            <div className="p-3 bg-transparent rounded">
+              {contentBlocks.slice(0,3).map((b, i) => (
+                <div key={`quick-${i}`} className="mb-6">
+                  {b.type === 'heading' && (
+                    <div className="text-3xl font-extrabold">{b.content?.text || 'Untitled'}</div>
+                  )}
+                  {b.type === 'text' && (
+                    <div className="text-lg leading-relaxed whitespace-pre-wrap opacity-90">{b.content?.text || ''}</div>
+                  )}
+                  {b.type === 'image' && b.content?.src && (
+                    <img src={b.content.src} alt={b.content?.alt || ''} className="max-w-full rounded shadow-md" />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Direct image fallback: render the first image block explicitly if present */}
+          {(() => {
+            const firstImage = Array.isArray(contentBlocks) ? contentBlocks.find(b => b.type === 'image' && b.content && b.content.src) : null;
+            if (firstImage) {
+              try { console.info('Lesson image src:', firstImage.content.src); } catch (_) {}
+            }
+            return firstImage ? (
+              <div className="mt-2">
+                <img src={firstImage.content.src} alt={firstImage.content.alt || ''} className="max-w-full rounded-lg border border-white/10" />
+              </div>
+            ) : null;
+          })()}
+          {process.env.NODE_ENV === 'development' && new URLSearchParams(location.search).get('debug') === '1' && (
+            <div className="mb-4 p-2 rounded bg-black/30 border border-white/10 text-xs">DEV: content container mounted. Sections: {contentSections.length}</div>
+          )}
           
           {/* Lesson Header - Title and Description */}
           <div className="text-center mb-12 space-y-4">
@@ -1226,7 +1368,7 @@ const ModernLessonViewer = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              className="text-4xl sm:text-5xl font-bold text-white leading-tight"
+              className="text-4xl sm:text-5xl font-bold leading-tight"
             >
               {lesson?.title || 'Loading Lesson...'}
             </motion.h1>
@@ -1236,7 +1378,7 @@ const ModernLessonViewer = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed"
+                className="text-xl max-w-3xl mx-auto leading-relaxed opacity-90"
               >
                 {lesson.description}
               </motion.p>
@@ -1271,26 +1413,7 @@ const ModernLessonViewer = () => {
             )}
           </div>
           
-          {/* Integrated Podcast Player for AI History Lesson */}
-          {showPodcastPlayer && (lessonId === 'history-of-ai' || lessonId === 'welcome-ai-revolution') && (
-            <>
-              <div className="relative z-20 mb-16">
-                <IntegratedPodcastPlayer
-                  audioUrl="/The Incredible Story of AI_ From Turing to Today.wav" // Your uploaded AI history audio
-                  title={lesson?.title || "The Incredible True Story of Artificial Intelligence"}
-                  chapters={[
-                    { title: "The Codebreaker Who Started It All", time: 0 },
-                    { title: "When the Internet Changed Everything", time: 540 },
-                    { title: "The Day AI Became Everyone's Assistant", time: 1080 }
-                  ]}
-                  className=""
-                />
-              </div>
-              
-              {/* Spacer for better separation */}
-              <div className="h-8"></div>
-            </>
-          )}
+          {/* Podcast toggle and player removed per new design */}
           
           {contentSections.length === 0 ? (
             <div className="text-center text-gray-400 py-8">
@@ -1322,7 +1445,52 @@ const ModernLessonViewer = () => {
                 )}
                 
                 {/* Always render content, but make it interactive only when visible */}
-                <div className={!section.isVisible ? 'filter blur-sm' : ''}>
+                <div className={!section.isVisible ? 'filter blur-sm' : ''} style={{ position: 'relative', zIndex: 40 }}>
+                  {process.env.NODE_ENV === 'development' && new URLSearchParams(location.search).get('debug') === '1' && (
+                    <div className="mb-2 text-xs text-gray-200/70">
+                      {`Section ${sectionIndex + 1}: ${section.blocks.length} blocks → `}
+                      {section.blocks.slice(0, 5).map(b => b.type).join(', ')}
+                    </div>
+                  )}
+
+                  {process.env.NODE_ENV === 'development' && new URLSearchParams(location.search).get('debug') === '1' && section.blocks.length > 0 && (
+                    <div className="mb-4 p-3 border border-blue-400/30 bg-blue-900/10 rounded">
+                      <div className="text-[10px] text-blue-200 mb-2">Dev force render (ensures visibility)</div>
+                      {section.blocks.slice(0, 3).map((b, i) => (
+                        <div key={`force-${section.id}-${i}`} className="mb-3">
+                          <div className="text-[10px] text-blue-300">{b.type}</div>
+                          {b.type === 'heading' && (
+                            <div className="text-2xl font-bold text-white">{b.content?.text || 'Untitled'}</div>
+                          )}
+                          {b.type === 'text' && (
+                            <div className="text-white whitespace-pre-wrap">{b.content?.text || ''}</div>
+                          )}
+                          {b.type === 'image' && b.content?.src && (
+                            <img src={b.content.src} alt={b.content?.alt || ''} className="max-w-full rounded border border-white/10" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {process.env.NODE_ENV === 'development' && new URLSearchParams(location.search).get('debug') === '1' && section.blocks.length > 0 && (
+                    <div className="mb-6 p-4 bg-black/20 border border-white/10 rounded">
+                      <div className="text-[10px] text-gray-400 mb-2">Dev fallback preview (raw render)</div>
+                      {section.blocks.map((b, i) => (
+                        <div key={`dev-preview-${section.id}-${i}`} className="mb-4">
+                          {b.type === 'heading' && (
+                            <div className="text-3xl font-extrabold text-white">{b.content?.text || 'Untitled'}</div>
+                          )}
+                          {b.type === 'text' && (
+                            <div className="text-white text-base leading-relaxed whitespace-pre-wrap">{b.content?.text || ''}</div>
+                          )}
+                          {b.type === 'image' && b.content?.src && (
+                            <img src={b.content.src} alt={b.content?.alt || ''} className="max-w-full rounded" />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <ContentBlockRenderer
                     blocks={section.blocks}
                     onBlockComplete={section.isVisible ? handleBlockComplete : () => {}}
@@ -1340,6 +1508,28 @@ const ModernLessonViewer = () => {
                     }}
                     className={`space-y-6 ${!section.isVisible ? 'opacity-40' : ''}`}
                   />
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="mt-6 p-4 bg-black/20 border border-white/10 rounded relative z-40">
+                      <div className="text-xs text-gray-300 mb-3">Direct render fallback:</div>
+                      {section.blocks.map((b, i) => (
+                        <div key={`dev-${section.id}-${i}`} className="mb-5">
+                          <div className="text-[10px] text-gray-400 mb-1">{b.type}</div>
+                          {(() => {
+                            if (b.type === 'heading') {
+                              return <div className="text-3xl font-extrabold">{b.content?.text || 'Untitled'}</div>;
+                            }
+                            if (b.type === 'text') {
+                              return <div className="text-lg leading-relaxed whitespace-pre-wrap">{b.content?.text || ''}</div>;
+                            }
+                            if (b.type === 'image' && b.content?.src) {
+                              return <img src={b.content.src} alt={b.content?.alt || ''} className="max-w-full rounded" />;
+                            }
+                            return null;
+                          })()}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
                 {/* Show unlock hint only after the LAST quiz section or questions marked as last in group */}
@@ -1356,12 +1546,25 @@ const ModernLessonViewer = () => {
           )}
           
           {/* Debug info in development */}
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-8 p-4 bg-gray-900/50 rounded-lg text-xs text-gray-400">
-              <p>Debug Info:</p>
-              <p>Sections: {contentSections.length}</p>
-              <p>Visible sections: {contentSections.filter(s => s.isVisible).length}</p>
-              <p>Quiz completion state: {JSON.stringify(Object.fromEntries(quizCompletionState))}</p>
+          {process.env.NODE_ENV === 'development' && new URLSearchParams(location.search).get('debug') === '1' && (
+            <div className="fixed left-6 bottom-6 right-6 md:right-auto md:max-w-md p-4 bg-black/60 border border-white/10 rounded-lg text-xs text-gray-200 z-[70]">
+              <div className="font-semibold mb-2">Debug Info:</div>
+              <div>Sections: {contentSections.length}</div>
+              <div>Visible sections: {contentSections.filter(s => s.isVisible).length}</div>
+              <div>Quiz completion state: {JSON.stringify(Object.fromEntries(quizCompletionState))}</div>
+              {devDebugInfo && (
+                <div className="mt-2 opacity-90">
+                  <div>Difficulty: {devDebugInfo.difficulty}</div>
+                  <div>contentPages: {devDebugInfo.contentPages}, premiumPages: {devDebugInfo.premiumPages}</div>
+                  <div>pagesToUse: {devDebugInfo.pagesToUse}, directBlocks: {devDebugInfo.directBlocks}</div>
+                  {Array.isArray(devDebugInfo.directTypes) && (
+                    <div>types: {devDebugInfo.directTypes.join(', ')}</div>
+                  )}
+                  {devDebugInfo.convertedSlides !== undefined && (
+                    <div>convertedSlides: {devDebugInfo.convertedSlides}</div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

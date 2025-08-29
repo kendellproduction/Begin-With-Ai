@@ -1,21 +1,22 @@
-import React, { Suspense, lazy, useState, useEffect, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useRef } from 'react';
 import BlockErrorBoundary from './BlockErrorBoundary';
 import { BLOCK_TYPES, DEFAULT_BLOCK_CONFIG } from './constants';
 
-// Lazy load all content blocks for performance
-const TextBlock = lazy(() => import('./TextBlock'));
-const HeadingBlock = lazy(() => import('./HeadingBlock'));
-const ImageBlock = lazy(() => import('./ImageBlock'));
-const VideoBlock = lazy(() => import('./VideoBlock'));
-const PodcastSyncBlock = lazy(() => import('./PodcastSyncBlock'));
-const QuizBlock = lazy(() => import('./QuizBlock'));
-const SandboxBlock = lazy(() => import('./SandboxBlock'));
-const SectionBreak = lazy(() => import('./SectionBreak'));
-const FillBlankBlock = lazy(() => import('./FillBlankBlock'));
-const ChecklistBlock = lazy(() => import('./ChecklistBlock'));
-const ProgressCheckpoint = lazy(() => import('./ProgressCheckpoint'));
-const CallToActionBlock = lazy(() => import('./CallToActionBlock'));
-const APICallBlock = lazy(() => import('./APICallBlock'));
+// Import synchronously in development to avoid any bundler/lazy edge-cases
+// and keep lazy in production for performance
+import TextBlock from './TextBlock';
+import HeadingBlock from './HeadingBlock';
+import ImageBlock from './ImageBlock';
+import VideoBlock from './VideoBlock';
+import PodcastSyncBlock from './PodcastSyncBlock';
+import QuizBlock from './QuizBlock';
+import SandboxBlock from './SandboxBlock';
+import SectionBreak from './SectionBreak';
+import FillBlankBlock from './FillBlankBlock';
+import ChecklistBlock from './ChecklistBlock';
+import ProgressCheckpoint from './ProgressCheckpoint';
+import CallToActionBlock from './CallToActionBlock';
+import APICallBlock from './APICallBlock';
 
 const ContentBlockRenderer = ({
   blocks = [],
